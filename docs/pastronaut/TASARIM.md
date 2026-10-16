@@ -224,7 +224,8 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
 | Hassas veri (2026-10-16) | Varsayılan: her şey eşitlenir (parola yöneticisi kopyaları hariç, bugünkü gibi). Ayarlarda ayrı anahtarlar, varsayılanı kapalı: "Tek kullanımlık kodları eşitleme" (Mac'te 5 dk sonra siler), "Kart ve IBAN numaralarını eşitleme", "Yalnızca sabitlenenleri eşitle". |
 | Yerelleştirme (2026-10-16) | İngilizce temel, Türkçe tam. iOS: String Catalog (`.xcstrings`) her hedefte; Mac: Maccy'nin `.strings` dosyalarına dokunulmaz, bizim metinler ayrı `Pastronaut.xcstrings` tablosunda. Testler etiket değil erişilebilirlik kimliğiyle öğe bulur. |
 | Dağıtım (2026-10-16) | iOS: App Store (TestFlight önce). Mac: GitHub Releases (Developer ID + noter onayı + Sparkle) → kendi Homebrew tap'i → Mac App Store (iOS ile aynı paket kimliği, Universal Purchase). |
-| Görsel kimlik | Taslaklar: https://claude.ai/artifact/VgG1CnRShnUMFaLNVLLvgM (3 ikon yönü, 2 palet, tüm ekranlar EN/TR). Kullanıcı seçimi bekleniyor. |
+| Görsel kimlik (2026-10-16) | Taslaklar: https://claude.ai/artifact/VgG1CnRShnUMFaLNVLLvgM. Seçim: ikon **A · Kask** (vizörde yansıyan pano), palet **Gece** (#1E1B4B lacivert, #5B4BD0 mor, #C9C4F2 açık mor, #E8833A turuncu: sabitler ve vurgu). Ekran düzenleri olduğu gibi onaylandı. |
+| Liquid Glass (2026-10-16) | iOS/macOS 26+'nın cam tasarımı korunur ve desteklenir. Sistem bileşenleri (gezinme ve araç çubukları, arama, sayfalar, listeler) özel arka planla örtülmez; cam kendiliğinden gelir. Özel yüzeyler (Mac popup'ı, klavye çipleri, widget'lar) 26+'da `glassEffect`, 17–25'te materyal kullanır. İkon Icon Composer biçiminde (`AppIcon.icon`, katmanlı); eski sürümler için Xcode düz ikon üretir. Taslaklardaki opak yüzeyler yalnızca yerleşimi gösterir. |
 
 ## 10. Geliştirme ortamı
 - **İki cihazlı uçtan uca test:** Mac Debug derlemesi ve iOS `build-for-testing` sonrası

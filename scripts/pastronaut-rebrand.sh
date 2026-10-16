@@ -37,3 +37,9 @@ find Maccy -name '*.strings' -print0 | xargs -0 sed -i '' -e "s/$OLD_ID/$NEW_ID/
 sed -i '' 's/Text("Maccy")/Text("Pastronaut")/' Maccy/Views/ListHeaderView.swift
 
 echo "Rebrand applied. Review with: git diff --stat"
+
+# 4. Icons: Pastronaut's own layered icon replaces Maccy's (keep ours on merge conflicts:
+#    `git checkout --ours Maccy/AppIcon.icon`). Maccy's legacy icon set and its Debug-only
+#    exclusion of the layered icon are removed so every configuration shows our icon.
+rm -rf Maccy/Assets.xcassets/AppIcon.appiconset
+perl -0pi -e 's/\t+EXCLUDED_SOURCE_FILE_NAMES = AppIcon\.icon;\n//g' Maccy.xcodeproj/project.pbxproj

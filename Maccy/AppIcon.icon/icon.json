@@ -1,74 +1,13 @@
 {
   "fill" : {
-    "linear-gradient" : [
-      "display-p3:1.00000,0.57647,0.97647,1.00000",
-      "srgb:1.00000,0.61176,0.35294,1.00000"
-    ],
-    "orientation" : {
-      "start" : {
-        "x" : 0.5,
-        "y" : 0
-      },
-      "stop" : {
-        "x" : 0.5,
-        "y" : 0.7
-      }
-    }
+    "solid" : "srgb:0.11765,0.10588,0.29412,1.00000"
   },
   "groups" : [
     {
-      "blur-material-specializations" : [
-        {
-          "value" : 0.2
-        },
-        {
-          "appearance" : "dark",
-          "value" : 0.2
-        }
-      ],
       "layers" : [
         {
-          "fill-specializations" : [
-            {
-              "appearance" : "dark",
-              "value" : "none"
-            }
-          ],
-          "image-name" : "3 - Layer.svg",
-          "name" : "3 - Layer"
-        }
-      ],
-      "shadow" : {
-        "kind" : "layer-color",
-        "opacity" : 0.5
-      },
-      "specular" : true,
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
-        {
-          "image-name" : "2 - Layer.svg",
-          "name" : "2 - Layer"
-        }
-      ],
-      "shadow" : {
-        "kind" : "layer-color",
-        "opacity" : 0.5
-      },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
-        {
-          "image-name" : "1 - Layer.svg",
-          "name" : "1 - Layer"
+          "image-name" : "Clipboard.svg",
+          "name" : "Clipboard"
         }
       ],
       "shadow" : {
@@ -77,25 +16,39 @@
       },
       "translucency" : {
         "enabled" : true,
-        "value" : 0.5
+        "value" : 0.2
       }
     },
     {
-      "hidden" : false,
       "layers" : [
         {
-          "image-name" : "0 - Layer.svg",
-          "name" : "0 - Layer"
+          "image-name" : "Visor.svg",
+          "name" : "Visor"
         }
       ],
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 1
+        "opacity" : 0.5
       },
-      "specular" : false,
       "translucency" : {
         "enabled" : true,
-        "value" : 1
+        "value" : 0.3
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "Shell.svg",
+          "name" : "Shell"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.4
       }
     }
   ],

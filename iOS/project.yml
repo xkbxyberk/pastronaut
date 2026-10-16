@@ -23,6 +23,10 @@ targets:
       - App
       - path: ../Maccy/Acknowledgements.txt
         buildPhase: resources
+      # One layered Icon Composer icon for Mac and iOS (Liquid Glass; Xcode renders flat icons for iOS 17-25).
+      - path: ../Maccy/AppIcon.icon
+        type: file
+        buildPhase: resources
     dependencies:
       - package: PastronautCore
       - target: PastronautKeyboard
@@ -30,6 +34,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut
         PRODUCT_NAME: Pastronaut
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     scheme:
       testTargets: [PastronautUITests]
     info:
