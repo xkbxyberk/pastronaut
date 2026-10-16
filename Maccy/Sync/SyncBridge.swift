@@ -222,12 +222,19 @@ final class SyncBridge {
     return Clip(
       text: text,
       sourceApp: item.application,
+      sourceAppName: item.application.flatMap(appName(for:)),
       sourceDevice: item.universalClipboard ? .iphone : .mac,
       firstCopiedAt: item.firstCopiedAt,
       lastCopiedAt: item.lastCopiedAt,
       modifiedAt: modifiedAt,
       pinned: item.pin != nil
     )
+  }
+
+  /// Readable app name for other devices, which cannot resolve a Mac bundle identifier.
+  private static func appName(for bundleIdentifier: String) -> String? {
+    guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else { return nil }
+    return FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: "")
   }
 
   private static func syncableText(of item: HistoryItem) -> String? {

@@ -18,7 +18,10 @@ public struct Clip: Codable, Equatable, Hashable, Sendable {
   public let id: String
   public let text: String
   public var kind: Kind
+  /// Bundle identifier of the app the text was copied from (Mac uses it for icons and ignore rules).
   public var sourceApp: String?
+  /// Readable name of that app ("Safari"), resolved where it was copied: other devices cannot look it up.
+  public var sourceAppName: String?
   public var sourceDevice: Device
   public var firstCopiedAt: Date
   public var lastCopiedAt: Date
@@ -29,6 +32,7 @@ public struct Clip: Codable, Equatable, Hashable, Sendable {
   public init(
     text: String,
     sourceApp: String? = nil,
+    sourceAppName: String? = nil,
     sourceDevice: Device,
     firstCopiedAt: Date = .now,
     lastCopiedAt: Date? = nil,
@@ -39,6 +43,7 @@ public struct Clip: Codable, Equatable, Hashable, Sendable {
     self.text = text
     self.kind = Clip.kind(of: text)
     self.sourceApp = sourceApp
+    self.sourceAppName = sourceAppName
     self.sourceDevice = sourceDevice
     self.firstCopiedAt = firstCopiedAt
     self.lastCopiedAt = lastCopiedAt ?? firstCopiedAt
@@ -80,6 +85,7 @@ public struct Clip: Codable, Equatable, Hashable, Sendable {
     if copy.lastCopiedAt > lastCopiedAt {
       result.sourceDevice = copy.sourceDevice
       result.sourceApp = copy.sourceApp ?? sourceApp
+      result.sourceAppName = copy.sourceAppName ?? sourceAppName
     }
     return result
   }

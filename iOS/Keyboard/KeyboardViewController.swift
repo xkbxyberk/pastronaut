@@ -65,6 +65,10 @@ final class KeyboardModel {
   func appeared(hasFullAccess: Bool, showsNextKeyboard: Bool) {
     self.hasFullAccess = hasFullAccess
     self.showsNextKeyboard = showsNextKeyboard
+    if hasFullAccess {
+      // Lets the app's setup guide tick "Full Access" (the App Group is read-only without it).
+      defaults?.set(Date.now, forKey: "keyboardFullAccessSeenAt")
+    }
     reload()
 
     let pasteboard = UIPasteboard.general

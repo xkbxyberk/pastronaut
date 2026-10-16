@@ -17,6 +17,8 @@ final class SyncStepTests: XCTestCase {
 
   override func setUp() {
     continueAfterFailure = false
+    // Keeps the first-launch setup guide from covering the list (Debug builds only).
+    app.launchEnvironment["PT_E2E"] = "1"
   }
 
   func testStep() throws {
@@ -33,9 +35,9 @@ final class SyncStepTests: XCTestCase {
     case "waitGone":
       wait(until: { !$0.exists })
     case "waitPinned":
-      wait(until: { $0.exists && ($0.value as? String) == "pinned" })
+      wait(until: { $0.exists && $0.identifier == "clip.pinned" })
     case "waitUnpinned":
-      wait(until: { $0.exists && ($0.value as? String) == "unpinned" })
+      wait(until: { $0.exists && $0.identifier == "clip.unpinned" })
     case "save":
       // The system Paste button rejects synthetic taps, so the app saves this text at launch (Debug only).
       app.launchEnvironment["PT_E2E_SAVE"] = text
@@ -63,8 +65,8 @@ final class SyncStepTests: XCTestCase {
       let button = app.buttons["pinAction"].firstMatch
       XCTAssertTrue(button.waitForExistence(timeout: 5), "\(op) action missing")
       button.tap()
-      let expected = op == "pin" ? "pinned" : "unpinned"
-      report(["ok": waitValue(of: row(match), equals: expected)])
+      let expected = op == "pin" ? "clip.pinned" : "clip.unpinned"
+      report(["ok": waitIdentifier(of: row(match), equals: expected)])
     case "delete":
       let element = try existingRow()
       element.swipeLeft()
@@ -94,6 +96,35 @@ final class SyncStepTests: XCTestCase {
         "titles": titles
       ])
       app.buttons["doneButton"].firstMatch.tap()
+    case "screenshot":
+      // Design review: the history screen, then the first clip's details. Attachments land in the result bundle.
+      app.launch()
+      Thread.sleep(forTimeInterval: 2)
+      attachScreenshot(named: "history")
+      let first = rows.firstMatch
+      if first.waitForExistence(timeout: 5) {
+        first.press(forDuration: 1.0)
+        let details = app.buttons["showDetails"].firstMatch
+        if details.waitForExistence(timeout: 3) {
+          details.tap()
+          Thread.sleep(forTimeInterval: 1)
+          attachScreenshot(named: "detail")
+        }
+      }
+      // Settings and the keyboard setup guide, from a fresh launch (the detail screen is still pushed).
+      app.terminate()
+      app.launch()
+      Thread.sleep(forTimeInterval: 1)
+      app.navigationBars.buttons.matching(identifier: "settingsButton").firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1)
+      attachScreenshot(named: "settings")
+      let setupRow = app.descendants(matching: .any)["setupKeyboard"].firstMatch
+      if setupRow.waitForExistence(timeout: 3) {
+        setupRow.tap()
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "setup")
+      }
+      report(["ok": true])
     case "keyboard":
       try keyboardStep()
     default:
@@ -104,7 +135,8 @@ final class SyncStepTests: XCTestCase {
   // MARK: - Rows
 
   private var rows: XCUIElementQuery {
-    app.buttons.matching(identifier: "clip")
+    // "clip.pinned" or "clip.unpinned" (HistoryView).
+    app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'clip.'"))
   }
 
   private func row(_ text: String) -> XCUIElement {
@@ -135,10 +167,10 @@ final class SyncStepTests: XCTestCase {
     report(["ok": met, "seconds": Date().timeIntervalSince(start).rounded()])
   }
 
-  private func waitValue(of element: XCUIElement, equals value: String) -> Bool {
+  private func waitIdentifier(of element: XCUIElement, equals value: String) -> Bool {
     let deadline = Date().addingTimeInterval(5)
     while Date() < deadline {
-      if (element.value as? String) == value { return true }
+      if element.identifier == value { return true }
       Thread.sleep(forTimeInterval: 0.25)
     }
     return false
@@ -193,6 +225,13 @@ final class SyncStepTests: XCTestCase {
     let typed = (field.value as? String)?.contains(match) ?? false
     let cloudStatus = safari.descendants(matching: .any)["cloudStatus"].firstMatch
     report(["ok": typed, "pinIcons": pinned, "cloudStatus": cloudStatus.exists ? cloudStatus.label : ""])
+  }
+
+  private func attachScreenshot(named name: String) {
+    let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+    attachment.name = name
+    attachment.lifetime = .keepAlways
+    add(attachment)
   }
 
   // MARK: - Output

@@ -4,6 +4,7 @@ import UIKit
 struct SettingsView: View {
   @Environment(ClipStore.self) private var store
   @Environment(\.dismiss) private var dismiss
+  private let setup = KeyboardSetup.shared
 
   var body: some View {
     NavigationStack {
@@ -14,7 +15,7 @@ struct SettingsView: View {
             .accessibilityIdentifier("syncedClips")
           LabeledContent("Last sync") {
             if let date = store.status?.lastSyncAt {
-              Text(date, style: .relative)
+              Text(date, format: .relative(presentation: .named))
             } else {
               Text(verbatim: "–")
             }
@@ -32,14 +33,19 @@ struct SettingsView: View {
         }
 
         Section {
-          Text("1. Open Settings › General › Keyboard › Keyboards › Add New Keyboard and choose Pastronaut.")
-          Text("2. Tap Pastronaut in the list and turn on Allow Full Access. Without it the keyboard still shows your history, but cannot save new copies.")
-          Text("3. In any text field, hold 🌐 and pick Pastronaut. Tap a clip to type it.")
-          Button("Open Settings") {
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-              UIApplication.shared.open(url)
+          NavigationLink {
+            KeyboardSetupView()
+          } label: {
+            LabeledContent("Set Up Keyboard") {
+              if setup.isComplete {
+                Label("Ready", systemImage: "checkmark.circle.fill")
+                  .foregroundStyle(.green)
+              } else {
+                Text("Not finished")
+              }
             }
           }
+          .accessibilityIdentifier("setupKeyboard")
         } header: {
           Text("Keyboard")
         } footer: {
@@ -47,12 +53,14 @@ struct SettingsView: View {
         }
 
         Section("About") {
+          LabeledContent("Version", value: Self.version)
           Link("Pastronaut on GitHub", destination: URL(string: "https://github.com/xkbxyberk/pastronaut")!)
-          Text("Based on Maccy by Alexey Rodionov (MIT). Not affiliated with Maccy.")
-            .font(.footnote)
           NavigationLink("Licenses") {
             LicensesView()
           }
+          Text("Based on Maccy by Alexey Rodionov (MIT). Not affiliated with Maccy.")
+            .font(.footnote)
+            .foregroundStyle(.secondary)
         }
       }
       .navigationTitle("Settings")
@@ -62,7 +70,15 @@ struct SettingsView: View {
             .accessibilityIdentifier("doneButton")
         }
       }
+      .onAppear { setup.update() }
     }
+  }
+
+  private static var version: String {
+    let info = Bundle.main.infoDictionary
+    let short = info?["CFBundleShortVersionString"] as? String ?? "?"
+    let build = info?["CFBundleVersion"] as? String ?? "?"
+    return "\(short) (\(build))"
   }
 }
 

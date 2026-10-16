@@ -14,6 +14,7 @@ public enum ClipRecord {
     // Encrypted (end-to-end, not visible in the CloudKit console).
     static let text = "text"
     static let sourceApp = "sourceApp"
+    static let sourceAppName = "sourceAppName"
     // Plain metadata.
     static let kind = "kind"
     static let sourceDevice = "sourceDevice"
@@ -34,6 +35,7 @@ public enum ClipRecord {
     let record = record ?? CKRecord(recordType: recordType, recordID: recordID(for: clip.id))
     record.encryptedValues[Field.text] = clip.text
     record.encryptedValues[Field.sourceApp] = clip.sourceApp
+    record.encryptedValues[Field.sourceAppName] = clip.sourceAppName
     record[Field.kind] = clip.kind.rawValue
     record[Field.sourceDevice] = clip.sourceDevice.rawValue
     record[Field.firstCopiedAt] = clip.firstCopiedAt
@@ -54,6 +56,7 @@ public enum ClipRecord {
     var clip = Clip(
       text: text,
       sourceApp: record.encryptedValues[Field.sourceApp] as? String,
+      sourceAppName: record.encryptedValues[Field.sourceAppName] as? String,
       sourceDevice: (record[Field.sourceDevice] as? String).flatMap(Clip.Device.init(rawValue:)) ?? .mac,
       firstCopiedAt: firstCopiedAt,
       lastCopiedAt: record[Field.lastCopiedAt] as? Date ?? firstCopiedAt,

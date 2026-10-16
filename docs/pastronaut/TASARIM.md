@@ -210,6 +210,12 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     Mac için ayrı `Pastronaut` tablosu (`Maccy/Sync/Pastronaut.xcstrings`); Kısayollar eylemi de katalogdan.
     Testler etiket yerine erişilebilirlik kimliğiyle çalışıyor; Türkçe cihazda tam koşu geçti (T21: uygulama
     "Ayarlar" başlığıyla açılıyor). Mac Sync ekranının metinleri yeniden tasarımında tabloya taşınacak.
+  - ✅ 4.3a iOS uygulaması yeni tasarım (Liquid Glass): gruplu geçmiş (Sabitlenenler/Bugün/Dün/Bu hafta/Daha eski),
+    Tümü/Mac/iPhone filtresi, içerik türü simgeleri (`ClipContent`: bağlantı, e-posta, telefon, renk, kod, metin),
+    kaynak uygulama adı (yeni şifreli alan `sourceAppName`, Mac çözer), dokununca kopyala + bildirim, bağlam menüsü,
+    ayrıntı ekranı (akıllı eylem, paylaş, sabitle, düzenle, sil), canlı kurulum rehberi (klavye eklendi mi:
+    `AppleKeyboards`; Tam Erişim: klavyenin App Group'a yazdığı işaret), yeni Ayarlar. Gece paleti varlık
+    kataloğunda; koyu tema vurgusu #6F5FEB (beyaz yazı ve siyah zemin ile ≈ 4,5:1). Tam E2E koşusu geçti.
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
   TestFlight ve App Store; Mac için GitHub Releases, Homebrew tap, Mac App Store.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.
@@ -233,6 +239,10 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
 | Liquid Glass (2026-10-16) | iOS/macOS 26+'nın cam tasarımı korunur ve desteklenir. Sistem bileşenleri (gezinme ve araç çubukları, arama, sayfalar, listeler) özel arka planla örtülmez; cam kendiliğinden gelir. Özel yüzeyler (Mac popup'ı, klavye çipleri, widget'lar) 26+'da `glassEffect`, 17–25'te materyal kullanır. İkon Icon Composer biçiminde (`AppIcon.icon`, katmanlı); eski sürümler için Xcode düz ikon üretir. Taslaklardaki opak yüzeyler yalnızca yerleşimi gösterir. |
 
 ## 10. Geliştirme ortamı
+- **PastronautCore testleri:** `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test` (paket artık
+  String Catalog içeriyor; Komut Satırı Araçları'nın `swift`'inde katalog derleyicisi yok).
+- **Ekran görüntüsü:** `TEST_RUNNER_PT_OP=screenshot` adımı geçmiş, ayrıntı, Ayarlar ve kurulum ekranlarını sonuç paketine
+  ekler; `xcrun xcresulttool export attachments` ile çıkarılır.
 - **İki cihazlı uçtan uca test:** Mac Debug derlemesi ve iOS `build-for-testing` sonrası
   `scripts/e2e/sync_e2e.py --mac-app <Pastronaut.app> --xctestrun <…xctestrun> --device <UDID>`. Mac push'unun
   çalışması için `--mac-app` bir Uygulamalar klasöründeki kopya olmalı (ör. `ditto … ~/Applications/Pastronaut.app`; R7). iPhone kilidi açık ve

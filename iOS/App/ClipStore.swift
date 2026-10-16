@@ -73,6 +73,32 @@ final class ClipStore {
     upsert(changed)
   }
 
+  /// Replaces a clip's text. The ID follows the text, so this is a delete plus a new clip that keeps the
+  /// pin and copy dates, the same as an edit on the Mac. Returns the new ID.
+  @discardableResult
+  func edit(_ clip: Clip, to text: String) -> String? {
+    guard !text.isEmpty, text != clip.text, SyncPolicy.default.isEligible(text) else { return nil }
+    let edited = Clip(
+      text: text,
+      sourceApp: clip.sourceApp,
+      sourceAppName: clip.sourceAppName,
+      sourceDevice: clip.sourceDevice,
+      firstCopiedAt: clip.firstCopiedAt,
+      lastCopiedAt: clip.lastCopiedAt,
+      modifiedAt: .now,
+      pinned: clip.pinned
+    )
+    clips.removeAll { $0.id == clip.id }
+    clips.append(edited)
+    Task {
+      await sync.delete(ids: [clip.id])
+      await sync.upsert(edited)
+      await reload()
+      await upload()
+    }
+    return edited.id
+  }
+
   func delete(_ clip: Clip) {
     clips.removeAll { $0.id == clip.id }
     Task {

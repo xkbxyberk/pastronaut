@@ -80,7 +80,7 @@ import Testing
   let date = Date(timeIntervalSince1970: 1_700_000_000)
 
   @Test func roundTrip() throws {
-    let clip = Clip(text: "merhaba\ndünya", sourceApp: "com.apple.Notes", sourceDevice: .iphone,
+    let clip = Clip(text: "merhaba\ndünya", sourceApp: "com.apple.Notes", sourceAppName: "Notlar", sourceDevice: .iphone,
                     firstCopiedAt: date, lastCopiedAt: date.addingTimeInterval(60),
                     modifiedAt: date.addingTimeInterval(90), pinned: true)
     let record = ClipRecord.record(for: clip)
@@ -92,9 +92,11 @@ import Testing
   }
 
   @Test func textAndSourceAppAreEncrypted() {
-    let record = ClipRecord.record(for: Clip(text: "secret", sourceApp: "app", sourceDevice: .mac))
+    let record = ClipRecord.record(for: Clip(text: "secret", sourceApp: "app", sourceAppName: "App", sourceDevice: .mac))
     #expect(record["text"] == nil)
     #expect(record["sourceApp"] == nil)
+    #expect(record["sourceAppName"] == nil)
+    #expect(record.encryptedValues["sourceAppName"] as? String == "App")
     #expect(record.encryptedValues["text"] as? String == "secret")
   }
 

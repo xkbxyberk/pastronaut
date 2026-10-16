@@ -45,6 +45,39 @@
         }
       }
     },
+    "Add the keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavyeyi ekle"
+          }
+        }
+      }
+    },
+    "Add the shortcut (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kısayolu ekle (isteğe bağlı)"
+          }
+        }
+      }
+    },
+    "Added": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eklendi"
+          }
+        }
+      }
+    },
     "Adds text to your Pastronaut history and syncs it to your Mac. Use it after Get Clipboard.": {
       "extractionState": "manual",
       "localizations": {
@@ -52,6 +85,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Metni Pastronaut geçmişine ekler ve Mac'inle eşitler. Panoyu Al eyleminden sonra kullan."
+          }
+        }
+      }
+    },
+    "All": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümü"
           }
         }
       }
@@ -67,6 +111,61 @@
         }
       }
     },
+    "Call": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ara"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vazgeç"
+          }
+        }
+      }
+    },
+    "Characters": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karakter"
+          }
+        }
+      }
+    },
+    "Code": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kod"
+          }
+        }
+      }
+    },
+    "Color": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renk"
+          }
+        }
+      }
+    },
     "Copied": {
       "extractionState": "manual",
       "localizations": {
@@ -74,6 +173,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kopyalandı"
+          }
+        }
+      }
+    },
+    "Copies the text": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metni kopyalar"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyala"
           }
         }
       }
@@ -89,6 +210,28 @@
         }
       }
     },
+    "Delete this clip?": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu öğe silinsin mi?"
+          }
+        }
+      }
+    },
+    "Device": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cihaz"
+          }
+        }
+      }
+    },
     "Done": {
       "extractionState": "manual",
       "localizations": {
@@ -96,6 +239,94 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bitti"
+          }
+        }
+      }
+    },
+    "Earlier": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha eski"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzenle"
+          }
+        }
+      }
+    },
+    "Email": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-posta"
+          }
+        }
+      }
+    },
+    "Encrypted": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şifreli"
+          }
+        }
+      }
+    },
+    "Even with Full Access, nothing you type is sent anywhere. The keyboard only reads your history in your own iCloud and writes the copies you capture there.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam Erişim açıkken bile yazdıkların hiçbir yere gönderilmez. Klavye yalnızca kendi iCloud'undaki geçmişi okur ve yakaladığın kopyaları oraya yazar."
+          }
+        }
+      }
+    },
+    "First copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk kopyalama"
+          }
+        }
+      }
+    },
+    "In Shortcuts, make a shortcut with “Get Clipboard” and “Save to Pastronaut”. Add it to Back Tap or the Action button to save with one gesture.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kestirmeler'de “Panoyu Al” ve “Pastronaut'a kaydet” eylemleriyle bir kestirme oluştur. Tek hareketle kaydetmek için Arkaya Dokun'a ya da Eylem düğmesine ata."
+          }
+        }
+      }
+    },
+    "It is removed from all your devices.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm cihazlarından silinir."
           }
         }
       }
@@ -111,6 +342,17 @@
         }
       }
     },
+    "Last copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son kopyalama"
+          }
+        }
+      }
+    },
     "Last sync": {
       "extractionState": "manual",
       "localizations": {
@@ -118,6 +360,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Son eşitleme"
+          }
+        }
+      }
+    },
+    "Later": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonra"
+          }
+        }
+      }
+    },
+    "Lets the keyboard save new copies and fetch the latest history from iCloud itself. Tap Pastronaut under Keyboards and turn on Allow Full Access, then open the keyboard once.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavyenin yeni kopyaları kaydetmesi ve iCloud'daki son durumu kendisi çekmesi için gerekli. Klavyeler altında Pastronaut'a dokun, Tam Erişime İzin Ver'i aç ve klavyeyi bir kez aç."
           }
         }
       }
@@ -144,6 +408,17 @@
         }
       }
     },
+    "Link": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı"
+          }
+        }
+      }
+    },
     "No clips yet": {
       "extractionState": "manual",
       "localizations": {
@@ -151,6 +426,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Henüz öğe yok"
+          }
+        }
+      }
+    },
+    "Not finished": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamamlanmadı"
           }
         }
       }
@@ -166,6 +452,39 @@
         }
       }
     },
+    "Nothing from this device": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihazdan öğe yok"
+          }
+        }
+      }
+    },
+    "On": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
+    },
+    "Open Link": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantıyı aç"
+          }
+        }
+      }
+    },
     "Open Settings": {
       "extractionState": "manual",
       "localizations": {
@@ -173,6 +492,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayarlar'ı aç"
+          }
+        }
+      }
+    },
+    "Open Shortcuts": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kestirmeler'i aç"
           }
         }
       }
@@ -188,6 +518,17 @@
         }
       }
     },
+    "Phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon"
+          }
+        }
+      }
+    },
     "Pin": {
       "extractionState": "manual",
       "localizations": {
@@ -199,6 +540,39 @@
         }
       }
     },
+    "Pinned": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenenler"
+          }
+        }
+      }
+    },
+    "Pinned clip": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenmiş"
+          }
+        }
+      }
+    },
+    "Ready": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazır"
+          }
+        }
+      }
+    },
     "Restricted": {
       "extractionState": "manual",
       "localizations": {
@@ -206,6 +580,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kısıtlı"
+          }
+        }
+      }
+    },
+    "Save": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydet"
           }
         }
       }
@@ -243,6 +628,28 @@
         }
       }
     },
+    "Set Up Keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavye kurulumu"
+          }
+        }
+      }
+    },
+    "Set up the Pastronaut keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut klavyesini kur"
+          }
+        }
+      }
+    },
     "Settings": {
       "extractionState": "manual",
       "localizations": {
@@ -254,6 +661,39 @@
         }
       }
     },
+    "Settings › General › Keyboard › Keyboards › Add New Keyboard › Pastronaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar › Genel › Klavye › Klavyeler › Yeni Klavye Ekle › Pastronaut"
+          }
+        }
+      }
+    },
+    "Share": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paylaş"
+          }
+        }
+      }
+    },
+    "Show Details": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayrıntıları göster"
+          }
+        }
+      }
+    },
     "Signed in": {
       "extractionState": "manual",
       "localizations": {
@@ -261,6 +701,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Giriş yapıldı"
+          }
+        }
+      }
+    },
+    "Source": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaynak"
+          }
+        }
+      }
+    },
+    "Step %lld of 3": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adım %lld / 3"
           }
         }
       }
@@ -342,6 +804,28 @@
         }
       }
     },
+    "This Week": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu hafta"
+          }
+        }
+      }
+    },
+    "This clip was deleted": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu öğe silindi"
+          }
+        }
+      }
+    },
     "This text is too large to sync, so it was not saved.": {
       "extractionState": "manual",
       "localizations": {
@@ -364,6 +848,28 @@
         }
       }
     },
+    "Today": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün"
+          }
+        }
+      }
+    },
+    "Turn on Full Access": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam Erişim'i aç"
+          }
+        }
+      }
+    },
     "Turn on Sync in Pastronaut on your Mac, or save your clipboard with the paste button.": {
       "extractionState": "manual",
       "localizations": {
@@ -371,6 +877,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mac'teki Pastronaut'ta eşitlemeyi aç ya da yapıştır düğmesiyle panonu kaydet."
+          }
+        }
+      }
+    },
+    "Type what you copied on your Mac with a single tap on iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'te kopyaladığını iPhone'da tek dokunuşla yaz."
           }
         }
       }
@@ -393,6 +910,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sabitlemeyi kaldır"
+          }
+        }
+      }
+    },
+    "Version": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sürüm"
+          }
+        }
+      }
+    },
+    "Write Email": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-posta yaz"
+          }
+        }
+      }
+    },
+    "Yesterday": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dün"
           }
         }
       }
