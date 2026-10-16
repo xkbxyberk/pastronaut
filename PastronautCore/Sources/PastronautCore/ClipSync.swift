@@ -77,7 +77,7 @@ public actor ClipSync {
     if state.engineState == nil {
       engine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: ClipRecord.zoneID))])
     }
-    logger.info("Started with \(self.state.entries.count) mirrored clips")
+    logger.notice("Started with \(self.state.entries.count) mirrored clips")
   }
 
   /// Stops syncing and forgets the local mirror. iCloud data and local history are left untouched.
@@ -172,6 +172,7 @@ extension ClipSync: CKSyncEngineDelegate {
       // Forget the mirror but do not report deletions: local history must survive a cloud wipe.
       // New local changes recreate the zone through the zoneNotFound path.
       guard changes.deletions.contains(where: { $0.zoneID == ClipRecord.zoneID }) else { return }
+      logger.notice("Clips zone was deleted in iCloud; forgetting \(self.state.entries.count) mirrored clips")
       state.entries.removeAll()
       lastError = "iCloud data was deleted; local history was kept."
       persist()
@@ -216,6 +217,7 @@ extension ClipSync: CKSyncEngineDelegate {
   }
 
   private func handleAccountChange(_ change: CKSyncEngine.Event.AccountChange, syncEngine: CKSyncEngine) async {
+    logger.notice("Account change: \(String(describing: change.changeType), privacy: .public)")
     switch change.changeType {
     case .signIn:
       // Upload everything mirrored so far (e.g. clips collected before iCloud was available).
@@ -260,6 +262,7 @@ extension ClipSync: CKSyncEngineDelegate {
       }
     }
 
+    logger.notice("Fetched \(changes.modifications.count) modifications, \(changes.deletions.count) deletions")
     lastSyncAt = .now
     persist()
     await notify(result)
@@ -291,13 +294,20 @@ extension ClipSync: CKSyncEngineDelegate {
         // Deleted on the server; recreate from our copy.
         state.entries[id]?.systemFields = nil
         resend.append(recordID)
+      case .batchRequestFailed:
+        // Rejected only because another record in the same batch failed.
+        resend.append(recordID)
       case .networkFailure, .networkUnavailable, .zoneBusy, .serviceUnavailable, .notAuthenticated,
            .operationCancelled, .requestRateLimited:
         // CKSyncEngine retries these on its own.
         break
       default:
         lastError = failure.error.localizedDescription
-        logger.error("Cannot save \(id): \(failure.error.localizedDescription)")
+        // The ID is a content hash, not content, so it is safe to log publicly.
+        logger.error("""
+          Cannot save \(id, privacy: .public): CKError \(failure.error.code.rawValue, privacy: .public) \
+          \(failure.error.localizedDescription, privacy: .public)
+          """)
       }
     }
 
@@ -307,6 +317,10 @@ extension ClipSync: CKSyncEngineDelegate {
     if !resend.isEmpty {
       syncEngine.state.add(pendingRecordZoneChanges: resend.map { .saveRecord($0) })
     }
+    logger.notice("""
+      Sent \(sent.savedRecords.count) saves, \(sent.deletedRecordIDs.count) deletes, \
+      \(sent.failedRecordSaves.count) failed saves, \(sent.failedRecordDeletes.count) failed deletes
+      """)
     if sent.failedRecordSaves.isEmpty {
       lastError = nil
     }

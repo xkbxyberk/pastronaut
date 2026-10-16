@@ -1,6 +1,7 @@
 import AppKit
 import Defaults
 import Logging
+import os
 import PastronautCore
 import Settings
 
@@ -36,12 +37,35 @@ final class SyncBridge {
     sync = ClipSync(containerIdentifier: PastronautIDs.iCloudContainer, storageDirectory: directory)
   }
 
-  /// Call once after History has loaded. Follows the setting for the rest of the session.
+  /// Call once at launch. Follows the setting for the rest of the session.
   func start() {
     guard observation == nil else { return }
+    #if DEBUG
+    // Tests run inside the app and clear History constantly; they must never reach the user's iCloud
+    // data or the sync mirror, which share this app's container.
+    if AppDelegate.isTesting { return }
+    #endif
+    // CKSyncEngine fetches when its subscription push arrives; without registering, the Mac only
+    // fetched at launch and on "Sync Now", so changes from the iPhone never showed up.
+    NSApplication.shared.registerForRemoteNotifications()
+    startFallbackPolling()
     observation = Task { [weak self] in
+      // Maccy loads history lazily when the popup first appears. Remote clips applied to an unloaded
+      // history would be stored as duplicates, so load it before syncing.
+      try? await History.shared.load()
       for await enabled in Defaults.updates(.iCloudSync) {
         await self?.setEnabled(enabled)
+      }
+    }
+  }
+
+  /// Safety net for missed pushes (e.g. while asleep or offline). Fetching with a change token is cheap.
+  private func startFallbackPolling() {
+    Task { [weak self] in
+      while !Task.isCancelled {
+        try? await Task.sleep(for: .seconds(120))
+        guard let self, Defaults[.iCloudSync] else { continue }
+        try? await self.sync.syncNow()
       }
     }
   }
@@ -192,5 +216,23 @@ final class SyncBridge {
   private static func syncableText(of item: HistoryItem) -> String? {
     guard item.fileURLs.isEmpty, item.imageData == nil, let text = item.text, !text.isEmpty else { return nil }
     return text
+  }
+}
+
+// MARK: - Push notifications
+
+// Kept in this file so AppDelegate (upstream code) stays untouched.
+extension AppDelegate {
+  @objc func application(_ application: NSApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    os_log(.default, "Pastronaut: registered for remote notifications")
+  }
+
+  @objc func application(_ application: NSApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+    os_log(.error, "Pastronaut: remote notification registration failed: %{public}@", error.localizedDescription)
+  }
+
+  @objc func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
+    os_log(.default, "Pastronaut: remote notification received")
+    Task { try? await SyncBridge.shared.syncNow() }
   }
 }
