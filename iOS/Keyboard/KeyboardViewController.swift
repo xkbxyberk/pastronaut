@@ -47,6 +47,10 @@ enum KeyboardMetrics {
   static let height: CGFloat = 300
   static let keyHeight: CGFloat = 42
   static let spacing: CGFloat = 6
+  /// Close to the system keys on iOS 26 and later.
+  static let keyRadius: CGFloat = 10
+  /// Extra inset for the top row: the system backdrop has large rounded top corners on iOS 26 and later.
+  static let topRowInset: CGFloat = 8
 }
 
 // MARK: - Model
@@ -321,7 +325,7 @@ struct KeyboardView: View {
       #endif
     }
     .padding(.horizontal, 4)
-    .padding(.top, 6)
+    .padding(.top, 8)
     .padding(.bottom, 2)
   }
 }
@@ -352,11 +356,12 @@ private struct BrowsePanel: View {
               .font(.footnote)
               .foregroundStyle(.secondary)
           }
-          .padding(.horizontal, 10)
+          .padding(.horizontal, 12)
           .frame(maxWidth: .infinity, minHeight: 40)
-          .keyBackground()
+          .keyBackground(radius: 14)
         }
         .buttonStyle(.plain)
+        .padding(.horizontal, KeyboardMetrics.topRowInset)
         .accessibilityIdentifier("fromMacChip")
       }
 
@@ -370,7 +375,7 @@ private struct BrowsePanel: View {
               .frame(maxWidth: .infinity, minHeight: 30)
               .background {
                 if model.tab == tab {
-                  RoundedRectangle(cornerRadius: 7, style: .continuous).fill(KeyStyle.key)
+                  Capsule().fill(KeyStyle.key)
                 }
               }
           }
@@ -382,8 +387,8 @@ private struct BrowsePanel: View {
           model.beginSearch()
         } label: {
           Image(systemName: "magnifyingglass")
-            .frame(width: 40, height: 30)
-            .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .frame(width: 44, height: 30)
+            .background(KeyStyle.function, in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("Search"))
@@ -393,10 +398,11 @@ private struct BrowsePanel: View {
             Task { @MainActor in model.capture(strings) }
           }
           .labelStyle(.iconOnly)
-          .buttonBorderShape(.roundedRectangle(radius: 7))
+          .buttonBorderShape(.capsule)
           .controlSize(.small)
         }
       }
+      .padding(.horizontal, KeyboardMetrics.topRowInset)
 
       if !model.hasFullAccess {
         Text("Turn on Allow Full Access in Settings to save new copies from this keyboard.")
@@ -519,8 +525,9 @@ private struct ActionPanel: View {
           .padding(10)
       }
       .frame(maxHeight: .infinity)
-      .keyBackground()
+      .keyBackground(radius: 18)
       .noTopScrollEdgeEffect()
+      .padding(.horizontal, KeyboardMetrics.topRowInset)
 
       HStack(spacing: KeyboardMetrics.spacing) {
         FunctionKey(systemImage: "xmark", label: "Close") { model.focused = nil }
@@ -543,7 +550,7 @@ private struct ActionPanel: View {
             }
             .foregroundStyle(.red)
             .frame(maxWidth: confirmsDelete ? 90 : 52, minHeight: KeyboardMetrics.keyHeight)
-            .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous))
           }
           .buttonStyle(.plain)
           .accessibilityLabel(confirmsDelete ? Text("Confirm delete") : Text("Delete"))
@@ -556,7 +563,7 @@ private struct ActionPanel: View {
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity, minHeight: KeyboardMetrics.keyHeight)
-            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("clipAction.insert")
@@ -582,9 +589,9 @@ private struct SearchPanel: View {
           Spacer(minLength: 0)
         }
         .font(.system(size: 16))
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 12)
         .frame(minHeight: 36)
-        .keyBackground()
+        .background(Capsule().fill(KeyStyle.key))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("searchField")
         Button {
@@ -593,11 +600,12 @@ private struct SearchPanel: View {
           Text("Done")
             .font(.system(size: 16, weight: .semibold))
             .frame(minWidth: 64, minHeight: 36)
-            .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .background(KeyStyle.function, in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("searchDone")
       }
+      .padding(.horizontal, KeyboardMetrics.topRowInset)
 
       ScrollView(.horizontal) {
         HStack(spacing: 5) {
@@ -719,7 +727,7 @@ private struct FunctionKey: View {
       Image(systemName: systemImage)
         .font(.system(size: 18))
         .frame(maxWidth: .infinity, minHeight: KeyboardMetrics.keyHeight)
-        .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous))
     }
     .buttonStyle(.plain)
     .accessibilityLabel(Text(label))
@@ -727,9 +735,9 @@ private struct FunctionKey: View {
 }
 
 private extension View {
-  func keyBackground() -> some View {
+  func keyBackground(radius: CGFloat = KeyboardMetrics.keyRadius) -> some View {
     background(
-      RoundedRectangle(cornerRadius: 8, style: .continuous)
+      RoundedRectangle(cornerRadius: radius, style: .continuous)
         .fill(KeyStyle.key)
         .shadow(color: KeyStyle.shadow, radius: 0, x: 0, y: 1)
     )

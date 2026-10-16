@@ -142,6 +142,14 @@ final class SyncStepTests: XCTestCase {
         }
         Thread.sleep(forTimeInterval: 2)
         attachScreenshot(named: "kb-\(name)")
+        // The leftmost tab touches the backdrop's rounded corner: check it selected too.
+        let pinnedTab = app.descendants(matching: .any)["tab.pinned"].firstMatch
+        if pinnedTab.exists {
+          pinnedTab.tap()
+          Thread.sleep(forTimeInterval: 0.5)
+          attachScreenshot(named: "kb-pinned-\(name)")
+          app.descendants(matching: .any)["tab.recent"].firstMatch.tap()
+        }
         let searchKey = app.descendants(matching: .any)["searchKey"].firstMatch
         if searchKey.exists {
           searchKey.tap()
