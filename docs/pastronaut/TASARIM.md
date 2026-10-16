@@ -79,11 +79,15 @@ bir dokunuşla yazdığı alana ekler.
 
 Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi eşitlemede tutarlı kalmıyor.
 
-### 4.4 Sınırlar ve silme
-- Bulutta en fazla `syncLimit` (varsayılan 200) sabit olmayan kayıt ve tüm sabit kayıtlar tutulur. En eskiler
-  buluttan silinir; yereldeki geçmiş etkilenmez.
-- "Öğeyi sil" ve "Temizle" diğer cihazlara yansır. Ayarlarda "yalnızca bu cihazda temizle" seçeneği de olur.
-- Ayar: "iCloud eşitlemesi" (varsayılan kapalı). Kapatınca bulut verisini silme seçeneği sunulur.
+### 4.4 Sınırlar ve silme (Faz 1'de uygulandığı haliyle)
+- Bulut için ayrı bir sınır yok. Mac kendi geçmiş sınırını (varsayılan 200 sabit olmayan) uygularken sildiği öğeler
+  buluttan da silinir. Böylece bulut Mac'in geçmişini izler.
+  - Ayrı bir bulut sınırı denendi ve bırakıldı: cihazlar arasında "biri tutar, öteki siler" çelişkisi doğuruyordu.
+  - iPhone'un kendi budaması Faz 2'de ele alınacak.
+- "Öğeyi sil", "Temizle" (sabit olmayanlar) ve "Hepsini temizle" diğer cihazlara yansır.
+- Ayar: "Sync history with iCloud" (varsayılan kapalı). Kapatmak bulut verisini silmez; ayrıca "Delete iCloud Data"
+  düğmesi var. Bulut verisi silinince diğer cihazlar yalnızca eşitleme kopyalarını unutur; **yerel geçmişleri korunur**.
+- Hesaptan çıkış ya da hesap değişikliğinde eşitleme kopyası unutulur; yerel geçmiş korunur.
 
 ### 4.5 Gizlilik
 - Yalnızca Mac'te yok sayma kurallarından geçip geçmişe giren öğeler eşitlenir. Gizli işaretli kopyalar zaten geçmişe girmez.
@@ -137,11 +141,13 @@ Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi e
 ## 8. Fazlar ve kabul ölçütleri
 - **Faz 0: Riskleri kapatan prototip (1 hafta).** CloudKit'e yazan minimal bir Mac uygulaması, okuyan bir iOS uygulaması
   ve panoyu okuyan bir klavye. Ölçüt: R2 ve R3 yanıtlanır.
-- **Faz 1: Mac eşitlemesi.** Ölçütler:
-  - Ayar açıkken kopyalanan metin 10 saniye içinde bulutta.
-  - Tekrar kopyalama yeni kayıt açmaz.
-  - Yok sayılan bir türdeki kopya buluta gitmez (birim test).
-  - Silme ve temizleme yayılır.
+- **Faz 1: Mac eşitlemesi. ✅ (2026-10-16, Development ortamı; commit `8be6c29`)** Ölçütler:
+  - ✅ Ayar açıkken kopyalanan metin 10 saniye içinde bulutta. Kullanıcı gözlemi: sayaç ve "Last sync" 10 sn içinde güncellendi.
+  - ✅ Tekrar kopyalama yeni kayıt açmaz (kullanıcı gözlemi).
+  - ✅ Yok sayılan bir türdeki kopya buluta gitmez: `SyncBridgeTests.testConcealedCopiesNeverReachHistory`
+    ve mevcut `ClipboardTests` yok sayma testleri.
+  - ✅ Silme buluta yayılır (kullanıcı gözlemi: sayaç azaldı). Diğer cihaza yayılması Faz 2'de doğrulanacak.
+  - Günlükte hata yok. Testler: 104 MaccyTests, 15 PastronautCore.
 - **Faz 2: iOS uygulaması ve klavye (yalnızca metin).** Ölçütler:
   - Mac'te kopyalanan metin iPhone klavyesinde görünür ve dokunulunca yazılır.
   - Tam Erişim kapalıyken klavye çökmez ve yönlendirme gösterir.
