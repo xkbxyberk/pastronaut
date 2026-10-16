@@ -190,14 +190,17 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
   - Testin bulduğu hatalar: (1) Mac push'suz hiç çekmiyordu, (2) iPhone değişiklikleri uygulama askıya alınınca
     gönderilmiyordu, (3) Tam Erişim kapalıyken klavye `NSFileCoordinator` ile okuyamadığı için listeyi boş gösteriyordu
     (geri alınarak doğrulandı). Üçü de düzeltildi.
-- **Faz 3: Telefon kopyaları.** Ölçüt: uygulama, klavye ve Kısayol ile yakalanan kopya Mac geçmişinde görünür.
+- **Faz 3: Telefon kopyaları. ✅ (2026-10-16, commit `aed6e23`)** Ölçüt: uygulama, klavye ve Kısayol ile yakalanan kopya Mac geçmişinde görünür.
   Son koşu 2026-10-16 20:07 (Mac `~/Applications`'tan, push açık): 21 zorunlu kontrolün 21'i geçti, 1 uyarı (T13).
   - ✅ Uygulama çalışmıyorken klavye Mac'teki yeni öğeyi kendisi çeker (T18; ayrıca 3/3 tekrar, uygulama anlık
     görüntüsünde öğe yokken). Bu sayede T14 de geçiyor.
   - ✅ Klavyenin doğrudan yüklemesi Mac'e ≈ 2 sn'de ulaşır (T19; Debug kancasıyla aynı `KeyboardCloud.save`).
   - ✅ Sabitli metni yeniden kopyalamak sabitlemeyi korur, doğrudan ve uygulama yolunda (T20).
   - ✅ iPhone → Mac tüm işlemler ≈ 2 sn (push).
-  - Elle doğrulanacak: klavyenin Yapıştır düğmesiyle uygulamayı açmadan yakalama, Kısayollar eylemi.
+  - ✅ Elle (kullanıcı, 2026-10-16 20:30–20:36): uygulama kapalıyken klavyenin Yapıştır düğmesiyle yakalama
+    ("cloud: saved") ve "Panoyu Al → Save to Pastronaut" kısayolu ("Saved to Pastronaut."). İkisinde de metin önce
+    Evrensel Pano'yla Mac'e düştü; iPhone'un bulut kaydı push'la 9–40 sn sonra geldi ve aynı öğeyle birleşti
+    (Mac günlüğü: `remote notification received`, `1 changes`). Çift kayıt oluşmadı.
   - Bir koşuda T14/T18 klavye çekmesi başarısız oldu, nedeni görülemedi (hata sessizdi). Klavye artık Debug'da son
     bulut işleminin sonucunu gösteriyor; tekrar olursa test çıktısında görünecek.
 - **Faz 4: Yayın.** Lisans ekranı, gizlilik politikası (App Store zorunlu), App Store Gizlilik Etiketi, TestFlight, başvuru.
