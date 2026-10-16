@@ -203,7 +203,10 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     (Mac günlüğü: `remote notification received`, `1 changes`). Çift kayıt oluşmadı.
   - Bir koşuda T14/T18 klavye çekmesi başarısız oldu, nedeni görülemedi (hata sessizdi). Klavye artık Debug'da son
     bulut işleminin sonucunu gösteriyor; tekrar olursa test çıktısında görünecek.
-- **Faz 4: Yayın.** Lisans ekranı, gizlilik politikası (App Store zorunlu), App Store Gizlilik Etiketi, TestFlight, başvuru.
+- **Faz 4: Ürünleşme (1.0 kapsamı, §9).** Önce zorunlu temizlik (Maccy ikonu ve menü simgesi), yerelleştirme altyapısı ve
+  testlerin kimlik tabanlı olması; sonra görsel kimlik, Mac popup'ı, iOS ekranları, klavye, widget'lar ve uzantılar.
+- **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
+  TestFlight ve App Store; Mac için GitHub Releases, Homebrew tap, Mac App Store.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.
 
 ## 9. Kararlar (2026-10-16)
@@ -216,6 +219,12 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
 | En düşük sürümler | iOS 17, macOS 14 (upstream ile aynı) |
 | Fiyat | Ücretsiz, uygulama içi satın alma yok |
 | Upstream'e not | Taslak: `docs/pastronaut/upstream-not.md`. Kullanıcı onayı olmadan gönderilmez. |
+| Mac popup'ı (2026-10-16) | Kendi tasarımımız, 1.0'da: gruplar (Sabitlenenler/Bugün/Dün), cihaz filtresi, önizleme paneli, eşitleme durum satırı. Bedeli: upstream'den güncelleme büyük ölçüde elle seçmeli aktarıma döner (R6 kabul edildi). |
+| 1.0 kapsamı (2026-10-16) | Geniş: Mac yeni popup + ayarlar + ilk açılış rehberi; iOS ana ekran, ayrıntı, canlı kurulum rehberi; klavyede "Mac'ten son kopya", sekmeler ve arama; widget'lar, kilit ekranı, Denetim Merkezi (iOS 18+), Paylaş uzantısı, ek Kısayollar eylemleri, Face ID kilidi; kendi ikonlar; EN/TR yerelleştirme. |
+| Hassas veri (2026-10-16) | Varsayılan: her şey eşitlenir (parola yöneticisi kopyaları hariç, bugünkü gibi). Ayarlarda ayrı anahtarlar, varsayılanı kapalı: "Tek kullanımlık kodları eşitleme" (Mac'te 5 dk sonra siler), "Kart ve IBAN numaralarını eşitleme", "Yalnızca sabitlenenleri eşitle". |
+| Yerelleştirme (2026-10-16) | İngilizce temel, Türkçe tam. iOS: String Catalog (`.xcstrings`) her hedefte; Mac: Maccy'nin `.strings` dosyalarına dokunulmaz, bizim metinler ayrı `Pastronaut.xcstrings` tablosunda. Testler etiket değil erişilebilirlik kimliğiyle öğe bulur. |
+| Dağıtım (2026-10-16) | iOS: App Store (TestFlight önce). Mac: GitHub Releases (Developer ID + noter onayı + Sparkle) → kendi Homebrew tap'i → Mac App Store (iOS ile aynı paket kimliği, Universal Purchase). |
+| Görsel kimlik | Taslaklar: https://claude.ai/artifact/VgG1CnRShnUMFaLNVLLvgM (3 ikon yönü, 2 palet, tüm ekranlar EN/TR). Kullanıcı seçimi bekleniyor. |
 
 ## 10. Geliştirme ortamı
 - **İki cihazlı uçtan uca test:** Mac Debug derlemesi ve iOS `build-for-testing` sonrası
