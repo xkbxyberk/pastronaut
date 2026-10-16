@@ -74,6 +74,8 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
   private let pinManager = PinManager()
   private var allPinnedItems: [HistoryItemDecorator] { pinManager.pinnedItems }
   private var allUnpinnedItems: [HistoryItemDecorator] = []
+  // Pastronaut: unfiltered items for iCloud sync.
+  var allItems: [HistoryItemDecorator] { allPinnedItems + allUnpinnedItems }
   private var filteredPinnedItems: [HistoryItemDecorator] = []
   private var filteredUnpinnedItems: [HistoryItemDecorator] = []
 
@@ -198,6 +200,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
     limitHistorySize(to: item.pin == nil ? Defaults[.size] - 1 : Defaults[.size])
 
     sessionLog[Clipboard.shared.changeCount] = item
+    SyncBridge.shared.didAdd(item) // Pastronaut
 
     let itemDecorator: HistoryItemDecorator
     if let pin = item.pin {
@@ -236,6 +239,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
 
   @MainActor
   func clear() {
+    SyncBridge.shared.willDelete(allUnpinnedItems.map(\.item)) // Pastronaut
     withLogging("Clearing history") {
       allUnpinnedItems.forEach(cleanup)
       allUnpinnedItems.removeAll()
@@ -265,6 +269,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
 
   @MainActor
   func clearAll() {
+    SyncBridge.shared.willDelete(allItems.map(\.item)) // Pastronaut
     withLogging("Clearing all history") {
       allPinnedItems.forEach(cleanup)
       allUnpinnedItems.forEach(cleanup)
@@ -303,6 +308,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
   func delete(_ item: HistoryItemDecorator?) {
     guard let item else { return }
 
+    SyncBridge.shared.willDelete([item.item]) // Pastronaut
     cleanup(item)
     withLogging("Removing history item") {
       deleteFromStorage(item.item)
@@ -480,6 +486,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
       allUnpinnedItems.removeAll { $0 == item }
     }
 
+    SyncBridge.shared.didChangePin(item.item) // Pastronaut
     searchQuery = ""
     updateUnpinnedShortcuts()
     if item.isUnpinned {
@@ -501,6 +508,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
     pinManager.updatePin(of: itemDecorator, to: pin)
     if !wasPinned && itemDecorator.isPinned {
       allUnpinnedItems.removeAll { $0 == itemDecorator }
+      SyncBridge.shared.didChangePin(item) // Pastronaut
     }
     updateShortcuts()
   }

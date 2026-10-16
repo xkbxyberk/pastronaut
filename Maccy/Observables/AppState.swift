@@ -118,7 +118,8 @@ class AppState: Sendable {
       let appearanceTitle = NSLocalizedString("Title", tableName: "AppearanceSettings", comment: "")
       let ignoreTitle = NSLocalizedString("Title", tableName: "IgnoreSettings", comment: "")
       let advancedTitle = NSLocalizedString("Title", tableName: "AdvancedSettings", comment: "")
-      let toolbarTitles = [generalTitle, storageTitle, appearanceTitle, ignoreTitle, advancedTitle]
+      let syncTitle = "Sync" // Pastronaut
+      let toolbarTitles = [generalTitle, storageTitle, appearanceTitle, ignoreTitle, syncTitle, advancedTitle]
       let titleAttributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: NSFont.systemFontSize)]
       let titleWidth = toolbarTitles.reduce(CGFloat.zero) {
         $0 + ($1 as NSString).size(withAttributes: titleAttributes).width
@@ -159,6 +160,15 @@ class AppState: Sendable {
             toolbarIcon: NSImage.nosign!
           ) {
             IgnoreSettingsPane()
+              .frame(minWidth: minimumWidth)
+          },
+          // Pastronaut
+          Settings.Pane(
+            identifier: Settings.PaneIdentifier.sync,
+            title: syncTitle,
+            toolbarIcon: NSImage(systemSymbolName: "icloud", accessibilityDescription: syncTitle)!
+          ) {
+            SyncSettingsPane()
               .frame(minWidth: minimumWidth)
           },
           Settings.Pane(

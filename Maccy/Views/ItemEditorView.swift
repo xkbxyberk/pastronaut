@@ -189,6 +189,10 @@ struct ItemEditorView: View {
   }
 
   private func applyChanges() {
+    // Pastronaut: editing the text changes the clip's identity in iCloud.
+    let previousClipID = SyncBridge.clipID(of: item.item)
+    defer { SyncBridge.shared.didEdit(item.item, previousClipID: previousClipID) }
+
     if !item.hasImage && editableTitle != item.item.title {
       item.item.title = editableTitle
       item.title = editableTitle

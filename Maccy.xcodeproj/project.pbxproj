@@ -64,6 +64,9 @@
 		DA0FFA2A2C8D100C00A66C97 /* ModifierFlags+Description.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0FFA292C8D0FEC00A66C97 /* ModifierFlags+Description.swift */; };
 		DA13D7CA2C19F52B00FA9E23 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = DA13D7C92C19F52B00FA9E23 /* LaunchAtLogin */; };
 		DA13D7D02C19F8C300FA9E23 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = DA13D7CF2C19F8C300FA9E23 /* Defaults */; };
+		67CFBF7B8D2615BB1336A127 /* PastronautCore in Frameworks */ = {isa = PBXBuildFile; productRef = B072D60DDB83FC6A4050547E /* PastronautCore */; };
+		413D7FD3F22A45C693CF685F /* SyncBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */; };
+		37A576BFBA4FEEC87DE10616 /* SyncSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC7B1A343D3468FB0F938E4F /* SyncSettingsPane.swift */; };
 		DA13D7D22C19F91B00FA9E23 /* Defaults.Keys+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA13D7D12C19F91B00FA9E23 /* Defaults.Keys+Names.swift */; };
 		DA13D7D82C1A223E00FA9E23 /* Select.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA13D7D32C1A223E00FA9E23 /* Select.swift */; };
 		DA13D7D92C1A223E00FA9E23 /* Get.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA13D7D42C1A223E00FA9E23 /* Get.swift */; };
@@ -83,6 +86,7 @@
 		DA19691F2C3F5F0600258481 /* KeyHandlingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA19691E2C3F5F0600258481 /* KeyHandlingView.swift */; };
 		DA1969212C3F6C6800258481 /* HistoryItemAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1969202C3F6C6800258481 /* HistoryItemAction.swift */; };
 		DA1EDE432045B35300479723 /* HistoryDecoratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1EDE422045B35300479723 /* HistoryDecoratorTests.swift */; };
+		A93B57DA7C55E0283705CBEF /* SyncBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D97C13765AAE02C98427FD /* SyncBridgeTests.swift */; };
 		DA20FA722B082DD600056DD5 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA20FA712B082DD600056DD5 /* Notifier.swift */; };
 		DA20FA742B082E0100056DD5 /* Knock.caf in Resources */ = {isa = PBXBuildFile; fileRef = DA20FA732B082E0100056DD5 /* Knock.caf */; };
 		DA20FA762B082E0800056DD5 /* Write.caf in Resources */ = {isa = PBXBuildFile; fileRef = DA20FA752B082E0800056DD5 /* Write.caf */; };
@@ -269,6 +273,9 @@
 		DA00992D256411F90030E697 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		2B0574F93F6D64822A89D9BB /* Acknowledgements.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		DA00992F256411F90030E697 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		3787E55D54393A96440E4474 /* PastronautCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = PastronautCore; sourceTree = "<group>"; };
+		9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBridge.swift; sourceTree = "<group>"; };
+		AC7B1A343D3468FB0F938E4F /* SyncSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettingsPane.swift; sourceTree = "<group>"; };
 		DA05B5102C234CB1006980FE /* MaccyApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MaccyApp.swift; sourceTree = "<group>"; };
 		DA05B5122C234DCF006980FE /* HistoryItemContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryItemContent.swift; sourceTree = "<group>"; };
 		DA05B5132C234DCF006980FE /* HistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryItem.swift; sourceTree = "<group>"; };
@@ -314,6 +321,7 @@
 		DA19691E2C3F5F0600258481 /* KeyHandlingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyHandlingView.swift; sourceTree = "<group>"; };
 		DA1969202C3F6C6800258481 /* HistoryItemAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryItemAction.swift; sourceTree = "<group>"; };
 		DA1EDE422045B35300479723 /* HistoryDecoratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDecoratorTests.swift; sourceTree = "<group>"; };
+		86D97C13765AAE02C98427FD /* SyncBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBridgeTests.swift; sourceTree = "<group>"; };
 		DA20FA712B082DD600056DD5 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
 		DA20FA732B082E0100056DD5 /* Knock.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Knock.caf; sourceTree = "<group>"; };
 		DA20FA752B082E0800056DD5 /* Write.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Write.caf; sourceTree = "<group>"; };
@@ -635,6 +643,7 @@
 				DA5F46512020E9FB00425C11 /* Carbon.framework in Frameworks */,
 				2F12271E2E5C932200A1592A /* Logging in Frameworks */,
 				DA13D7D02C19F8C300FA9E23 /* Defaults in Frameworks */,
+				67CFBF7B8D2615BB1336A127 /* PastronautCore in Frameworks */,
 				DA009947256414800030E697 /* SwiftHEXColors in Frameworks */,
 				DA5154D82564102900C01004 /* Sauce in Frameworks */,
 				2F39CB0A2AD9AE1F00B749FD /* Settings in Frameworks */,
@@ -703,6 +712,15 @@
 				DA0EE7B8204657830025FC60 /* MaccyUITests.swift */,
 			);
 			path = MaccyUITests;
+			sourceTree = "<group>";
+		};
+		144515F987E6663417D14F79 /* Sync */ = {
+			isa = PBXGroup;
+			children = (
+				9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */,
+				AC7B1A343D3468FB0F938E4F /* SyncSettingsPane.swift */,
+			);
+			path = Sync;
 			sourceTree = "<group>";
 		};
 		DA181178247D150B00066D55 /* Settings */ = {
@@ -787,6 +805,7 @@
 				DAE2850123225BD90080E394 /* ColorImageTests.swift */,
 				DA360DB21E3DF137005C6F6B /* HistoryTests.swift */,
 				DA1EDE422045B35300479723 /* HistoryDecoratorTests.swift */,
+				86D97C13765AAE02C98427FD /* SyncBridgeTests.swift */,
 				DAFE2DE8268A9B1B00990986 /* HistoryItemTests.swift */,
 				DA384E85232746D800603999 /* SearchTests.swift */,
 				DA696BD12401EEE900DE80CF /* SorterTests.swift */,
@@ -853,6 +872,7 @@
 				DA00992C256411F90030E697 /* appcast.xml */,
 				DA00992F256411F90030E697 /* LICENSE */,
 				DA00992D256411F90030E697 /* README.md */,
+				3787E55D54393A96440E4474 /* PastronautCore */,
 				DAEE38441E3DBEB100DD2966 /* Products */,
 				C2D16D1C2EE365D52E1EE446 /* Frameworks */,
 			);
@@ -876,6 +896,7 @@
 				DA05B50F2C234C1C006980FE /* Models */,
 				DA3BCB902C3EEC1000B01BC1 /* Observables */,
 				DA181178247D150B00066D55 /* Settings */,
+				144515F987E6663417D14F79 /* Sync */,
 				DA21AD3C249E85BD003E7C98 /* Sounds */,
 				DA19690C2C3EEF9300258481 /* Views */,
 				2B0574F93F6D64822A89D9BB /* Acknowledgements.txt */,
@@ -979,6 +1000,7 @@
 				2F39CB092AD9AE1F00B749FD /* Settings */,
 				DA13D7C92C19F52B00FA9E23 /* LaunchAtLogin */,
 				DA13D7CF2C19F8C300FA9E23 /* Defaults */,
+				B072D60DDB83FC6A4050547E /* PastronautCore */,
 				DAC0CA3D2C88E7A4003BF498 /* Fuse */,
 				2F12271D2E5C932200A1592A /* Logging */,
 			);
@@ -1136,6 +1158,7 @@
 				DAFE2DE9268A9B1B00990986 /* HistoryItemTests.swift in Sources */,
 				DA3CE8001E44A62500B3AA98 /* ClipboardTests.swift in Sources */,
 				DA1EDE432045B35300479723 /* HistoryDecoratorTests.swift in Sources */,
+				A93B57DA7C55E0283705CBEF /* SyncBridgeTests.swift in Sources */,
 				DAE2850223225BD90080E394 /* ColorImageTests.swift in Sources */,
 				DA384E86232746D800603999 /* SearchTests.swift in Sources */,
 				DA696BD22401EEE900DE80CF /* SorterTests.swift in Sources */,
@@ -1204,6 +1227,8 @@
 				DA689FCC2C1D1D510009B887 /* MenuIcon.swift in Sources */,
 				2FD499452FFC489400149F02 /* MovableByWindowBackgroundModifier.swift in Sources */,
 				DAAEB196219694AE00A7883C /* About.swift in Sources */,
+				413D7FD3F22A45C693CF685F /* SyncBridge.swift in Sources */,
+				37A576BFBA4FEEC87DE10616 /* SyncSettingsPane.swift in Sources */,
 				DA6D98E22AEABE03008A77CE /* Accessibility.swift in Sources */,
 				2F0EC7792E7727E3003E2EA9 /* HeightReaderModifier.swift in Sources */,
 				2F578C3D2EFFE8400088B759 /* ItemsProtocol.swift in Sources */,
@@ -2075,6 +2100,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DAC0CA3C2C88E7A4003BF498 /* XCRemoteSwiftPackageReference "fuse-swift" */;
 			productName = Fuse;
+		};
+		B072D60DDB83FC6A4050547E /* PastronautCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PastronautCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -54,6 +54,7 @@ struct ContentView: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       .task {
         try? await appState.history.load()
+        SyncBridge.shared.start() // Pastronaut: needs the loaded history for the initial upload
       }
     }
     .animation(.easeInOut(duration: 0.2), value: appState.searchVisible)

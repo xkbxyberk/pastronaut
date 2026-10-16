@@ -168,12 +168,13 @@ extension ClipSync: CKSyncEngineDelegate {
       await handleAccountChange(change, syncEngine: syncEngine)
 
     case .fetchedDatabaseChanges(let changes):
-      // The zone disappears when the user deletes iCloud data or another device turns sync off with deletion.
+      // The zone disappears when iCloud data is deleted (from another device or iCloud settings).
+      // Forget the mirror but do not report deletions: local history must survive a cloud wipe.
+      // New local changes recreate the zone through the zoneNotFound path.
       guard changes.deletions.contains(where: { $0.zoneID == ClipRecord.zoneID }) else { return }
-      let ids = Array(state.entries.keys)
       state.entries.removeAll()
+      lastError = "iCloud data was deleted; local history was kept."
       persist()
-      await notify(ids.map { .deleted(id: $0) })
 
     case .fetchedRecordZoneChanges(let changes):
       await handleFetched(changes, syncEngine: syncEngine)
