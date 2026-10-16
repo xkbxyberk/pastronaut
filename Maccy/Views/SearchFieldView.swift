@@ -8,15 +8,23 @@ struct SearchFieldView: View {
 
   var body: some View {
     ZStack {
-      RoundedRectangle(cornerRadius: Popup.cornerRadius, style: .continuous)
-        .fill(Color.secondary)
-        .opacity(0.1)
-        .frame(height: 23)
+      // Pastronaut: a glass capsule on macOS 26 and later.
+      if #available(macOS 26.0, *) {
+        Capsule()
+          .fill(.clear)
+          .frame(height: 26)
+          .glassEffect(.regular, in: Capsule())
+      } else {
+        RoundedRectangle(cornerRadius: Popup.cornerRadius, style: .continuous)
+          .fill(Color.secondary)
+          .opacity(0.1)
+          .frame(height: 23)
+      }
 
       HStack {
         Image(systemName: "magnifyingglass")
           .frame(width: 11, height: 11)
-          .padding(.leading, 5)
+          .padding(.leading, 9)
           .opacity(0.8)
           .accessibilityHidden(true)
 

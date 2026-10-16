@@ -84,6 +84,7 @@ struct KeyboardSetupView: View {
       }
       .padding()
     }
+    .background(Color(uiColor: .systemGroupedBackground))
     .toolbar {
       if isSheet {
         ToolbarItem(placement: .confirmationAction) {
@@ -135,10 +136,10 @@ private struct StepCard<Actions: View>: View {
       Spacer(minLength: 0)
     }
     .padding(16)
-    .background(.background.secondary, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
     .overlay {
       if state == .current {
-        RoundedRectangle(cornerRadius: 18, style: .continuous)
+        RoundedRectangle(cornerRadius: 24, style: .continuous)
           .strokeBorder(Color.accentColor, lineWidth: 2)
       }
     }

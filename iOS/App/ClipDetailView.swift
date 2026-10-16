@@ -47,7 +47,7 @@ struct ClipDetailView: View {
           .textSelection(.enabled)
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(18)
-          .background(.background.secondary, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+          .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
 
         Button {
           copy(clip)
@@ -101,6 +101,8 @@ struct ClipDetailView: View {
       }
       .padding()
     }
+    // Grouped background so the white cards stand out in light mode, like Settings.
+    .background(Color(uiColor: .systemGroupedBackground))
     .sheet(isPresented: $isEditing) {
       ClipEditor(text: clip.text) { newText in
         if let newID = store.edit(clip, to: newText) {
@@ -195,7 +197,7 @@ private struct InfoList: View {
       }
     }
     .font(.subheadline)
-    .background(.background.secondary, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
   }
 
   private func row(_ title: LocalizedStringKey, @ViewBuilder value: () -> some View) -> some View {

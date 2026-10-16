@@ -15,27 +15,28 @@ struct HistoryView: View {
     @Bindable var store = store
     NavigationStack {
       List {
-        Section {
-          // Scrolls with the list so the glass navigation bar keeps the top edge.
-          Picker("Device", selection: $filter) {
-            ForEach(DeviceFilter.allCases) { filter in
-              Text(filter.title).tag(filter)
-            }
+        if #unavailable(iOS 26.0) {
+          // Before Liquid Glass the filter scrolls with the list.
+          Section {
+            filterBar
+              .listRowInsets(EdgeInsets())
+              .listRowBackground(Color.clear)
           }
-          .pickerStyle(.segmented)
-          .labelsHidden()
-          .listRowInsets(EdgeInsets())
-          .listRowBackground(Color.clear)
-          .accessibilityIdentifier("deviceFilter")
         }
         ForEach(sections) { section in
-          Section(section.title) {
+          Section {
             ForEach(section.clips, id: \.id) { clip in
               row(clip)
             }
+          } header: {
+            Text(section.title)
           }
+          .headerProminence(.increased)
         }
       }
+      // Separate cards instead of one grouped block: each clip is its own rounded surface.
+      .listRowSpacing(10)
+      .modifier(FilterBarPlacement { filterBar })
       .overlay {
         if store.clips.isEmpty {
           ContentUnavailableView(
@@ -116,6 +117,14 @@ struct HistoryView: View {
     store.filteredClips.filter(filter.includes).sectioned()
   }
 
+  private var filterBar: some View {
+    let clips = store.filteredClips
+    let counts = Dictionary(uniqueKeysWithValues: DeviceFilter.allCases.map { filter in
+      (filter, clips.filter(filter.includes).count)
+    })
+    return DeviceFilterBar(selection: $filter, counts: counts)
+  }
+
   private func row(_ clip: Clip) -> some View {
     Button {
       copy(clip)
@@ -123,6 +132,13 @@ struct HistoryView: View {
       ClipRow(clip: clip)
     }
     .foregroundStyle(.primary)
+    .listRowInsets(EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 16))
+    .listRowBackground(
+      // White cards on the grey grouped background in light mode, raised grey in dark mode.
+      RoundedRectangle(cornerRadius: 24, style: .continuous)
+        .fill(Color(uiColor: .secondarySystemGroupedBackground))
+    )
+    .listRowSeparator(.hidden)
     // The identifier carries the pin state for the end-to-end test (iOS/UITests); VoiceOver reads the label.
     .accessibilityIdentifier(clip.pinned ? "clip.pinned" : "clip.unpinned")
     .accessibilityHint(Text("Copies the text"))
@@ -196,7 +212,7 @@ struct ClipRow: View {
 
   var body: some View {
     HStack(spacing: 12) {
-      ClipIcon(content: clip.content)
+      ClipIcon(content: clip.content, size: 38, glass: true)
       VStack(alignment: .leading, spacing: 3) {
         Text(clip.preview)
           .font(clip.content.usesMonospacedFont ? .body.monospaced() : .body)
@@ -285,3 +301,22 @@ extension Array where Element == Clip {
     ].filter { !$0.clips.isEmpty }
   }
 }
+
+/// On iOS 26 and later the filter is a glass bar under the navigation bar that takes part in the scroll
+/// edge effect; earlier systems show it at the top of the list instead.
+private struct FilterBarPlacement<Bar: View>: ViewModifier {
+  @ViewBuilder let bar: () -> Bar
+
+  func body(content: Content) -> some View {
+    if #available(iOS 26.0, *) {
+      content.safeAreaBar(edge: .top, alignment: .leading) {
+        bar()
+          .padding(.horizontal)
+          .padding(.vertical, 6)
+      }
+    } else {
+      content
+    }
+  }
+}
+

@@ -26,7 +26,7 @@ class Popup {
   // Radius used for items inset by the padding. Ensures they visually have the same curvature
   // as the menu.
   static let cornerRadius: CGFloat = if #available(macOS 26.0, *) {
-    7
+    10 // Pastronaut: rounder rows that follow the Liquid Glass popup's corners.
   } else {
     4
   }

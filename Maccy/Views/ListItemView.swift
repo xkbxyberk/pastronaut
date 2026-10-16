@@ -149,9 +149,11 @@ struct ListItemView<Title: View, ID: Hashable>: View {
     // macOS 26 broke hovering if no background is present.
     // The slight opcaity white background is a workaround
     .background(
-      isSelected ? Color.accentColor.opacity(0.8) : .white.opacity(0.001),
+      isSelected && !GlassSelection.isUsed(for: selectionAppearance)
+        ? Color.accentColor.opacity(0.8) : .white.opacity(0.001),
       in: selectionAppearance.rect(cornerRadius: Popup.cornerRadius)
     )
+    .modifier(GlassSelection(isSelected: isSelected, appearance: selectionAppearance)) // Pastronaut
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(Text(accessibilityLabel))
     .accessibilityAddTraits(isSelected ? .isSelected : [])

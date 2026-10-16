@@ -98,9 +98,21 @@ final class SyncStepTests: XCTestCase {
       app.buttons["doneButton"].firstMatch.tap()
     case "screenshot":
       // Design review: the history screen, then the first clip's details. Attachments land in the result bundle.
-      app.launch()
-      Thread.sleep(forTimeInterval: 2)
-      attachScreenshot(named: "history")
+      defer { XCUIDevice.shared.appearance = .dark }
+      for (name, appearance) in [("light", XCUIDevice.Appearance.light), ("dark", .dark)] {
+        XCUIDevice.shared.appearance = appearance
+        app.terminate()
+        app.launch()
+        Thread.sleep(forTimeInterval: 2)
+        attachScreenshot(named: "history-\(name)")
+        let iphoneFilter = app.descendants(matching: .any)["filter.iphone"].firstMatch
+        if iphoneFilter.exists {
+          iphoneFilter.tap()
+          Thread.sleep(forTimeInterval: 1)
+          attachScreenshot(named: "history-iphone-\(name)")
+          app.descendants(matching: .any)["filter.all"].firstMatch.tap()
+        }
+      }
       let first = rows.firstMatch
       if first.waitForExistence(timeout: 5) {
         first.press(forDuration: 1.0)

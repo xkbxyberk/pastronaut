@@ -52,10 +52,48 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
 
 struct DeviceFilterPicker: View {
   @Environment(AppState.self) private var appState
+  @Namespace private var glassNamespace
 
   var body: some View {
+    if #available(macOS 26.0, *) {
+      // Glass capsules; the tinted selection flows between them.
+      GlassEffectContainer(spacing: 6) {
+        HStack(spacing: 4) {
+          ForEach(DeviceFilter.allCases) { filter in
+            chip(filter)
+          }
+        }
+      }
+      .accessibilityElement(children: .contain)
+      .accessibilityIdentifier("device-filter")
+    } else {
+      segmented
+    }
+  }
+
+  @available(macOS 26.0, *)
+  private func chip(_ filter: DeviceFilter) -> some View {
+    let isSelected = appState.history.deviceFilter == filter
+    return Button {
+      withAnimation(.bouncy(duration: 0.3)) { appState.history.deviceFilter = filter }
+    } label: {
+      Text(verbatim: filter.title)
+        .font(.callout.weight(isSelected ? .semibold : .regular))
+        .foregroundStyle(isSelected ? Color.white : Color.primary)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .contentShape(Capsule())
+    }
+    .buttonStyle(.plain)
+    .glassEffect(isSelected ? .regular.tint(.accentColor).interactive() : .regular.interactive(), in: Capsule())
+    .glassEffectID(filter, in: glassNamespace)
+    .accessibilityLabel(Text(verbatim: filter.title))
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
+  }
+
+  private var segmented: some View {
     @Bindable var history = appState.history
-    Picker(selection: $history.deviceFilter) {
+    return Picker(selection: $history.deviceFilter) {
       ForEach(DeviceFilter.allCases) { filter in
         Text(verbatim: filter.title).tag(filter)
       }
@@ -111,6 +149,31 @@ struct ClipContentIcon: View {
   var size: CGFloat = 22
 
   var body: some View {
+    if #available(macOS 26.0, *) {
+      symbol
+        .frame(width: size, height: size)
+        .glassEffect(.regular.tint(isSelected ? Color.white.opacity(0.25) : Color.brand.opacity(0.3)), in: Circle())
+        .accessibilityHidden(true)
+    } else {
+      tile
+    }
+  }
+
+  @ViewBuilder
+  private var symbol: some View {
+    if case .color(let hex) = content, let color = NSColor(hexString: hex) {
+      Circle()
+        .fill(Color(nsColor: color))
+        .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 0.5))
+        .frame(width: size * 0.56, height: size * 0.56)
+    } else {
+      Image(systemName: content.symbolName)
+        .font(.system(size: size * 0.44, weight: .semibold))
+        .foregroundStyle(isSelected ? Color.white : Color.brand)
+    }
+  }
+
+  private var tile: some View {
     RoundedRectangle(cornerRadius: size / 4, style: .continuous)
       .fill(isSelected ? Color.white.opacity(0.22) : Color.brand.opacity(0.16))
       .frame(width: size, height: size)
@@ -264,3 +327,30 @@ struct SyncStatusLine: View {
     }
   }
 }
+
+// MARK: - Selection
+
+/// On macOS 26 and later a single selected row is tinted Liquid Glass instead of a flat fill. Rows joined by a
+/// multiple selection keep Maccy's connected flat shape.
+struct GlassSelection: ViewModifier {
+  let isSelected: Bool
+  let appearance: SelectionAppearance
+
+  /// Whether a selected row with this appearance is drawn as glass (then it gets no flat fill).
+  static func isUsed(for appearance: SelectionAppearance) -> Bool {
+    if #available(macOS 26.0, *) { return appearance == .none }
+    return false
+  }
+
+  func body(content: Content) -> some View {
+    if #available(macOS 26.0, *), isSelected, appearance == .none {
+      content.glassEffect(
+        .regular.tint(Color.accentColor.opacity(0.85)).interactive(),
+        in: RoundedRectangle(cornerRadius: Popup.cornerRadius, style: .continuous)
+      )
+    } else {
+      content
+    }
+  }
+}
+

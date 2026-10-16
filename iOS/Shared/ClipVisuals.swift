@@ -50,27 +50,40 @@ extension Clip {
   var preview: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
 }
 
-/// Rounded tile with the content type's symbol, or a swatch for colors.
+/// The content type's symbol, or a swatch for colors. `glass` puts it in a tinted Liquid Glass circle on
+/// iOS 26 and later (list rows); otherwise a soft rounded tile (keyboard keys, older systems).
 struct ClipIcon: View {
   let content: ClipContent
   var size: CGFloat = 32
+  var glass = false
 
   var body: some View {
-    RoundedRectangle(cornerRadius: size / 4, style: .continuous)
-      .fill(Color.accentColor.opacity(0.14))
-      .frame(width: size, height: size)
-      .overlay {
-        if case .color(let hex) = content, let swatch = Color(hex: hex) {
-          RoundedRectangle(cornerRadius: size / 6, style: .continuous)
-            .fill(swatch)
-            .frame(width: size * 0.56, height: size * 0.56)
-        } else {
-          Image(systemName: content.symbolName)
-            .font(.system(size: size * 0.45, weight: .semibold))
-            .foregroundStyle(Color.accentColor)
-        }
+    Group {
+      if glass, #available(iOS 26.0, *) {
+        symbol
+          .frame(width: size, height: size)
+          .glassEffect(.regular.tint(Color.accentColor.opacity(0.28)), in: Circle())
+      } else {
+        symbol
+          .frame(width: size, height: size)
+          .background(Color.accentColor.opacity(0.14), in: RoundedRectangle(cornerRadius: size / 4, style: .continuous))
       }
-      .accessibilityHidden(true)
+    }
+    .accessibilityHidden(true)
+  }
+
+  @ViewBuilder
+  private var symbol: some View {
+    if case .color(let hex) = content, let swatch = Color(hex: hex) {
+      Circle()
+        .fill(swatch)
+        .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+        .frame(width: size * 0.56, height: size * 0.56)
+    } else {
+      Image(systemName: content.symbolName)
+        .font(.system(size: size * 0.42, weight: .semibold))
+        .foregroundStyle(Color.accentColor)
+    }
   }
 }
 
