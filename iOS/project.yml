@@ -73,6 +73,9 @@ targets:
       path: Keyboard/PastronautKeyboard.entitlements
       properties:
         com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]
+        # Direct fetch and upload with Full Access (Faz 3, KeyboardCloud).
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.xkbxyberk.pastronaut]
+        com.apple.developer.icloud-services: [CloudKit]
   # Driven step by step by scripts/e2e/sync_e2e.py for the two-device sync test.
   PastronautUITests:
     type: bundle.ui-testing

@@ -71,16 +71,19 @@ def mac_state(prefix="PTEST", op="dump", text=None):
             ["/usr/bin/log", "show", "--last", "30s", "--style", "ndjson", "--predicate",
              'process == "Pastronaut" AND eventMessage BEGINSWITH "PTEST-STATE"'],
             capture_output=True, text=True).stdout
+        parts = {}
         for line in out.splitlines():
             try:
                 message = json.loads(line).get("eventMessage", "")
             except json.JSONDecodeError:
                 continue
-            if not message.startswith("PTEST-STATE "):
-                continue
-            state = json.loads(message[len("PTEST-STATE "):])
-            if state.get("tag") == tag:
-                return state
+            # "PTEST-STATE <tag> <i>/<n> <json part>" (see E2EControl.dump)
+            fields = message.split(" ", 3)
+            if len(fields) == 4 and fields[0] == "PTEST-STATE" and fields[1] == tag:
+                index, count = map(int, fields[2].split("/"))
+                parts[index] = fields[3]
+                if len(parts) == count:
+                    return json.loads("".join(parts[i] for i in range(1, count + 1)))
     raise RuntimeError("Mac did not answer (is the Debug build running?)")
 
 
@@ -152,6 +155,16 @@ def ios_install():
     app = os.path.join(os.path.dirname(args.xctestrun), "Debug-iphoneos", "Pastronaut.app")
     subprocess.run(["xcrun", "devicectl", "device", "install", "app", "--device", args.device, app, "-q"],
                    env=DEV, check=True, capture_output=True)
+
+
+def ios_terminate_app():
+    """Ends the app process so only the keyboard can bring in new data."""
+    out = subprocess.run(["xcrun", "devicectl", "device", "info", "processes", "--device", args.device],
+                         env=DEV, capture_output=True, text=True).stdout
+    for line in out.splitlines():
+        if line.rstrip().endswith("/Pastronaut.app/Pastronaut"):
+            subprocess.run(["xcrun", "devicectl", "device", "process", "terminate", "--device", args.device,
+                            "--pid", line.split()[0], "-q"], env=DEV, capture_output=True)
 
 
 def ios_file(name):
@@ -231,6 +244,8 @@ def main():
     f_match = f"{prefix} F"
     f = f"{f_match} large " + "x" * 110_000
     g = f"{prefix} G saved on iPhone while Mac app was closed"
+    k = f"{prefix} K fetched by the keyboard itself"
+    y = f"{prefix} Y saved by the keyboard directly"
     log(f"Run {run}, scratch files in {work}")
 
     # 0. Both apps up, sync on.
@@ -337,6 +352,36 @@ def main():
         if not r.get("ok"):
             log(f"keyboard: {json.dumps(r, ensure_ascii=False)[:1500]}")
 
+    # 18. Faz 3: with Full Access the keyboard fetches by itself, even with the app not running.
+    if not args.skip_keyboard:
+        ios_terminate_app()
+        mac_copy(k)
+        time.sleep(5)
+        in_snapshot = find(ios_snapshot(), k) is not None
+        r = ios_step("keyboard", k, timeout=20)
+        check("T18", "Keyboard fetches new Mac clips itself (app not running, Full Access)",
+              r.get("ok") and not in_snapshot, f"app snapshot already had it: {in_snapshot}")
+        if not r.get("ok"):
+            log(f"keyboard: {json.dumps(r, ensure_ascii=False)[:1500]}")
+
+    # 19. Faz 3: the keyboard's direct upload reaches the Mac.
+    r = ios_step("keyboardSave", y)
+    ok, secs, _ = mac_wait("Y", lambda s: mac_item(s, y) is not None, 60)
+    check("T19", "Keyboard's direct upload reaches the Mac", ok, f"{secs}s")
+
+    # 20. Copying a pinned text again on the iPhone keeps it pinned (direct and app paths).
+    if ok:
+        mac_state(op="pin", text=y)
+        time.sleep(8)
+        ios_step("keyboardSave", y)
+        ios_step("save", y)
+        time.sleep(15)
+        state = mac_state()
+        remote = find(ios_mirror(), y)
+        check("T20", "Copying a pinned text again keeps the pin",
+              (mac_item(state, y) or {}).get("pinned") is True and bool(remote and remote["pinned"]),
+              f"Mac {mac_item(state, y)}, iPhone pinned={remote and remote['pinned']}")
+
     # 15. Changes made while the Mac app is closed arrive when it starts.
     mac_quit()
     r1 = ios_step("save", g)
@@ -348,7 +393,7 @@ def main():
           r1.get("ok") and r2.get("ok") and ok, f"{secs}s")
 
     # 16. Clean up through the Mac; the iPhone must follow.
-    for text in (a, c, g, f):
+    for text in (a, c, g, f, k, y):
         mac_state(op="delete", text=text)
     r = ios_step("waitGone", a, timeout=120)
     time.sleep(5)

@@ -333,7 +333,13 @@ enum E2EControl {
     ]
     guard let json = try? JSONSerialization.data(withJSONObject: state),
           let line = String(data: json, encoding: .utf8) else { return }
-    os_log(.default, "PTEST-STATE %{public}@", line)
+    // The unified log truncates long messages, so the state goes out in numbered parts.
+    let parts = stride(from: 0, to: line.count, by: 600).map {
+      String(line.dropFirst($0).prefix(600))
+    }
+    for (index, part) in parts.enumerated() {
+      os_log(.default, "PTEST-STATE %{public}@ %d/%d %{public}@", tag, index + 1, parts.count, part)
+    }
   }
 }
 #endif

@@ -125,3 +125,64 @@ import Testing
     #expect(updated["pinned"] as? Int64 == 1)
   }
 }
+
+@Suite struct CopiedAgainTests {
+  @Test func keepsPinAndTakesNewerCopy() {
+    let early = Date(timeIntervalSince1970: 1_000)
+    let late = Date(timeIntervalSince1970: 2_000)
+    let pinned = Clip(text: "same", sourceDevice: .mac, firstCopiedAt: early, pinned: true)
+    let capture = Clip(text: "same", sourceDevice: .iphone, firstCopiedAt: late)
+    let result = pinned.copiedAgain(capture)
+    #expect(result.pinned)
+    #expect(result.firstCopiedAt == early)
+    #expect(result.lastCopiedAt == late)
+    #expect(result.modifiedAt == late)
+    #expect(result.sourceDevice == .iphone)
+    // The plain merge would have unpinned it; that is why captures use copiedAgain.
+    #expect(pinned.merged(with: capture).pinned == false)
+  }
+
+  @Test func olderCopyKeepsSource() {
+    let early = Date(timeIntervalSince1970: 1_000)
+    let late = Date(timeIntervalSince1970: 2_000)
+    let clip = Clip(text: "same", sourceDevice: .mac, firstCopiedAt: late)
+    let result = clip.copiedAgain(Clip(text: "same", sourceDevice: .iphone, firstCopiedAt: early))
+    #expect(result.sourceDevice == .mac)
+    #expect(result.firstCopiedAt == early)
+    #expect(result.lastCopiedAt == late)
+  }
+}
+
+@Suite struct KeyboardCacheTests {
+  private let date = Date(timeIntervalSince1970: 5_000)
+
+  @Test func fullFetchReplacesEverything() {
+    var cache = KeyboardCache(clips: [Clip(text: "gone", sourceDevice: .mac)])
+    cache.apply(fetched: [Clip(text: "kept", sourceDevice: .mac)], deletedIDs: [], isFullFetch: true, token: Data([1]), at: date)
+    #expect(cache.clips.map(\.text) == ["kept"])
+    #expect(cache.token == Data([1]))
+    #expect(cache.fetchedAt == date)
+  }
+
+  @Test func incrementalFetchMergesAndDeletes() {
+    let a = Clip(text: "a", sourceDevice: .mac)
+    let b = Clip(text: "b", sourceDevice: .mac)
+    var cache = KeyboardCache(clips: [a, b], token: Data([1]))
+    var pinnedA = a
+    pinnedA.pinned = true
+    pinnedA.modifiedAt = a.modifiedAt.addingTimeInterval(10)
+    let c = Clip(text: "c", sourceDevice: .iphone)
+    cache.apply(fetched: [pinnedA, c], deletedIDs: [b.id], isFullFetch: false, token: Data([2]), at: date)
+    #expect(Set(cache.clips.map(\.text)) == ["a", "c"])
+    #expect(cache.clips.first { $0.text == "a" }?.pinned == true)
+    #expect(cache.token == Data([2]))
+  }
+
+  @Test func insertMergesWithExisting() {
+    var cache = KeyboardCache(clips: [Clip(text: "a", sourceDevice: .mac)])
+    cache.insert(Clip(text: "a", sourceDevice: .iphone, firstCopiedAt: .now.addingTimeInterval(60)))
+    #expect(cache.clips.count == 1)
+    cache.insert(Clip(text: "b", sourceDevice: .iphone))
+    #expect(cache.clips.count == 2)
+  }
+}

@@ -41,6 +41,13 @@ final class SyncStepTests: XCTestCase {
       app.launchEnvironment["PT_E2E_SAVE"] = text
       app.launch()
       report(["ok": row(match).waitForExistence(timeout: 15)])
+    case "keyboardSave":
+      // Runs the keyboard's direct upload inside the app (Debug only): the keyboard's Paste button
+      // cannot be tapped by a test.
+      app.launchEnvironment["PT_E2E_KEYBOARD_SAVE"] = text
+      app.launch()
+      Thread.sleep(forTimeInterval: 6)
+      report(["ok": true])
     case "waitCount":
       app.activate()
       let start = Date()
@@ -164,6 +171,8 @@ final class SyncStepTests: XCTestCase {
       func count(_ format: String, _ value: String) -> Int {
         safari.descendants(matching: .any).matching(NSPredicate(format: format, value)).count
       }
+      let cloudStatus = safari.descendants(matching: .any)
+        .matching(NSPredicate(format: "label BEGINSWITH 'cloud:'")).firstMatch
       let diagnostics = safari.descendants(matching: .any)
         .matching(NSPredicate(format: "label CONTAINS 'diag:'")).firstMatch
       report(["ok": false, "reason": "clip not in keyboard", "switches": switches,
@@ -172,6 +181,7 @@ final class SyncStepTests: XCTestCase {
               "noClipsText": count("label BEGINSWITH %@", "No clips yet"),
               "fullAccessHint": count("label BEGINSWITH %@", "Turn on Allow Full Access"),
               "diagnostics": diagnostics.exists ? diagnostics.label : "",
+              "cloudStatus": cloudStatus.exists ? cloudStatus.label : "",
               "rowsWithDeviceIcon": count("label CONTAINS %@", "laptopcomputer") + count("label CONTAINS %@", "iphone")])
       return
     }
@@ -179,7 +189,9 @@ final class SyncStepTests: XCTestCase {
     clip.tap()
     let field = safari.textFields.firstMatch
     let typed = (field.value as? String)?.contains(match) ?? false
-    report(["ok": typed, "pinIcons": pinned])
+    let cloudStatus = safari.descendants(matching: .any)
+      .matching(NSPredicate(format: "label BEGINSWITH 'cloud:'")).firstMatch
+    report(["ok": typed, "pinIcons": pinned, "cloudStatus": cloudStatus.exists ? cloudStatus.label : ""])
   }
 
   // MARK: - Output

@@ -47,6 +47,25 @@ public struct SharedClipFiles: Sendable {
     (try? decode([Clip].self, from: snapshotURL)) ?? []
   }
 
+  // MARK: - Keyboard cache
+
+  var keyboardCacheURL: URL { directory.appending(path: "keyboard-cache.json") }
+
+  /// Written only by the keyboard (with Full Access); plain atomic file I/O like the snapshot.
+  public func readKeyboardCache() -> KeyboardCache? {
+    try? decode(KeyboardCache.self, from: keyboardCacheURL)
+  }
+
+  public func writeKeyboardCache(_ cache: KeyboardCache) throws {
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    try encode(cache, to: keyboardCacheURL)
+  }
+
+  /// When the app last wrote the snapshot; lets the keyboard pick the fresher of snapshot and cache.
+  public var snapshotDate: Date? {
+    (try? FileManager.default.attributesOfItem(atPath: snapshotURL.path))?[.modificationDate] as? Date
+  }
+
   // MARK: - Inbox
 
   /// Adds a captured clip unless the inbox already holds the same content.
@@ -64,6 +83,15 @@ public struct SharedClipFiles: Sendable {
 
   public func readInbox() -> [Clip] {
     (try? coordinatedRead(inboxURL, decode: [Clip].self)) ?? []
+  }
+
+  /// Drops a capture the keyboard already saved to iCloud itself.
+  public func removeFromInbox(id: String) throws {
+    try coordinatedWrite(to: inboxURL) { url in
+      guard var inbox = try? decode([Clip].self, from: url) else { return }
+      inbox.removeAll { $0.id == id }
+      try encode(inbox, to: url)
+    }
   }
 
   /// Returns and removes everything in the inbox in one coordinated step.

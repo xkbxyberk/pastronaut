@@ -180,6 +180,11 @@ public actor ClipSync {
     persist()
   }
 
+  /// Reports a new copy of some text captured on this device. Keeps the pin if the clip already exists.
+  public func recordCopy(_ copy: Clip) {
+    upsert(state.entries[copy.id].map { $0.clip.copiedAgain(copy) } ?? copy)
+  }
+
   /// Reports clips deleted on this device. Unknown IDs are ignored.
   public func delete(ids: some Sequence<String>) {
     guard let engine else { return }

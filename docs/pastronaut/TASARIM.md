@@ -136,8 +136,20 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
      Bu kopyalar panoda `com.apple.is-remote-clipboard` türüyle işaretli gelir. Proje sahibi bu türü yok sayma
      listesine eklemeyi önermiş (#182, 2024). Kullanıcı eklemişse bu yol kapanır; Eşitleme ayarlarında bu durum belirtilmeli.
      Bu tür, kaynağı "iPhone" olarak işaretlemek için de kullanılabilir.
-- Eşitleme: CKSyncEngine uygulamada çalışır. Sessiz anlık bildirim ve arka plan yenilemesiyle uyanır. Klavyenin
-  yazdığı yeni kopyalar bir sonraki uyanışta gönderilir.
+- Eşitleme: CKSyncEngine yalnızca uygulamada çalışır. Sessiz anlık bildirimle uyanır; iOS arka plan push'larını
+  kıstığı için bu en iyi çabadır (Faz 2, T13).
+- **Klavyenin kendi bulut erişimi (Faz 3, `KeyboardCloud`), yalnızca Tam Erişim'le:**
+  - Klavye açılınca (en sık 5 sn'de bir) "Clips" bölgesini kendi değişiklik işaretiyle çeker ve `keyboard-cache.json`'a
+    yazar. Liste, uygulamanın anlık görüntüsünden ya da daha yeniyse bu önbellekten oluşur, üstüne gelen kutusu eklenir.
+  - Yakalanan kopya önce gelen kutusuna yazılır (kaybolmasın), sonra tek kayıt olarak doğrudan buluta kaydedilir;
+    başarılıysa gelen kutusundan çıkarılır. Çevrimdışıysa uygulama sonra gönderir.
+  - Klavyede ikinci bir CKSyncEngine yok: iki motor aynı durumu paylaşamaz. Uygulama, klavyenin yazdığı kaydı
+    herhangi bir uzak değişiklik gibi çeker.
+- **Yeniden kopyalama sabitlemeyi korur** (`Clip.copiedAgain`, `ClipSync.recordCopy`): yakalanan kopya sabitleme
+  bilgisi taşımaz; düz birleştirme ("yeni olan kazanır") sabitli bir metni yeniden kopyalayınca sabitlemeyi kaldırıyordu.
+- **Kısayollar eylemi** `SaveTextIntent` ("Save to Pastronaut", metin parametresi). Önerilen kısayol:
+  "Panoyu Al → Save to Pastronaut"; Arkaya Dokun veya Eylem düğmesine bağlanabilir. Metni Kısayollar okuduğu için
+  uygulama ayrıca yapıştırma izni sormaz.
 
 ## 7. Riskler ve doğrulanacaklar
 | # | Konu | Nasıl doğrulanır |
@@ -179,6 +191,15 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     gönderilmiyordu, (3) Tam Erişim kapalıyken klavye `NSFileCoordinator` ile okuyamadığı için listeyi boş gösteriyordu
     (geri alınarak doğrulandı). Üçü de düzeltildi.
 - **Faz 3: Telefon kopyaları.** Ölçüt: uygulama, klavye ve Kısayol ile yakalanan kopya Mac geçmişinde görünür.
+  Son koşu 2026-10-16 20:07 (Mac `~/Applications`'tan, push açık): 21 zorunlu kontrolün 21'i geçti, 1 uyarı (T13).
+  - ✅ Uygulama çalışmıyorken klavye Mac'teki yeni öğeyi kendisi çeker (T18; ayrıca 3/3 tekrar, uygulama anlık
+    görüntüsünde öğe yokken). Bu sayede T14 de geçiyor.
+  - ✅ Klavyenin doğrudan yüklemesi Mac'e ≈ 2 sn'de ulaşır (T19; Debug kancasıyla aynı `KeyboardCloud.save`).
+  - ✅ Sabitli metni yeniden kopyalamak sabitlemeyi korur, doğrudan ve uygulama yolunda (T20).
+  - ✅ iPhone → Mac tüm işlemler ≈ 2 sn (push).
+  - Elle doğrulanacak: klavyenin Yapıştır düğmesiyle uygulamayı açmadan yakalama, Kısayollar eylemi.
+  - Bir koşuda T14/T18 klavye çekmesi başarısız oldu, nedeni görülemedi (hata sessizdi). Klavye artık Debug'da son
+    bulut işleminin sonucunu gösteriyor; tekrar olursa test çıktısında görünecek.
 - **Faz 4: Yayın.** Lisans ekranı, gizlilik politikası (App Store zorunlu), App Store Gizlilik Etiketi, TestFlight, başvuru.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.
 

@@ -68,6 +68,22 @@ public struct Clip: Codable, Equatable, Hashable, Sendable {
     return .url
   }
 
+  /// The same text was copied again. `copy` is a fresh capture that knows nothing about this clip's pin,
+  /// so unlike `merged(with:)` the pin is kept; copy times widen and the newer copy names the source.
+  /// `modifiedAt` moves forward so other devices take this version, pin included.
+  public func copiedAgain(_ copy: Clip) -> Clip {
+    precondition(id == copy.id, "Only copies of the same text can be combined")
+    var result = self
+    result.firstCopiedAt = min(firstCopiedAt, copy.firstCopiedAt)
+    result.lastCopiedAt = max(lastCopiedAt, copy.lastCopiedAt)
+    result.modifiedAt = max(modifiedAt, copy.modifiedAt)
+    if copy.lastCopiedAt > lastCopiedAt {
+      result.sourceDevice = copy.sourceDevice
+      result.sourceApp = copy.sourceApp ?? sourceApp
+    }
+    return result
+  }
+
   /// Combines two versions of the same clip from different devices.
   /// Copy dates widen to cover both; source and pin state follow the most recent modification.
   public func merged(with other: Clip) -> Clip {

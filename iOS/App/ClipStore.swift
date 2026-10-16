@@ -84,8 +84,26 @@ final class ClipStore {
 
   /// Saves text from the system Paste button (no paste permission prompt).
   func save(_ text: String?) {
-    guard let text, !text.isEmpty else { return }
-    upsert(Clip(text: text, sourceDevice: .iphone))
+    guard let text else { return }
+    Task { _ = await saveNow(text) }
+  }
+
+  enum SaveResult {
+    case saved
+    case empty
+    case tooLarge
+  }
+
+  /// Saves and uploads a copy, keeping the pin if the text is already in the history. Used by the
+  /// Paste button and the Shortcuts action, which waits for the upload before it finishes.
+  func saveNow(_ text: String) async -> SaveResult {
+    guard !text.isEmpty else { return .empty }
+    guard SyncPolicy.default.isEligible(text) else { return .tooLarge }
+    await start()
+    await sync.recordCopy(Clip(text: text, sourceDevice: .iphone))
+    await reload()
+    await upload()
+    return .saved
   }
 
   private func upsert(_ clip: Clip) {
@@ -111,7 +129,7 @@ final class ClipStore {
   private func ingestInbox() async {
     guard let files, let captured = try? files.drainInbox() else { return }
     for clip in captured {
-      await sync.upsert(clip)
+      await sync.recordCopy(clip)
     }
   }
 

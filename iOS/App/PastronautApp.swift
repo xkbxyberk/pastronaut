@@ -1,3 +1,4 @@
+import PastronautCore
 import SwiftUI
 import UIKit
 
@@ -32,9 +33,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     // The end-to-end test cannot tap the system Paste button (it rejects synthetic touches), so it
     // hands the text over at launch and the same save path runs.
     if let text = ProcessInfo.processInfo.environment["PT_E2E_SAVE"] {
-      Task { @MainActor in
-        await ClipStore.shared.start()
-        ClipStore.shared.save(text)
+      Task { @MainActor in _ = await ClipStore.shared.saveNow(text) }
+    }
+    // Runs the keyboard's direct upload (KeyboardCloud) without the app's sync engine, since the test
+    // cannot tap the keyboard's Paste button either.
+    if let text = ProcessInfo.processInfo.environment["PT_E2E_KEYBOARD_SAVE"], let files = SharedClipFiles() {
+      Task {
+        let cloud = KeyboardCloud(containerIdentifier: PastronautIDs.iCloudContainer, files: files)
+        try? await cloud.save(Clip(text: text, sourceDevice: .iphone))
       }
     }
     #endif

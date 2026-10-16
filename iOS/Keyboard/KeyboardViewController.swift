@@ -1,3 +1,4 @@
+import CloudKit
 import PastronautCore
 import SwiftUI
 import UIKit
@@ -40,15 +41,26 @@ final class KeyboardModel {
   private(set) var showsNextKeyboard = true
   /// The pasteboard changed since the last capture. Detected from metadata only, so iOS shows no prompt.
   private(set) var hasNewClip = false
+  /// Last iCloud fetch or upload outcome; shown in Debug builds for the end-to-end test.
+  private(set) var cloudStatus = "cloud: idle"
 
   var insert: (String) -> Void = { _ in }
   var deleteBackward: () -> Void = {}
   var nextKeyboard: () -> Void = {}
 
-  private let files = SharedClipFiles()
+  private let files: SharedClipFiles?
+  /// Network needs Full Access; only used when the keyboard has it.
+  private let cloud: KeyboardCloud?
   /// Writable only with Full Access, like the rest of the App Group.
   private let defaults = UserDefaults(suiteName: PastronautIDs.appGroup)
   private let lastCapturedChangeCountKey = "keyboardLastCapturedChangeCount"
+  @ObservationIgnored private var lastCloudRefresh = Date.distantPast
+
+  init() {
+    let files = SharedClipFiles()
+    self.files = files
+    cloud = files.map { KeyboardCloud(containerIdentifier: PastronautIDs.iCloudContainer, files: $0) }
+  }
 
   func appeared(hasFullAccess: Bool, showsNextKeyboard: Bool) {
     self.hasFullAccess = hasFullAccess
@@ -58,15 +70,54 @@ final class KeyboardModel {
     let pasteboard = UIPasteboard.general
     let lastCaptured = defaults?.object(forKey: lastCapturedChangeCountKey) as? Int
     hasNewClip = hasFullAccess && pasteboard.hasStrings && pasteboard.changeCount != lastCaptured
+    refreshFromCloud()
   }
 
-  /// Receives text from the system Paste button and leaves it for the app to sync.
+  /// The app may not have run since the last change (iOS rations background pushes), so with Full
+  /// Access the keyboard fetches the latest state itself.
+  private func refreshFromCloud() {
+    guard hasFullAccess, let cloud, Date.now.timeIntervalSince(lastCloudRefresh) > 5 else { return }
+    lastCloudRefresh = .now
+    cloudStatus = "cloud: fetching"
+    Task {
+      do {
+        let cache = try await cloud.refresh()
+        cloudStatus = "cloud: fetched \(cache.clips.count)"
+      } catch {
+        cloudStatus = "cloud: fetch failed \(Self.describe(error))"
+      }
+      reload()
+    }
+  }
+
+  private static func describe(_ error: Error) -> String {
+    if let error = error as? CKError { return "CKError \(error.code.rawValue) \(error.localizedDescription)" }
+    return String(describing: error)
+  }
+
+  /// Receives text from the system Paste button and saves it to iCloud, so the Mac gets it without the
+  /// app being opened. The inbox is written first and kept if the upload fails; the app sends it later.
   func capture(_ strings: [String]) {
     guard let files, let text = strings.first, !text.isEmpty else { return }
-    try? files.appendToInbox(Clip(text: text, sourceDevice: .iphone))
+    let clip = Clip(text: text, sourceDevice: .iphone)
+    try? files.appendToInbox(clip)
     defaults?.set(UIPasteboard.general.changeCount, forKey: lastCapturedChangeCountKey)
     hasNewClip = false
     reload()
+    guard hasFullAccess, let cloud else { return }
+    Task {
+      do {
+        try await cloud.save(clip)
+        cloudStatus = "cloud: saved"
+        try? files.removeFromInbox(id: clip.id)
+        // Makes the cache newer than the app's snapshot, so the saved clip stays listed.
+        _ = try? await cloud.refresh()
+        reload()
+      } catch {
+        // Offline or not eligible: the inbox keeps it for the app.
+        cloudStatus = "cloud: save failed \(Self.describe(error))"
+      }
+    }
   }
 
   #if DEBUG
@@ -91,9 +142,14 @@ final class KeyboardModel {
       clips = []
       return
     }
-    // Captures not yet synced by the app are shown too.
+    // The app's snapshot, or the keyboard's own fetch when that is newer, plus captures not yet synced.
+    var base = files.readSnapshot()
+    if hasFullAccess, let cache = files.readKeyboardCache(), let fetchedAt = cache.fetchedAt,
+       fetchedAt > files.snapshotDate ?? .distantPast {
+      base = cache.clips
+    }
     var byID: [String: Clip] = [:]
-    for clip in files.readSnapshot() + files.readInbox() {
+    for clip in base + files.readInbox() {
       byID[clip.id] = byID[clip.id].map { $0.merged(with: clip) } ?? clip
     }
     clips = Array(byID.values.inHistoryOrder.prefix(100))
@@ -108,6 +164,9 @@ struct KeyboardView: View {
       header
       list
       keys
+      #if DEBUG
+      Text(model.cloudStatus).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1)
+      #endif
     }
     .padding(6)
   }
