@@ -231,6 +231,16 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     iPhone'dan eşitlenen öğeler Mac'te `com.xkbxyberk.pastronaut.from-iphone` işaretiyle saklanır: rozet için ve Mac
     onları değiştirince (ör. sabitleme) cihaz bilgisi Mac'e dönmesin diye. Ekran görüntüleri Maccy UI testinden
     (`testPastronautScreenshots`, ayrı test deposu); tam E2E geçti.
+  - ✅ 4.4b Liquid Glass geçişi: iOS'ta cam kapsül filtre (sayılarla, seçim akarak geçer, `safeAreaBar`), ayrı kart
+    satırlar ve cam içerik simgeleri; Mac'te cam filtre, cam arama alanı, renkli cam seçim (çoklu seçimde düz), daha
+    yuvarlak satırlar. 17–25 / 14–25'te önceki görünüm.
+  - ✅ 4.4c Mac Eşitleme ayarları (gruplu form; durum, gizlilik, iPhone QR'ı, eylemler) ve ilk açılış karşılama
+    penceresi. Gizlilik anahtarları (`SensitiveContent`, `PrivacyOptions`; varsayılan kapalı): tek kullanımlık kod
+    (yalnız 4–8 hane ya da tam kelime olarak kod sözcüğü + 4–8 hane; Mac'te 5 dk sonra silinir), kart (Luhn) ve IBAN
+    (mod 97), yalnızca sabitlenenler. Anahtar açılınca bu Mac'in kurala uymayan öğeleri buluttan kalkar (iPhone'un
+    yakaladıklarına ve yerel geçmişe dokunulmaz), kapanınca yeniden yüklenir. E2E T24 (kod Mac'te kalır), T25 (yalnız
+    sabitlenenler) geçti. QR şimdilik GitHub proje sayfası; App Store bağlantısı Faz 5'te. Ayarlar penceresinin
+    görüntüsü UI testinde alınamadı (pencere test ortamında açılmıyor); elle bakılmalı.
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
   TestFlight ve App Store; Mac için GitHub Releases, Homebrew tap, Mac App Store.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.

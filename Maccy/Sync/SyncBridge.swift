@@ -7,6 +7,10 @@ import Settings
 
 extension Defaults.Keys {
   static let iCloudSync = Key<Bool>("pastronautICloudSync", default: false)
+  // Privacy switches in Sync settings; off by default, so everything syncs.
+  static let syncSkipOneTimeCodes = Key<Bool>("pastronautSkipOneTimeCodes", default: false)
+  static let syncSkipCardNumbers = Key<Bool>("pastronautSkipCardNumbers", default: false)
+  static let syncPinnedOnly = Key<Bool>("pastronautPinnedOnly", default: false)
 }
 
 // Declared here rather than next to the SwiftUI pane: SwiftUI's `Settings` scene makes the name ambiguous.
@@ -29,6 +33,7 @@ final class SyncBridge {
   /// Serializes calls into the actor so a delete and a re-add of the same clip keep their order.
   private var tail: Task<Void, Never>?
   private var observation: Task<Void, Never>?
+  private var privacyObservation: Task<Void, Never>?
 
   private var isEnabled: Bool { Defaults[.iCloudSync] && !isApplyingRemote }
 
@@ -43,9 +48,14 @@ final class SyncBridge {
     #if DEBUG
     // Tests run inside the app and clear History constantly; they must never reach the user's iCloud
     // data or the sync mirror, which share this app's container.
-    if AppDelegate.isTesting { return }
+    if AppDelegate.isTesting {
+      // Design review screenshots (MaccyUITests.testPastronautScreenshots).
+      if CommandLine.arguments.contains("pastronaut-show-onboarding") { OnboardingWindow.show() }
+      return
+    }
     E2EControl.start(sync: sync)
     #endif
+    OnboardingWindow.showIfNeeded()
     // CKSyncEngine fetches when its subscription push arrives; without registering, the Mac only
     // fetched at launch and on "Sync Now", so changes from the iPhone never showed up.
     NSApplication.shared.registerForRemoteNotifications()
@@ -58,6 +68,49 @@ final class SyncBridge {
       for await enabled in Defaults.updates(.iCloudSync) {
         await self?.setEnabled(enabled)
       }
+    }
+    privacyObservation = Task { [weak self] in
+      for await _ in Defaults.updates(.syncSkipOneTimeCodes, .syncSkipCardNumbers, .syncPinnedOnly, initial: false) {
+        await self?.applyPrivacyChange()
+      }
+    }
+  }
+
+  // MARK: - Privacy
+
+  var privacy: PrivacyOptions {
+    PrivacyOptions(
+      skipOneTimeCodes: Defaults[.syncSkipOneTimeCodes],
+      skipCardNumbers: Defaults[.syncSkipCardNumbers],
+      pinnedOnly: Defaults[.syncPinnedOnly]
+    )
+  }
+
+  /// A switch changed: take this Mac's clips that are no longer allowed out of iCloud, and upload the ones that
+  /// are allowed again. Clips captured on the iPhone are left alone, and local history is never touched.
+  private func applyPrivacyChange() async {
+    guard Defaults[.iCloudSync] else { return }
+    let privacy = privacy
+    let blocked = await sync.clips
+      .filter { $0.sourceDevice == .mac && !privacy.allows($0.text, pinned: $0.pinned) }
+      .map(\.id)
+    if !blocked.isEmpty {
+      logger.info("Privacy change removes \(blocked.count) clips from iCloud")
+      enqueue { await $0.delete(ids: blocked) }
+    }
+    uploadExistingHistory()
+  }
+
+  /// With "Don't sync one-time codes" on, a code also leaves this Mac's history after five minutes.
+  private func scheduleRemovalIfOneTimeCode(_ item: HistoryItem) {
+    guard Defaults[.syncSkipOneTimeCodes], item.pin == nil, let text = item.text,
+          SensitiveContent(text) == .oneTimeCode else { return }
+    Task { @MainActor in
+      try? await Task.sleep(for: .seconds(5 * 60))
+      guard Defaults[.syncSkipOneTimeCodes],
+            let decorator = History.shared.allItems.first(where: { $0.item == item }),
+            decorator.item.pin == nil else { return }
+      History.shared.delete(decorator)
     }
   }
 
@@ -119,13 +172,20 @@ final class SyncBridge {
   // MARK: - Local changes (hooks from History)
 
   func didAdd(_ item: HistoryItem) {
-    guard isEnabled, let clip = Self.clip(for: item, modifiedAt: item.lastCopiedAt) else { return }
+    scheduleRemovalIfOneTimeCode(item)
+    guard isEnabled, let clip = Self.clip(for: item, modifiedAt: item.lastCopiedAt),
+          privacy.allows(clip.text, pinned: clip.pinned) else { return }
     enqueue { await $0.upsert(clip) }
   }
 
   func didChangePin(_ item: HistoryItem) {
     guard isEnabled, let clip = Self.clip(for: item, modifiedAt: .now) else { return }
-    enqueue { await $0.upsert(clip) }
+    if privacy.allows(clip.text, pinned: clip.pinned) {
+      enqueue { await $0.upsert(clip) }
+    } else if clip.sourceDevice == .mac {
+      // E.g. unpinned while "Sync pinned items only" is on.
+      enqueue { await $0.delete(ids: [clip.id]) }
+    }
   }
 
   func willDelete(_ items: [HistoryItem]) {
@@ -141,13 +201,16 @@ final class SyncBridge {
     if let previousClipID, previousClipID != clip?.id {
       enqueue { await $0.delete(ids: [previousClipID]) }
     }
-    if let clip {
+    if let clip, privacy.allows(clip.text, pinned: clip.pinned) {
       enqueue { await $0.upsert(clip) }
     }
   }
 
   private func uploadExistingHistory() {
-    let clips = History.shared.allItems.compactMap { Self.clip(for: $0.item, modifiedAt: $0.item.lastCopiedAt) }
+    let privacy = privacy
+    let clips = History.shared.allItems
+      .compactMap { Self.clip(for: $0.item, modifiedAt: $0.item.lastCopiedAt) }
+      .filter { privacy.allows($0.text, pinned: $0.pinned) }
     logger.info("Uploading \(clips.count) existing clips")
     enqueue { sync in
       for clip in clips {
@@ -315,6 +378,18 @@ enum E2EControl {
       let prefix = command.prefix ?? "PTEST-"
       for item in History.shared.allItems where item.item.text?.hasPrefix(prefix) == true {
         History.shared.delete(item)
+      }
+    case "privacy":
+      // {"op":"privacy","text":"otp:on"} — otp, cards or pinned; on or off.
+      let parts = (command.text ?? "").split(separator: ":").map(String.init)
+      if parts.count == 2 {
+        let on = parts[1] == "on"
+        switch parts[0] {
+        case "otp": Defaults[.syncSkipOneTimeCodes] = on
+        case "cards": Defaults[.syncSkipCardNumbers] = on
+        case "pinned": Defaults[.syncPinnedOnly] = on
+        default: break
+        }
       }
     case "sync":
       Task { try? await SyncBridge.shared.syncNow() }

@@ -66,6 +66,7 @@
 		DA13D7D02C19F8C300FA9E23 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = DA13D7CF2C19F8C300FA9E23 /* Defaults */; };
 		67CFBF7B8D2615BB1336A127 /* PastronautCore in Frameworks */ = {isa = PBXBuildFile; productRef = B072D60DDB83FC6A4050547E /* PastronautCore */; };
 		413D7FD3F22A45C693CF685F /* SyncBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */; };
+		A1C0FFEE0000000000000032 /* OnboardingWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000031 /* OnboardingWindow.swift */; };
 		A1C0FFEE0000000000000022 /* PastronautPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000021 /* PastronautPopup.swift */; };
 		37A576BFBA4FEEC87DE10616 /* SyncSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC7B1A343D3468FB0F938E4F /* SyncSettingsPane.swift */; };
 		A1C0FFEE0000000000000012 /* Pastronaut.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000011 /* Pastronaut.xcstrings */; };
@@ -277,6 +278,7 @@
 		DA00992F256411F90030E697 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		3787E55D54393A96440E4474 /* PastronautCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = PastronautCore; sourceTree = "<group>"; };
 		9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBridge.swift; sourceTree = "<group>"; };
+		A1C0FFEE0000000000000031 /* OnboardingWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindow.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000021 /* PastronautPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastronautPopup.swift; sourceTree = "<group>"; };
 		AC7B1A343D3468FB0F938E4F /* SyncSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettingsPane.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000011 /* Pastronaut.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Pastronaut.xcstrings; sourceTree = "<group>"; };
@@ -722,6 +724,7 @@
 			isa = PBXGroup;
 			children = (
 				9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */,
+				A1C0FFEE0000000000000031 /* OnboardingWindow.swift */,
 				A1C0FFEE0000000000000021 /* PastronautPopup.swift */,
 				AC7B1A343D3468FB0F938E4F /* SyncSettingsPane.swift */,
 				A1C0FFEE0000000000000011 /* Pastronaut.xcstrings */,
@@ -1235,6 +1238,7 @@
 				2FD499452FFC489400149F02 /* MovableByWindowBackgroundModifier.swift in Sources */,
 				DAAEB196219694AE00A7883C /* About.swift in Sources */,
 				413D7FD3F22A45C693CF685F /* SyncBridge.swift in Sources */,
+				A1C0FFEE0000000000000032 /* OnboardingWindow.swift in Sources */,
 				A1C0FFEE0000000000000022 /* PastronautPopup.swift in Sources */,
 				37A576BFBA4FEEC87DE10616 /* SyncSettingsPane.swift in Sources */,
 				DA6D98E22AEABE03008A77CE /* Accessibility.swift in Sources */,

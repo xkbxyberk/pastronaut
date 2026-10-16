@@ -392,6 +392,38 @@ def main():
         ok23, secs, _ = mac_wait("Y gone", lambda s: mac_item(s, y) is None, 60)
         check("T23", "Keyboard delete → Mac", r.get("ok") and ok23, f"{secs}s {r.get('cloudStatus', r.get('reason', ''))}")
 
+    # 24. Privacy: with "Don't sync one-time codes" on, a code stays on the Mac. The iPhone app is kept in the
+    # foreground (it refreshes every minute and gets pushes) so "not there" really means not synced.
+    code = run[-6:]  # six digits, unique per run
+    mac_state(op="privacy", text="otp:on")
+    marker = f"{prefix} marker after the number"  # no code word: the switch must not catch it
+    r = ios_step("waitVisible", marker, timeout=90,
+                 on_ready=lambda: (time.sleep(2), mac_copy(code), time.sleep(3), mac_copy(marker)))
+    ok_mac = any(item["text"] == code for item in mac_state(prefix=code)["history"])
+    leaked = any(clip["text"] == code for clip in ios_mirror())
+    mac_state(op="privacy", text="otp:off")
+    for text in (code, marker):
+        mac_state(op="delete", text=text)
+    check("T24", "One-time code stays on the Mac (privacy switch on)",
+          r.get("ok") and ok_mac and not leaked,
+          f"later copy reached iPhone: {r.get('ok')}, code in Mac history: {ok_mac}, code on iPhone: {leaked}")
+
+    # 25. Privacy: with "Sync pinned items only" on, only pinned copies reach the iPhone.
+    p = f"{prefix} P pinned-only"
+    q = f"{prefix} Q pinned marker"
+    mac_state(op="privacy", text="pinned:on")
+    r1 = ios_step("waitVisible", q, timeout=90,
+                  on_ready=lambda: (time.sleep(2), mac_copy(p), time.sleep(3), mac_copy(q),
+                                    time.sleep(2), mac_state(op="pin", text=q)))
+    early = find(ios_mirror(), p) is not None
+    r2 = ios_step("waitVisible", p, timeout=90, on_ready=lambda: (time.sleep(2), mac_state(op="pin", text=p)))
+    mac_state(op="privacy", text="pinned:off")
+    for text in (p, q):
+        mac_state(op="delete", text=text)
+    check("T25", "Pinned-only: unpinned copy stays, pinned copy syncs",
+          r1.get("ok") and not early and r2.get("ok"),
+          f"pinned marker reached: {r1.get('ok')}, unpinned on iPhone: {early}, after pin: {r2.get('ok')} {r2.get('seconds')}s")
+
     # 15. Changes made while the Mac app is closed arrive when it starts.
     mac_quit()
     r1 = ios_step("save", g)

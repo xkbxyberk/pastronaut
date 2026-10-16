@@ -111,7 +111,7 @@ class AppState: Sendable {
   }
 
   @MainActor
-  func openPreferences() { // swiftlint:disable:this function_body_length
+  func openPreferences(pane: String? = nil) { // swiftlint:disable:this function_body_length
     if settingsWindowController == nil {
       let generalTitle = NSLocalizedString("Title", tableName: "GeneralSettings", comment: "")
       let storageTitle = NSLocalizedString("Title", tableName: "StorageSettings", comment: "")
@@ -182,7 +182,7 @@ class AppState: Sendable {
         ]
       )
     }
-    settingsWindowController?.show()
+    settingsWindowController?.show(pane: pane.map { Settings.PaneIdentifier($0) }) // Pastronaut: can open a given pane.
     settingsWindowController?.window?.orderFrontRegardless()
   }
 
