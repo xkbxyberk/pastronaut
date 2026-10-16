@@ -1,0 +1,17 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "iCloud data was deleted; local history was kept.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud verisi silindi; yerel geçmiş korundu."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -165,7 +165,8 @@ struct KeyboardView: View {
       list
       keys
       #if DEBUG
-      Text(model.cloudStatus).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1)
+      Text(verbatim: model.cloudStatus).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1)
+        .accessibilityIdentifier("cloudStatus")
       #endif
     }
     .padding(6)
@@ -187,6 +188,7 @@ struct KeyboardView: View {
       }
     } else {
       Text("Turn on Allow Full Access in Settings to save new copies from this keyboard.")
+        .accessibilityIdentifier("fullAccessHint")
         .font(.caption2)
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -198,8 +200,9 @@ struct KeyboardView: View {
     if model.clips.isEmpty {
       VStack {
         Text("No clips yet. Open Pastronaut once to sync your history.")
+          .accessibilityIdentifier("emptyState")
         #if DEBUG
-        Text(model.diagnostics).font(.caption2)
+        Text(verbatim: model.diagnostics).font(.caption2).accessibilityIdentifier("diagnostics")
         #endif
       }
       .font(.footnote)
@@ -215,6 +218,7 @@ struct KeyboardView: View {
               HStack(alignment: .firstTextBaseline, spacing: 6) {
                 if clip.pinned {
                   Image(systemName: "pin.fill").font(.caption2).foregroundStyle(.orange)
+                    .accessibilityIdentifier("pinIcon")
                 }
                 Text(clip.text.replacingOccurrences(of: "\n", with: " ⏎ "))
                   .lineLimit(2)
@@ -240,13 +244,14 @@ struct KeyboardView: View {
         key(systemImage: "globe") { model.nextKeyboard() }
       }
       key(title: "space") { model.insert(" ") }
+        .accessibilityIdentifier("spaceKey")
         .frame(maxWidth: .infinity)
       key(systemImage: "delete.left") { model.deleteBackward() }
       key(systemImage: "return") { model.insert("\n") }
     }
   }
 
-  private func key(title: String? = nil, systemImage: String? = nil, action: @escaping () -> Void) -> some View {
+  private func key(title: LocalizedStringKey? = nil, systemImage: String? = nil, action: @escaping () -> Void) -> some View {
     Button(action: action) {
       Group {
         if let systemImage {

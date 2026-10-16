@@ -136,12 +136,12 @@ final class ClipStore {
   private func updateAccountStatus() async {
     do {
       accountStatus = switch try await CKContainer(identifier: PastronautIDs.iCloudContainer).accountStatus() {
-      case .available: "Signed in"
-      case .noAccount: "Not signed in to iCloud"
-      case .restricted: "Restricted"
-      case .temporarilyUnavailable: "Temporarily unavailable"
-      case .couldNotDetermine: "Unknown"
-      @unknown default: "Unknown"
+      case .available: String(localized: "Signed in")
+      case .noAccount: String(localized: "Not signed in to iCloud")
+      case .restricted: String(localized: "Restricted")
+      case .temporarilyUnavailable: String(localized: "Temporarily unavailable")
+      case .couldNotDetermine: String(localized: "Unknown")
+      @unknown default: String(localized: "Unknown")
       }
     } catch {
       accountStatus = error.localizedDescription

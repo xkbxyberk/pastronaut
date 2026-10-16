@@ -1,0 +1,50 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "New text on the clipboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panoda yeni metin var"
+          }
+        }
+      }
+    },
+    "No clips yet. Open Pastronaut once to sync your history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz öğe yok. Geçmişini eşitlemek için Pastronaut'u bir kez aç."
+          }
+        }
+      }
+    },
+    "Turn on Allow Full Access in Settings to save new copies from this keyboard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu klavyeden yeni kopya kaydetmek için Ayarlar'da Tam Erişim'i aç."
+          }
+        }
+      }
+    },
+    "space": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "boşluk"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

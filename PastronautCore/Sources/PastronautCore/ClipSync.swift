@@ -245,7 +245,7 @@ extension ClipSync: CKSyncEngineDelegate {
       logger.notice("Clips zone was deleted in iCloud; forgetting \(self.state.entries.count) mirrored clips")
       state.entries.removeAll()
       state.catchUpToken = nil
-      lastError = "iCloud data was deleted; local history was kept."
+      lastError = String(localized: "iCloud data was deleted; local history was kept.", bundle: .module)
       persist()
 
     case .fetchedRecordZoneChanges(let changes):

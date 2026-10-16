@@ -2,7 +2,9 @@ import Defaults
 import PastronautCore
 import SwiftUI
 
-// English-only for now; localized with the iOS app in Faz 2.
+// Pastronaut's own Mac strings live in the "Pastronaut" table (Maccy/Sync/Pastronaut.xcstrings), so Maccy's
+// Localizable.strings files stay untouched for upstream merges: Text("…", tableName: "Pastronaut") and
+// String(localized: "…", table: "Pastronaut"). This pane is still English-only until its redesign (Faz 4).
 struct SyncSettingsPane: View {
   @Default(.iCloudSync) private var isEnabled
   @State private var status: SyncStatus?

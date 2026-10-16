@@ -118,7 +118,7 @@ class AppState: Sendable {
       let appearanceTitle = NSLocalizedString("Title", tableName: "AppearanceSettings", comment: "")
       let ignoreTitle = NSLocalizedString("Title", tableName: "IgnoreSettings", comment: "")
       let advancedTitle = NSLocalizedString("Title", tableName: "AdvancedSettings", comment: "")
-      let syncTitle = "Sync" // Pastronaut
+      let syncTitle = String(localized: "Sync", table: "Pastronaut") // Pastronaut
       let toolbarTitles = [generalTitle, storageTitle, appearanceTitle, ignoreTitle, syncTitle, advancedTitle]
       let titleAttributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: NSFont.systemFontSize)]
       let titleWidth = toolbarTitles.reduce(CGFloat.zero) {

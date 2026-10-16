@@ -67,6 +67,7 @@
 		67CFBF7B8D2615BB1336A127 /* PastronautCore in Frameworks */ = {isa = PBXBuildFile; productRef = B072D60DDB83FC6A4050547E /* PastronautCore */; };
 		413D7FD3F22A45C693CF685F /* SyncBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */; };
 		37A576BFBA4FEEC87DE10616 /* SyncSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC7B1A343D3468FB0F938E4F /* SyncSettingsPane.swift */; };
+		A1C0FFEE0000000000000012 /* Pastronaut.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000011 /* Pastronaut.xcstrings */; };
 		DA13D7D22C19F91B00FA9E23 /* Defaults.Keys+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA13D7D12C19F91B00FA9E23 /* Defaults.Keys+Names.swift */; };
 		DA13D7D82C1A223E00FA9E23 /* Select.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA13D7D32C1A223E00FA9E23 /* Select.swift */; };
 		DA13D7D92C1A223E00FA9E23 /* Get.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA13D7D42C1A223E00FA9E23 /* Get.swift */; };
@@ -276,6 +277,7 @@
 		3787E55D54393A96440E4474 /* PastronautCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = PastronautCore; sourceTree = "<group>"; };
 		9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBridge.swift; sourceTree = "<group>"; };
 		AC7B1A343D3468FB0F938E4F /* SyncSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettingsPane.swift; sourceTree = "<group>"; };
+		A1C0FFEE0000000000000011 /* Pastronaut.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Pastronaut.xcstrings; sourceTree = "<group>"; };
 		DA05B5102C234CB1006980FE /* MaccyApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MaccyApp.swift; sourceTree = "<group>"; };
 		DA05B5122C234DCF006980FE /* HistoryItemContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryItemContent.swift; sourceTree = "<group>"; };
 		DA05B5132C234DCF006980FE /* HistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryItem.swift; sourceTree = "<group>"; };
@@ -719,6 +721,7 @@
 			children = (
 				9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */,
 				AC7B1A343D3468FB0F938E4F /* SyncSettingsPane.swift */,
+				A1C0FFEE0000000000000011 /* Pastronaut.xcstrings */,
 			);
 			path = Sync;
 			sourceTree = "<group>";
@@ -1137,6 +1140,7 @@
 				714ABC457AA277100F28DAC1 /* Acknowledgements.txt in Resources */,
 				DA9C3C4A2C20D4B40056795D /* IgnoreSettings.strings in Resources */,
 				42E9C329301B7F9C00B6B55B /* AppIcon.icon in Resources */,
+				A1C0FFEE0000000000000012 /* Pastronaut.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

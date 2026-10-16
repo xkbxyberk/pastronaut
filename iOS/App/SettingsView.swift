@@ -11,11 +11,12 @@ struct SettingsView: View {
         Section {
           LabeledContent("iCloud", value: store.accountStatus)
           LabeledContent("Synced clips", value: store.status.map { "\($0.syncedClips)" } ?? "–")
+            .accessibilityIdentifier("syncedClips")
           LabeledContent("Last sync") {
             if let date = store.status?.lastSyncAt {
               Text(date, style: .relative)
             } else {
-              Text("–")
+              Text(verbatim: "–")
             }
           }
           if let error = store.status?.lastError {
@@ -58,6 +59,7 @@ struct SettingsView: View {
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button("Done") { dismiss() }
+            .accessibilityIdentifier("doneButton")
         }
       }
     }
@@ -68,7 +70,7 @@ struct LicensesView: View {
   private let text: String = {
     guard let url = Bundle.main.url(forResource: "Acknowledgements", withExtension: "txt"),
           let text = try? String(contentsOf: url, encoding: .utf8) else {
-      return "Licenses are missing from this build."
+      return String(localized: "Licenses are missing from this build.")
     }
     return text
   }()

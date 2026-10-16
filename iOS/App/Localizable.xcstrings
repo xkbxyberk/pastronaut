@@ -1,0 +1,402 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "1. Open Settings › General › Keyboard › Keyboards › Add New Keyboard and choose Pastronaut.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Ayarlar › Genel › Klavye › Klavyeler › Yeni Klavye Ekle'yi aç ve Pastronaut'u seç."
+          }
+        }
+      }
+    },
+    "2. Tap Pastronaut in the list and turn on Allow Full Access. Without it the keyboard still shows your history, but cannot save new copies.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Listede Pastronaut'a dokun ve Tam Erişime İzin Ver'i aç. Bu olmadan klavye geçmişini yine gösterir ama yeni kopyaları kaydedemez."
+          }
+        }
+      }
+    },
+    "3. In any text field, hold 🌐 and pick Pastronaut. Tap a clip to type it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Herhangi bir metin alanında 🌐 tuşunu basılı tut ve Pastronaut'u seç. Yazmak için bir öğeye dokun."
+          }
+        }
+      }
+    },
+    "About": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hakkında"
+          }
+        }
+      }
+    },
+    "Adds text to your Pastronaut history and syncs it to your Mac. Use it after Get Clipboard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metni Pastronaut geçmişine ekler ve Mac'inle eşitler. Panoyu Al eyleminden sonra kullan."
+          }
+        }
+      }
+    },
+    "Based on Maccy by Alexey Rodionov (MIT). Not affiliated with Maccy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alexey Rodionov'un Maccy uygulamasına (MIT) dayanır. Maccy ile bağlantılı değildir."
+          }
+        }
+      }
+    },
+    "Copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalandı"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sil"
+          }
+        }
+      }
+    },
+    "Done": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitti"
+          }
+        }
+      }
+    },
+    "Keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavye"
+          }
+        }
+      }
+    },
+    "Last sync": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son eşitleme"
+          }
+        }
+      }
+    },
+    "Licenses": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lisanslar"
+          }
+        }
+      }
+    },
+    "Licenses are missing from this build.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu derlemede lisans metinleri yok."
+          }
+        }
+      }
+    },
+    "No clips yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz öğe yok"
+          }
+        }
+      }
+    },
+    "Not signed in to iCloud": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud'a giriş yapılmamış"
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'ı aç"
+          }
+        }
+      }
+    },
+    "Pastronaut on GitHub": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub'da Pastronaut"
+          }
+        }
+      }
+    },
+    "Pin": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitle"
+          }
+        }
+      }
+    },
+    "Restricted": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kısıtlı"
+          }
+        }
+      }
+    },
+    "Save ${text} to Pastronaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${text} metnini Pastronaut'a kaydet"
+          }
+        }
+      }
+    },
+    "Save to Pastronaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'a kaydet"
+          }
+        }
+      }
+    },
+    "Saved to Pastronaut.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'a kaydedildi."
+          }
+        }
+      }
+    },
+    "Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar"
+          }
+        }
+      }
+    },
+    "Signed in": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giriş yapıldı"
+          }
+        }
+      }
+    },
+    "Sync": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşitleme"
+          }
+        }
+      }
+    },
+    "Sync Now": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi eşitle"
+          }
+        }
+      }
+    },
+    "Synced clips": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşitlenen öğeler"
+          }
+        }
+      }
+    },
+    "Temporarily unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçici olarak kullanılamıyor"
+          }
+        }
+      }
+    },
+    "Text": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin"
+          }
+        }
+      }
+    },
+    "Text clips sync through your private iCloud database. Clip text is end-to-end encrypted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin öğeleri özel iCloud veritabanın üzerinden eşitlenir. Metinler uçtan uca şifrelenir."
+          }
+        }
+      }
+    },
+    "There was no text to save.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydedilecek metin yoktu."
+          }
+        }
+      }
+    },
+    "This text is too large to sync, so it was not saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu metin eşitlenemeyecek kadar büyük, bu yüzden kaydedilmedi."
+          }
+        }
+      }
+    },
+    "To save copies without tapping the paste button, set Settings › Pastronaut › Paste from Other Apps to Allow. iOS then shows a short notice each time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yapıştır düğmesine dokunmadan kopya kaydetmek için Ayarlar › Pastronaut › Diğer Uygulamalardan Yapıştır'ı İzin Ver olarak ayarla. iOS her seferinde kısa bir bildirim gösterir."
+          }
+        }
+      }
+    },
+    "Turn on Sync in Pastronaut on your Mac, or save your clipboard with the paste button.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'teki Pastronaut'ta eşitlemeyi aç ya da yapıştır düğmesiyle panonu kaydet."
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilinmiyor"
+          }
+        }
+      }
+    },
+    "Unpin": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlemeyi kaldır"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

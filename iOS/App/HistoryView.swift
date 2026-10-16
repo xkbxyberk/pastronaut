@@ -25,9 +25,14 @@ struct HistoryView: View {
             Button {
               store.togglePin(clip)
             } label: {
-              Label(clip.pinned ? "Unpin" : "Pin", systemImage: clip.pinned ? "pin.slash" : "pin")
+              if clip.pinned {
+                Label("Unpin", systemImage: "pin.slash")
+              } else {
+                Label("Pin", systemImage: "pin")
+              }
             }
             .tint(.orange)
+            .accessibilityIdentifier("pinAction")
           }
           .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
@@ -35,6 +40,7 @@ struct HistoryView: View {
             } label: {
               Label("Delete", systemImage: "trash")
             }
+            .accessibilityIdentifier("deleteAction")
           }
         }
       }
@@ -73,6 +79,7 @@ struct HistoryView: View {
           } label: {
             Label("Settings", systemImage: "gearshape")
           }
+          .accessibilityIdentifier("settingsButton")
         }
       }
       .sheet(isPresented: $showsSettings) {

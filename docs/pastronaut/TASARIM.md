@@ -205,6 +205,11 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     bulut işleminin sonucunu gösteriyor; tekrar olursa test çıktısında görünecek.
 - **Faz 4: Ürünleşme (1.0 kapsamı, §9).** Önce zorunlu temizlik (Maccy ikonu ve menü simgesi), yerelleştirme altyapısı ve
   testlerin kimlik tabanlı olması; sonra görsel kimlik, Mac popup'ı, iOS ekranları, klavye, widget'lar ve uzantılar.
+  - ✅ 4.1 Kendi ikonlar (commit `30d3fa6`).
+  - ✅ 4.2 Yerelleştirme altyapısı: iOS uygulama/klavye/çekirdek için `Localizable.xcstrings` (EN temel, TR tam),
+    Mac için ayrı `Pastronaut` tablosu (`Maccy/Sync/Pastronaut.xcstrings`); Kısayollar eylemi de katalogdan.
+    Testler etiket yerine erişilebilirlik kimliğiyle çalışıyor; Türkçe cihazda tam koşu geçti (T21: uygulama
+    "Ayarlar" başlığıyla açılıyor). Mac Sync ekranının metinleri yeniden tasarımında tabloya taşınacak.
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
   TestFlight ve App Store; Mac için GitHub Releases, Homebrew tap, Mac App Store.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.

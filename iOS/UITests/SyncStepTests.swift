@@ -59,7 +59,8 @@ final class SyncStepTests: XCTestCase {
     case "pin", "unpin":
       let element = try existingRow()
       element.swipeRight()
-      let button = app.buttons[op == "pin" ? "Pin" : "Unpin"].firstMatch
+      // Identifiers, not labels: the app follows the device language.
+      let button = app.buttons["pinAction"].firstMatch
       XCTAssertTrue(button.waitForExistence(timeout: 5), "\(op) action missing")
       button.tap()
       let expected = op == "pin" ? "pinned" : "unpinned"
@@ -67,7 +68,7 @@ final class SyncStepTests: XCTestCase {
     case "delete":
       let element = try existingRow()
       element.swipeLeft()
-      let button = app.buttons["Delete"].firstMatch
+      let button = app.buttons["deleteAction"].firstMatch
       XCTAssertTrue(button.waitForExistence(timeout: 5), "delete action missing")
       button.tap()
       report(["ok": element.waitForNonExistence(timeout: 5)])
@@ -80,15 +81,19 @@ final class SyncStepTests: XCTestCase {
       report(["ok": app.wait(for: .runningBackgroundSuspended, timeout: 15) || app.state == .runningBackground])
     case "status":
       app.activate()
-      app.buttons["Settings"].firstMatch.tap()
+      app.buttons["settingsButton"].firstMatch.tap()
       let error = app.staticTexts["syncError"]
-      let synced = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Synced clips'")).firstMatch
+      let synced = app.descendants(matching: .any)["syncedClips"].firstMatch
+      // The sheet sits over the history screen, so both navigation bars exist; report every title.
+      let titles = app.navigationBars.allElementsBoundByIndex.map(\.identifier)
       report([
         "ok": true,
         "error": error.waitForExistence(timeout: 2) ? error.label : "",
-        "synced": synced.exists ? synced.label : "?"
+        "synced": synced.exists ? synced.label : "?",
+        // Shows which language the app runs in ("Ayarlar" on a Turkish device).
+        "titles": titles
       ])
-      app.buttons["Done"].firstMatch.tap()
+      app.buttons["doneButton"].firstMatch.tap()
     case "keyboard":
       try keyboardStep()
     default:
@@ -171,26 +176,22 @@ final class SyncStepTests: XCTestCase {
       func count(_ format: String, _ value: String) -> Int {
         safari.descendants(matching: .any).matching(NSPredicate(format: format, value)).count
       }
-      let cloudStatus = safari.descendants(matching: .any)
-        .matching(NSPredicate(format: "label BEGINSWITH 'cloud:'")).firstMatch
-      let diagnostics = safari.descendants(matching: .any)
-        .matching(NSPredicate(format: "label CONTAINS 'diag:'")).firstMatch
+      let cloudStatus = safari.descendants(matching: .any)["cloudStatus"].firstMatch
+      let diagnostics = safari.descendants(matching: .any)["diagnostics"].firstMatch
       report(["ok": false, "reason": "clip not in keyboard", "switches": switches,
               "globeValue": (globe.value as? String) ?? "",
-              "spaceKey": count("label == %@", "space"),
-              "noClipsText": count("label BEGINSWITH %@", "No clips yet"),
-              "fullAccessHint": count("label BEGINSWITH %@", "Turn on Allow Full Access"),
+              "spaceKey": count("identifier == %@", "spaceKey"),
+              "noClipsText": count("identifier == %@", "emptyState"),
+              "fullAccessHint": count("identifier == %@", "fullAccessHint"),
               "diagnostics": diagnostics.exists ? diagnostics.label : "",
-              "cloudStatus": cloudStatus.exists ? cloudStatus.label : "",
-              "rowsWithDeviceIcon": count("label CONTAINS %@", "laptopcomputer") + count("label CONTAINS %@", "iphone")])
+              "cloudStatus": cloudStatus.exists ? cloudStatus.label : ""])
       return
     }
-    let pinned = safari.images.matching(NSPredicate(format: "identifier == 'pin.fill' OR label == 'Pin'")).count
+    let pinned = safari.images.matching(identifier: "pinIcon").count
     clip.tap()
     let field = safari.textFields.firstMatch
     let typed = (field.value as? String)?.contains(match) ?? false
-    let cloudStatus = safari.descendants(matching: .any)
-      .matching(NSPredicate(format: "label BEGINSWITH 'cloud:'")).firstMatch
+    let cloudStatus = safari.descendants(matching: .any)["cloudStatus"].firstMatch
     report(["ok": typed, "pinIcons": pinned, "cloudStatus": cloudStatus.exists ? cloudStatus.label : ""])
   }
 

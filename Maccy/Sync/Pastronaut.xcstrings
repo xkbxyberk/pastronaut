@@ -1,0 +1,17 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Sync": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşitleme"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

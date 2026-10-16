@@ -407,6 +407,9 @@ def main():
     every = mac_state(prefix="")
     time.sleep(5)
     status = ios_step("status")
+    check("T21", "App runs in the device language (Turkish device shows Ayarlar)",
+          "Ayarlar" in status.get("titles", []) or "Settings" in status.get("titles", []),
+          f"navigation titles={status.get('titles')}")
     check("T17", "Final counts match, no sync errors",
           every["synced"] == len(ios_mirror()) and not every["lastError"] and not status.get("error"),
           f"Mac {every['synced']} iPhone {len(ios_mirror())} macError={every['lastError']} "
