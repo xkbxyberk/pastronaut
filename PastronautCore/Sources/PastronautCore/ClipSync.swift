@@ -32,6 +32,8 @@ public actor ClipSync {
   struct PersistedState: Codable {
     var entries: [String: MirrorEntry] = [:]
     var engineState: CKSyncEngine.State.Serialization?
+    /// Archived change token of our own zone fetch (see `catchUp`). Separate from the engine's tokens.
+    var catchUpToken: Data?
   }
 
   private let container: CKContainer
@@ -95,10 +97,73 @@ public actor ClipSync {
     stop()
   }
 
+  /// Fetches and sends now. Call at launch, on foreground, on push and from a periodic fallback.
   public func syncNow() async throws {
     guard let engine else { return }
     try await engine.fetchChanges()
+    try await catchUp(syncEngine: engine)
     try await engine.sendChanges()
+  }
+
+  /// Uploads pending changes now instead of waiting for the engine's own schedule, which runs a few
+  /// seconds later and never runs if iOS suspends the app first.
+  public func sendNow() async throws {
+    try await engine?.sendChanges()
+  }
+
+  /// Fetches our zone directly with our own change token.
+  ///
+  /// CKSyncEngine only fetches zones it was told changed, and it learns that from pushes. When a push is
+  /// lost (observed on macOS: apsd drops CloudKit pushes for an "unknown token") the engine logs "no zone
+  /// IDs needing to be fetched" for every fetch, so launch, manual sync and polling never see changes,
+  /// even with an explicit zone scope. Changes found here go through the same merge as the engine's, so
+  /// seeing a change twice is harmless.
+  private func catchUp(syncEngine: CKSyncEngine) async throws {
+    var token = state.catchUpToken.flatMap {
+      try? NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: $0)
+    }
+    let isFullFetch = token == nil
+    var records: [CKRecord] = []
+    var deletions: [CKRecord.ID] = []
+    var moreComing = true
+    do {
+      while moreComing {
+        let changes = try await container.privateCloudDatabase.recordZoneChanges(
+          inZoneWith: ClipRecord.zoneID, since: token
+        )
+        for (_, result) in changes.modificationResultsByID {
+          if case .success(let modification) = result { records.append(modification.record) }
+        }
+        deletions += changes.deletions.map(\.recordID)
+        token = changes.changeToken
+        moreComing = changes.moreComing
+      }
+    } catch let error as CKError where error.code == .changeTokenExpired {
+      state.catchUpToken = nil
+      persist()
+      return try await catchUp(syncEngine: syncEngine)
+    } catch let error as CKError where error.code == .zoneNotFound {
+      // Nothing uploaded yet, or iCloud data was deleted; the engine handles both.
+      return
+    }
+
+    if isFullFetch {
+      // A full fetch reports no deletions. Clips this device saw on the server that are gone now, and
+      // that are not waiting to be uploaded again, were deleted elsewhere.
+      let onServer = Set(records.map(\.recordID.recordName))
+      let pendingSaves = Set(syncEngine.state.pendingRecordZoneChanges.compactMap { change -> String? in
+        if case .saveRecord(let id) = change { return id.recordName }
+        return nil
+      })
+      deletions += state.entries
+        .filter { $0.value.systemFields != nil && !onServer.contains($0.key) && !pendingSaves.contains($0.key) }
+        .map { ClipRecord.recordID(for: $0.key) }
+    }
+
+    state.catchUpToken = token.flatMap {
+      try? NSKeyedArchiver.archivedData(withRootObject: $0, requiringSecureCoding: true)
+    }
+    await apply(modifications: records, deletions: deletions, syncEngine: syncEngine, source: "catch-up")
   }
 
   // MARK: - Local changes
@@ -174,6 +239,7 @@ extension ClipSync: CKSyncEngineDelegate {
       guard changes.deletions.contains(where: { $0.zoneID == ClipRecord.zoneID }) else { return }
       logger.notice("Clips zone was deleted in iCloud; forgetting \(self.state.entries.count) mirrored clips")
       state.entries.removeAll()
+      state.catchUpToken = nil
       lastError = "iCloud data was deleted; local history was kept."
       persist()
 
@@ -228,6 +294,7 @@ extension ClipSync: CKSyncEngineDelegate {
     case .signOut, .switchAccounts:
       // Another account's clips must not leak into this one. Local history is the caller's to keep.
       state.entries.removeAll()
+      state.catchUpToken = nil
       persist()
     @unknown default:
       break
@@ -235,10 +302,24 @@ extension ClipSync: CKSyncEngineDelegate {
   }
 
   private func handleFetched(_ changes: CKSyncEngine.Event.FetchedRecordZoneChanges, syncEngine: CKSyncEngine) async {
+    await apply(
+      modifications: changes.modifications.map(\.record),
+      deletions: changes.deletions.map(\.recordID),
+      syncEngine: syncEngine,
+      source: "engine"
+    )
+  }
+
+  /// Merges fetched records into the mirror and reports what changed. Safe to call twice for one change.
+  private func apply(
+    modifications: [CKRecord],
+    deletions: [CKRecord.ID],
+    syncEngine: CKSyncEngine,
+    source: String
+  ) async {
     var result: [ClipChange] = []
 
-    for modification in changes.modifications {
-      let record = modification.record
+    for record in modifications {
       guard let remote = ClipRecord.clip(from: record) else {
         logger.error("Ignoring invalid clip record \(record.recordID.recordName)")
         continue
@@ -255,14 +336,17 @@ extension ClipSync: CKSyncEngineDelegate {
       }
     }
 
-    for deletion in changes.deletions {
-      let id = deletion.recordID.recordName
+    for recordID in deletions {
+      let id = recordID.recordName
       if state.entries.removeValue(forKey: id) != nil {
         result.append(.deleted(id: id))
       }
     }
 
-    logger.notice("Fetched \(changes.modifications.count) modifications, \(changes.deletions.count) deletions")
+    logger.notice("""
+      Fetched (\(source, privacy: .public)): \(modifications.count) modifications, \(deletions.count) deletions, \
+      \(result.count) changes
+      """)
     lastSyncAt = .now
     persist()
     await notify(result)

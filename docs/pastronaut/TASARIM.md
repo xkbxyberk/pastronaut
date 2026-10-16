@@ -89,7 +89,18 @@ Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi e
   düğmesi var. Bulut verisi silinince diğer cihazlar yalnızca eşitleme kopyalarını unutur; **yerel geçmişleri korunur**.
 - Hesaptan çıkış ya da hesap değişikliğinde eşitleme kopyası unutulur; yerel geçmiş korunur.
 
-### 4.5 Gizlilik
+### 4.5 Push'a güvenmeme (Faz 2 uçtan uca testinden)
+CKSyncEngine bir bölgeyi yalnızca o bölgenin değiştiğini push'tan öğrenince çeker. Push kaybolursa `fetchChanges()`,
+açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs needing to be fetched`). Bu yüzden:
+- `ClipSync.syncNow()` motorun çekmesinden sonra kendi **yakalama çekmesini** (`catchUp`) yapar. Bölgeyi kendi değişiklik
+  işaretimizle doğrudan ister; sonuç motorunkiyle aynı birleştirmeden geçer, aynı değişikliği iki kez görmek zararsızdır.
+  İlk (işaretsiz) çekmede sunucuda artık olmayan ve yeniden gönderilmeyi beklemeyen kayıtlar silinmiş sayılır.
+- `syncNow()` şu anlarda çağrılır. Mac: açılışta, push gelince, dakikada bir ve bir penceresi öne gelince (en sık 10 sn'de bir).
+  iPhone: açılışta, öne gelince, push gelince, aşağı çekince ve açıkken dakikada bir.
+- iPhone her yerel değişiklikten sonra hemen gönderir (`sendNow`) ve bunu kısa bir arka plan göreviyle güvenceye alır.
+  Motorun kendi gönderimi birkaç saniye bekliyor; uygulama bu sırada askıya alınırsa değişiklik bir sonraki açılışa kalıyordu.
+
+### 4.6 Gizlilik
 - Yalnızca Mac'te yok sayma kurallarından geçip geçmişe giren öğeler eşitlenir. Gizli işaretli kopyalar zaten geçmişe girmez.
 - iPhone'da yakalanan kopyalar için de aynı düzenli ifade kuralları uygulanır (kurallar eşitlenen bir ayar kaydında tutulur; Sonra).
 - Şifreli alanlar Apple'ın uçtan uca şifrelemesiyle korunur; geliştirici CloudKit panosunda içeriği göremez.
@@ -137,6 +148,7 @@ Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi e
 | R4 | Klavye bellek sınırı | Faz 2'de Instruments ile ölçüm |
 | R5 | "Pastronaut" adının App Store'da ve marka olarak uygunluğu | App Store Connect'te ad ayırma, marka araması |
 | R6 | Upstream değişiklikleriyle birleşme maliyeti | Değişiklikleri kanca ve ayrı klasörlerle sınırlamak |
+| R7 | Mac'te CloudKit push'u uygulamaya ulaşmıyor | Açık. `apsd` push'ları alıp `usernoted`'a veriyor; `usernoted` ise Debug uygulamasını "eksik uygulama" sayıp push kaydını siliyor (günlük: `Removing missing application`). Uygulama `/private/tmp` altındaki DerivedData'dan çalışıyor. `/Applications` altında denenecek. O zamana kadar yakalama çekmesi gecikmeyi ≤ 1 dk tutuyor. |
 
 ## 8. Fazlar ve kabul ölçütleri
 - **Faz 0: Riskleri kapatan prototip (1 hafta).** CloudKit'e yazan minimal bir Mac uygulaması, okuyan bir iOS uygulaması
@@ -147,10 +159,24 @@ Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi e
   - ✅ Yok sayılan bir türdeki kopya buluta gitmez: `SyncBridgeTests.testConcealedCopiesNeverReachHistory`
     ve mevcut `ClipboardTests` yok sayma testleri.
   - ✅ Silme buluta yayılır (kullanıcı gözlemi: sayaç azaldı). Diğer cihaza yayılması Faz 2'de doğrulanacak.
-  - Günlükte hata yok. Testler: 104 MaccyTests, 15 PastronautCore.
-- **Faz 2: iOS uygulaması ve klavye (yalnızca metin).** Ölçütler:
-  - Mac'te kopyalanan metin iPhone klavyesinde görünür ve dokunulunca yazılır.
-  - Tam Erişim kapalıyken klavye çökmez ve yönlendirme gösterir.
+  - ~~Günlükte hata yok.~~ **Geçersiz:** sorgular zsh'nin yerleşik `log` komutuna gitmiş ve boş dönmüştü. Artık
+    `/usr/bin/log` kullanılıyor. Testler: 104 MaccyTests, 15 PastronautCore.
+- **Faz 2: iOS uygulaması ve klavye (yalnızca metin).** Ölçütler `scripts/e2e/sync_e2e.py` ile iki gerçek cihazda
+  otomatik sınanır (§10). Son koşu 2026-10-16 19:19, Development ortamı: 15 zorunlu kontrolün 15'i geçti, 2 uyarı.
+  - ✅ Mac'te kopyalanan metin iPhone klavyesinde görünür ve dokunulunca yazılır. Tam Erişim kapalıyken de görünür
+    (önceden boş görünüyordu, bkz. aşağıda) — T02, T14 (ayrı koşuda geçti).
+  - ✅ Tam Erişim kapalıyken klavye çökmez ve yönlendirme gösterir — T14 tanısı ("fullAccessHint").
+  - ✅ İki yönde ekleme, sabitleme, sabit kaldırma, silme (T02–T07, T11, T12). Mac → açık iPhone ≈ 23 sn,
+    iPhone → Mac ≈ 45–55 sn (Mac'te push çalışmadığı için dakikalık yoklamayla; bkz. R7).
+  - ✅ Türkçe, emoji, çok satırlı metin bayt bayt aynı (T08). Gizli (parola) kopya hiçbir yere gitmez (T09).
+    100 KB üstü metin Mac'te kalır (T10).
+  - ✅ Mac kapalıyken iPhone'da yapılanlar Mac açılınca gelir (T15, 2 sn). İlk kurulum geçmişi çeker (T01).
+  - ⚠️ Uygulama arka plandayken sessiz push'la klavye verisinin tazelenmesi: bir koşuda 51 sn'de geçti, son koşuda
+    3 dakikada gelmedi (iOS arka plan push'larını kısar). En iyi çaba; Faz 3'te klavyenin kendisi çekebilir (Tam Erişim'le).
+  - Elle doğrulanır: sistem Yapıştır düğmesi (otomasyondan gelen dokunuşu reddeder), Tam Erişim açıkken klavyeden yakalama.
+  - Testin bulduğu hatalar: (1) Mac push'suz hiç çekmiyordu, (2) iPhone değişiklikleri uygulama askıya alınınca
+    gönderilmiyordu, (3) Tam Erişim kapalıyken klavye `NSFileCoordinator` ile okuyamadığı için listeyi boş gösteriyordu
+    (geri alınarak doğrulandı). Üçü de düzeltildi.
 - **Faz 3: Telefon kopyaları.** Ölçüt: uygulama, klavye ve Kısayol ile yakalanan kopya Mac geçmişinde görünür.
 - **Faz 4: Yayın.** Lisans ekranı, gizlilik politikası (App Store zorunlu), App Store Gizlilik Etiketi, TestFlight, başvuru.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.
@@ -167,6 +193,11 @@ Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi e
 | Upstream'e not | Taslak: `docs/pastronaut/upstream-not.md`. Kullanıcı onayı olmadan gönderilmez. |
 
 ## 10. Geliştirme ortamı
+- **İki cihazlı uçtan uca test:** Mac Debug derlemesi ve iOS `build-for-testing` sonrası
+  `scripts/e2e/sync_e2e.py --mac-app <Pastronaut.app> --xctestrun <…xctestrun> --device <UDID>`. iPhone kilidi açık ve
+  bağlı kalmalı; ~13 dk sürer. Mac yalnızca Debug derlemesindeki `E2EControl` ile, iPhone XCUITest adımlarıyla
+  (`iOS/UITests`) sürülür; durum Mac'te birleşik günlükten, iPhone'da `devicectl` ile App Group dosyalarından okunur.
+  `test-without-building` değişen uygulamayı her zaman yeniden kurmuyor; betik bu yüzden önce `devicectl` ile kurar.
 - Xcode 27.1 `/Applications/Xcode.app` içinde. `xcode-select` Komut Satırı Araçları'nı gösteriyor; bu yüzden komutlar
   `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` ile çalıştırılır.
 - iOS SDK 27.1 kurulu. iOS simülatör çalışma zamanı **yok**. Faz 0 için ya simülatör indirilecek (birkaç GB, onay gerekir)

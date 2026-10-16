@@ -40,8 +40,11 @@ public struct SharedClipFiles: Sendable {
     }
   }
 
+  /// Plain read, no file coordination: without Full Access the keyboard cannot use file coordination
+  /// and a coordinated read returned nothing (found by the end-to-end test). The snapshot is always
+  /// replaced atomically, so a reader sees either the old or the new file, never half of one.
   public func readSnapshot() -> [Clip] {
-    (try? coordinatedRead(snapshotURL, decode: [Clip].self)) ?? []
+    (try? decode([Clip].self, from: snapshotURL)) ?? []
   }
 
   // MARK: - Inbox

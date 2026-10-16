@@ -19,7 +19,7 @@ struct SettingsView: View {
             }
           }
           if let error = store.status?.lastError {
-            Text(error).font(.footnote).foregroundStyle(.red)
+            Text(error).font(.footnote).foregroundStyle(.red).accessibilityIdentifier("syncError")
           }
           Button("Sync Now") {
             Task { await store.refresh() }

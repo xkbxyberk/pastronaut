@@ -78,6 +78,7 @@ final class ClipStore {
     Task {
       await sync.delete(ids: [clip.id])
       await reload()
+      await upload()
     }
   }
 
@@ -91,7 +92,20 @@ final class ClipStore {
     Task {
       await sync.upsert(clip)
       await reload()
+      await upload()
     }
+  }
+
+  /// Sends local changes right away and asks iOS for time to finish if the app is leaving the foreground.
+  /// Without this a pin or delete made just before switching apps waited until Pastronaut was opened again.
+  func upload() async {
+    let application = UIApplication.shared
+    let task = BackgroundTask()
+    task.id = application.beginBackgroundTask(withName: "Upload clip changes") {
+      task.end(application)
+    }
+    try? await sync.sendNow()
+    task.end(application)
   }
 
   private func ingestInbox() async {
@@ -114,5 +128,16 @@ final class ClipStore {
     } catch {
       accountStatus = error.localizedDescription
     }
+  }
+}
+
+@MainActor
+private final class BackgroundTask {
+  var id = UIBackgroundTaskIdentifier.invalid
+
+  func end(_ application: UIApplication) {
+    guard id != .invalid else { return }
+    application.endBackgroundTask(id)
+    id = .invalid
   }
 }

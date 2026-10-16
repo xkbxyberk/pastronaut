@@ -44,11 +44,13 @@ final class SyncBridge {
     // Tests run inside the app and clear History constantly; they must never reach the user's iCloud
     // data or the sync mirror, which share this app's container.
     if AppDelegate.isTesting { return }
+    E2EControl.start(sync: sync)
     #endif
     // CKSyncEngine fetches when its subscription push arrives; without registering, the Mac only
     // fetched at launch and on "Sync Now", so changes from the iPhone never showed up.
     NSApplication.shared.registerForRemoteNotifications()
     startFallbackPolling()
+    syncWhenWindowsOpen()
     observation = Task { [weak self] in
       // Maccy loads history lazily when the popup first appears. Remote clips applied to an unloaded
       // history would be stored as duplicates, so load it before syncing.
@@ -59,14 +61,27 @@ final class SyncBridge {
     }
   }
 
-  /// Safety net for missed pushes (e.g. while asleep or offline). Fetching with a change token is cheap.
+  /// Safety net for missed pushes (e.g. while asleep or offline). An unchanged zone costs one small request.
   private func startFallbackPolling() {
     Task { [weak self] in
       while !Task.isCancelled {
-        try? await Task.sleep(for: .seconds(120))
+        try? await Task.sleep(for: .seconds(60))
         guard let self, Defaults[.iCloudSync] else { continue }
         try? await self.sync.syncNow()
       }
+    }
+  }
+
+  /// Fetches when the history popup (or any window of this app) opens, so the list is fresh when the
+  /// user is about to paste even if a push was lost. At most every 10 seconds.
+  private func syncWhenWindowsOpen() {
+    var lastSync = Date.distantPast
+    NotificationCenter.default.addObserver(
+      forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main
+    ) { [weak self] _ in
+      guard Defaults[.iCloudSync], Date.now.timeIntervalSince(lastSync) > 10 else { return }
+      lastSync = .now
+      Task { try? await self?.sync.syncNow() }
     }
   }
 
@@ -77,6 +92,8 @@ final class SyncBridge {
       }
       await sync.start()
       uploadExistingHistory()
+      // Catch up on changes made while this app was closed; the engine alone waits for a push.
+      try? await sync.syncNow()
     } else {
       await sync.setChangeHandler(nil)
       await sync.stop()
@@ -236,3 +253,87 @@ extension AppDelegate {
     Task { try? await SyncBridge.shared.syncNow() }
   }
 }
+
+// MARK: - End-to-end test control
+
+#if DEBUG
+/// Lets `scripts/e2e` drive this Mac during the two-device sync test. Debug builds only.
+///
+/// Commands arrive as a distributed notification whose object is a JSON string, e.g.
+/// `{"op":"pin","text":"…"}`. Results are written to the unified log as `PTEST-STATE {json}` lines,
+/// because the sandbox keeps the test script out of this app's container.
+@MainActor
+enum E2EControl {
+  static let commandName = Notification.Name("com.xkbxyberk.pastronaut.e2e.command")
+  private static var sync: ClipSync?
+
+  static func start(sync: ClipSync) {
+    self.sync = sync
+    DistributedNotificationCenter.default().addObserver(
+      forName: commandName, object: nil, queue: .main
+    ) { notification in
+      let object = notification.object as? String
+      MainActor.assumeIsolated { handle(object) }
+    }
+    os_log(.default, "PTEST-READY")
+  }
+
+  private struct Command: Decodable {
+    var op: String
+    var text: String?
+    var prefix: String?
+    var tag: String?
+  }
+
+  private static func handle(_ object: String?) {
+    guard let data = object?.data(using: .utf8),
+          let command = try? JSONDecoder().decode(Command.self, from: data) else { return }
+    let item = command.text.flatMap { text in History.shared.allItems.first { $0.item.text == text } }
+    switch command.op {
+    case "pin":
+      if let item, item.item.pin == nil { History.shared.togglePin(item) }
+    case "unpin":
+      if let item, item.item.pin != nil { History.shared.togglePin(item) }
+    case "delete":
+      if let item { History.shared.delete(item) }
+    case "purge":
+      // Removes leftovers of earlier runs; only texts with the given prefix.
+      let prefix = command.prefix ?? "PTEST-"
+      for item in History.shared.allItems where item.item.text?.hasPrefix(prefix) == true {
+        History.shared.delete(item)
+      }
+    case "sync":
+      Task { try? await SyncBridge.shared.syncNow() }
+    default:
+      break
+    }
+    Task { await dump(prefix: command.prefix ?? "PTEST", tag: command.tag ?? command.op) }
+  }
+
+  private static func dump(prefix: String, tag: String) async {
+    let status = await SyncBridge.shared.status()
+    let mirrored = await sync?.clips ?? []
+    func summary(_ text: String) -> String { text.count > 80 ? "\(text.prefix(80))…(\(text.count))" : text }
+    let history: [[String: Any]] = History.shared.allItems.compactMap { decorator in
+      guard let text = decorator.item.text, text.hasPrefix(prefix) else { return nil }
+      return ["text": summary(text), "pinned": decorator.item.pin != nil, "length": text.count]
+    }
+    let cloud: [[String: Any]] = mirrored.filter { $0.text.hasPrefix(prefix) }.map {
+      ["text": summary($0.text), "pinned": $0.pinned, "device": $0.sourceDevice.rawValue]
+    }
+    let state: [String: Any] = [
+      "tag": tag,
+      "enabled": Defaults[.iCloudSync],
+      "running": status.isRunning,
+      "synced": status.syncedClips,
+      "historyCount": History.shared.allItems.count,
+      "lastError": status.lastError ?? NSNull(),
+      "history": history,
+      "mirror": cloud
+    ]
+    guard let json = try? JSONSerialization.data(withJSONObject: state),
+          let line = String(data: json, encoding: .utf8) else { return }
+    os_log(.default, "PTEST-STATE %{public}@", line)
+  }
+}
+#endif

@@ -69,6 +69,23 @@ final class KeyboardModel {
     reload()
   }
 
+  #if DEBUG
+  /// Why the list is empty, read by the end-to-end test.
+  var diagnostics: String {
+    guard let files else { return "diag: no app group container" }
+    let url = files.directory.appending(path: "clips.json")
+    guard let data = FileManager.default.contents(atPath: url.path) else {
+      let exists = FileManager.default.fileExists(atPath: url.path)
+      return "diag: cannot read snapshot (exists: \(exists), dir: \(files.directory.path))"
+    }
+    do {
+      return "diag: \(try JSONDecoder().decode([Clip].self, from: data).count) clips in \(data.count) bytes"
+    } catch {
+      return "diag: decode failed \(error)"
+    }
+  }
+  #endif
+
   private func reload() {
     guard let files else {
       clips = []
@@ -120,10 +137,15 @@ struct KeyboardView: View {
   @ViewBuilder
   private var list: some View {
     if model.clips.isEmpty {
-      Text("No clips yet. Open Pastronaut once to sync your history.")
-        .font(.footnote)
-        .foregroundStyle(.secondary)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      VStack {
+        Text("No clips yet. Open Pastronaut once to sync your history.")
+        #if DEBUG
+        Text(model.diagnostics).font(.caption2)
+        #endif
+      }
+      .font(.footnote)
+      .foregroundStyle(.secondary)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
     } else {
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 4) {

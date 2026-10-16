@@ -30,6 +30,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut
         PRODUCT_NAME: Pastronaut
+    scheme:
+      testTargets: [PastronautUITests]
     info:
       path: App/Info.plist
       properties:
@@ -71,3 +73,17 @@ targets:
       path: Keyboard/PastronautKeyboard.entitlements
       properties:
         com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]
+  # Driven step by step by scripts/e2e/sync_e2e.py for the two-device sync test.
+  PastronautUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: Pastronaut
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.uitests
+        TEST_TARGET_NAME: Pastronaut
+        GENERATE_INFOPLIST_FILE: YES
+        # XCUIApplication is main-actor isolated; Swift 5 mode keeps the step code plain.
+        SWIFT_VERSION: "5.0"

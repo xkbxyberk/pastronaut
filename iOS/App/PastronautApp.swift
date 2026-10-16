@@ -14,6 +14,8 @@ struct PastronautApp: App {
     .onChange(of: scenePhase) { _, phase in
       if phase == .active {
         Task { await ClipStore.shared.refresh() }
+      } else if phase == .background {
+        Task { await ClipStore.shared.upload() }
       }
     }
   }
@@ -26,6 +28,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
   ) -> Bool {
     // CKSyncEngine subscribes to changes; silent pushes wake the app so the keyboard snapshot stays fresh.
     application.registerForRemoteNotifications()
+    #if DEBUG
+    // The end-to-end test cannot tap the system Paste button (it rejects synthetic touches), so it
+    // hands the text over at launch and the same save path runs.
+    if let text = ProcessInfo.processInfo.environment["PT_E2E_SAVE"] {
+      Task { @MainActor in
+        await ClipStore.shared.start()
+        ClipStore.shared.save(text)
+      }
+    }
+    #endif
     return true
   }
 

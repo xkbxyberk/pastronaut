@@ -18,6 +18,9 @@ struct HistoryView: View {
             ClipRow(clip: clip, isCopied: copiedID == clip.id)
           }
           .foregroundStyle(.primary)
+          // Used by the end-to-end test (iOS/UITests).
+          .accessibilityIdentifier("clip")
+          .accessibilityValue(clip.pinned ? "pinned" : "unpinned")
           .swipeActions(edge: .leading) {
             Button {
               store.togglePin(clip)
@@ -48,6 +51,13 @@ struct HistoryView: View {
       }
       .searchable(text: $store.searchText)
       .refreshable { await store.refresh() }
+      .task {
+        // Safety net for lost pushes while the app is open; the app is suspended in the background.
+        while !Task.isCancelled {
+          try? await Task.sleep(for: .seconds(60))
+          await store.refresh()
+        }
+      }
       .navigationTitle("Pastronaut")
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
