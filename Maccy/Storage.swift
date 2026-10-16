@@ -19,11 +19,13 @@ class Storage {
   private let url = URL.applicationSupportDirectory.appending(path: "Maccy/Storage.sqlite")
 
   init() {
-    var config = ModelConfiguration(url: url)
+    // Pastronaut: the app has a CloudKit entitlement for its own sync layer, so SwiftData would
+    // default to `.automatic` CloudKit mirroring of this store. The local store must stay local.
+    var config = ModelConfiguration(url: url, cloudKitDatabase: .none)
 
     #if DEBUG
     if AppDelegate.isTesting {
-      config = ModelConfiguration(isStoredInMemoryOnly: true)
+      config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
     }
     #endif
 

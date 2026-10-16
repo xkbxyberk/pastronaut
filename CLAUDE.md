@@ -22,7 +22,17 @@ Hedef platformlar: macOS 14+ (mevcut uygulama), iOS 17+ (yeni uygulama ve klavye
 - Derleme: `xcodebuild -project Maccy.xcodeproj -scheme Maccy -configuration Debug build`
 - Test: `xcodebuild -project Maccy.xcodeproj -scheme Maccy test`
 
+## Upstream ile birleştirme
+1. `git fetch upstream && git merge upstream/master` komutlarını çalıştır. Çakışan çeviri dosyalarında upstream sürümünü al.
+2. `scripts/pastronaut-rebrand.sh` betiğini çalıştır. Betik kimlik, ad ve besleme adresini yeniden uygular; tekrar çalıştırmak güvenlidir.
+3. Paket bağımlılıkları değiştiyse `scripts/generate-acknowledgements.sh` betiğini çalıştır.
+4. Derle ve testleri çalıştır: `xcodebuild … -only-testing:MaccyTests test`.
+
+Swift modül adı bilerek `Maccy` bırakıldı (`PRODUCT_MODULE_NAME`). Ürün adı ve paket kimliği Pastronaut.
+
 ## Çalışma kuralları
+- Yerel SwiftData deposu `cloudKitDatabase: .none` ile açılır (`Maccy/Storage.swift`). Bu ayar kaldırılırsa iCloud
+  yetkisi yüzünden SwiftData otomatik CloudKit eşitlemesine geçer ve depo açılmaz. Eşitleme yalnızca kendi katmanımızla yapılır.
 - Upstream ile birleşmeyi kolay tutmak için mevcut dosyalarda en az değişiklik yap. Yeni kodu ayrı dosyalara
   ve klasörlere koy (`Maccy/Sync/`, `Shared/`, `PastronautiOS/`, `PastronautKeyboard/`).
 - Kabul ölçütleri teste dönüşmeden bir özelliğe "bitti" deme.

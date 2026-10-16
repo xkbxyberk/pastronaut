@@ -25,7 +25,7 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © Alexey Rodionov</string>
+	<string>Copyright © Alexey Rodionov (Maccy). Pastronaut changes © xkbxyberk.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SUEnableDownloaderService</key>
@@ -33,21 +33,21 @@
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/p0deje/Maccy/master/appcast.xml</string>
+	<string>https://raw.githubusercontent.com/xkbxyberk/pastronaut/pastronaut/pastronaut-appcast.xml</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
-	<dict>
-		<key>UTTypeIdentifier</key>
-		<string>org.p0deje.Maccy.pin-reorder</string>
-		<key>UTTypeTagSpecification</key>
-		<dict/>
-		<key>UTTypeDescription</key>
-		<string>Maccy Pin Reorder Type</string>
-		<key>UTTypeConformsTo</key>
-		<array>
-		<string>public.data</string>
-		</array>
-	</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Pastronaut Pin Reorder Type</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.xkbxyberk.pastronaut.pin-reorder</string>
+			<key>UTTypeTagSpecification</key>
+			<dict/>
+		</dict>
 	</array>
 </dict>
 </plist>

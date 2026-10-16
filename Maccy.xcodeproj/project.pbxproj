@@ -50,6 +50,7 @@
 		CA110ED10000000000000001 /* CollectionSurroundingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA110ED10000000000000002 /* CollectionSurroundingTests.swift */; };
 		DA009931256411F90030E697 /* appcast.xml in Resources */ = {isa = PBXBuildFile; fileRef = DA00992C256411F90030E697 /* appcast.xml */; };
 		DA009932256411F90030E697 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = DA00992D256411F90030E697 /* README.md */; };
+		714ABC457AA277100F28DAC1 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2B0574F93F6D64822A89D9BB /* Acknowledgements.txt */; };
 		DA009934256411F90030E697 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DA00992F256411F90030E697 /* LICENSE */; };
 		DA009947256414800030E697 /* SwiftHEXColors in Frameworks */ = {isa = PBXBuildFile; productRef = DA009946256414800030E697 /* SwiftHEXColors */; };
 		DA009955256414E60030E697 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = DA009954256414E60030E697 /* KeyboardShortcuts */; };
@@ -266,6 +267,7 @@
 		CF8FD822BE40469D80B10A06 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/AdvancedSettings.strings; sourceTree = "<group>"; };
 		DA00992C256411F90030E697 /* appcast.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = appcast.xml; sourceTree = "<group>"; };
 		DA00992D256411F90030E697 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		2B0574F93F6D64822A89D9BB /* Acknowledgements.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		DA00992F256411F90030E697 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		DA05B5102C234CB1006980FE /* MaccyApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MaccyApp.swift; sourceTree = "<group>"; };
 		DA05B5122C234DCF006980FE /* HistoryItemContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryItemContent.swift; sourceTree = "<group>"; };
@@ -876,6 +878,7 @@
 				DA181178247D150B00066D55 /* Settings */,
 				DA21AD3C249E85BD003E7C98 /* Sounds */,
 				DA19690C2C3EEF9300258481 /* Views */,
+				2B0574F93F6D64822A89D9BB /* Acknowledgements.txt */,
 				DAAEB195219694AE00A7883C /* About.swift */,
 				DA6D98E12AEABE03008A77CE /* Accessibility.swift */,
 				DAEE38461E3DBEB100DD2966 /* AppDelegate.swift */,
@@ -1109,6 +1112,7 @@
 				DA689FB02C1CD3B00009B887 /* StorageSettings.strings in Resources */,
 				DA5E62802C39E53F00F4C710 /* PreviewItemView.strings in Resources */,
 				DA009932256411F90030E697 /* README.md in Resources */,
+				714ABC457AA277100F28DAC1 /* Acknowledgements.txt in Resources */,
 				DA9C3C4A2C20D4B40056795D /* IgnoreSettings.strings in Resources */,
 				42E9C329301B7F9C00B6B55B /* AppIcon.icon in Resources */,
 			);
@@ -1617,7 +1621,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = MN3X4648SC;
+				DEVELOPMENT_TEAM = V88QY49A4T;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = MaccyUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1626,7 +1630,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.p0deje.MaccyUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xkbxyberk.pastronaut.uitests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
@@ -1645,7 +1649,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = MN3X4648SC;
+				DEVELOPMENT_TEAM = V88QY49A4T;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = MaccyUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1654,7 +1658,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.p0deje.MaccyUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xkbxyberk.pastronaut.uitests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
@@ -1671,7 +1675,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = MN3X4648SC;
+				DEVELOPMENT_TEAM = V88QY49A4T;
 				INFOPLIST_FILE = MaccyTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1679,12 +1683,12 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.p0deje.MaccyTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xkbxyberk.pastronaut.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Maccy.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Maccy";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pastronaut.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pastronaut";
 			};
 			name = Debug;
 		};
@@ -1696,7 +1700,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = MN3X4648SC;
+				DEVELOPMENT_TEAM = V88QY49A4T;
 				INFOPLIST_FILE = MaccyTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1704,12 +1708,12 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.p0deje.MaccyTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xkbxyberk.pastronaut.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Maccy.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Maccy";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pastronaut.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pastronaut";
 			};
 			name = Release;
 		};
@@ -1851,7 +1855,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 62;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = MN3X4648SC;
+				DEVELOPMENT_TEAM = V88QY49A4T;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_SOURCE_FILE_NAMES = AppIcon.icon;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1866,8 +1870,9 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.7.1;
-				PRODUCT_BUNDLE_IDENTIFIER = org.p0deje.Maccy;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.xkbxyberk.pastronaut;
+				PRODUCT_MODULE_NAME = Maccy;
+				PRODUCT_NAME = Pastronaut;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
@@ -1887,7 +1892,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 62;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = MN3X4648SC;
+				DEVELOPMENT_TEAM = V88QY49A4T;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1901,8 +1906,9 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.7.1;
-				PRODUCT_BUNDLE_IDENTIFIER = org.p0deje.Maccy;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.xkbxyberk.pastronaut;
+				PRODUCT_MODULE_NAME = Maccy;
+				PRODUCT_NAME = Pastronaut;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 6.0;
 			};

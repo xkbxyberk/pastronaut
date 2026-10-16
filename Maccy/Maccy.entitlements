@@ -11,5 +11,18 @@
     	<string>$(PRODUCT_BUNDLE_IDENTIFIER)-spks</string>
     	<string>$(PRODUCT_BUNDLE_IDENTIFIER)-spki</string>
 	</array>
+	<!-- Pastronaut: iCloud sync -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array>
+		<string>iCloud.com.xkbxyberk.pastronaut</string>
+	</array>
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudKit</string>
+	</array>
+	<key>com.apple.developer.aps-environment</key>
+	<string>development</string>
 </dict>
 </plist>

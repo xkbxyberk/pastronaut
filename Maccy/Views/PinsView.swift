@@ -2,7 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 private enum PinReorderDrag {
-  static let contentType = UTType(exportedAs: "org.p0deje.Maccy.pin-reorder")
+  static let contentType = UTType(exportedAs: "com.xkbxyberk.pastronaut.pin-reorder")
 }
 
 struct PinsView: View {

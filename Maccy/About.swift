@@ -13,12 +13,25 @@ class About {
     return string
   }
 
+  // Pastronaut: own links, plus attribution to Maccy and the bundled license texts.
   private var links: NSMutableAttributedString {
-    let string = NSMutableAttributedString(string: "Website│GitHub│Support",
+    let string = NSMutableAttributedString(string: "GitHub│Support│Licenses",
                                            attributes: [NSAttributedString.Key.foregroundColor: NSColor.labelColor])
-    string.addAttribute(.link, value: "https://maccy.app", range: NSRange(location: 0, length: 7))
-    string.addAttribute(.link, value: "https://github.com/p0deje/Maccy", range: NSRange(location: 8, length: 6))
-    string.addAttribute(.link, value: "mailto:support@maccy.app", range: NSRange(location: 15, length: 7))
+    string.addAttribute(.link, value: "https://github.com/xkbxyberk/pastronaut", range: NSRange(location: 0, length: 6))
+    string.addAttribute(.link, value: "https://github.com/xkbxyberk/pastronaut/issues",
+                        range: NSRange(location: 7, length: 7))
+    if let acknowledgements = Bundle.main.url(forResource: "Acknowledgements", withExtension: "txt") {
+      string.addAttribute(.link, value: acknowledgements, range: NSRange(location: 15, length: 8))
+    }
+    return string
+  }
+
+  private var maccyCredits: NSMutableAttributedString {
+    let string = NSMutableAttributedString(
+      string: "Based on Maccy by Alexey Rodionov (MIT). Not affiliated with Maccy.",
+      attributes: [NSAttributedString.Key.foregroundColor: NSColor.labelColor]
+    )
+    string.addAttribute(.link, value: "https://github.com/p0deje/Maccy", range: NSRange(location: 9, length: 5))
     return string
   }
 
@@ -27,6 +40,8 @@ class About {
                                             attributes: [NSAttributedString.Key.foregroundColor: NSColor.labelColor])
     credits.append(links)
     credits.append(NSAttributedString(string: "\n\n"))
+    credits.append(maccyCredits)
+    credits.append(NSAttributedString(string: "\n"))
     credits.append(kossCredits)
     credits.append(NSAttributedString(string: "\n"))
     credits.append(familyCredits)
