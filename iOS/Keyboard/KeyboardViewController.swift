@@ -572,7 +572,7 @@ private struct ActionPanel: View {
         } label: {
           Label("Type", systemImage: "return.left")
             .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.onAccent)
             .frame(maxWidth: .infinity, minHeight: KeyboardMetrics.keyHeight)
             .background(Color.accentColor, in: RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous))
         }

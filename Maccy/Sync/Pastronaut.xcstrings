@@ -23,6 +23,28 @@
         }
       }
     },
+    "Clipboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pano"
+          }
+        }
+      }
+    },
+    "Clipboard in orbit": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pano ve yörünge"
+          }
+        }
+      }
+    },
     "Code": {
       "extractionState": "manual",
       "localizations": {
@@ -78,6 +100,39 @@
         }
       }
     },
+    "Helmet (Pastronaut)": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kask (Pastronaut)"
+          }
+        }
+      }
+    },
+    "Helmet, outline": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kask, ince"
+          }
+        }
+      }
+    },
+    "Helmet, solid": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dolu kask"
+          }
+        }
+      }
+    },
     "Link": {
       "extractionState": "manual",
       "localizations": {
@@ -85,6 +140,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bağlantı"
+          }
+        }
+      }
+    },
+    "Paperclip": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ataş"
           }
         }
       }
@@ -107,6 +173,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sabitlenenler"
+          }
+        }
+      }
+    },
+    "Scissors": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Makas"
           }
         }
       }
@@ -184,6 +261,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bugün"
+          }
+        }
+      }
+    },
+    "Two documents": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İki belge"
           }
         }
       }

@@ -6,6 +6,8 @@ import SwiftUI
 extension Color {
   /// Pins and pin actions (Gece palette).
   static let pin = Color("PinColor")
+  /// Text and symbols on an accent fill: white in light mode, night blue on the dark-mode sky blue.
+  static let onAccent = Color("AccentForeground")
 }
 
 extension ClipContent {

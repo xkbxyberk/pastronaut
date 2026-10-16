@@ -11,6 +11,11 @@ extension NSImage {
 extension NSImage.Name {
   static let clipboard = NSImage.Name("clipboard.fill")
   static let maccyStatusBar = NSImage.Name("StatusBarMenuImage")
+  // Pastronaut menu bar icons.
+  static let statusBarHelmet = NSImage.Name("StatusBarHelmet")
+  static let statusBarHelmetSolid = NSImage.Name("StatusBarHelmetSolid")
+  static let statusBarOrbit = NSImage.Name("StatusBarOrbit")
+  static let statusBarDocuments = NSImage.Name("StatusBarDocuments")
   static let scissors = NSImage.Name("scissors")
   static let paperclip = NSImage.Name("paperclip")
 }

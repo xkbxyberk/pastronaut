@@ -550,6 +550,23 @@ class MaccyUITests: XCTestCase {
       app.typeKey(.escape, modifierFlags: [])
       sleep(1)
     }
+
+    // Appearance settings: the menu bar icon picker, opened.
+    popUpWithMouse()
+    app.typeKey(",", modifierFlags: [.command])
+    let settings = app.windows.firstMatch
+    if settings.waitForExistence(timeout: 5) {
+      let appearanceTab = settings.toolbars.buttons.element(boundBy: 2)
+      if appearanceTab.exists { appearanceTab.click() }
+      sleep(1)
+      let picker = settings.popUpButtons.matching(NSPredicate(format: "label CONTAINS[c] %@ OR label CONTAINS[c] %@", "Menü", "Menu")).firstMatch
+      if picker.exists {
+        picker.click()
+        sleep(1)
+      }
+      attachScreenshot(app.windows.firstMatch, named: "popup-settings-appearance")
+      app.typeKey(.escape, modifierFlags: [])
+    }
   }
 
   private func attachScreenshot(_ element: XCUIElement, named name: String) {

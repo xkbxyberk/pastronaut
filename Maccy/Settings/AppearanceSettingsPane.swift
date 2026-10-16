@@ -152,7 +152,13 @@ struct AppearanceSettingsPane: View {
 
           Picker("", selection: $menuIcon) {
             ForEach(MenuIcon.allCases) { icon in
-              Image(nsImage: icon.image)
+              // Pastronaut: name next to each icon.
+              Label {
+                Text(verbatim: icon.title)
+              } icon: {
+                Image(nsImage: icon.image)
+              }
+              .tag(icon)
             }
           }
           .labelsHidden()

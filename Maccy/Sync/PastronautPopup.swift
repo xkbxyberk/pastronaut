@@ -7,6 +7,9 @@ import SwiftUI
 // Pastronaut's additions to Maccy's popup: device of origin, device filter, content icons, day sections and
 // the sync status line. Strings live in the "Pastronaut" table (Pastronaut.xcstrings).
 
+// `Color.brand` comes from the BrandColor asset (generated asset symbol): deep sky in light mode, the sky blue
+// itself in dark mode (Gökyüzü palette).
+
 // MARK: - Device of origin
 
 extension NSPasteboard.PasteboardType {
@@ -109,7 +112,7 @@ struct ClipContentIcon: View {
 
   var body: some View {
     RoundedRectangle(cornerRadius: size / 4, style: .continuous)
-      .fill(isSelected ? Color.white.opacity(0.22) : Color.accentColor.opacity(0.16))
+      .fill(isSelected ? Color.white.opacity(0.22) : Color.brand.opacity(0.16))
       .frame(width: size, height: size)
       .overlay {
         if case .color(let hex) = content, let color = NSColor(hexString: hex) {
@@ -119,7 +122,7 @@ struct ClipContentIcon: View {
         } else {
           Image(systemName: content.symbolName)
             .font(.system(size: size * 0.46, weight: .semibold))
-            .foregroundStyle(isSelected ? Color.white : Color.accentColor)
+            .foregroundStyle(isSelected ? Color.white : Color.brand)
         }
       }
       .accessibilityHidden(true)

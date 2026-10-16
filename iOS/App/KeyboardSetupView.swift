@@ -156,7 +156,7 @@ private struct StepCard<Actions: View>: View {
     case .current:
       Text(number, format: .number)
         .font(.subheadline.bold())
-        .foregroundStyle(.white)
+        .foregroundStyle(Color.onAccent)
         .frame(width: 28, height: 28)
         .background(Color.accentColor, in: Circle())
     case .upcoming:
