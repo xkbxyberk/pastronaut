@@ -51,7 +51,7 @@ struct MacContentView: View {
       text = ""
       await refresh()
     } catch {
-      message = "Yazma hatası: \(error.localizedDescription)"
+      message = "Yazma hatası: \(error.localizedDescription) [\(String(describing: error).prefix(300))]"
     }
   }
 

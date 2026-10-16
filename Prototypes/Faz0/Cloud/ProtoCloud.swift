@@ -23,8 +23,13 @@ struct ProtoCloud {
     }
   }
 
+  // modifyRecordZones/modifyRecords only throw for whole-operation failures.
+  // Per-item failures (e.g. a record type missing from the Production schema) come back in the result maps.
   func ensureZone() async throws {
-    _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: zoneID)], deleting: [])
+    let result = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: zoneID)], deleting: [])
+    for (_, zoneResult) in result.saveResults {
+      _ = try zoneResult.get()
+    }
   }
 
   func save(text: String, source: String) async throws {
@@ -33,7 +38,10 @@ struct ProtoCloud {
     record.encryptedValues["text"] = text
     record["source"] = source
     record["copiedAt"] = Date.now
-    _ = try await database.modifyRecords(saving: [record], deleting: [])
+    let result = try await database.modifyRecords(saving: [record], deleting: [])
+    for (_, recordResult) in result.saveResults {
+      _ = try recordResult.get()
+    }
   }
 
   func fetchAll() async throws -> [ProtoItem] {

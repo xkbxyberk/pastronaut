@@ -63,3 +63,23 @@ Tur 2: aynı gün, aynı cihaz. Kanıt: kullanıcı gözlemi ve App Group günl�
 2. Kullanıcı uygulamaya "Diğer Uygulamalardan Yapıştır: İzin Ver" verirse otomatik okuma. Sistem her seferinde kısa bir bildirim gösterir.
 
 Tam Erişim olmadan geçmiş gösterilebilir ama yakalama yapılamaz.
+
+Tur 3 (R3): Mac prototipi Release'te arşivlendi ve `method=developer-id` ile dışa aktarıldı.
+- İmza: Developer ID Application (V88QY49A4T), Hardened Runtime açık.
+- Gömülü profil: "Mac Team Direct Provisioning Profile".
+- Noter onayı yok; yerel derleme olduğu için karantina işareti de yok.
+
+| Test | Sonuç | Not |
+|---|---|---|
+| Developer ID'de iCloud ortamı | yalnızca Production | `iCloudContainerEnvironment=Development` dışa aktarımda reddedildi |
+| Hesap durumu | ✅ `available` | |
+| Özel DB'de bölge oluşturma | ✅ | Şemadan bağımsız. "ProtoZone" kullanıcının kendi iCloud'unda kaldı; zararsız. |
+| Kayıt yazma | ❌ beklenen | `Cannot create new type ProtoClip in production schema` (CKError 12/2006) |
+
+**R3 sonucu:** CloudKit, App Store dışında Developer ID ile dağıtılan Mac uygulamasında çalışıyor. Yayından önce
+şemanın CloudKit Console'dan Production'a bir kez yayınlanması gerekiyor. Production şeması yalnızca
+eklemeye açık; bu yüzden şemayı kesinleştirmeden yayınlamamalıyız.
+
+**Ders:** `modifyRecords` ve `modifyRecordZones` kayıt bazındaki hataları fırlatmaz, sonuç listesinde döndürür.
+İlk sürüm bu hatayı yuttu ve "Yazıldı" dedi. Asıl uygulamada her sonuç kontrol edilmeli (CKSyncEngine bunları
+olay olarak verir).

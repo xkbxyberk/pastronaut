@@ -129,7 +129,7 @@ Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi e
 |---|---|---|
 | R1 | Klavye kuralları (App Review 4.4.1): giriş işlevi, sonraki klavye düğmesi, Tam Erişim olmadan çalışma | Güncel kural metni ve küçük bir prototip ile TestFlight dış inceleme |
 | R2 | Klavye uzantısı Tam Erişim'le panoyu okurken iOS onay penceresi çıkıyor mu? | ✅ Kapandı (Faz 0, iOS 27.0.1): düz okumada çıkıyor. Sistem Yapıştır düğmesinde ve "İzin Ver" ayarıyla çıkmıyor. iOS 17–26'da doğrulanmadı. |
-| R3 | CloudKit Developer ID ile dağıtılan Mac uygulamasında sorunsuz çalışıyor mu? | Faz 0 prototipi |
+| R3 | CloudKit Developer ID ile dağıtılan Mac uygulamasında sorunsuz çalışıyor mu? | ✅ Kapandı (Faz 0): çalışıyor, ama yalnızca Production ortamında. Şema yayından önce Production'a deploy edilmeli; şema yalnızca eklemeye açık olduğu için önce kesinleşmeli. Noter onayı ayrıca denenmedi. |
 | R4 | Klavye bellek sınırı | Faz 2'de Instruments ile ölçüm |
 | R5 | "Pastronaut" adının App Store'da ve marka olarak uygunluğu | App Store Connect'te ad ayırma, marka araması |
 | R6 | Upstream değişiklikleriyle birleşme maliyeti | Değişiklikleri kanca ve ayrı klasörlerle sınırlamak |
