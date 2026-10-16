@@ -104,6 +104,11 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
 - Yalnızca Mac'te yok sayma kurallarından geçip geçmişe giren öğeler eşitlenir. Gizli işaretli kopyalar zaten geçmişe girmez.
 - iPhone'da yakalanan kopyalar için de aynı düzenli ifade kuralları uygulanır (kurallar eşitlenen bir ayar kaydında tutulur; Sonra).
 - Şifreli alanlar Apple'ın uçtan uca şifrelemesiyle korunur; geliştirici CloudKit panosunda içeriği göremez.
+- **Açık (2026-10-17, Paste araştırmasında bulundu):** kayıt adı (`recordName`) metnin tuzsuz SHA-256'sı ve şifrelenmez.
+  Kısa metinler (6 haneli kod, kısa parola, kart) bu özetten geri bulunabilir. Çözüm: kimliği kullanıcıya özel bir
+  anahtarla HMAC-SHA256 olarak üretmek; anahtar şifreli alanlı tek bir ayar kaydında eşitlenir. Geçiş arka planda,
+  bloklamadan yapılır; koleksiyonlarla aynı şema değişikliğinde. O zamana kadar arayüz "uçtan uca şifreli" demez,
+  "metin şifreli saklanır" der.
 
 ## 5. macOS değişiklikleri
 1. Kimlik: `PRODUCT_BUNDLE_IDENTIFIER` yeni bir kimliğe, `DEVELOPMENT_TEAM` kullanıcının ekibine, görünen ad ve ikon
@@ -241,6 +246,14 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     yakaladıklarına ve yerel geçmişe dokunulmaz), kapanınca yeniden yüklenir. E2E T24 (kod Mac'te kalır), T25 (yalnız
     sabitlenenler) geçti. QR şimdilik GitHub proje sayfası; App Store bağlantısı Faz 5'te. Ayarlar penceresinin
     görüntüsü UI testinde alınamadı (pencere test ortamında açılmıyor); elle bakılmalı.
+  - 4.5 Dalga 1 (Paste araştırmasından, `research/paste-ozet.md` §9): şifreleme ifadesinin dürüstleştirilmesi; Mac'te
+    ekran paylaşımında gizleme, zamanlı duraklatma, süreye göre saklama, silmeyi geri alma, satır sağ tık menüsü ve
+    "bağlamda göster"; iOS'ta "açılınca panoyu kaydet" (varsayılan kapalı) ve izin yönlendirmesi, "+" ile yeni öğe,
+    seçim modu ve toplu silme; `#`'siz hex renk (en az bir A–F harfi).
+  - 4.6 Dalga 2 (1.0 yüzeyleri): Paylaş + Eylem uzantısı, kopyala düğmeli widget'lar, Denetim Merkezi / Action Button,
+    Kısayollar okuma eylemleri, filtre jetonlu arama, Face ID kilidi.
+  - 4.7 Dalga 3: koleksiyonlar + HMAC kimlik geçişi (tek şema değişikliği), Mac'te yerel OCR, isteğe bağlı Spotlight,
+    iPad, dışa/içe aktarma.
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
   TestFlight ve App Store; Mac için GitHub Releases, Homebrew tap, Mac App Store.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.
@@ -261,6 +274,7 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
 | Yerelleştirme (2026-10-16) | İngilizce temel, Türkçe tam. iOS: String Catalog (`.xcstrings`) her hedefte; Mac: Maccy'nin `.strings` dosyalarına dokunulmaz, bizim metinler ayrı `Pastronaut.xcstrings` tablosunda. Testler etiket değil erişilebilirlik kimliğiyle öğe bulur. |
 | Dağıtım (2026-10-16) | iOS: App Store (TestFlight önce). Mac: GitHub Releases (Developer ID + noter onayı + Sparkle) → kendi Homebrew tap'i → Mac App Store (iOS ile aynı paket kimliği, Universal Purchase). |
 | Görsel kimlik v2 (2026-10-16) | Taslaklar: https://claude.ai/artifact/VgG1CnRShnUMFaLNVLLvgM ("Kimlik v2"). **Gökyüzü paleti:** gök #87CEEB (marka, ikon, koyu temada vurgu), derin gök #1E6FA8 (açık temada vurgu; beyaz yazı 5:1), gece #0E2236, sis #E3F3FA, güneş #F2A541 (sabitler; açık temada #C77A12). iOS'ta koyu temada dolgulu düğme yazısı gece rengi (`AccentForeground`; beyaz yazı gök mavisinde 1,8:1). Mac'te seçim beyaz yazı taşıdığı için koyu tema vurgusu #2A7DBA, simgeler `BrandColor` (koyuda gök). **İkon:** "Ufuk" + yörünge: gece zemini, gezegen ufku, yıldızlar, kask, vizörde turuncu pano, gök mavisi yörünge (üst yarı arkada, alt yarı uyduyla önde); Icon Composer'ın 4 grup sınırına göre katmanlı. **Menü çubuğu:** varsayılan "Kask + pano" (halka, vizörde pano silueti, yan ışıklar, boyunluk); Görünüm ayarlarında adlarıyla 8 seçenek. |
+| Paste araştırması (2026-10-17) | Kaynak: `research/paste-ozet.md`. Sıra Dalga 1 → 2 → 3. Pin grupları "Koleksiyon" (EN *Collection*); "Pinboard", "Paste Stack" ve yatay kart şeridi kullanılmaz, dikey popup korunur. iOS'ta açılışta otomatik kayıt varsayılan kapalı. Görsel eşitleme 1.0 sonrası ("yalnız metin = güvenilir"). Telemetri ve varsayılan açık yapay zekâ yok; yerel MCP sunucusu "Sonra" listesinde. (Kullanıcı soruları yanıtlamadan "devam et" dedi; öneriler varsayılan alındı, değiştirilebilir.) |
 | Liquid Glass (2026-10-16) | iOS/macOS 26+'nın cam tasarımı korunur ve desteklenir. Sistem bileşenleri (gezinme ve araç çubukları, arama, sayfalar, listeler) özel arka planla örtülmez; cam kendiliğinden gelir. Özel yüzeyler (Mac popup'ı, klavye çipleri, widget'lar) 26+'da `glassEffect`, 17–25'te materyal kullanır. İkon Icon Composer biçiminde (`AppIcon.icon`, katmanlı); eski sürümler için Xcode düz ikon üretir. Taslaklardaki opak yüzeyler yalnızca yerleşimi gösterir. |
 
 ## 10. Geliştirme ortamı
