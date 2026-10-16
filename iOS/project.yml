@@ -1,0 +1,73 @@
+# iOS app and keyboard extension. Generate with: xcodegen generate (from this folder).
+# Kept apart from Maccy.xcodeproj so upstream merges never touch iOS files.
+name: Pastronaut-iOS
+options:
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  PastronautCore:
+    path: ../PastronautCore
+settings:
+  base:
+    DEVELOPMENT_TEAM: V88QY49A4T
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1"
+targets:
+  Pastronaut:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - path: ../Maccy/Acknowledgements.txt
+        buildPhase: resources
+    dependencies:
+      - package: PastronautCore
+      - target: PastronautKeyboard
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut
+        PRODUCT_NAME: Pastronaut
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Pastronaut
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIBackgroundModes: [remote-notification]
+        ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: App/Pastronaut.entitlements
+      properties:
+        aps-environment: development
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.xkbxyberk.pastronaut]
+        com.apple.developer.icloud-services: [CloudKit]
+        com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]
+  PastronautKeyboard:
+    type: app-extension
+    platform: iOS
+    sources: [Keyboard]
+    dependencies:
+      - package: PastronautCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.keyboard
+        PRODUCT_NAME: PastronautKeyboard
+    info:
+      path: Keyboard/Info.plist
+      properties:
+        CFBundleDisplayName: Pastronaut
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            IsASCIICapable: false
+            PrefersRightToLeft: false
+            PrimaryLanguage: mul
+            RequestsOpenAccess: true
+    entitlements:
+      path: Keyboard/PastronautKeyboard.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]

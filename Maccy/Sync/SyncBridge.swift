@@ -21,7 +21,6 @@ extension Settings.PaneIdentifier {
 @MainActor
 final class SyncBridge {
   static let shared = SyncBridge()
-  static let containerIdentifier = "iCloud.com.xkbxyberk.pastronaut"
 
   private let sync: ClipSync
   private let logger = Logger(label: "com.xkbxyberk.pastronaut.sync")
@@ -34,7 +33,7 @@ final class SyncBridge {
 
   private init() {
     let directory = URL.applicationSupportDirectory.appending(path: "Pastronaut")
-    sync = ClipSync(containerIdentifier: Self.containerIdentifier, storageDirectory: directory)
+    sync = ClipSync(containerIdentifier: PastronautIDs.iCloudContainer, storageDirectory: directory)
   }
 
   /// Call once after History has loaded. Follows the setting for the rest of the session.
