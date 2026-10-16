@@ -302,9 +302,10 @@ extension ClipSync: CKSyncEngineDelegate {
   }
 
   private func handleFetched(_ changes: CKSyncEngine.Event.FetchedRecordZoneChanges, syncEngine: CKSyncEngine) async {
+    // The engine fetches every zone in the database; other zones (e.g. Faz 0's ProtoZone) are not ours.
     await apply(
-      modifications: changes.modifications.map(\.record),
-      deletions: changes.deletions.map(\.recordID),
+      modifications: changes.modifications.map(\.record).filter { $0.recordID.zoneID == ClipRecord.zoneID },
+      deletions: changes.deletions.map(\.recordID).filter { $0.zoneID == ClipRecord.zoneID },
       syncEngine: syncEngine,
       source: "engine"
     )
