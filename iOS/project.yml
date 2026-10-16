@@ -69,6 +69,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.keyboard
         PRODUCT_NAME: PastronautKeyboard
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     info:
       path: Keyboard/Info.plist
       properties:

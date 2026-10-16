@@ -107,6 +107,31 @@ public actor KeyboardCloud {
 
   /// Saves a captured clip straight to iCloud, merging with the server copy if the clip already exists.
   public func save(_ clip: Clip) async throws {
+    // A capture knows nothing about pins: keep the server's.
+    try await save(clip) { remote, local in remote.copiedAgain(local) }
+  }
+
+  /// Pins or unpins a clip from the keyboard. The newer change wins, as everywhere else.
+  public func setPinned(_ pinned: Bool, for clip: Clip) async throws {
+    var changed = clip
+    changed.pinned = pinned
+    changed.modifiedAt = .now
+    try await save(changed) { remote, local in remote.merged(with: local) }
+  }
+
+  /// Deletes a clip for every device. A clip already gone from iCloud counts as deleted.
+  public func delete(id: String) async throws {
+    let recordID = ClipRecord.recordID(for: id)
+    let result = try await database.modifyRecords(saving: [], deleting: [recordID])
+    if case .failure(let error)? = result.deleteResults[recordID], (error as? CKError)?.code != .unknownItem {
+      throw error
+    }
+    var cache = files.readKeyboardCache() ?? KeyboardCache()
+    cache.clips.removeAll { $0.id == id }
+    try? files.writeKeyboardCache(cache)
+  }
+
+  private func save(_ clip: Clip, onConflict merge: (_ remote: Clip, _ local: Clip) -> Clip) async throws {
     guard policy.isEligible(clip.text) else { throw SaveError.notEligible }
     var clip = clip
     var base: CKRecord?
@@ -128,9 +153,8 @@ public actor KeyboardCloud {
         logger.notice("Keyboard saved a clip directly")
         return
       case .failure(let error as CKError) where error.code == .serverRecordChanged:
-        // Same text already in iCloud: keep its pin, record this copy.
         guard let server = error.serverRecord, let remote = ClipRecord.clip(from: server) else { throw error }
-        clip = remote.copiedAgain(clip)
+        clip = merge(remote, clip)
         base = server
       case .failure(let error as CKError) where error.code == .zoneNotFound:
         _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: ClipRecord.zoneID)], deleting: [])

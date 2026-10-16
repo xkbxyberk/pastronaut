@@ -125,6 +125,72 @@ final class SyncStepTests: XCTestCase {
         attachScreenshot(named: "setup")
       }
       report(["ok": true])
+    case "keyboardShots":
+      // Design review of the keyboard, in this app's own search field (Safari could show the user's pages).
+      // Ends in dark mode, this device's usual appearance ("unspecified" cannot be restored).
+      defer { XCUIDevice.shared.appearance = .dark }
+      for (name, appearance) in [("light", XCUIDevice.Appearance.light), ("dark", .dark)] {
+        XCUIDevice.shared.appearance = appearance
+        app.terminate()
+        app.launch()
+        let search = app.searchFields.firstMatch
+        guard search.waitForExistence(timeout: 5) else { break }
+        search.tap()
+        guard showPastronautKeyboard(in: app) else {
+          report(["ok": false, "reason": "keyboard not shown"])
+          return
+        }
+        Thread.sleep(forTimeInterval: 2)
+        attachScreenshot(named: "kb-\(name)")
+        let searchKey = app.descendants(matching: .any)["searchKey"].firstMatch
+        if searchKey.exists {
+          searchKey.tap()
+          for letter in ["k", "l"] {
+            app.descendants(matching: .any)["letter.\(letter)"].firstMatch.tap()
+          }
+          Thread.sleep(forTimeInterval: 1)
+          attachScreenshot(named: "kb-search-\(name)")
+          app.descendants(matching: .any)["searchDone"].firstMatch.tap()
+        }
+        let row = app.descendants(matching: .any)["kbClip"].firstMatch
+        if row.exists {
+          row.press(forDuration: 0.8)
+          Thread.sleep(forTimeInterval: 1)
+          attachScreenshot(named: "kb-actions-\(name)")
+        }
+      }
+      report(["ok": true])
+    case "keyboardAction":
+      // Long press a clip in the keyboard (Safari's address bar, app not opened) and pin/unpin or delete it.
+      let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
+      safari.launch()
+      let address = safari.textFields.firstMatch
+      if address.waitForExistence(timeout: 5) { address.tap() }
+      guard showPastronautKeyboard(in: safari) else {
+        report(["ok": false, "reason": "keyboard not shown"])
+        return
+      }
+      let row = safari.descendants(matching: .any)
+        .matching(NSPredicate(format: "identifier == 'kbClip' AND label CONTAINS %@", match)).firstMatch
+      guard row.waitForExistence(timeout: 10) else {
+        report(["ok": false, "reason": "clip not in keyboard"])
+        return
+      }
+      row.press(forDuration: 0.8)
+      let action = env["PT_ACTION"] ?? "pin"
+      let button = safari.descendants(matching: .any)["clipAction.\(action)"].firstMatch
+      guard button.waitForExistence(timeout: 3) else {
+        report(["ok": false, "reason": "no \(action) action"])
+        return
+      }
+      button.tap()
+      if action == "delete" { button.tap() }  // Second tap confirms.
+      let status = safari.descendants(matching: .any)["cloudStatus"].firstMatch
+      let deadline = Date().addingTimeInterval(15)
+      while Date() < deadline, !(status.exists && ["pinned", "deleted", "failed"].contains(where: status.label.contains)) {
+        Thread.sleep(forTimeInterval: 0.5)
+      }
+      report(["ok": status.exists && !status.label.contains("failed"), "cloudStatus": status.exists ? status.label : ""])
     case "keyboard":
       try keyboardStep()
     default:
@@ -225,6 +291,18 @@ final class SyncStepTests: XCTestCase {
     let typed = (field.value as? String)?.contains(match) ?? false
     let cloudStatus = safari.descendants(matching: .any)["cloudStatus"].firstMatch
     report(["ok": typed, "pinIcons": pinned, "cloudStatus": cloudStatus.exists ? cloudStatus.label : ""])
+  }
+
+  /// Switches the current text field's keyboard to Pastronaut with the system's next-keyboard button.
+  private func showPastronautKeyboard(in host: XCUIApplication) -> Bool {
+    let ours = host.descendants(matching: .any)["spaceKey"].firstMatch
+    let globe = host.buttons.matching(NSPredicate(format: "label IN %@", ["Next keyboard", "Sonraki klavye"])).firstMatch
+    var switches = 0
+    while !ours.waitForExistence(timeout: 2), switches < 6, globe.waitForExistence(timeout: 2) {
+      globe.tap()
+      switches += 1
+    }
+    return ours.exists
   }
 
   private func attachScreenshot(named name: String) {

@@ -123,10 +123,11 @@ def mac_launch():
 
 # MARK: - iPhone
 
-def ios_step(op, text="", match="", timeout=30, on_ready=None):
+def ios_step(op, text="", match="", timeout=30, on_ready=None, action=""):
     """Runs one XCUITest step and returns its PTEST-RESULT dict. `on_ready` runs once the app is waiting."""
     env = {**DEV, "TEST_RUNNER_PT_OP": op, "TEST_RUNNER_PT_TEXT": text,
-           "TEST_RUNNER_PT_MATCH": match, "TEST_RUNNER_PT_TIMEOUT": str(timeout)}
+           "TEST_RUNNER_PT_MATCH": match, "TEST_RUNNER_PT_TIMEOUT": str(timeout),
+           "TEST_RUNNER_PT_ACTION": action}
     process = subprocess.Popen(
         ["xcodebuild", "test-without-building", "-xctestrun", args.xctestrun,
          "-destination", f"id={args.device}",
@@ -381,6 +382,15 @@ def main():
         check("T20", "Copying a pinned text again keeps the pin",
               (mac_item(state, y) or {}).get("pinned") is True and bool(remote and remote["pinned"]),
               f"Mac {mac_item(state, y)}, iPhone pinned={remote and remote['pinned']}")
+
+    # 22–23. Faz 4: pin changes and deletions made in the keyboard reach the Mac without the app.
+    if not args.skip_keyboard and ok:
+        r = ios_step("keyboardAction", y, action="pin")
+        ok22, secs, _ = mac_wait("Y unpinned", lambda s: (mac_item(s, y) or {}).get("pinned") is False, 60)
+        check("T22", "Keyboard unpin → Mac", r.get("ok") and ok22, f"{secs}s {r.get('cloudStatus', r.get('reason', ''))}")
+        r = ios_step("keyboardAction", y, action="delete")
+        ok23, secs, _ = mac_wait("Y gone", lambda s: mac_item(s, y) is None, 60)
+        check("T23", "Keyboard delete → Mac", r.get("ok") and ok23, f"{secs}s {r.get('cloudStatus', r.get('reason', ''))}")
 
     # 15. Changes made while the Mac app is closed arrive when it starts.
     mac_quit()

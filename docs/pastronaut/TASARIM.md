@@ -216,6 +216,13 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     ayrıntı ekranı (akıllı eylem, paylaş, sabitle, düzenle, sil), canlı kurulum rehberi (klavye eklendi mi:
     `AppleKeyboards`; Tam Erişim: klavyenin App Group'a yazdığı işaret), yeni Ayarlar. Gece paleti varlık
     kataloğunda; koyu tema vurgusu #6F5FEB (beyaz yazı ve siyah zemin ile ≈ 4,5:1). Tam E2E koşusu geçti.
+  - ✅ 4.3b Klavye yeni tasarım, sistem klavyesine yakın: zemin sistemin (iOS 26+ cam), tuşlar açıkta beyaz, koyuda
+    yarı saydam; işlev tuşları koyu; tuş tıklama sesi (`UIInputViewAudioFeedback`). Tuş görünümünde "Mac'ten son kopya",
+    Sabit/Son/Mac/iPhone sekmeleri, cihaz diline göre Türkçe Q / QWERTY harf düzeniyle arama, uzun basınca eylem
+    paneli (tam metin, Yaz, Sabitle, iki dokunuşla Sil). Sabitleme ve silme klavyeden doğrudan iCloud'a
+    (`KeyboardCloud.setPinned`, `delete`). iOS 26'nın kaydırma kenarı bulanıklığı listede kapatıldı (ilk satırı
+    örtüyordu). Açık/koyu ekran görüntüleriyle kontrol edildi; E2E T22 (klavyeden sabitleme → Mac 2 sn) ve T23
+    (klavyeden silme → Mac 2 sn) dahil tam koşu geçti.
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
   TestFlight ve App Store; Mac için GitHub Releases, Homebrew tap, Mac App Store.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.

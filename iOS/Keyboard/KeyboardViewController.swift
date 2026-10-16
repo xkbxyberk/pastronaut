@@ -8,21 +8,27 @@ final class KeyboardViewController: UIInputViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
+    // A UIInputView that adopts UIInputViewAudioFeedback, so key taps click like the system keyboard.
+    let clickView = ClickInputView(frame: .zero, inputViewStyle: .keyboard)
+    clickView.allowsSelfSizing = true
+    inputView = clickView
+
     model.insert = { [weak self] in self?.textDocumentProxy.insertText($0) }
     model.deleteBackward = { [weak self] in self?.textDocumentProxy.deleteBackward() }
     model.nextKeyboard = { [weak self] in self?.advanceToNextInputMode() }
 
     let host = UIHostingController(rootView: KeyboardView(model: model))
     host.view.translatesAutoresizingMaskIntoConstraints = false
+    // The system draws the keyboard backdrop (glass on iOS 26 and later); keep it visible.
     host.view.backgroundColor = .clear
     addChild(host)
-    view.addSubview(host.view)
+    clickView.addSubview(host.view)
     NSLayoutConstraint.activate([
-      host.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      host.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-      host.view.topAnchor.constraint(equalTo: view.topAnchor),
-      host.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-      host.view.heightAnchor.constraint(equalToConstant: 290)
+      host.view.leadingAnchor.constraint(equalTo: clickView.leadingAnchor),
+      host.view.trailingAnchor.constraint(equalTo: clickView.trailingAnchor),
+      host.view.topAnchor.constraint(equalTo: clickView.topAnchor),
+      host.view.bottomAnchor.constraint(equalTo: clickView.bottomAnchor),
+      host.view.heightAnchor.constraint(equalToConstant: KeyboardMetrics.height)
     ])
     host.didMove(toParent: self)
   }
@@ -33,9 +39,26 @@ final class KeyboardViewController: UIInputViewController {
   }
 }
 
+private final class ClickInputView: UIInputView, UIInputViewAudioFeedback {
+  var enableInputClicksWhenVisible: Bool { true }
+}
+
+enum KeyboardMetrics {
+  static let height: CGFloat = 300
+  static let keyHeight: CGFloat = 42
+  static let spacing: CGFloat = 6
+}
+
+// MARK: - Model
+
 @MainActor
 @Observable
 final class KeyboardModel {
+  enum Tab: String, CaseIterable, Identifiable {
+    case pinned, recent, mac, iphone
+    var id: Self { self }
+  }
+
   private(set) var clips: [Clip] = []
   private(set) var hasFullAccess = false
   private(set) var showsNextKeyboard = true
@@ -43,6 +66,12 @@ final class KeyboardModel {
   private(set) var hasNewClip = false
   /// Last iCloud fetch or upload outcome; shown in Debug builds for the end-to-end test.
   private(set) var cloudStatus = "cloud: idle"
+
+  var tab: Tab = .recent
+  var isSearching = false
+  var query = ""
+  /// The clip whose action panel is open (long press).
+  var focused: Clip?
 
   var insert: (String) -> Void = { _ in }
   var deleteBackward: () -> Void = {}
@@ -62,9 +91,39 @@ final class KeyboardModel {
     cloud = files.map { KeyboardCloud(containerIdentifier: PastronautIDs.iCloudContainer, files: $0) }
   }
 
+  // MARK: Derived lists
+
+  /// The most recent clip copied on a Mac: the most common thing to paste on the iPhone.
+  var latestFromMac: Clip? {
+    clips.filter { $0.sourceDevice == .mac }.max { $0.lastCopiedAt < $1.lastCopiedAt }
+  }
+
+  var visibleClips: [Clip] {
+    let newestFirst = clips.sorted { $0.lastCopiedAt > $1.lastCopiedAt }
+    switch tab {
+    case .pinned: return newestFirst.filter(\.pinned)
+    case .recent: return newestFirst
+    case .mac: return newestFirst.filter { $0.sourceDevice == .mac }
+    case .iphone: return newestFirst.filter { $0.sourceDevice != .mac }
+    }
+  }
+
+  var searchResults: [Clip] {
+    let query = query.trimmingCharacters(in: .whitespaces)
+    guard !query.isEmpty else { return [] }
+    return clips
+      .filter { $0.text.range(of: query, options: [.caseInsensitive, .diacriticInsensitive], locale: .current) != nil }
+      .sorted { $0.lastCopiedAt > $1.lastCopiedAt }
+  }
+
+  // MARK: Lifecycle
+
   func appeared(hasFullAccess: Bool, showsNextKeyboard: Bool) {
     self.hasFullAccess = hasFullAccess
     self.showsNextKeyboard = showsNextKeyboard
+    isSearching = false
+    query = ""
+    focused = nil
     if hasFullAccess {
       // Lets the app's setup guide tick "Full Access" (the App Group is read-only without it).
       defaults?.set(Date.now, forKey: "keyboardFullAccessSeenAt")
@@ -75,6 +134,84 @@ final class KeyboardModel {
     let lastCaptured = defaults?.object(forKey: lastCapturedChangeCountKey) as? Int
     hasNewClip = hasFullAccess && pasteboard.hasStrings && pasteboard.changeCount != lastCaptured
     refreshFromCloud()
+  }
+
+  // MARK: Actions
+
+  func type(_ clip: Clip) {
+    click()
+    insert(clip.text)
+    if isSearching { endSearch() }
+    focused = nil
+  }
+
+  func typeKey(_ text: String) {
+    click()
+    insert(text)
+  }
+
+  func deleteKey() {
+    click()
+    deleteBackward()
+  }
+
+  func beginSearch() {
+    click()
+    query = ""
+    isSearching = true
+  }
+
+  func endSearch() {
+    isSearching = false
+    query = ""
+  }
+
+  func searchType(_ letter: String) {
+    click()
+    query.append(letter)
+  }
+
+  func searchDelete() {
+    click()
+    if !query.isEmpty { query.removeLast() }
+  }
+
+  /// Pins and deletions go straight to iCloud, like captures; the app and the Mac fetch them.
+  var canEdit: Bool { hasFullAccess && cloud != nil }
+
+  func togglePin(_ clip: Clip) {
+    guard canEdit, let cloud else { return }
+    focused = nil
+    Task {
+      do {
+        try await cloud.setPinned(!clip.pinned, for: clip)
+        cloudStatus = "cloud: pinned"
+        _ = try? await cloud.refresh()
+      } catch {
+        cloudStatus = "cloud: pin failed \(Self.describe(error))"
+      }
+      reload()
+    }
+  }
+
+  func delete(_ clip: Clip) {
+    guard canEdit, let cloud else { return }
+    focused = nil
+    clips.removeAll { $0.id == clip.id }
+    Task {
+      do {
+        try await cloud.delete(id: clip.id)
+        cloudStatus = "cloud: deleted"
+        _ = try? await cloud.refresh()
+      } catch {
+        cloudStatus = "cloud: delete failed \(Self.describe(error))"
+      }
+      reload()
+    }
+  }
+
+  private func click() {
+    UIDevice.current.playInputClick()
   }
 
   /// The app may not have run since the last change (iOS rations background pushes), so with Full
@@ -156,117 +293,477 @@ final class KeyboardModel {
     for clip in base + files.readInbox() {
       byID[clip.id] = byID[clip.id].map { $0.merged(with: clip) } ?? clip
     }
-    clips = Array(byID.values.inHistoryOrder.prefix(100))
+    clips = Array(byID.values.inHistoryOrder.prefix(200))
+    if let focused, !clips.contains(where: { $0.id == focused.id }) { self.focused = nil }
   }
 }
+
+// MARK: - Views
 
 struct KeyboardView: View {
   let model: KeyboardModel
 
   var body: some View {
-    VStack(spacing: 6) {
-      header
-      list
-      keys
+    VStack(spacing: KeyboardMetrics.spacing) {
+      if model.isSearching {
+        SearchPanel(model: model)
+      } else if let clip = model.focused {
+        ActionPanel(model: model, clip: clip)
+      } else {
+        BrowsePanel(model: model)
+      }
       #if DEBUG
-      Text(verbatim: model.cloudStatus).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1)
+      Text(verbatim: model.cloudStatus)
+        .font(.system(size: 9))
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
         .accessibilityIdentifier("cloudStatus")
       #endif
     }
-    .padding(6)
+    .padding(.horizontal, 4)
+    .padding(.top, 6)
+    .padding(.bottom, 2)
   }
+}
 
-  @ViewBuilder
-  private var header: some View {
-    if model.hasFullAccess {
-      if model.hasNewClip {
-        HStack {
-          Text("New text on the clipboard").font(.caption)
-          Spacer()
+/// Default view: latest Mac copy, tabs, the list and the basic input row.
+private struct BrowsePanel: View {
+  let model: KeyboardModel
+
+  var body: some View {
+    VStack(spacing: KeyboardMetrics.spacing) {
+      if let clip = model.latestFromMac {
+        Button {
+          model.type(clip)
+        } label: {
+          HStack(spacing: 8) {
+            Image(systemName: "laptopcomputer")
+              .foregroundStyle(Color.accentColor)
+            VStack(alignment: .leading, spacing: 0) {
+              Text("From Mac")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+              Text(clip.text.keyboardPreview)
+                .font(.system(size: 15))
+                .lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            Image(systemName: "return.left")
+              .font(.footnote)
+              .foregroundStyle(.secondary)
+          }
+          .padding(.horizontal, 10)
+          .frame(maxWidth: .infinity, minHeight: 40)
+          .keyBackground()
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("fromMacChip")
+      }
+
+      HStack(spacing: 4) {
+        ForEach(KeyboardModel.Tab.allCases) { tab in
+          Button {
+            model.tab = tab
+          } label: {
+            Text(tab.title)
+              .font(.system(size: 14, weight: model.tab == tab ? .semibold : .regular))
+              .frame(maxWidth: .infinity, minHeight: 30)
+              .background {
+                if model.tab == tab {
+                  RoundedRectangle(cornerRadius: 7, style: .continuous).fill(KeyStyle.key)
+                }
+              }
+          }
+          .buttonStyle(.plain)
+          .accessibilityIdentifier("tab.\(tab.rawValue)")
+          .accessibilityAddTraits(model.tab == tab ? .isSelected : [])
+        }
+        Button {
+          model.beginSearch()
+        } label: {
+          Image(systemName: "magnifyingglass")
+            .frame(width: 40, height: 30)
+            .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Search"))
+        .accessibilityIdentifier("searchKey")
+        if model.hasNewClip {
           PasteButton(payloadType: String.self) { strings in
             Task { @MainActor in model.capture(strings) }
           }
-          .labelStyle(.titleAndIcon)
-          .font(.caption)
+          .labelStyle(.iconOnly)
+          .buttonBorderShape(.roundedRectangle(radius: 7))
+          .controlSize(.small)
         }
       }
-    } else {
-      Text("Turn on Allow Full Access in Settings to save new copies from this keyboard.")
-        .accessibilityIdentifier("fullAccessHint")
-        .font(.caption2)
-        .foregroundStyle(.secondary)
-        .frame(maxWidth: .infinity, alignment: .leading)
+
+      if !model.hasFullAccess {
+        Text("Turn on Allow Full Access in Settings to save new copies from this keyboard.")
+          .accessibilityIdentifier("fullAccessHint")
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, 4)
+      }
+
+      ClipList(model: model)
+
+      HStack(spacing: KeyboardMetrics.spacing) {
+        if model.showsNextKeyboard {
+          FunctionKey(systemImage: "globe", label: "Next keyboard") { model.nextKeyboard() }
+            .frame(width: 44)
+        }
+        CharacterKey(title: "space", fontSize: 16) { model.typeKey(" ") }
+          .accessibilityIdentifier("spaceKey")
+        FunctionKey(systemImage: "delete.left", label: "Delete") { model.deleteKey() }
+          .frame(width: 52)
+          .accessibilityIdentifier("deleteKey")
+        FunctionKey(systemImage: "return", label: "Return") { model.typeKey("\n") }
+          .frame(width: 72)
+          .accessibilityIdentifier("returnKey")
+      }
     }
   }
+}
 
-  @ViewBuilder
-  private var list: some View {
-    if model.clips.isEmpty {
-      VStack {
-        Text("No clips yet. Open Pastronaut once to sync your history.")
-          .accessibilityIdentifier("emptyState")
-        #if DEBUG
-        Text(verbatim: model.diagnostics).font(.caption2).accessibilityIdentifier("diagnostics")
-        #endif
+private struct ClipList: View {
+  let model: KeyboardModel
+
+  var body: some View {
+    let clips = model.visibleClips
+    Group {
+      if model.clips.isEmpty {
+        VStack(spacing: 4) {
+          Text("No clips yet. Open Pastronaut once to sync your history.")
+            .accessibilityIdentifier("emptyState")
+          #if DEBUG
+          Text(verbatim: model.diagnostics).font(.caption2).accessibilityIdentifier("diagnostics")
+          #endif
+        }
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else if clips.isEmpty {
+        Text(model.tab == .pinned ? "No pinned clips" : "Nothing here yet")
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else {
+        ScrollView {
+          LazyVStack(spacing: 5) {
+            ForEach(clips, id: \.id) { clip in
+              ClipKey(clip: clip) { model.type(clip) } onLongPress: { model.focused = clip }
+            }
+          }
+          .padding(.horizontal, 1)
+          .padding(.bottom, 1)
+        }
+        .scrollIndicators(.hidden)
+        .noTopScrollEdgeEffect()
       }
-      .font(.footnote)
-      .foregroundStyle(.secondary)
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
-    } else {
+    }
+    .frame(maxHeight: .infinity)
+  }
+}
+
+/// One clip, drawn like a key: tap types it, long press opens its actions.
+private struct ClipKey: View {
+  let clip: Clip
+  let onTap: () -> Void
+  let onLongPress: () -> Void
+
+  var body: some View {
+    HStack(spacing: 6) {
+      if clip.pinned {
+        Image(systemName: "pin.fill")
+          .font(.caption2)
+          .foregroundStyle(Color.pin)
+          .accessibilityIdentifier("pinIcon")
+      }
+      Text(clip.text.keyboardPreview)
+        .font(.system(size: 15))
+        .lineLimit(1)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      Image(systemName: clip.sourceDevice == .mac ? "laptopcomputer" : "iphone")
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
+    }
+    .padding(.horizontal, 10)
+    .frame(minHeight: 38)
+    .keyBackground()
+    .contentShape(Rectangle())
+    .onTapGesture(perform: onTap)
+    .onLongPressGesture(minimumDuration: 0.4, perform: onLongPress)
+    .accessibilityElement(children: .combine)
+    .accessibilityAddTraits(.isButton)
+    .accessibilityIdentifier("kbClip")
+    .accessibilityAction(named: Text("Actions"), onLongPress)
+  }
+}
+
+/// Long press on a clip: the whole text and what can be done with it.
+private struct ActionPanel: View {
+  let model: KeyboardModel
+  let clip: Clip
+  @State private var confirmsDelete = false
+
+  var body: some View {
+    VStack(spacing: KeyboardMetrics.spacing) {
       ScrollView {
-        LazyVStack(alignment: .leading, spacing: 4) {
-          ForEach(model.clips, id: \.id) { clip in
-            Button {
-              model.insert(clip.text)
-            } label: {
-              HStack(alignment: .firstTextBaseline, spacing: 6) {
-                if clip.pinned {
-                  Image(systemName: "pin.fill").font(.caption2).foregroundStyle(.orange)
-                    .accessibilityIdentifier("pinIcon")
-                }
-                Text(clip.text.replacingOccurrences(of: "\n", with: " ⏎ "))
-                  .lineLimit(2)
-                  .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: clip.sourceDevice == .mac ? "laptopcomputer" : "iphone")
-                  .font(.caption2)
-                  .foregroundStyle(.secondary)
+        Text(clip.text)
+          .font(.system(size: 15))
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(10)
+      }
+      .frame(maxHeight: .infinity)
+      .keyBackground()
+      .noTopScrollEdgeEffect()
+
+      HStack(spacing: KeyboardMetrics.spacing) {
+        FunctionKey(systemImage: "xmark", label: "Close") { model.focused = nil }
+          .frame(width: 52)
+          .accessibilityIdentifier("clipAction.close")
+        if model.canEdit {
+          FunctionKey(systemImage: clip.pinned ? "pin.slash" : "pin",
+                      label: clip.pinned ? "Unpin" : "Pin") { model.togglePin(clip) }
+            .frame(width: 52)
+            .accessibilityIdentifier("clipAction.pin")
+          Button {
+            if confirmsDelete { model.delete(clip) } else { confirmsDelete = true }
+          } label: {
+            Group {
+              if confirmsDelete {
+                Text("Delete?").font(.system(size: 15, weight: .semibold))
+              } else {
+                Image(systemName: "trash").font(.system(size: 18))
               }
-              .padding(8)
-              .background(.background.secondary, in: RoundedRectangle(cornerRadius: 8))
+            }
+            .foregroundStyle(.red)
+            .frame(maxWidth: confirmsDelete ? 90 : 52, minHeight: KeyboardMetrics.keyHeight)
+            .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+          }
+          .buttonStyle(.plain)
+          .accessibilityLabel(confirmsDelete ? Text("Confirm delete") : Text("Delete"))
+          .accessibilityIdentifier("clipAction.delete")
+        }
+        Button {
+          model.type(clip)
+        } label: {
+          Label("Type", systemImage: "return.left")
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, minHeight: KeyboardMetrics.keyHeight)
+            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("clipAction.insert")
+      }
+    }
+  }
+}
+
+/// Search: a small letter keyboard filters the history; tapping a result types it.
+private struct SearchPanel: View {
+  let model: KeyboardModel
+
+  var body: some View {
+    VStack(spacing: KeyboardMetrics.spacing) {
+      HStack(spacing: KeyboardMetrics.spacing) {
+        HStack(spacing: 6) {
+          Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+          if model.query.isEmpty {
+            Text("Search history").foregroundStyle(.secondary)
+          } else {
+            Text(verbatim: model.query)
+          }
+          Spacer(minLength: 0)
+        }
+        .font(.system(size: 16))
+        .padding(.horizontal, 10)
+        .frame(minHeight: 36)
+        .keyBackground()
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("searchField")
+        Button {
+          model.endSearch()
+        } label: {
+          Text("Done")
+            .font(.system(size: 16, weight: .semibold))
+            .frame(minWidth: 64, minHeight: 36)
+            .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("searchDone")
+      }
+
+      ScrollView(.horizontal) {
+        HStack(spacing: 5) {
+          if model.searchResults.isEmpty {
+            Text(model.query.isEmpty ? "Type to search" : "No matches")
+              .font(.footnote)
+              .foregroundStyle(.secondary)
+              .padding(.horizontal, 6)
+          }
+          ForEach(model.searchResults.prefix(20), id: \.id) { clip in
+            Button {
+              model.type(clip)
+            } label: {
+              Text(clip.text.keyboardPreview)
+                .font(.system(size: 15))
+                .lineLimit(1)
+                .frame(maxWidth: 220)
+                .padding(.horizontal, 10)
+                .frame(minHeight: 34)
+                .keyBackground()
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("searchResult")
+          }
+        }
+        .padding(.horizontal, 1)
+      }
+      .scrollIndicators(.hidden)
+      .frame(height: 36)
+
+      LetterKeys(model: model)
+    }
+  }
+}
+
+private struct LetterKeys: View {
+  let model: KeyboardModel
+
+  /// Turkish Q layout on Turkish devices, QWERTY elsewhere.
+  private var rows: [[String]] {
+    if Locale.current.language.languageCode?.identifier == "tr" {
+      return [
+        ["q", "w", "e", "r", "t", "y", "u", "ı", "o", "p", "ğ", "ü"],
+        ["a", "s", "d", "f", "g", "h", "j", "k", "l", "ş", "i"],
+        ["z", "x", "c", "v", "b", "n", "m", "ö", "ç"]
+      ]
+    }
+    return [
+      ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+      ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+      ["z", "x", "c", "v", "b", "n", "m"]
+    ]
+  }
+
+  var body: some View {
+    VStack(spacing: 8) {
+      ForEach(rows.indices, id: \.self) { index in
+        HStack(spacing: 5) {
+          ForEach(rows[index], id: \.self) { letter in
+            CharacterKey(title: LocalizedStringKey(letter), fontSize: 20, verbatim: letter) {
+              model.searchType(letter)
+            }
+            .accessibilityIdentifier("letter.\(letter)")
+          }
+          if index == rows.count - 1 {
+            FunctionKey(systemImage: "delete.left", label: "Delete") { model.searchDelete() }
+              .frame(width: 44)
           }
         }
       }
+      CharacterKey(title: "space", fontSize: 16) { model.searchType(" ") }
     }
   }
+}
 
-  // Basic input row: App Review 4.4.1 expects real input and a way to switch keyboards.
-  private var keys: some View {
-    HStack(spacing: 6) {
-      if model.showsNextKeyboard {
-        key(systemImage: "globe") { model.nextKeyboard() }
-      }
-      key(title: "space") { model.insert(" ") }
-        .accessibilityIdentifier("spaceKey")
-        .frame(maxWidth: .infinity)
-      key(systemImage: "delete.left") { model.deleteBackward() }
-      key(systemImage: "return") { model.insert("\n") }
-    }
-  }
+// MARK: - Keys
 
-  private func key(title: LocalizedStringKey? = nil, systemImage: String? = nil, action: @escaping () -> Void) -> some View {
+/// Colors close to the system keyboard: white keys in light mode, translucent light keys in dark mode,
+/// and slightly darker function keys. Both sit on the system's own keyboard backdrop.
+enum KeyStyle {
+  static let key = Color(UIColor { traits in
+    traits.userInterfaceStyle == .dark ? UIColor(white: 1, alpha: 0.24) : .white
+  })
+  static let function = Color(UIColor { traits in
+    traits.userInterfaceStyle == .dark ? UIColor(white: 1, alpha: 0.12) : UIColor(white: 0, alpha: 0.12)
+  })
+  static let shadow = Color(UIColor { traits in
+    traits.userInterfaceStyle == .dark ? UIColor(white: 0, alpha: 0.4) : UIColor(white: 0, alpha: 0.28)
+  })
+}
+
+private struct CharacterKey: View {
+  let title: LocalizedStringKey
+  var fontSize: CGFloat = 20
+  /// Single letters are shown as typed, never looked up in the string catalog.
+  var verbatim: String?
+  let action: () -> Void
+
+  var body: some View {
     Button(action: action) {
       Group {
-        if let systemImage {
-          Image(systemName: systemImage)
-        } else {
-          Text(title ?? "")
-        }
+        if let verbatim { Text(verbatim: verbatim) } else { Text(title) }
       }
-      .frame(maxWidth: .infinity, minHeight: 42)
-      .background(.background.secondary, in: RoundedRectangle(cornerRadius: 6))
+      .font(.system(size: fontSize))
+      .frame(maxWidth: .infinity, minHeight: KeyboardMetrics.keyHeight)
+      .keyBackground()
     }
     .buttonStyle(.plain)
+  }
+}
+
+private struct FunctionKey: View {
+  let systemImage: String
+  let label: LocalizedStringKey
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      Image(systemName: systemImage)
+        .font(.system(size: 18))
+        .frame(maxWidth: .infinity, minHeight: KeyboardMetrics.keyHeight)
+        .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(Text(label))
+  }
+}
+
+private extension View {
+  func keyBackground() -> some View {
+    background(
+      RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .fill(KeyStyle.key)
+        .shadow(color: KeyStyle.shadow, radius: 0, x: 0, y: 1)
+    )
+  }
+
+  /// iOS 26 blurs the top edge of scroll views; in a short keyboard list that hides the first row.
+  @ViewBuilder
+  func noTopScrollEdgeEffect() -> some View {
+    if #available(iOS 26.0, *) {
+      scrollEdgeEffectHidden(true, for: .top)
+    } else {
+      self
+    }
+  }
+}
+
+private extension String {
+  /// One-line preview: line breaks shown as ⏎, surrounding blank space dropped.
+  var keyboardPreview: String {
+    trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\n", with: " ⏎ ")
+  }
+}
+
+extension Color {
+  static let pin = Color("PinColor")
+}
+
+private extension KeyboardModel.Tab {
+  var title: LocalizedStringKey {
+    switch self {
+    case .pinned: "Pinned"
+    case .recent: "Recent"
+    case .mac: "Mac"
+    case .iphone: "iPhone"
+    }
   }
 }
