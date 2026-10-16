@@ -481,23 +481,34 @@ private struct ClipKey: View {
   let onLongPress: () -> Void
 
   var body: some View {
-    HStack(spacing: 6) {
+    HStack(spacing: 8) {
+      // Same content icon as the app: a swatch for colors, a symbol for links, code, text…
+      ClipIcon(content: clip.content, size: 26)
+      Text(clip.text.keyboardPreview)
+        .font(.system(size: 15))
+        .lineLimit(1)
+        .frame(maxWidth: .infinity, alignment: .leading)
       if clip.pinned {
         Image(systemName: "pin.fill")
           .font(.caption2)
           .foregroundStyle(Color.pin)
           .accessibilityIdentifier("pinIcon")
       }
-      Text(clip.text.keyboardPreview)
-        .font(.system(size: 15))
-        .lineLimit(1)
-        .frame(maxWidth: .infinity, alignment: .leading)
-      Image(systemName: clip.sourceDevice == .mac ? "laptopcomputer" : "iphone")
-        .font(.caption2)
-        .foregroundStyle(.secondary)
-        .accessibilityHidden(true)
+      HStack(spacing: 3) {
+        // Only Mac copies know their app; iOS does not tell which app wrote to the pasteboard.
+        if let app = clip.sourceAppName {
+          Text(verbatim: app)
+            .lineLimit(1)
+            .frame(maxWidth: 80, alignment: .trailing)
+        }
+        Image(systemName: clip.sourceDevice == .mac ? "laptopcomputer" : "iphone")
+          .accessibilityHidden(true)
+      }
+      .font(.caption2)
+      .foregroundStyle(.secondary)
     }
-    .padding(.horizontal, 10)
+    .padding(.leading, 6)
+    .padding(.trailing, 10)
     .frame(minHeight: 38)
     .keyBackground()
     .contentShape(Rectangle())
@@ -619,11 +630,15 @@ private struct SearchPanel: View {
             Button {
               model.type(clip)
             } label: {
-              Text(clip.text.keyboardPreview)
-                .font(.system(size: 15))
-                .lineLimit(1)
-                .frame(maxWidth: 220)
-                .padding(.horizontal, 10)
+              HStack(spacing: 6) {
+                ClipIcon(content: clip.content, size: 22)
+                Text(clip.text.keyboardPreview)
+                  .font(.system(size: 15))
+                  .lineLimit(1)
+              }
+              .frame(maxWidth: 220)
+              .padding(.leading, 6)
+              .padding(.trailing, 10)
                 .frame(minHeight: 34)
                 .keyBackground()
             }
@@ -759,10 +774,6 @@ private extension String {
   var keyboardPreview: String {
     trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\n", with: " ⏎ ")
   }
-}
-
-extension Color {
-  static let pin = Color("PinColor")
 }
 
 private extension KeyboardModel.Tab {

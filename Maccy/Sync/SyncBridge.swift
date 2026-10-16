@@ -221,8 +221,10 @@ final class SyncBridge {
     guard let text = syncableText(of: item) else { return nil }
     return Clip(
       text: text,
-      sourceApp: item.application,
-      sourceAppName: item.application.flatMap(appName(for:)),
+      // A Universal Clipboard copy was made on another device; the app recorded here is just whatever was
+      // frontmost on this Mac, so it must not be shown as the source.
+      sourceApp: item.universalClipboard ? nil : item.application,
+      sourceAppName: item.universalClipboard ? nil : item.application.flatMap(appName(for:)),
       sourceDevice: item.universalClipboard ? .iphone : .mac,
       firstCopiedAt: item.firstCopiedAt,
       lastCopiedAt: item.lastCopiedAt,
