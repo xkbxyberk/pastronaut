@@ -1,4 +1,4 @@
-# Upstream'e not (taslak, gönderilmedi)
+# Upstream'e not (gönderildi: 2026-10-16, https://github.com/p0deje/Maccy/discussions/1596)
 
 **Nereye:** p0deje/Maccy → Discussions'ta yeni bir tartışma. #182 (cloud sync) ve #762 (iOS app) bağlantılı.
 Konu iki issue'yu da kapsadığı ve bir soru içerdiği için tartışma daha uygun.

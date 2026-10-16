@@ -110,7 +110,11 @@ Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi e
   - Bellek sınırı için yalnızca başlıklar ve sayfalı sorgular kullanılır; görsel önizleme yok.
 - **Telefondaki kopyaları yakalama** (arka planda sürekli izleme iOS'ta mümkün değil):
   1. Uygulama öne geldiğinde pano okunur. Kullanıcı ayarlardan "Diğer uygulamalardan yapıştır: İzin ver" seçmezse sistem onay sorar.
-  2. Klavye açıldığında pano değiştiyse okunur (Tam Erişim gerekir).
+  2. Klavye (Faz 0 sonucuna göre; bkz. `Prototypes/Faz0/README.md`):
+     - Klavye açılınca panonun değişip değişmediği izin istemeden algılanır (`changeCount`, `hasStrings`).
+     - Değiştiyse "Panodakini kaydet" alanında sistemin **Yapıştır düğmesi** gösterilir; tek dokunuşla, izin penceresi olmadan yakalanır.
+     - Kullanıcı ayarlardan "Diğer Uygulamalardan Yapıştır: İzin Ver" seçerse "otomatik kaydet" açılabilir. Sistem her okumada kısa bir bildirim gösterir; kurulum rehberinde bu açıklanmalı.
+     - Tam Erişim kapalıysa klavye geçmişi gösterir ve yazar ama yakalama yapamaz (App Group'a yazamıyor).
   3. App Intent "Panoyu Pastronaut'a kaydet": Kısayollar, Arkaya Dokun ve Eylem düğmesi için.
   4. (Sonra) Paylaş uzantısı.
   5. Universal Clipboard: telefon Mac'e yakınken telefonda yapılan kopya Mac'e düşer ve oradan eşitlenir.
@@ -124,7 +128,7 @@ Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi e
 | # | Konu | Nasıl doğrulanır |
 |---|---|---|
 | R1 | Klavye kuralları (App Review 4.4.1): giriş işlevi, sonraki klavye düğmesi, Tam Erişim olmadan çalışma | Güncel kural metni ve küçük bir prototip ile TestFlight dış inceleme |
-| R2 | Klavye uzantısı Tam Erişim'le panoyu okurken iOS onay penceresi çıkıyor mu? | Faz 0 prototipi |
+| R2 | Klavye uzantısı Tam Erişim'le panoyu okurken iOS onay penceresi çıkıyor mu? | ✅ Kapandı (Faz 0, iOS 27.0.1): düz okumada çıkıyor. Sistem Yapıştır düğmesinde ve "İzin Ver" ayarıyla çıkmıyor. iOS 17–26'da doğrulanmadı. |
 | R3 | CloudKit Developer ID ile dağıtılan Mac uygulamasında sorunsuz çalışıyor mu? | Faz 0 prototipi |
 | R4 | Klavye bellek sınırı | Faz 2'de Instruments ile ölçüm |
 | R5 | "Pastronaut" adının App Store'da ve marka olarak uygunluğu | App Store Connect'te ad ayırma, marka araması |

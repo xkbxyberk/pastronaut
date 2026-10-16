@@ -1,0 +1,76 @@
+# XcodeGen spec for the Faz 0 risk prototype. Generate with: xcodegen generate
+name: PastronautProto
+options:
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: V88QY49A4T
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    GENERATE_INFOPLIST_FILE: YES
+targets:
+  ProtoMac:
+    type: application
+    platform: macOS
+    sources: [Mac, Shared, Cloud]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut
+        PRODUCT_NAME: PastronautProto
+        ENABLE_HARDENED_RUNTIME: YES
+    entitlements:
+      path: Mac/ProtoMac.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.xkbxyberk.pastronaut]
+        com.apple.developer.icloud-services: [CloudKit]
+  ProtoiOS:
+    type: application
+    platform: iOS
+    sources: [iOS, Shared, Cloud]
+    dependencies:
+      - target: ProtoKeyboard
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut
+        PRODUCT_NAME: PastronautProto
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        TARGETED_DEVICE_FAMILY: "1"
+    entitlements:
+      path: iOS/ProtoiOS.entitlements
+      properties:
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.xkbxyberk.pastronaut]
+        com.apple.developer.icloud-services: [CloudKit]
+        com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]
+  ProtoKeyboard:
+    type: app-extension
+    platform: iOS
+    sources: [Keyboard, Shared]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.keyboard
+        PRODUCT_NAME: PastronautProtoKeyboard
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: Keyboard/Info.plist
+      properties:
+        CFBundleDisplayName: PastronautProto
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            IsASCIICapable: false
+            PrefersRightToLeft: false
+            PrimaryLanguage: tr-TR
+            RequestsOpenAccess: true
+    entitlements:
+      path: Keyboard/ProtoKeyboard.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]
