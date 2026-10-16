@@ -16,6 +16,26 @@ struct PreviewItemView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
+      // Pastronaut: what it is and where it was copied.
+      if let info = ClipRowInfo(item) {
+        HStack(spacing: 6) {
+          ClipContentIcon(content: info.content, size: 18)
+          Text(verbatim: info.content.kindName)
+            .font(.caption.weight(.semibold))
+          Spacer(minLength: 4)
+          if info.fromIPhone {
+            Label {
+              Text(verbatim: "iPhone")
+            } icon: {
+              Image(systemName: "iphone")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+          }
+        }
+        .padding(.bottom, 8)
+      }
+
       if item.hasImage {
         AsyncView<NSImage?, _, _>(id: item.id) {
           return await item.asyncGetPreviewImage()

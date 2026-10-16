@@ -24,6 +24,8 @@ struct FooterView: View {
         .padding(.horizontal, Popup.horizontalSeparatorPadding)
         .padding(.bottom, Popup.verticalSeparatorPadding)
 
+      SyncStatusLine() // Pastronaut
+
       ZStack {
         FooterItemView(item: footer.items[0])
           .invisible(!showClear)

@@ -516,6 +516,49 @@ class MaccyUITests: XCTestCase {
     assertPopupDismissed()
   }
 
+  // Pastronaut: screenshots for design review, not assertions. Run with
+  // -only-testing:MaccyUITests/MaccyUITests/testPastronautScreenshots and export the result bundle's attachments.
+  func testPastronautScreenshots() throws {
+    // This Mac runs in dark mode; the light pass forces Aqua for this launch only.
+    for appearance in ["dark", "light"] {
+      if appearance == "light" {
+        app.terminate()
+        app.launchArguments += ["-NSRequiresAquaSystemAppearance", "YES"]
+        app.launch()
+      }
+      for text in ["#5B4BD0", "git push origin main", "+90 555 010 20 30", "https://developer.apple.com/documentation/cloudkit"] {
+        copyToClipboard(text)
+      }
+      // A Universal Clipboard copy, i.e. one made on the iPhone.
+      pasteboard.clearContents()
+      pasteboard.setString("Toplantı Perşembe 14:00'te, 3. kattaki salonda.", forType: .string)
+      pasteboard.setData(Data(), forType: NSPasteboard.PasteboardType("com.apple.is-remote-clipboard"))
+      waitTillClipboardCheck()
+
+      popUpWithMouse()
+      usleep(300_000)
+      attachScreenshot(app.dialogs.firstMatch, named: "popup-\(appearance)")
+      sleep(3) // The preview opens on its own after a short delay.
+      attachScreenshot(app.dialogs.firstMatch, named: "popup-preview-\(appearance)")
+      let filter = app.descendants(matching: .any)["device-filter"].firstMatch
+      let iphone = filter.descendants(matching: .any).matching(NSPredicate(format: "label == 'iPhone'")).firstMatch
+      if iphone.exists {
+        iphone.click()
+        sleep(1)
+        attachScreenshot(app.dialogs.firstMatch, named: "popup-iphone-\(appearance)")
+      }
+      app.typeKey(.escape, modifierFlags: [])
+      sleep(1)
+    }
+  }
+
+  private func attachScreenshot(_ element: XCUIElement, named name: String) {
+    let attachment = XCTAttachment(screenshot: element.screenshot())
+    attachment.name = name
+    attachment.lifetime = .keepAlways
+    add(attachment)
+  }
+
   private func popUpWithHotkey() {
     simulatePopupHotkey()
     waitUntilPoppedUp()

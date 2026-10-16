@@ -42,12 +42,14 @@ struct HistoryItemView: View {
   }
 
   var body: some View {
+    let info = ClipRowInfo(item) // Pastronaut
     ListItemView(
       id: item.id,
       selectionId: item.id,
       appIcon: item.applicationImage,
       image: item.thumbnailImage,
-      accessoryImage: item.thumbnailImage != nil ? nil : colorSwatchImage,
+      accessoryImage: item.thumbnailImage != nil || info != nil ? nil : colorSwatchImage,
+      clipInfo: info,
       attributedTitle: item.attributedTitle,
       shortcuts: item.shortcuts,
       isSelected: item.isSelected,

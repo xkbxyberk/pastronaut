@@ -223,6 +223,14 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     (`KeyboardCloud.setPinned`, `delete`). iOS 26'nın kaydırma kenarı bulanıklığı listede kapatıldı (ilk satırı
     örtüyordu). Açık/koyu ekran görüntüleriyle kontrol edildi; E2E T22 (klavyeden sabitleme → Mac 2 sn) ve T23
     (klavyeden silme → Mac 2 sn) dahil tam koşu geçti.
+  - ✅ 4.4a Mac popup'ı (Maccy'nin popup'ı üzerine, macOS 26 cam zemini korunarak): Tümü/Bu Mac/iPhone filtresi (arama
+    ile birlikte uygulanır, ⌘1–9 görünen listeyi izler), Sabitlenenler ve gün başlıkları (tarihe göre sıralıyken,
+    arama yokken), içerik simgeleri (renkte örnek), "uygulama · zaman" alt satırı ve iPhone rozeti, önizlemede tür ve
+    kaynak, altbilgide eşitleme durumu. Gece vurgusu (`AccentColor`; macOS yalnızca "Çok renkli" vurguda kullanır).
+    Başlıktaki uygulama adı varsayılan kapalı (Pastronaut taşıma adımı; Maccy 2.x taşıması her kurulumda açıyordu).
+    iPhone'dan eşitlenen öğeler Mac'te `com.xkbxyberk.pastronaut.from-iphone` işaretiyle saklanır: rozet için ve Mac
+    onları değiştirince (ör. sabitleme) cihaz bilgisi Mac'e dönmesin diye. Ekran görüntüleri Maccy UI testinden
+    (`testPastronautScreenshots`, ayrı test deposu); tam E2E geçti.
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
   TestFlight ve App Store; Mac için GitHub Releases, Homebrew tap, Mac App Store.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.

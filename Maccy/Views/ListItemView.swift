@@ -34,6 +34,7 @@ struct ListItemView<Title: View, ID: Hashable>: View {
   var appIcon: ApplicationImage?
   var image: NSImage?
   var accessoryImage: NSImage?
+  var clipInfo: ClipRowInfo? // Pastronaut: content icon and "where · when" line for text clips.
   var attributedTitle: AttributedString?
   var shortcuts: [KeyShortcut]
   var isSelected: Bool
@@ -68,6 +69,12 @@ struct ListItemView<Title: View, ID: Hashable>: View {
       Spacer()
         .frame(width: showIcons ? 5 : 10)
 
+      if let clipInfo {
+        ClipContentIcon(content: clipInfo.content, isSelected: isSelected)
+          .padding(.trailing, 8)
+          .padding(.vertical, 5)
+      }
+
       if let accessoryImage {
         Image(nsImage: accessoryImage)
           .accessibilityIdentifier("copy-history-item")
@@ -82,6 +89,23 @@ struct ListItemView<Title: View, ID: Hashable>: View {
           .accessibilityHidden(true)
           .padding(.trailing, 5)
           .padding(.vertical, 5)
+      } else if let clipInfo {
+        VStack(alignment: .leading, spacing: 1) {
+          ListItemTitleView(attributedTitle: attributedTitle, title: title)
+          HStack(spacing: 4) {
+            if clipInfo.fromIPhone {
+              Image(systemName: "iphone")
+                .accessibilityLabel(Text(verbatim: "iPhone"))
+            }
+            Text(verbatim: clipInfo.subtitle)
+              .lineLimit(1)
+          }
+          .font(.caption)
+          .foregroundStyle(isSelected ? Color.white.opacity(0.8) : Color.secondary)
+        }
+        .accessibilityHidden(true)
+        .padding(.trailing, 5)
+        .padding(.vertical, 4)
       } else {
         ListItemTitleView(attributedTitle: attributedTitle, title: title)
           .accessibilityHidden(true)

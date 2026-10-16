@@ -24,10 +24,20 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
     }
   }
   var pinnedItems: [HistoryItemDecorator] {
-    searchQuery.isEmpty ? allPinnedItems : filteredPinnedItems
+    (searchQuery.isEmpty ? allPinnedItems : filteredPinnedItems).filter(deviceFilter.includes) // Pastronaut
   }
   var unpinnedItems: [HistoryItemDecorator] {
-    searchQuery.isEmpty ? allUnpinnedItems : filteredUnpinnedItems
+    (searchQuery.isEmpty ? allUnpinnedItems : filteredUnpinnedItems).filter(deviceFilter.includes) // Pastronaut
+  }
+
+  // Pastronaut: All / This Mac / iPhone, applied on top of the search.
+  var deviceFilter: DeviceFilter = .all {
+    didSet {
+      guard deviceFilter != oldValue else { return }
+      updateUnpinnedShortcuts()
+      AppState.shared.navigator.select(item: firstUnpinnedItem ?? firstPinnedItem)
+      AppState.shared.popup.needsResize = true
+    }
   }
   var availablePins: [String] { pinManager.availablePins }
 

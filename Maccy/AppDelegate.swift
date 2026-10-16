@@ -154,6 +154,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       UserDefaults.standard.removeObject(forKey: "hideTitle")
     }
 
+    // Pastronaut: the 2.x migration above turns the title on for every new install; the device filter needs
+    // that room. Users can still turn it on in Appearance settings.
+    ensureMigration(key: "2026-10-16-pastronaut-hide-title") {
+      Defaults[.showTitle] = false
+    }
+
     ensureMigration(key: "2025-07-04-add-jpeg-heic") {
       var types = Defaults[.enabledPasteboardTypes]
       if !types.isDisjoint(with: StorageType.images.types) {

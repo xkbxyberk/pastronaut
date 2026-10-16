@@ -195,7 +195,12 @@ final class SyncBridge {
 
   private func insert(_ clip: Clip) {
     let content = HistoryItemContent(type: NSPasteboard.PasteboardType.string.rawValue, value: Data(clip.text.utf8))
-    let item = HistoryItem(contents: [content])
+    var contents = [content]
+    if clip.sourceDevice != .mac {
+      // Remembers the origin so the popup can badge it and later changes from this Mac keep it an iPhone clip.
+      contents.append(HistoryItemContent(type: NSPasteboard.PasteboardType.pastronautFromIPhone.rawValue, value: Data()))
+    }
+    let item = HistoryItem(contents: contents)
     if #unavailable(macOS 15.0) {
       // Same requirement as Clipboard: on macOS 14 the item must be in storage before History.add.
       try? History.shared.insertIntoStorage(item)
@@ -225,7 +230,7 @@ final class SyncBridge {
       // frontmost on this Mac, so it must not be shown as the source.
       sourceApp: item.universalClipboard ? nil : item.application,
       sourceAppName: item.universalClipboard ? nil : item.application.flatMap(appName(for:)),
-      sourceDevice: item.universalClipboard ? .iphone : .mac,
+      sourceDevice: item.isFromIPhone ? .iphone : .mac,
       firstCopiedAt: item.firstCopiedAt,
       lastCopiedAt: item.lastCopiedAt,
       modifiedAt: modifiedAt,

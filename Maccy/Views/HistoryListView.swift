@@ -85,6 +85,7 @@ struct HistoryListView: View {
       }
 
       if topPinsVisible {
+        HistorySectionHeader(title: String(localized: "Pinned", table: "Pastronaut")) // Pastronaut
         PinsView(items: pinnedItems)
       }
 
@@ -101,7 +102,13 @@ struct HistoryListView: View {
     ScrollView {
       ScrollViewReader { proxy in
         MultipleSelectionListView(items: unpinnedItems) { previous, item, next, index in
-          HistoryItemView(item: item, previous: previous, next: next, index: index)
+          VStack(spacing: 0) {
+            // Pastronaut: Today / Yesterday / This Week / Earlier.
+            if let title = HistorySections.title(for: item, after: previous) {
+              HistorySectionHeader(title: title)
+            }
+            HistoryItemView(item: item, previous: previous, next: next, index: index)
+          }
         }
         .padding(.top, scrollTopPadding)
         .padding(.bottom, scrollBottomPadding)
@@ -157,6 +164,7 @@ struct HistoryListView: View {
       }
 
       if bottomPinsVisible {
+        HistorySectionHeader(title: String(localized: "Pinned", table: "Pastronaut")) // Pastronaut
         PinsView(items: pinnedItems)
       }
     }

@@ -20,6 +20,9 @@ struct HeaderView: View {
         )
         .padding(.horizontal, Popup.horizontalPadding)
 
+        DeviceFilterPicker() // Pastronaut
+          .padding(.trailing, Popup.horizontalPadding)
+
         ToolbarButton {
           controller.togglePreview()
         } label: {
