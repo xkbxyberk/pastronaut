@@ -148,7 +148,7 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
 | R4 | Klavye bellek sınırı | Faz 2'de Instruments ile ölçüm |
 | R5 | "Pastronaut" adının App Store'da ve marka olarak uygunluğu | App Store Connect'te ad ayırma, marka araması |
 | R6 | Upstream değişiklikleriyle birleşme maliyeti | Değişiklikleri kanca ve ayrı klasörlerle sınırlamak |
-| R7 | Mac'te CloudKit push'u uygulamaya ulaşmıyor | Açık. `apsd` push'ları alıp `usernoted`'a veriyor; `usernoted` ise Debug uygulamasını "eksik uygulama" sayıp push kaydını siliyor (günlük: `Removing missing application`). Uygulama `/private/tmp` altındaki DerivedData'dan çalışıyor. `/Applications` altında denenecek. O zamana kadar yakalama çekmesi gecikmeyi ≤ 1 dk tutuyor. |
+| R7 | Mac'te CloudKit push'u uygulamaya ulaşmıyor | ✅ Kapandı (2026-10-16): uygulama hatası değil, ortam sorunu. Uygulama `/private/tmp` altındaki DerivedData'dan çalışınca `usernoted` onu "eksik uygulama" sayıp push kaydını siliyor (günlük: `Removing missing application`); push'lar düşüyor. `~/Applications` altından çalışınca push geliyor: iPhone → Mac kaydetme, sabitleme, silme ≈ 2 sn. Mac'i test ederken uygulamayı bir Uygulamalar klasöründen çalıştır. |
 
 ## 8. Fazlar ve kabul ölçütleri
 - **Faz 0: Riskleri kapatan prototip (1 hafta).** CloudKit'e yazan minimal bir Mac uygulaması, okuyan bir iOS uygulaması
@@ -167,7 +167,8 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     (önceden boş görünüyordu, bkz. aşağıda) — T02, T14 (ayrı koşuda geçti).
   - ✅ Tam Erişim kapalıyken klavye çökmez ve yönlendirme gösterir — T14 tanısı ("fullAccessHint").
   - ✅ İki yönde ekleme, sabitleme, sabit kaldırma, silme (T02–T07, T11, T12). Mac → açık iPhone ≈ 23 sn,
-    iPhone → Mac ≈ 45–55 sn (Mac'te push çalışmadığı için dakikalık yoklamayla; bkz. R7).
+    iPhone → Mac ≈ 45–55 sn DerivedData'dan çalışırken (push düşüyor, dakikalık yoklama), `~/Applications`'tan
+    çalışırken ≈ 2 sn (push; bkz. R7).
   - ✅ Türkçe, emoji, çok satırlı metin bayt bayt aynı (T08). Gizli (parola) kopya hiçbir yere gitmez (T09).
     100 KB üstü metin Mac'te kalır (T10).
   - ✅ Mac kapalıyken iPhone'da yapılanlar Mac açılınca gelir (T15, 2 sn). İlk kurulum geçmişi çeker (T01).
@@ -194,7 +195,8 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
 
 ## 10. Geliştirme ortamı
 - **İki cihazlı uçtan uca test:** Mac Debug derlemesi ve iOS `build-for-testing` sonrası
-  `scripts/e2e/sync_e2e.py --mac-app <Pastronaut.app> --xctestrun <…xctestrun> --device <UDID>`. iPhone kilidi açık ve
+  `scripts/e2e/sync_e2e.py --mac-app <Pastronaut.app> --xctestrun <…xctestrun> --device <UDID>`. Mac push'unun
+  çalışması için `--mac-app` bir Uygulamalar klasöründeki kopya olmalı (ör. `ditto … ~/Applications/Pastronaut.app`; R7). iPhone kilidi açık ve
   bağlı kalmalı; ~13 dk sürer. Mac yalnızca Debug derlemesindeki `E2EControl` ile, iPhone XCUITest adımlarıyla
   (`iOS/UITests`) sürülür; durum Mac'te birleşik günlükten, iPhone'da `devicectl` ile App Group dosyalarından okunur.
   `test-without-building` değişen uygulamayı her zaman yeniden kurmuyor; betik bu yüzden önce `devicectl` ile kurar.
