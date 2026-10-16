@@ -1,0 +1,315 @@
+import CloudKit
+import Foundation
+import os
+
+/// A clip that changed because of another device.
+public enum ClipChange: Equatable, Sendable {
+  case upserted(Clip)
+  case deleted(id: String)
+}
+
+public struct SyncStatus: Equatable, Sendable {
+  public var isRunning: Bool
+  public var syncedClips: Int
+  public var lastSyncAt: Date?
+  public var lastError: String?
+}
+
+/// Two-way sync of clips with the user's private iCloud database, built on CKSyncEngine.
+///
+/// Keeps a small mirror of every synced clip (with the server's system fields) next to the app's own
+/// storage, so the app's history model stays untouched. Callers report local changes with `upsert`
+/// and `delete`; remote changes arrive through the change handler.
+public actor ClipSync {
+  public typealias ChangeHandler = @Sendable ([ClipChange]) async -> Void
+
+  struct MirrorEntry: Codable {
+    var clip: Clip
+    /// Archived system fields of the last known server record; nil until first saved or fetched.
+    var systemFields: Data?
+  }
+
+  struct PersistedState: Codable {
+    var entries: [String: MirrorEntry] = [:]
+    var engineState: CKSyncEngine.State.Serialization?
+  }
+
+  private let container: CKContainer
+  private let fileURL: URL
+  private let policy: SyncPolicy
+  private var state: PersistedState
+  private var engine: CKSyncEngine?
+  private var changeHandler: ChangeHandler?
+  private var lastSyncAt: Date?
+  private var lastError: String?
+  private let logger = Logger(subsystem: "com.xkbxyberk.pastronaut", category: "ClipSync")
+
+  public init(containerIdentifier: String, storageDirectory: URL, policy: SyncPolicy = .default) {
+    self.container = CKContainer(identifier: containerIdentifier)
+    self.fileURL = storageDirectory.appending(path: "clip-sync.json")
+    self.policy = policy
+    self.state = Self.load(from: fileURL)
+  }
+
+  public func setChangeHandler(_ handler: ChangeHandler?) {
+    changeHandler = handler
+  }
+
+  public var status: SyncStatus {
+    SyncStatus(isRunning: engine != nil, syncedClips: state.entries.count, lastSyncAt: lastSyncAt, lastError: lastError)
+  }
+
+  public var clips: [Clip] {
+    state.entries.values.map(\.clip)
+  }
+
+  // MARK: - Lifecycle
+
+  public func start() {
+    guard engine == nil else { return }
+    let configuration = CKSyncEngine.Configuration(
+      database: container.privateCloudDatabase,
+      stateSerialization: state.engineState,
+      delegate: self
+    )
+    let engine = CKSyncEngine(configuration)
+    self.engine = engine
+    if state.engineState == nil {
+      engine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: ClipRecord.zoneID))])
+    }
+    logger.info("Started with \(self.state.entries.count) mirrored clips")
+  }
+
+  /// Stops syncing and forgets the local mirror. iCloud data and local history are left untouched.
+  public func stop() {
+    engine = nil
+    state = PersistedState()
+    persist()
+  }
+
+  /// Deletes the clips zone from iCloud for every device, then stops.
+  public func deleteCloudData() async throws {
+    guard let engine else { return }
+    engine.state.add(pendingDatabaseChanges: [.deleteZone(ClipRecord.zoneID)])
+    try await engine.sendChanges()
+    stop()
+  }
+
+  public func syncNow() async throws {
+    guard let engine else { return }
+    try await engine.fetchChanges()
+    try await engine.sendChanges()
+  }
+
+  // MARK: - Local changes
+
+  /// Reports a clip created or changed on this device. Ineligible clips and no-op updates are ignored.
+  public func upsert(_ clip: Clip) {
+    guard let engine, policy.isEligible(clip.text) else { return }
+    let existing = state.entries[clip.id]
+    let merged = existing.map { $0.clip.merged(with: clip) } ?? clip
+    guard merged != existing?.clip else { return }
+
+    state.entries[clip.id] = MirrorEntry(clip: merged, systemFields: existing?.systemFields)
+    engine.state.add(pendingRecordZoneChanges: [.saveRecord(ClipRecord.recordID(for: clip.id))])
+    persist()
+  }
+
+  /// Reports clips deleted on this device. Unknown IDs are ignored.
+  public func delete(ids: some Sequence<String>) {
+    guard let engine else { return }
+    let removed = ids.filter { state.entries.removeValue(forKey: $0) != nil }
+    guard !removed.isEmpty else { return }
+    engine.state.add(pendingRecordZoneChanges: removed.map { .deleteRecord(ClipRecord.recordID(for: $0)) })
+    persist()
+  }
+
+  // MARK: - Persistence
+
+  private static func load(from url: URL) -> PersistedState {
+    guard let data = try? Data(contentsOf: url),
+          let state = try? JSONDecoder().decode(PersistedState.self, from: data) else {
+      return PersistedState()
+    }
+    return state
+  }
+
+  private func persist() {
+    do {
+      try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+      try JSONEncoder().encode(state).write(to: fileURL, options: .atomic)
+    } catch {
+      logger.error("Cannot persist sync state: \(error.localizedDescription)")
+    }
+  }
+
+  private func notify(_ changes: [ClipChange]) async {
+    guard !changes.isEmpty else { return }
+    await changeHandler?(changes)
+  }
+
+  private func record(for recordID: CKRecord.ID) -> CKRecord? {
+    guard let entry = state.entries[recordID.recordName] else { return nil }
+    let base = entry.systemFields.flatMap(ClipRecord.record(fromSystemFields:))
+    return ClipRecord.record(for: entry.clip, updating: base)
+  }
+}
+
+// MARK: - CKSyncEngineDelegate
+
+extension ClipSync: CKSyncEngineDelegate {
+  public func handleEvent(_ event: CKSyncEngine.Event, syncEngine: CKSyncEngine) async {
+    switch event {
+    case .stateUpdate(let update):
+      state.engineState = update.stateSerialization
+      persist()
+
+    case .accountChange(let change):
+      await handleAccountChange(change, syncEngine: syncEngine)
+
+    case .fetchedDatabaseChanges(let changes):
+      // The zone disappears when the user deletes iCloud data or another device turns sync off with deletion.
+      guard changes.deletions.contains(where: { $0.zoneID == ClipRecord.zoneID }) else { return }
+      let ids = Array(state.entries.keys)
+      state.entries.removeAll()
+      persist()
+      await notify(ids.map { .deleted(id: $0) })
+
+    case .fetchedRecordZoneChanges(let changes):
+      await handleFetched(changes, syncEngine: syncEngine)
+
+    case .sentRecordZoneChanges(let sent):
+      handleSent(sent, syncEngine: syncEngine)
+
+    case .sentDatabaseChanges, .willFetchChanges, .willFetchRecordZoneChanges, .didFetchRecordZoneChanges,
+         .didFetchChanges, .willSendChanges, .didSendChanges:
+      break
+
+    @unknown default:
+      logger.info("Unknown sync engine event")
+    }
+  }
+
+  public func nextRecordZoneChangeBatch(
+    _ context: CKSyncEngine.SendChangesContext,
+    syncEngine: CKSyncEngine
+  ) async -> CKSyncEngine.RecordZoneChangeBatch? {
+    let pending = syncEngine.state.pendingRecordZoneChanges.filter { context.options.scope.contains($0) }
+    guard !pending.isEmpty else { return nil }
+
+    // The record provider is synchronous and nonisolated, so build the records here on the actor.
+    var records: [CKRecord.ID: CKRecord] = [:]
+    var stale: [CKSyncEngine.PendingRecordZoneChange] = []
+    for case .saveRecord(let recordID) in pending {
+      if let record = record(for: recordID) {
+        records[recordID] = record
+      } else {
+        // Deleted locally after the save was queued.
+        stale.append(.saveRecord(recordID))
+      }
+    }
+    syncEngine.state.remove(pendingRecordZoneChanges: stale)
+
+    let batchRecords = records
+    return await CKSyncEngine.RecordZoneChangeBatch(pendingChanges: pending) { batchRecords[$0] }
+  }
+
+  private func handleAccountChange(_ change: CKSyncEngine.Event.AccountChange, syncEngine: CKSyncEngine) async {
+    switch change.changeType {
+    case .signIn:
+      // Upload everything mirrored so far (e.g. clips collected before iCloud was available).
+      syncEngine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: ClipRecord.zoneID))])
+      syncEngine.state.add(pendingRecordZoneChanges: state.entries.keys.map {
+        .saveRecord(ClipRecord.recordID(for: $0))
+      })
+    case .signOut, .switchAccounts:
+      // Another account's clips must not leak into this one. Local history is the caller's to keep.
+      state.entries.removeAll()
+      persist()
+    @unknown default:
+      break
+    }
+  }
+
+  private func handleFetched(_ changes: CKSyncEngine.Event.FetchedRecordZoneChanges, syncEngine: CKSyncEngine) async {
+    var result: [ClipChange] = []
+
+    for modification in changes.modifications {
+      let record = modification.record
+      guard let remote = ClipRecord.clip(from: record) else {
+        logger.error("Ignoring invalid clip record \(record.recordID.recordName)")
+        continue
+      }
+      let local = state.entries[remote.id]?.clip
+      let merged = local.map { $0.merged(with: remote) } ?? remote
+      state.entries[remote.id] = MirrorEntry(clip: merged, systemFields: ClipRecord.systemFields(of: record))
+      if merged != remote {
+        // This device knows something newer (e.g. a later copy); push it back.
+        syncEngine.state.add(pendingRecordZoneChanges: [.saveRecord(record.recordID)])
+      }
+      if merged != local {
+        result.append(.upserted(merged))
+      }
+    }
+
+    for deletion in changes.deletions {
+      let id = deletion.recordID.recordName
+      if state.entries.removeValue(forKey: id) != nil {
+        result.append(.deleted(id: id))
+      }
+    }
+
+    lastSyncAt = .now
+    persist()
+    await notify(result)
+  }
+
+  private func handleSent(_ sent: CKSyncEngine.Event.SentRecordZoneChanges, syncEngine: CKSyncEngine) {
+    for record in sent.savedRecords where state.entries[record.recordID.recordName] != nil {
+      state.entries[record.recordID.recordName]?.systemFields = ClipRecord.systemFields(of: record)
+    }
+
+    var resend: [CKRecord.ID] = []
+    var needsZone = false
+    for failure in sent.failedRecordSaves {
+      let recordID = failure.record.recordID
+      let id = recordID.recordName
+      switch failure.error.code {
+      case .serverRecordChanged:
+        // Another device saved first: merge with the server version and retry on top of it.
+        guard let serverRecord = failure.error.serverRecord,
+              let remote = ClipRecord.clip(from: serverRecord),
+              let local = state.entries[id]?.clip else { continue }
+        state.entries[id] = MirrorEntry(clip: local.merged(with: remote), systemFields: ClipRecord.systemFields(of: serverRecord))
+        resend.append(recordID)
+      case .zoneNotFound:
+        needsZone = true
+        state.entries[id]?.systemFields = nil
+        resend.append(recordID)
+      case .unknownItem:
+        // Deleted on the server; recreate from our copy.
+        state.entries[id]?.systemFields = nil
+        resend.append(recordID)
+      case .networkFailure, .networkUnavailable, .zoneBusy, .serviceUnavailable, .notAuthenticated,
+           .operationCancelled, .requestRateLimited:
+        // CKSyncEngine retries these on its own.
+        break
+      default:
+        lastError = failure.error.localizedDescription
+        logger.error("Cannot save \(id): \(failure.error.localizedDescription)")
+      }
+    }
+
+    if needsZone {
+      syncEngine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: ClipRecord.zoneID))])
+    }
+    if !resend.isEmpty {
+      syncEngine.state.add(pendingRecordZoneChanges: resend.map { .saveRecord($0) })
+    }
+    if sent.failedRecordSaves.isEmpty {
+      lastError = nil
+    }
+    lastSyncAt = .now
+    persist()
+  }
+}
