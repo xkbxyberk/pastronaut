@@ -4,11 +4,16 @@ Copy-ready metadata (English primary, Turkish localization) and the answers for 
 in brackets. Checked against the app as of commit `daf0da7`.
 
 ## App information
-- **Name** [30]: `Pastronaut` · TR: `Pastronaut`
+- **Name** [30]: `Pastronaut` · TR: `Pastronaut: Pano Geçmişi` (24). App names are unique per localization, and
+  "Pastronaut" is already reserved by someone else for Turkish (seen 2026-10-18), so the Turkish name adds a
+  descriptor. The Home Screen still shows "Pastronaut" (from the app bundle).
 - **Subtitle** [30]: `Your Mac clipboard on iPhone` (28) · TR: `Mac panon artık iPhone'da` (25)
 - **Bundle ID:** `com.xkbxyberk.pastronaut` · **SKU:** `pastronaut-ios`
 - **Primary category:** Productivity · **Secondary:** Utilities
-- **Content rights:** no third-party content.
+- **Content rights:** optional link previews show the title and image of pages the user copied (like Messages'
+  link previews), so answer "Yes, it contains, shows or accesses third-party content" honestly (owner's decision).
+- **Bundle IDs:** the app record uses `com.xkbxyberk.pastronaut`; `.keyboard`, `.share` and `.widgets` are the
+  extensions' App IDs that Xcode's automatic signing created ("XC …"). They ship inside the app; keep them.
 - **Privacy Policy URL:** https://xkbxyberk.github.io/pastronaut/privacy.html
 - **Support URL:** https://github.com/xkbxyberk/pastronaut/issues (contact e-mail is on the privacy page)
 - **Marketing URL:** https://xkbxyberk.github.io/pastronaut/
