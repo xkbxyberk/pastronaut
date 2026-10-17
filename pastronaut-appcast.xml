@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pastronaut update feed (Sparkle). Intentionally empty until the first signed release. -->
+<!-- Pastronaut update feed (Sparkle). Each item: the notarized zip on GitHub Releases, signed with the EdDSA key
+     whose public half is SUPublicEDKey in Maccy/Info.plist. -->
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
     <title>Pastronaut</title>
+    <item>
+      <title>Pastronaut 0.1.0</title>
+      <pubDate>Sun, 18 Oct 2026 02:23:56 +0300</pubDate>
+      <sparkle:version>1</sparkle:version>
+      <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/xkbxyberk/pastronaut/releases/tag/v0.1.0</sparkle:releaseNotesLink>
+      <enclosure
+        url="https://github.com/xkbxyberk/pastronaut/releases/download/v0.1.0/Pastronaut-0.1.0.zip"
+        type="application/octet-stream"
+        sparkle:edSignature="xFva2ua5Q5pyKoqAjCmVbeZ+1IAR/wxjunicqR07+sPkL96/73/knOHmFWOOq5+7I2Y/s8abWjG9ywa+LhNcCw=="
+        length="6589855" />
+    </item>
   </channel>
 </rss>
