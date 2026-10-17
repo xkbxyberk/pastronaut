@@ -7,6 +7,8 @@ public enum ClipContent: Equatable, Sendable {
   case email(String)
   case phone(String)
   case color(hex: String)
+  /// A postal address, found by the system's data detector (works offline, also for Turkish addresses).
+  case address(String)
   case code
   case text
 
@@ -29,6 +31,8 @@ public enum ClipContent: Equatable, Sendable {
     }
     if Self.isPhone(trimmed) {
       self = .phone(trimmed)
+    } else if Self.isAddress(trimmed) {
+      self = .address(trimmed)
     } else if Self.looksLikeCode(trimmed) {
       self = .code
     } else {
@@ -36,7 +40,36 @@ public enum ClipContent: Equatable, Sendable {
     }
   }
 
+  /// The kind, for colors and symbols shared by the Mac, the iPhone and the keyboard.
+  public var kind: ClipKind {
+    switch self {
+    case .link: .link
+    case .email: .email
+    case .phone: .phone
+    case .color: .color
+    case .address: .address
+    case .code: .code
+    case .text: .text
+    }
+  }
+
   // MARK: - Rules
+
+  /// NSDataDetector is Sendable: one instance serves every thread.
+  private static let addressDetector = try? NSDataDetector(
+    types: NSTextCheckingResult.CheckingType.address.rawValue
+  )
+
+  /// Most of a short text is one address with a street ("Moda Cad. No:12 Kadıköy/İstanbul").
+  static func isAddress(_ text: String) -> Bool {
+    let length = (text as NSString).length
+    guard length >= 8, length <= 240, text.contains(where: \.isNumber), text.split(separator: "\n").count <= 4,
+          let detector = addressDetector else { return false }
+    let matches = detector.matches(in: text, range: NSRange(location: 0, length: length))
+    guard matches.contains(where: { $0.addressComponents?[.street] != nil }) else { return false }
+    let covered = matches.reduce(0) { $0 + $1.range.length }
+    return Double(covered) / Double(length) >= 0.6
+  }
 
   private static func isSingleToken(_ text: String) -> Bool {
     !text.isEmpty && !text.contains(where: \.isWhitespace)

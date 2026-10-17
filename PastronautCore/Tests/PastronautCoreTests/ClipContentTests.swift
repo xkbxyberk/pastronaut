@@ -44,3 +44,39 @@ import Testing
     #expect(ClipContent(text) == .text)
   }
 }
+
+@Suite struct AddressAndKindTests {
+  @Test(arguments: [
+    "Kadıköy, Moda Cd. No: 12, İstanbul",
+    "Caferağa Mah. Moda Cad. No:12 D:3 34710 Kadıköy/İstanbul",
+    "Atatürk Bulvarı No:45 Çankaya Ankara",
+    "1 Infinite Loop, Cupertino, CA 95014"
+  ])
+  func addresses(_ text: String) {
+    #expect(ClipContent(text) == .address(text))
+    #expect(ClipContent(text).kind == .address)
+  }
+
+  @Test(arguments: [
+    "Toplantı Perşembe 14:00'te",
+    "Kargo takip no: 1Z 999 AA1 0123 4567 84",
+    "Moda",
+    "let x = 12"
+  ])
+  func notAddresses(_ text: String) {
+    #expect(ClipContent(text).kind != .address)
+  }
+
+  @Test func addressChip() {
+    #expect(ClipSearchToken.address.matches(text: "Bağdat Cd. No: 300 Kadıköy İstanbul", pinned: false, lastCopiedAt: .now))
+    #expect(!ClipSearchToken.address.matches(text: "hello", pinned: false, lastCopiedAt: .now))
+  }
+
+  @Test func everyKindHasAPaletteEntryButColor() {
+    for kind in ClipKind.allCases where kind != .color {
+      #expect(ClipKind.palette[kind] != nil, "\(kind)")
+    }
+    #expect(ClipContent("#1E6FA8").kind == .color)
+    #expect(ClipContent("https://example.com").kind == .link)
+  }
+}

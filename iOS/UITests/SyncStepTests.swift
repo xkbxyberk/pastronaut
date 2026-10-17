@@ -258,6 +258,12 @@ final class SyncStepTests: XCTestCase {
         app.launch()
         Thread.sleep(forTimeInterval: 2)
         attachScreenshot(named: "history-\(name)")
+        // The bar with the logotype must stay put while the list scrolls under it.
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "history-scrolled-\(name)")
+        app.swipeDown()
+        app.swipeDown()
         let iphoneFilter = app.descendants(matching: .any)["filter.iphone"].firstMatch
         if iphoneFilter.exists {
           iphoneFilter.tap()

@@ -329,6 +329,18 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
       dışındaydı); adım düzeltildi ve senaryo tek başına 3/3 geçti.
     - Turlarda bulunan hatalar: iPhone'da açık koleksiyon başka cihazda silinince liste boş kalıyordu (artık Tümü'ne
       döner); iPhone'da sürüklenebilir satırlar bağlam menüsünü kilitliyordu (sürükleme yalnızca iPad'de).
+  - 4.8 Dalga 4 (tasarım; kararlar 2026-10-17, taslaklar: claude.ai/artifact/9vFzTdRTriSotafFwJ6SKf):
+    - Tür renkleri her yerde aynı: metin kurşuni, bağlantı mavi, kod mor, e-posta camgöbeği, telefon yeşil, adres
+      turuncu, görsel pembe, dosya toprak; renk öğesi kendi rengi, görsel küçük resmi. Mac'te "renkli simge" stili
+      (soluk zemin + renkli simge); seçili satırda simge beyaz zemine geçer. Simgesiz kalan satırlar düzeltilecek.
+    - iPhone: önizlemeler açıkken türe göre kartlar (iki sütun); adreste harita (NSDataDetector + MKMapSnapshotter),
+      bağlantıda sayfa önizlemesi (LinkPresentation), kodda cihazda renklendirme. Tek kullanımlık görünen
+      bağlantılar (token, reset, verify, login, unsubscribe, uzun sorgu) hiç açılmaz. Önizlemeler ilk açılışta bir
+      kez sorulur; kapalıyken uygulama Mac'e benzer bir liste görünümüyle açılır.
+    - Başlık sabit: büyük, kayan başlık yerine sabit bir üst çubukta logotip (kaydırırken titreme hatası da bununla
+      gider). Logotip seçimi sürüyor (sekiz seçenek).
+    - Klavye: iki sütunlu ızgara + alt kategori çubuğu (son, sabit, Mac, iPhone, koleksiyonlar renkli baş harfle) +
+      tuş sırası (ara, boşluk, sil, satır başı); üstte "Mac'ten son" kutusu.
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
   TestFlight ve App Store; Mac için GitHub Releases, Homebrew tap, Mac App Store.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.

@@ -153,6 +153,11 @@ private struct SmartAction {
       let dialable = number.filter { $0.isNumber || $0 == "+" }
       guard let url = URL(string: "tel:\(dialable)") else { return nil }
       (title, systemImage, self.url) = ("Call", "phone", url)
+    case .address(let address):
+      var components = URLComponents(string: "https://maps.apple.com/")
+      components?.queryItems = [URLQueryItem(name: "daddr", value: address)]
+      guard let url = components?.url else { return nil }
+      (title, systemImage, self.url) = ("Get Directions", "arrow.triangle.turn.up.right.diamond", url)
     case .color, .code, .text:
       return nil
     }

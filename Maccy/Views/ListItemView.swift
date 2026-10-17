@@ -70,7 +70,7 @@ struct ListItemView<Title: View, ID: Hashable>: View {
         .frame(width: showIcons ? 5 : 10)
 
       if let clipInfo {
-        ClipContentIcon(content: clipInfo.content, isSelected: isSelected)
+        ClipContentIcon(kind: clipInfo.kind, colorHex: clipInfo.colorHex, isSelected: isSelected)
           .padding(.trailing, 8)
           .padding(.vertical, 5)
       }

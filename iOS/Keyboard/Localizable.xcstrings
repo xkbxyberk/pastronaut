@@ -286,6 +286,39 @@
           }
         }
       }
+    },
+    "Address": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adres"
+          }
+        }
+      }
+    },
+    "Addresses": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresler"
+          }
+        }
+      }
+    },
+    "Get Directions": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yol Tarifi"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

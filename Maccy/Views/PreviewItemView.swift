@@ -19,8 +19,8 @@ struct PreviewItemView: View {
       // Pastronaut: what it is and where it was copied.
       if let info = ClipRowInfo(item) {
         HStack(spacing: 6) {
-          ClipContentIcon(content: info.content, size: 18)
-          Text(verbatim: info.content.kindName)
+          ClipContentIcon(kind: info.kind, colorHex: info.colorHex, size: 18)
+          Text(verbatim: info.kind.title)
             .font(.caption.weight(.semibold))
           Spacer(minLength: 4)
           if info.fromIPhone {

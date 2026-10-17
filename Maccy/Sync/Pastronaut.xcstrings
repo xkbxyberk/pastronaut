@@ -1422,6 +1422,50 @@
           }
         }
       }
+    },
+    "Address": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adres"
+          }
+        }
+      }
+    },
+    "Addresses": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresler"
+          }
+        }
+      }
+    },
+    "Image": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görsel"
+          }
+        }
+      }
+    },
+    "File": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -10,6 +10,7 @@ public enum ClipSearchToken: String, CaseIterable, Hashable, Identifiable, Senda
   case email
   case phone
   case color
+  case address
   case code
   case text
 
@@ -21,7 +22,7 @@ public enum ClipSearchToken: String, CaseIterable, Hashable, Identifiable, Senda
     switch self {
     case .pinned: .pin
     case .today, .thisWeek: .date
-    case .link, .email, .phone, .color, .code, .text: .kind
+    case .link, .email, .phone, .color, .address, .code, .text: .kind
     }
   }
 
@@ -39,7 +40,7 @@ public enum ClipSearchToken: String, CaseIterable, Hashable, Identifiable, Senda
     case .thisWeek:
       let start = calendar.date(byAdding: .day, value: -6, to: calendar.startOfDay(for: now)) ?? now
       return lastCopiedAt >= start
-    case .link, .email, .phone, .color, .code, .text:
+    case .link, .email, .phone, .color, .address, .code, .text:
       return text.map { kind(of: ClipContent($0)) } ?? false
     }
   }
@@ -60,7 +61,8 @@ public enum ClipSearchToken: String, CaseIterable, Hashable, Identifiable, Senda
 
   private func kind(of content: ClipContent) -> Bool {
     switch (self, content) {
-    case (.link, .link), (.email, .email), (.phone, .phone), (.color, .color), (.code, .code), (.text, .text):
+    case (.link, .link), (.email, .email), (.phone, .phone), (.color, .color), (.address, .address), (.code, .code),
+         (.text, .text):
       true
     default:
       false

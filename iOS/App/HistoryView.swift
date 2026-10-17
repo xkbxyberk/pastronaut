@@ -101,7 +101,9 @@ struct HistoryView: View {
         Label(token.title, systemImage: token.systemImage)
       }
       .refreshable { await store.refresh() }
-      .navigationTitle(title)
+      // A fixed bar with the logotype instead of a large title: the large title collapsing on scroll fought the
+      // filter bar under it and made the list jump.
+      .modifier(BrandTitle(showsBrand: showsScopeBar, title: title))
       .onContinueUserActivity(CSSearchableItemActionType) { activity in
         // A pinned clip chosen in Spotlight is copied.
         if let id = SpotlightIndex.clipID(from: activity), let clip = store.clips.first(where: { $0.id == id }) {
@@ -207,7 +209,19 @@ struct HistoryView: View {
 
   @ToolbarContentBuilder
   private var browsingToolbar: some ToolbarContent {
-    ToolbarItemGroup(placement: .topBarLeading) {
+    if showsScopeBar {
+      if #available(iOS 26.0, *) {
+        ToolbarItem(placement: .topBarLeading) {
+          PastronautWordmark(size: 21)
+        }
+        .sharedBackgroundVisibility(.hidden)
+      } else {
+        ToolbarItem(placement: .topBarLeading) {
+          PastronautWordmark(size: 21)
+        }
+      }
+    }
+    ToolbarItemGroup(placement: .topBarTrailing) {
       PasteButton(payloadType: String.self) { strings in
         Task { @MainActor in store.save(strings.first) }
       }
@@ -219,6 +233,9 @@ struct HistoryView: View {
         Label("New Clip", systemImage: "square.and.pencil")
       }
       .accessibilityIdentifier("newClipButton")
+    }
+    if #available(iOS 26.0, *) {
+      ToolbarSpacer(.fixed, placement: .topBarTrailing)
     }
     ToolbarItemGroup(placement: .topBarTrailing) {
       Button {
@@ -521,6 +538,7 @@ extension ClipSearchToken {
     case .email: "Emails"
     case .phone: "Phone Numbers"
     case .color: "Colors"
+    case .address: "Addresses"
     case .code: "Code"
     case .text: "Text"
     }
@@ -535,6 +553,7 @@ extension ClipSearchToken {
     case .email: "envelope"
     case .phone: "phone"
     case .color: "paintpalette"
+    case .address: "mappin.and.ellipse"
     case .code: "chevron.left.forwardslash.chevron.right"
     case .text: "text.alignleft"
     }
@@ -551,6 +570,32 @@ private struct DraggableOnPad: ViewModifier {
       content.draggable(text)
     } else {
       content
+    }
+  }
+}
+
+/// The phone's history shows the logotype in a fixed bar (the title stays for the back button where iOS allows);
+/// next to the iPad's sidebar the screen keeps a plain inline title.
+private struct BrandTitle: ViewModifier {
+  let showsBrand: Bool
+  let title: Text
+
+  func body(content: Content) -> some View {
+    if showsBrand {
+      if #available(iOS 18.0, *) {
+        content
+          .navigationTitle(Text(verbatim: "Pastronaut"))
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar(removing: .title)
+      } else {
+        content
+          .navigationTitle(Text(verbatim: ""))
+          .navigationBarTitleDisplayMode(.inline)
+      }
+    } else {
+      content
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
     }
   }
 }

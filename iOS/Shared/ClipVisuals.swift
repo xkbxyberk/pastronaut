@@ -11,16 +11,8 @@ extension Color {
 }
 
 extension ClipContent {
-  var symbolName: String {
-    switch self {
-    case .link: "link"
-    case .email: "envelope"
-    case .phone: "phone"
-    case .color: "paintpalette"
-    case .code: "chevron.left.forwardslash.chevron.right"
-    case .text: "text.alignleft"
-    }
-  }
+  /// Same symbols and colors as the Mac popup (`ClipKind` in PastronautCore).
+  var symbolName: String { kind.symbolName }
 
   var kindName: LocalizedStringKey {
     switch self {
@@ -28,6 +20,7 @@ extension ClipContent {
     case .email: "Email"
     case .phone: "Phone"
     case .color: "Color"
+    case .address: "Address"
     case .code: "Code"
     case .text: "Text"
     }
@@ -36,7 +29,7 @@ extension ClipContent {
   var usesMonospacedFont: Bool {
     switch self {
     case .link, .code, .color: true
-    case .email, .phone, .text: false
+    case .email, .phone, .address, .text: false
     }
   }
 }
@@ -50,8 +43,8 @@ extension Clip {
   var preview: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
 }
 
-/// The content type's symbol, or a swatch for colors. `glass` puts it in a tinted Liquid Glass circle on
-/// iOS 26 and later (list rows); otherwise a soft rounded tile (keyboard keys, older systems).
+/// The kind's symbol in the kind's color on a soft circle of that color, or a swatch for colors. `glass` makes the
+/// circle tinted Liquid Glass on iOS 26 and later (list rows).
 struct ClipIcon: View {
   let content: ClipContent
   var size: CGFloat = 32
@@ -62,11 +55,11 @@ struct ClipIcon: View {
       if glass, #available(iOS 26.0, *) {
         symbol
           .frame(width: size, height: size)
-          .glassEffect(.regular.tint(Color.accentColor.opacity(0.28)), in: Circle())
+          .glassEffect(.regular.tint(content.kind.tint.opacity(0.22)), in: Circle())
       } else {
         symbol
           .frame(width: size, height: size)
-          .background(Color.accentColor.opacity(0.14), in: RoundedRectangle(cornerRadius: size / 4, style: .continuous))
+          .background(content.kind.tint.opacity(0.16), in: Circle())
       }
     }
     .accessibilityHidden(true)
@@ -82,7 +75,7 @@ struct ClipIcon: View {
     } else {
       Image(systemName: content.symbolName)
         .font(.system(size: size * 0.42, weight: .semibold))
-        .foregroundStyle(Color.accentColor)
+        .foregroundStyle(content.kind.tint)
     }
   }
 }

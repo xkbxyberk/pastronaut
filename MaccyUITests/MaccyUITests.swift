@@ -526,7 +526,10 @@ class MaccyUITests: XCTestCase {
         app.launchArguments += ["-NSRequiresAquaSystemAppearance", "YES"]
         app.launch()
       }
-      for text in ["#5B4BD0", "git push origin main", "+90 555 010 20 30", "https://developer.apple.com/documentation/cloudkit"] {
+      for text in [
+        "#5B4BD0", "git push origin main", "+90 555 010 20 30", "ayse@example.com",
+        "Caferağa Mah. Moda Cad. No:12 34710 Kadıköy/İstanbul", "https://developer.apple.com/documentation/cloudkit"
+      ] {
         copyToClipboard(text)
       }
       // A Universal Clipboard copy, i.e. one made on the iPhone.

@@ -79,7 +79,7 @@ struct ClipFilterMenu: View {
         toggle(.thisWeek)
       }
       Section {
-        ForEach([ClipSearchToken.link, .email, .phone, .color, .code, .text], id: \.self, content: toggle)
+        ForEach([ClipSearchToken.link, .email, .phone, .address, .color, .code, .text], id: \.self, content: toggle)
       }
       if isFiltering {
         Divider()
@@ -128,6 +128,7 @@ extension ClipSearchToken {
     case .email: String(localized: "Emails", table: "Pastronaut")
     case .phone: String(localized: "Phone Numbers", table: "Pastronaut")
     case .color: String(localized: "Colors", table: "Pastronaut")
+    case .address: String(localized: "Addresses", table: "Pastronaut")
     case .code: String(localized: "Code", table: "Pastronaut")
     case .text: String(localized: "Text", table: "Pastronaut")
     }
@@ -142,6 +143,7 @@ extension ClipSearchToken {
     case .email: "envelope"
     case .phone: "phone"
     case .color: "paintpalette"
+    case .address: "mappin.and.ellipse"
     case .code: "chevron.left.forwardslash.chevron.right"
     case .text: "text.alignleft"
     }
@@ -217,22 +219,39 @@ struct DeviceFilterPicker: View {
 
 // MARK: - Rows
 
-/// Text items get a content icon (a swatch for colors) and a line saying where and when they were copied.
+/// Text and file items get a colored kind icon (a swatch for colors) and a line saying where and when they were
+/// copied. Images keep Maccy's thumbnail.
 struct ClipRowInfo {
-  let content: ClipContent
+  let kind: ClipKind
+  /// nil for files.
+  let content: ClipContent?
   let subtitle: String
   let fromIPhone: Bool
 
   @MainActor
   init?(_ decorator: HistoryItemDecorator) {
     let item = decorator.item
-    guard item.imageData == nil, item.fileURLs.isEmpty, let text = item.text, !text.isEmpty else { return nil }
-    content = ClipContent(text)
+    guard item.imageData == nil else { return nil }
+    if !item.fileURLs.isEmpty {
+      kind = .file
+      content = nil
+    } else if let text = item.text, !text.isEmpty {
+      let content = ClipContent(text)
+      self.content = content
+      kind = content.kind
+    } else {
+      return nil
+    }
     fromIPhone = item.isFromIPhone
     let when = item.lastCopiedAt.formatted(.relative(presentation: .named, unitsStyle: .abbreviated))
     // The app recorded for a Universal Clipboard copy is only what was frontmost here, so leave it out.
     let app = fromIPhone ? nil : item.application.flatMap(AppNames.name(for:))
     subtitle = [app, when].compactMap { $0 }.joined(separator: " · ")
+  }
+
+  var colorHex: String? {
+    if case .color(let hex)? = content { return hex }
+    return nil
   }
 }
 
@@ -249,76 +268,46 @@ enum AppNames {
   }
 }
 
-/// Rounded tile with the content type's symbol, or a swatch for colors. Mirrors the iOS app's icon.
+/// The kind's symbol on a soft circle of the kind's color ("colored icon"), or a swatch for colors. On a selected
+/// row the circle turns white and keeps the kind's color, so the kind stays readable. Same colors as the iPhone.
 struct ClipContentIcon: View {
-  let content: ClipContent
+  let kind: ClipKind
+  var colorHex: String?
   var isSelected = false
   var size: CGFloat = 22
 
   var body: some View {
-    if #available(macOS 26.0, *) {
-      symbol
-        .frame(width: size, height: size)
-        .glassEffect(.regular.tint(isSelected ? Color.white.opacity(0.25) : Color.brand.opacity(0.3)), in: Circle())
-        .accessibilityHidden(true)
-    } else {
-      tile
-    }
-  }
-
-  @ViewBuilder
-  private var symbol: some View {
-    if case .color(let hex) = content, let color = NSColor(hexString: hex) {
-      Circle()
-        .fill(Color(nsColor: color))
-        .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 0.5))
-        .frame(width: size * 0.56, height: size * 0.56)
-    } else {
-      Image(systemName: content.symbolName)
-        .font(.system(size: size * 0.44, weight: .semibold))
-        .foregroundStyle(isSelected ? Color.white : Color.brand)
-    }
-  }
-
-  private var tile: some View {
-    RoundedRectangle(cornerRadius: size / 4, style: .continuous)
-      .fill(isSelected ? Color.white.opacity(0.22) : Color.brand.opacity(0.16))
-      .frame(width: size, height: size)
-      .overlay {
-        if case .color(let hex) = content, let color = NSColor(hexString: hex) {
-          RoundedRectangle(cornerRadius: size / 6, style: .continuous)
-            .fill(Color(nsColor: color))
-            .frame(width: size * 0.58, height: size * 0.58)
-        } else {
-          Image(systemName: content.symbolName)
-            .font(.system(size: size * 0.46, weight: .semibold))
-            .foregroundStyle(isSelected ? Color.white : Color.brand)
-        }
+    ZStack {
+      if let hex = colorHex, let color = NSColor(hexString: hex) {
+        Circle()
+          .fill(Color(nsColor: color))
+          .overlay(Circle().strokeBorder(Color.primary.opacity(0.15), lineWidth: 0.5))
+          .overlay(Circle().strokeBorder(isSelected ? Color.white : Color.clear, lineWidth: 1.5))
+      } else {
+        Circle()
+          .fill(isSelected ? AnyShapeStyle(Color.white) : AnyShapeStyle(kind.tint.opacity(0.18)))
+        Image(systemName: kind.symbolName)
+          .font(.system(size: size * 0.46, weight: .semibold))
+          .foregroundStyle(isSelected ? kind.deepTint : kind.tint)
       }
-      .accessibilityHidden(true)
+    }
+    .frame(width: size, height: size)
+    .accessibilityHidden(true)
   }
 }
 
-extension ClipContent {
-  var symbolName: String {
+extension ClipKind {
+  var title: String {
     switch self {
-    case .link: "link"
-    case .email: "envelope"
-    case .phone: "phone"
-    case .color: "paintpalette"
-    case .code: "chevron.left.forwardslash.chevron.right"
-    case .text: "text.alignleft"
-    }
-  }
-
-  var kindName: String {
-    switch self {
+    case .text: String(localized: "Text", table: "Pastronaut")
     case .link: String(localized: "Link", table: "Pastronaut")
+    case .code: String(localized: "Code", table: "Pastronaut")
     case .email: String(localized: "Email", table: "Pastronaut")
     case .phone: String(localized: "Phone", table: "Pastronaut")
+    case .address: String(localized: "Address", table: "Pastronaut")
     case .color: String(localized: "Color", table: "Pastronaut")
-    case .code: String(localized: "Code", table: "Pastronaut")
-    case .text: String(localized: "Text", table: "Pastronaut")
+    case .image: String(localized: "Image", table: "Pastronaut")
+    case .file: String(localized: "File", table: "Pastronaut")
     }
   }
 }
