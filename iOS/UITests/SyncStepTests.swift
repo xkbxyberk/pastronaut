@@ -156,6 +156,7 @@ final class SyncStepTests: XCTestCase {
         report(["ok": false, "reason": "no chip"])
         return
       }
+      revealChip(chip)
       chip.tap()
       report(["ok": row(match).waitForExistence(timeout: timeout)])
     case "cardsShots":
@@ -184,7 +185,10 @@ final class SyncStepTests: XCTestCase {
       app.activate()
       let name = env["PT_ACTION"] ?? ""
       let chip = app.buttons["collection.\(name)"].firstMatch
-      if chip.waitForExistence(timeout: 10) { chip.tap() }
+      if chip.waitForExistence(timeout: 10) {
+        revealChip(chip)
+        chip.tap()
+      }
       Thread.sleep(forTimeInterval: 1)
       attachScreenshot(named: "collection-scope")
       try existingRow().press(forDuration: 1.2)
@@ -414,6 +418,16 @@ final class SyncStepTests: XCTestCase {
     app.descendants(matching: .any)
       .matching(NSPredicate(format: "identifier BEGINSWITH 'clip.' AND label CONTAINS %@", text))
       .firstMatch
+  }
+
+  /// Collection chips sit in a row that scrolls sideways; one past the edge has to be scrolled to first.
+  private func revealChip(_ chip: XCUIElement) {
+    // Asking an off-screen element whether it is hittable fails the test, so compare frames instead.
+    let bar = app.descendants(matching: .any)["deviceFilter"].firstMatch
+    let width = app.frame.width
+    for _ in 0..<6 where bar.exists && (chip.frame.maxX > width - 8 || chip.frame.minX < 8) {
+      if chip.frame.minX < 8 { bar.swipeRight() } else { bar.swipeLeft() }
+    }
   }
 
   /// Menu items keep their identifiers on some systems and only their labels on others.

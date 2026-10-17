@@ -329,7 +329,11 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
       dışındaydı); adım düzeltildi ve senaryo tek başına 3/3 geçti.
     - Turlarda bulunan hatalar: iPhone'da açık koleksiyon başka cihazda silinince liste boş kalıyordu (artık Tümü'ne
       döner); iPhone'da sürüklenebilir satırlar bağlam menüsünü kilitliyordu (sürükleme yalnızca iPad'de).
-  - 4.8 Dalga 4 (tasarım; kararlar 2026-10-17, taslaklar: claude.ai/artifact/9vFzTdRTriSotafFwJ6SKf):
+  - ✅ 4.8 Dalga 4 (tasarım; kararlar ve uygulama 2026-10-17, taslaklar: claude.ai/artifact/9vFzTdRTriSotafFwJ6SKf):
+    - Uygulandı: logotip 1a (`PastronautWordmark`, vektör; harfler `scripts/brand/wordmark.swift` ile Unbounded'dan
+      bir kez çıkarıldı, OFL), sabit üst çubuk, ortak tür renkleri (`ClipKind`), adres türü, kartlar ve önizlemeler
+      (`PreviewStore`, `LinkPreviewPolicy`, `CodeHighlighter`), ilk açılış sorusu, yeni klavye düzeni, koleksiyonlara
+      kimlikten türetilen sabit renk. Ekran görüntüleriyle denetlendi (iPhone açık/koyu, klavye açık/koyu, Mac popup).
     - Tür renkleri her yerde aynı: metin kurşuni, bağlantı mavi, kod mor, e-posta camgöbeği, telefon yeşil, adres
       turuncu, görsel pembe, dosya toprak; renk öğesi kendi rengi, görsel küçük resmi. Mac'te "renkli simge" stili
       (soluk zemin + renkli simge); seçili satırda simge beyaz zemine geçer. Simgesiz kalan satırlar düzeltilecek.

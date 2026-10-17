@@ -514,12 +514,14 @@ private struct ClipGrid: View {
           .frame(maxWidth: .infinity, maxHeight: .infinity)
       } else {
         ScrollView {
+          let latest = (model.tab == .recent || model.tab == .mac) ? model.latestFromMac : nil
           VStack(spacing: 6) {
-            if (model.tab == .recent || model.tab == .mac), let latest = model.latestFromMac {
+            if let latest {
               LatestFromMacKey(clip: latest) { model.type(latest) }
             }
+            // The latest Mac copy has its own key above; don't show it twice.
             LazyVGrid(columns: columns, spacing: 6) {
-              ForEach(clips, id: \.id) { clip in
+              ForEach(clips.filter { $0.id != latest?.id }, id: \.id) { clip in
                 ClipTile(clip: clip) { model.type(clip) } onLongPress: { model.focused = clip }
               }
             }
