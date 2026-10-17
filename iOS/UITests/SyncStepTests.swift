@@ -180,6 +180,17 @@ final class SyncStepTests: XCTestCase {
       Thread.sleep(forTimeInterval: 4)
       attachScreenshot(named: "cards-dark")
       report(["ok": true])
+    case "privacyLink":
+      // Settings › About has the Privacy Policy link (App Review 5.1.1).
+      app.launch()
+      app.navigationBars.buttons.matching(identifier: "settingsButton").firstMatch.tap()
+      let link = app.descendants(matching: .any)["privacyPolicy"].firstMatch
+      for _ in 0..<6 where !link.isHittable {
+        app.swipeUp()
+      }
+      Thread.sleep(forTimeInterval: 1)
+      attachScreenshot(named: "settings-privacy-link")
+      report(["ok": link.exists])
     case "readmeShots":
       // README and store pictures: made-up clips (PT_DEMO, no sync), English, cards and list, light and dark,
       // a collection, the keyboard. Ends by launching normally, which puts the real history back for the keyboard.
