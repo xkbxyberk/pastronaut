@@ -13,10 +13,13 @@ final class ClipStore {
   private(set) var clips: [Clip] = []
   private(set) var status: SyncStatus?
   private(set) var accountStatus: String = "…"
+  /// Set when the clipboard was saved by itself on opening the app, for a short notice.
+  private(set) var autoSavedAt: Date?
   var searchText = ""
 
   private let sync: ClipSync
   private let files: SharedClipFiles?
+  private let sharedDefaults = UserDefaults(suiteName: PastronautIDs.appGroup)
   private var isStarted = false
 
   var filteredClips: [Clip] {
@@ -59,6 +62,8 @@ final class ClipStore {
 
   func copy(_ clip: Clip) {
     UIPasteboard.general.string = clip.text
+    // Our own copy is already in the history; don't save it again on the next launch.
+    sharedDefaults?.set(UIPasteboard.general.changeCount, forKey: AutoCapture.lastChangeCountKey)
     var used = clip
     used.lastCopiedAt = .now
     used.modifiedAt = .now
@@ -100,11 +105,57 @@ final class ClipStore {
   }
 
   func delete(_ clip: Clip) {
-    clips.removeAll { $0.id == clip.id }
+    delete([clip])
+  }
+
+  func delete(_ removed: [Clip]) {
+    let ids = Set(removed.map(\.id))
+    guard !ids.isEmpty else { return }
+    clips.removeAll { ids.contains($0.id) }
     Task {
-      await sync.delete(ids: [clip.id])
+      await sync.delete(ids: Array(ids))
       await reload()
       await upload()
+    }
+  }
+
+  /// Pins every clip when any of them is unpinned, otherwise unpins them all.
+  func togglePin(_ changed: [Clip]) {
+    let pin = changed.contains { !$0.pinned }
+    Task {
+      for var clip in changed where clip.pinned != pin {
+        clip.pinned = pin
+        clip.modifiedAt = .now
+        await sync.upsert(clip)
+      }
+      await reload()
+      await upload()
+    }
+  }
+
+  // MARK: - Saving the clipboard on launch
+
+  var isAutoSaveEnabled: Bool {
+    sharedDefaults?.bool(forKey: AutoCapture.settingKey) ?? false
+  }
+
+  /// With "Save Clipboard on Opening" on, a new copy is saved when the app comes to the foreground. Reading
+  /// the text asks for permission unless Paste from Other Apps is set to Allow; checking for text doesn't.
+  func autoSaveClipboard() async {
+    guard isAutoSaveEnabled else { return }
+    let pasteboard = UIPasteboard.general
+    let changeCount = pasteboard.changeCount
+    guard pasteboard.hasStrings,
+          changeCount != sharedDefaults?.object(forKey: AutoCapture.lastChangeCountKey) as? Int else { return }
+    // Marked before reading, so a declined permission prompt isn't shown again for the same copy.
+    sharedDefaults?.set(changeCount, forKey: AutoCapture.lastChangeCountKey)
+    guard let text = pasteboard.string, AutoCapture.allows(text) else { return }
+    // Already in the history, usually a Mac copy that Universal Clipboard put here: leave it as it is, so it
+    // isn't relabelled as an iPhone copy or moved to the top.
+    let id = Clip.id(for: text)
+    guard !clips.contains(where: { $0.id == id }) else { return }
+    if await saveNow(text) == .saved {
+      autoSavedAt = .now
     }
   }
 

@@ -246,10 +246,26 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     yakaladıklarına ve yerel geçmişe dokunulmaz), kapanınca yeniden yüklenir. E2E T24 (kod Mac'te kalır), T25 (yalnız
     sabitlenenler) geçti. QR şimdilik GitHub proje sayfası; App Store bağlantısı Faz 5'te. Ayarlar penceresinin
     görüntüsü UI testinde alınamadı (pencere test ortamında açılmıyor); elle bakılmalı.
-  - 4.5 Dalga 1 (Paste araştırmasından, `research/paste-ozet.md` §9): şifreleme ifadesinin dürüstleştirilmesi; Mac'te
-    ekran paylaşımında gizleme, zamanlı duraklatma, süreye göre saklama, silmeyi geri alma, satır sağ tık menüsü ve
-    "bağlamda göster"; iOS'ta "açılınca panoyu kaydet" (varsayılan kapalı) ve izin yönlendirmesi, "+" ile yeni öğe,
-    seçim modu ve toplu silme; `#`'siz hex renk (en az bir A–F harfi).
+  - ✅ 4.5 Dalga 1 (Paste araştırmasından, `research/paste-ozet.md` §9):
+    - Mac (`Maccy/Sync/PopupExtras.swift`, Maccy dosyalarında tek satırlık kancalar): menü çubuğu simgesine sağ tık /
+      ⌃-tık menüsü (15 dk / 1 saat / yarına kadar / ben sürdürene kadar duraklat, sürdür, aç, ayarlar, çık). Duraklatma
+      Maccy'nin `ignoreEvents` anahtarını kullanır, süre bitince kendiliğinden kalkar ve popup altında "Sürdür"
+      düğmeli bir bildirim görünür. Depolama ayarında "Geçmişi sakla" seçeneği (süresiz / 1 gün / 1 hafta / 1 ay / 1 yıl;
+      sabitlenenler muaf, kısaltırken onay istenir, saatte bir uygulanır). Görünüm ayarında "Ekran paylaşımında ve
+      kayıtta gizle" (`sharingType = .none`). Satıra sağ tık menüsü (kopyala, yapıştır, düz metin yapıştır, görseldeki
+      metni kopyala, sabitle, geçmişte göster, sil). Silinenler 8 sn içinde ⌘Z ya da "Geri Al" ile geri gelir.
+      Kurallar `PastronautCore/HistoryRules.swift` içinde ve test edildi. UI testi: `testPastronautPopupExtras`.
+    - iOS: Ayarlar › Pano › "Açılınca Panoyu Kaydet" (varsayılan kapalı, App Group'ta paylaşılır). Uygulama öne
+      gelince ve klavye açılınca yeni kopyayı kendisi kaydeder; kod, kart ve IBAN atlanır (`AutoCapture`). İzin sorusunu
+      kaldırmak için iOS Ayarlar'ına giden düğme var. Panodaki metin geçmişte zaten varsa dokunulmaz: Mac'in
+      kopyaları Evrensel Pano'yla iPhone panosuna da düşüyor; yoksa "iPhone" diye yeniden etiketlenip öne taşınıyor,
+      iPhone'da silinen ya da sabitlemesi kaldırılan öğe geri geliyordu (E2E 2. koşu, T05/T11). "+" ile yeni öğe, "Seç" ile çoklu seçim, toplu sabitleme ve
+      onaylı toplu silme.
+    - Renk: `#` olmadan, rakam ve A–F harfi karışık 6 haneli hex de renk sayılır ("facade" ve "235442" metin kalır).
+    - Arayüz artık "uçtan uca şifreli" demiyor (bkz. §4.6, kayıt adı sorunu).
+    - E2E: T26 (iPhone'da "+" → Mac), T27 (toplu silme → Mac), T28 (açılışta kaydetme → Mac), T29 (kod atlanır).
+      Test aracı arka planda olduğu için panoya yazamıyor; T28/T29'da metni Debug kancası (`PT_E2E_PASTEBOARD`)
+      uygulamanın kendi panosuna koyuyor. iOS'un izin sorusu elle denenecek.
   - 4.6 Dalga 2 (1.0 yüzeyleri): Paylaş + Eylem uzantısı, kopyala düğmeli widget'lar, Denetim Merkezi / Action Button,
     Kısayollar okuma eylemleri, filtre jetonlu arama, Face ID kilidi.
   - 4.7 Dalga 3: koleksiyonlar + HMAC kimlik geçişi (tek şema değişikliği), Mac'te yerel OCR, isteğe bağlı Spotlight,

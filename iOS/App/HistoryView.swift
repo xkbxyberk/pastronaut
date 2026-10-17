@@ -5,16 +5,20 @@ struct HistoryView: View {
   @Environment(ClipStore.self) private var store
   @State private var filter: DeviceFilter = .all
   @State private var showsSettings = false
-  @State private var showsCopied = false
-  @State private var hideCopied: Task<Void, Never>?
+  @State private var toast: LocalizedStringKey?
+  @State private var hideToast: Task<Void, Never>?
   @State private var detail: Clip?
   @State private var showsSetup = false
+  @State private var showsNewClip = false
+  @State private var editMode: EditMode = .inactive
+  @State private var selection = Set<String>()
+  @State private var confirmsBulkDelete = false
   @AppStorage("setupGuideShown") private var setupGuideShown = false
 
   var body: some View {
     @Bindable var store = store
     NavigationStack {
-      List {
+      List(selection: $selection) {
         if #unavailable(iOS 26.0) {
           // Before Liquid Glass the filter scrolls with the list.
           Section {
@@ -53,11 +57,15 @@ struct HistoryView: View {
         }
       }
       .overlay(alignment: .bottom) {
-        if showsCopied {
-          Toast(text: "Copied")
+        if let toast {
+          Toast(text: toast)
             .padding(.bottom, 24)
             .transition(.move(edge: .bottom).combined(with: .opacity))
         }
+      }
+      .environment(\.editMode, $editMode)
+      .onChange(of: store.autoSavedAt) {
+        showToast("Saved from clipboard")
       }
       .searchable(text: $store.searchText)
       .refreshable { await store.refresh() }
@@ -66,20 +74,28 @@ struct HistoryView: View {
         ClipDetailView(clipID: clip.id)
       }
       .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          PasteButton(payloadType: String.self) { strings in
-            Task { @MainActor in store.save(strings.first) }
-          }
-          .labelStyle(.iconOnly)
-          .buttonBorderShape(.circle)
+        if isEditing {
+          editingToolbar
+        } else {
+          browsingToolbar
         }
-        ToolbarItem(placement: .topBarTrailing) {
-          Button {
-            showsSettings = true
-          } label: {
-            Label("Settings", systemImage: "gearshape")
-          }
-          .accessibilityIdentifier("settingsButton")
+      }
+      .confirmationDialog(
+        Text("Delete \(selection.count) clips?"),
+        isPresented: $confirmsBulkDelete,
+        titleVisibility: .visible
+      ) {
+        Button("Delete", role: .destructive) {
+          store.delete(selectedClips)
+          endEditing()
+        }
+        .accessibilityIdentifier("confirmBulkDelete")
+      } message: {
+        Text("They are removed from all your devices.")
+      }
+      .sheet(isPresented: $showsNewClip) {
+        ClipEditor(text: "", title: "New Clip") { text in
+          store.save(text)
         }
       }
       .sheet(isPresented: $showsSettings) {
@@ -125,12 +141,110 @@ struct HistoryView: View {
     return DeviceFilterBar(selection: $filter, counts: counts)
   }
 
-  private func row(_ clip: Clip) -> some View {
-    Button {
-      copy(clip)
-    } label: {
-      ClipRow(clip: clip)
+  private var isEditing: Bool { editMode.isEditing }
+
+  private var selectedClips: [Clip] {
+    store.clips.filter { selection.contains($0.id) }
+  }
+
+  @ToolbarContentBuilder
+  private var browsingToolbar: some ToolbarContent {
+    ToolbarItemGroup(placement: .topBarLeading) {
+      PasteButton(payloadType: String.self) { strings in
+        Task { @MainActor in store.save(strings.first) }
+      }
+      .labelStyle(.iconOnly)
+      .buttonBorderShape(.circle)
+      Button {
+        showsNewClip = true
+      } label: {
+        Label("New Clip", systemImage: "square.and.pencil")
+      }
+      .accessibilityIdentifier("newClipButton")
     }
+    ToolbarItemGroup(placement: .topBarTrailing) {
+      Button {
+        withAnimation { editMode = .active }
+      } label: {
+        Label("Select", systemImage: "checkmark.circle")
+      }
+      .disabled(store.clips.isEmpty)
+      .accessibilityIdentifier("selectButton")
+      Button {
+        showsSettings = true
+      } label: {
+        Label("Settings", systemImage: "gearshape")
+      }
+      .accessibilityIdentifier("settingsButton")
+    }
+  }
+
+  @ToolbarContentBuilder
+  private var editingToolbar: some ToolbarContent {
+    ToolbarItem(placement: .topBarLeading) {
+      let visible = Set(sections.flatMap(\.clips).map(\.id))
+      if !visible.isEmpty && visible.isSubset(of: selection) {
+        Button("Deselect All") { selection.removeAll() }
+      } else {
+        Button("Select All") { selection = visible }
+          .accessibilityIdentifier("selectAllButton")
+      }
+    }
+    ToolbarItem(placement: .confirmationAction) {
+      Button("Done") { endEditing() }
+        .accessibilityIdentifier("endSelectButton")
+    }
+    ToolbarItemGroup(placement: .bottomBar) {
+      Button {
+        store.togglePin(selectedClips)
+        endEditing()
+      } label: {
+        let pins = selectedClips.contains { !$0.pinned }
+        Label(pins ? "Pin" : "Unpin", systemImage: pins ? "pin" : "pin.slash")
+      }
+      .disabled(selection.isEmpty)
+      .accessibilityIdentifier("bulkPin")
+      Spacer()
+      Text("\(selection.count) selected")
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+      Spacer()
+      Button(role: .destructive) {
+        confirmsBulkDelete = true
+      } label: {
+        Label("Delete", systemImage: "trash")
+      }
+      .disabled(selection.isEmpty)
+      .accessibilityIdentifier("bulkDelete")
+    }
+  }
+
+  private func endEditing() {
+    withAnimation {
+      editMode = .inactive
+      selection.removeAll()
+    }
+  }
+
+  @ViewBuilder
+  private func row(_ clip: Clip) -> some View {
+    if isEditing {
+      // While selecting, a tap selects; copying would be a surprise.
+      cardRow(ClipRow(clip: clip), clip: clip)
+    } else {
+      cardRow(
+        Button {
+          copy(clip)
+        } label: {
+          ClipRow(clip: clip)
+        },
+        clip: clip
+      )
+    }
+  }
+
+  private func cardRow(_ content: some View, clip: Clip) -> some View {
+    content
     .foregroundStyle(.primary)
     .listRowInsets(EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 16))
     .listRowBackground(
@@ -197,12 +311,16 @@ struct HistoryView: View {
   private func copy(_ clip: Clip) {
     store.copy(clip)
     Haptics.success()
-    withAnimation(.snappy) { showsCopied = true }
-    hideCopied?.cancel()
-    hideCopied = Task {
+    showToast("Copied")
+  }
+
+  private func showToast(_ text: LocalizedStringKey) {
+    withAnimation(.snappy) { toast = text }
+    hideToast?.cancel()
+    hideToast = Task {
       try? await Task.sleep(for: .seconds(1.4))
       guard !Task.isCancelled else { return }
-      withAnimation(.snappy) { showsCopied = false }
+      withAnimation(.snappy) { toast = nil }
     }
   }
 }

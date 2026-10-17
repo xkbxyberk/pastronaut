@@ -201,6 +201,7 @@ struct AppearanceSettingsPane: View {
         Defaults.Toggle(key: .showFooter) {
           Text("ShowFooter", tableName: "AppearanceSettings")
         }
+        HideDuringScreenSharingToggle() // Pastronaut
         // Settings.Section offers its content the full container width even though the content
         // starts after the label column, so cap the width to make long translations wrap.
         Text("OpenPreferencesWarning", tableName: "AppearanceSettings")

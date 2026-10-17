@@ -19,6 +19,8 @@ final class SyncStepTests: XCTestCase {
     continueAfterFailure = false
     // Keeps the first-launch setup guide from covering the list (Debug builds only).
     app.launchEnvironment["PT_E2E"] = "1"
+    // Off unless a step turns it on: with it on, Mac copies arriving by Universal Clipboard would be saved again.
+    app.launchEnvironment["PT_AUTO_SAVE"] = "0"
   }
 
   func testStep() throws {
@@ -77,6 +79,65 @@ final class SyncStepTests: XCTestCase {
     case "copy":
       try existingRow().tap()
       report(["ok": UIPasteboard.general.string == text])
+    case "newClip":
+      // "+" in the toolbar: type a clip without copying anything.
+      app.activate()
+      let new = app.buttons["newClipButton"].firstMatch
+      XCTAssertTrue(new.waitForExistence(timeout: 10), "new clip button missing")
+      new.tap()
+      let editor = app.textViews["clipEditor"].firstMatch
+      XCTAssertTrue(editor.waitForExistence(timeout: 5), "editor missing")
+      editor.typeText(text)
+      app.buttons["saveClipButton"].firstMatch.tap()
+      report(["ok": row(match).waitForExistence(timeout: 10)])
+    case "bulkDelete":
+      // Select mode: every clip containing one of the "|"-separated parts, then Delete and confirm.
+      app.activate()
+      let parts = text.split(separator: "|").map(String.init)
+      guard parts.allSatisfy({ row($0).waitForExistence(timeout: timeout) }) else {
+        report(["ok": false, "reason": "rows missing"])
+        return
+      }
+      app.buttons["selectButton"].firstMatch.tap()
+      for part in parts {
+        anyRow(part).tap()
+      }
+      app.buttons["bulkDelete"].firstMatch.tap()
+      let confirm = app.buttons["confirmBulkDelete"].firstMatch
+      XCTAssertTrue(confirm.waitForExistence(timeout: 5), "confirmation missing")
+      confirm.tap()
+      Thread.sleep(forTimeInterval: 1)
+      report(["ok": parts.allSatisfy { !anyRow($0).exists }])
+    case "autoSave":
+      // "Save Clipboard on Opening" with the setting on (Debug only). The runner runs in the background and
+      // iOS won't let it write the clipboard, so the app puts the text there itself at launch, standing in
+      // for another app's copy. The permission prompt for real copies is checked by hand.
+      app.launchEnvironment["PT_AUTO_SAVE"] = "1"
+      app.launchEnvironment["PT_E2E_PASTEBOARD"] = text
+      app.launch()
+      allowPasteIfAsked()
+      let saved = row(match).waitForExistence(timeout: timeout)
+      report(["ok": saved, "visible": saved])
+    case "selectShots":
+      // Design review: select mode, the new clip sheet and the clipboard settings.
+      app.activate()
+      app.buttons["selectButton"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 0.5)
+      app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'clip.'")).firstMatch.tap()
+      Thread.sleep(forTimeInterval: 0.5)
+      attachScreenshot(named: "select-mode")
+      app.buttons["endSelectButton"].firstMatch.tap()
+      app.buttons["newClipButton"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1)
+      attachScreenshot(named: "new-clip")
+      app.terminate()
+      app.launch()
+      app.buttons["settingsButton"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1)
+      app.swipeUp()
+      Thread.sleep(forTimeInterval: 2)
+      attachScreenshot(named: "settings-clipboard")
+      report(["ok": true])
     case "background":
       app.activate()
       XCUIDevice.shared.press(.home)
@@ -227,6 +288,28 @@ final class SyncStepTests: XCTestCase {
 
   private func row(_ text: String) -> XCUIElement {
     rows.matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+  }
+
+  /// A row in any mode; while selecting, rows are not buttons.
+  private func anyRow(_ text: String) -> XCUIElement {
+    app.descendants(matching: .any)
+      .matching(NSPredicate(format: "identifier BEGINSWITH 'clip.' AND label CONTAINS %@", text))
+      .firstMatch
+  }
+
+  /// Taps "Allow Paste" when iOS asks whether Pastronaut may read another app's copy.
+  private func allowPasteIfAsked() {
+    let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+    let deadline = Date().addingTimeInterval(6)
+    while Date() < deadline {
+      for alert in [app.alerts.firstMatch, springboard.alerts.firstMatch] where alert.exists {
+        // Buttons are "Don't Allow Paste" and "Allow Paste" (in the device language); allow is last.
+        let buttons = alert.buttons.allElementsBoundByIndex
+        buttons.last?.tap()
+        return
+      }
+      Thread.sleep(forTimeInterval: 0.3)
+    }
   }
 
   private func existingRow() throws -> XCUIElement {

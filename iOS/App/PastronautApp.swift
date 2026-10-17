@@ -14,7 +14,10 @@ struct PastronautApp: App {
     }
     .onChange(of: scenePhase) { _, phase in
       if phase == .active {
-        Task { await ClipStore.shared.refresh() }
+        Task {
+          await ClipStore.shared.autoSaveClipboard()
+          await ClipStore.shared.refresh()
+        }
       } else if phase == .background {
         Task { await ClipStore.shared.upload() }
       }
@@ -30,6 +33,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     // CKSyncEngine subscribes to changes; silent pushes wake the app so the keyboard snapshot stays fresh.
     application.registerForRemoteNotifications()
     #if DEBUG
+    // The end-to-end test turns "Save Clipboard on Opening" on only for its own steps ("1"), off otherwise ("0").
+    if let autoSave = ProcessInfo.processInfo.environment["PT_AUTO_SAVE"] {
+      UserDefaults(suiteName: PastronautIDs.appGroup)?.set(autoSave == "1", forKey: AutoCapture.settingKey)
+    }
+    // Stands in for another app's copy (the test runner may not write the clipboard from the background).
+    // Local only, so Universal Clipboard can't carry it to the Mac and hide a failed save.
+    if let text = ProcessInfo.processInfo.environment["PT_E2E_PASTEBOARD"] {
+      UIPasteboard.general.setItems([["public.utf8-plain-text": text]], options: [.localOnly: true])
+    }
     // The end-to-end test cannot tap the system Paste button (it rejects synthetic touches), so it
     // hands the text over at launch and the same save path runs.
     if let text = ProcessInfo.processInfo.environment["PT_E2E_SAVE"] {

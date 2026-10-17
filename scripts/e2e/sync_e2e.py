@@ -124,17 +124,33 @@ def mac_launch():
 # MARK: - iPhone
 
 def ios_step(op, text="", match="", timeout=30, on_ready=None, action=""):
-    """Runs one XCUITest step and returns its PTEST-RESULT dict. `on_ready` runs once the app is waiting."""
+    """Runs one XCUITest step and returns its PTEST-RESULT dict. `on_ready` runs once the app is waiting.
+
+    xcodebuild sometimes hangs before the test starts (seen once with the iPhone connected and unlocked);
+    such a step is stopped and tried once more instead of blocking the whole run."""
+    result = _ios_step_once(op, text, match, timeout, on_ready, action)
+    if result.get("reason") == "xcodebuild hung":
+        log(f"  {op}: xcodebuild hung, trying once more")
+        result = _ios_step_once(op, text, match, timeout, on_ready, action)
+    return result
+
+
+def _ios_step_once(op, text, match, timeout, on_ready, action):
     env = {**DEV, "TEST_RUNNER_PT_OP": op, "TEST_RUNNER_PT_TEXT": text,
            "TEST_RUNNER_PT_MATCH": match, "TEST_RUNNER_PT_TIMEOUT": str(timeout),
            "TEST_RUNNER_PT_ACTION": action}
     process = subprocess.Popen(
         ["xcodebuild", "test-without-building", "-xctestrun", args.xctestrun,
          "-destination", f"id={args.device}",
-         "-only-testing:PastronautUITests/SyncStepTests/testStep"],
+         "-only-testing:PastronautUITests/SyncStepTests/testStep",
+         # Without this every step leaves a new folder in ~/Library/Developer/Xcode/DerivedData.
+         "-derivedDataPath", os.path.join(work, "DerivedData")],
         env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     result = None
     output = []
+    # Generous: launching the runner takes ~10 s, the step itself up to `timeout`.
+    watchdog = threading.Timer(timeout + 180, process.kill)
+    watchdog.start()
     for line in process.stdout:
         output.append(line)
         if "PTEST-READY" in line and on_ready:
@@ -143,6 +159,10 @@ def ios_step(op, text="", match="", timeout=30, on_ready=None, action=""):
         if line.startswith("PTEST-RESULT "):
             result = json.loads(line[len("PTEST-RESULT "):])
     process.wait()
+    hung = not watchdog.is_alive() and result is None
+    watchdog.cancel()
+    if hung:
+        return {"ok": False, "reason": "xcodebuild hung"}
     if result is None:
         tail = "".join(output[-15:])
         if "Unlock" in tail or "locked" in tail:
@@ -261,10 +281,17 @@ def main():
     # 1. Fresh install pulls the existing cloud history.
     every = mac_state(prefix="")
     mac_texts = sorted(item["text"] for item in every["mirror"])
-    r = ios_step("waitCount", str(len(mac_texts)), timeout=90)
-    ios_texts = sorted(summary(clip["text"]) for clip in ios_mirror())
-    check("T01", "Fresh iPhone install has the Mac's synced clips", r.get("ok") and ios_texts == mac_texts,
-          f"Mac {len(mac_texts)}, iPhone {len(ios_texts)}, {r.get('seconds')}s")
+    # Compared through the iPhone's sync mirror: a long list doesn't put every row on screen for the UI test.
+    start = time.time()
+    ios_texts = []
+    while time.time() - start < 90:
+        ios_texts = sorted(summary(clip["text"]) for clip in ios_mirror())
+        if ios_texts == mac_texts:
+            break
+        time.sleep(3)
+    missing = sorted(set(mac_texts) - set(ios_texts))[:3]
+    check("T01", "Fresh iPhone install has the Mac's synced clips", ios_texts == mac_texts,
+          f"Mac {len(mac_texts)}, iPhone {len(ios_texts)}, {round(time.time() - start)}s, missing {missing}")
 
     # 2. Mac copy shows up on the open iPhone app by push.
     r = ios_step("waitVisible", a, timeout=120, on_ready=lambda: (time.sleep(2), mac_copy(a)))
@@ -424,6 +451,40 @@ def main():
           r1.get("ok") and not early and r2.get("ok"),
           f"pinned marker reached: {r1.get('ok')}, unpinned on iPhone: {early}, after pin: {r2.get('ok')} {r2.get('seconds')}s")
 
+    # 26. "+" makes a clip on the iPhone without copying anything; the Mac gets it.
+    n = f"{prefix} N typed on iPhone"
+    r = ios_step("newClip", n)
+    ok, secs, _ = mac_wait("new clip", lambda s: mac_item(s, n) is not None, 60)
+    check("T26", "New clip typed on iPhone → Mac", r.get("ok") and ok, f"{secs}s")
+
+    # 27. Select mode deletes two clips at once; both leave the Mac.
+    s1, s2 = f"{prefix} S1 bulk", f"{prefix} S2 bulk"
+    mac_copy(s1)
+    time.sleep(2)
+    mac_copy(s2)
+    r = ios_step("bulkDelete", f"{s1}|{s2}", timeout=60)
+    ok, secs, _ = mac_wait("bulk delete", lambda s: mac_item(s, s1) is None and mac_item(s, s2) is None, 60)
+    check("T27", "Select mode: two clips deleted on iPhone → gone on Mac", r.get("ok") and ok, f"{secs}s {r}")
+
+    # 28. "Save Clipboard on Opening": the app saves the iPhone's clipboard when it opens. The test runner's
+    # copy is local only, so the only way to the Mac is this save.
+    auto = f"{prefix} V saved when the app opened"
+    ios_terminate_app()
+    r = ios_step("autoSave", auto, timeout=20)
+    ok, secs, _ = mac_wait("auto-save", lambda s: mac_item(s, auto) is not None, 60)
+    check("T28", "Clipboard saved on opening → Mac", r.get("ok") and ok, f"{secs}s {r}")
+
+    # 29. ...but a one-time code on the clipboard is left out.
+    otp = f"Doğrulama kodunuz: {run}"
+    ios_terminate_app()
+    r = ios_step("autoSave", otp, timeout=8)
+    time.sleep(3)
+    on_iphone = find(ios_mirror(), otp) is not None
+    on_mac = mac_item(mac_state(prefix="Doğrulama"), otp) is not None
+    check("T29", "Opening skips a one-time code on the clipboard",
+          not r.get("visible") and not on_iphone and not on_mac,
+          f"row {r.get('visible')}, iPhone {on_iphone}, Mac {on_mac}")
+
     # 15. Changes made while the Mac app is closed arrive when it starts.
     mac_quit()
     r1 = ios_step("save", g)
@@ -435,7 +496,7 @@ def main():
           r1.get("ok") and r2.get("ok") and ok, f"{secs}s")
 
     # 16. Clean up through the Mac; the iPhone must follow.
-    for text in (a, c, g, f, k, y):
+    for text in (a, c, g, f, k, y, n, auto):
         mac_state(op="delete", text=text)
     r = ios_step("waitGone", a, timeout=120)
     time.sleep(5)

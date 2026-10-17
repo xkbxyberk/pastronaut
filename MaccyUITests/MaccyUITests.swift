@@ -559,6 +559,82 @@ class MaccyUITests: XCTestCase {
     attachScreenshot(app.windows.firstMatch, named: "popup-onboarding")
   }
 
+  // Pastronaut: row context menu, undo after deleting, "Show in History" and the timed pause.
+  func testPastronautPopupExtras() throws {
+    for text in ["c0ffee", "git push origin main", "Toplantı Perşembe 14:00'te"] {
+      copyToClipboard(text)
+    }
+
+    // Context menu, then delete and undo.
+    popUpWithMouse()
+    let row = historyRow("git push origin main")
+    XCTAssertTrue(row.waitForExistence(timeout: 3))
+    row.rightClick()
+    let delete = app.menuItems["context-delete"].firstMatch
+    XCTAssertTrue(delete.waitForExistence(timeout: 3))
+    attachScreenshot(app.menus.containing(.menuItem, identifier: "context-delete").firstMatch, named: "extras-context-menu")
+    delete.click()
+    XCTAssertTrue(waitForNonExistence(row, timeout: 3))
+    let undo = app.buttons["undo-button"].firstMatch
+    XCTAssertTrue(undo.waitForExistence(timeout: 3))
+    attachScreenshot(app.dialogs.firstMatch, named: "extras-undo")
+    app.typeKey("z", modifierFlags: .command)
+    XCTAssertTrue(historyRow("git push origin main").waitForExistence(timeout: 3))
+
+    // Show in History clears the search. Reopen first: typing while the preview slides out moves the window
+    // (Maccy behaviour, see SlideoutController.togglePreview).
+    app.typeKey(.escape, modifierFlags: [])
+    popUpWithMouse()
+    search("toplant")
+    let result = historyRow("Toplantı Perşembe 14:00'te")
+    XCTAssertTrue(result.waitForExistence(timeout: 3))
+    attachScreenshot(app.dialogs.firstMatch, named: "extras-search")
+    result.rightClick()
+    attachScreenshot(app.menus.containing(.menuItem, identifier: "context-delete").firstMatch, named: "extras-search-menu")
+    let reveal = app.menuItems["context-reveal"].firstMatch
+    XCTAssertTrue(reveal.waitForExistence(timeout: 3))
+    reveal.click()
+    XCTAssertTrue(historyRow("c0ffee").waitForExistence(timeout: 3))
+    app.typeKey(.escape, modifierFlags: [])
+    sleep(1)
+
+    // Pause for 15 minutes from the menu bar item's right-click menu: new copies are not saved.
+    app.statusItems.firstMatch.rightClick()
+    let pause = app.menuItems["pause-copying"].firstMatch
+    XCTAssertTrue(pause.waitForExistence(timeout: 3))
+    pause.hover()
+    let fifteen = app.menuItems["pause-fifteenMinutes"].firstMatch
+    XCTAssertTrue(fifteen.waitForExistence(timeout: 3))
+    attachScreenshot(app.menus.containing(.menuItem, identifier: "pause-copying").firstMatch, named: "extras-status-menu")
+    fifteen.click()
+    copyToClipboard("copied while paused")
+    popUpWithMouse()
+    XCTAssertTrue(app.buttons["resume-button"].firstMatch.waitForExistence(timeout: 3))
+    XCTAssertFalse(historyRow("copied while paused").exists)
+    attachScreenshot(app.dialogs.firstMatch, named: "extras-paused")
+    app.buttons["resume-button"].firstMatch.click()
+    XCTAssertTrue(waitForNonExistence(app.buttons["resume-button"].firstMatch, timeout: 3))
+    app.typeKey(.escape, modifierFlags: [])
+    copyToClipboard("copied after resuming")
+    popUpWithMouse()
+    XCTAssertTrue(historyRow("copied after resuming").waitForExistence(timeout: 3))
+  }
+
+  private func historyRow(_ text: String) -> XCUIElement {
+    app.dialogs.firstMatch.descendants(matching: .any)
+      .matching(identifier: "copy-history-item")
+      .matching(NSPredicate(format: "label BEGINSWITH %@", text))
+      .firstMatch
+  }
+
+  private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+    let deadline = Date.now.addingTimeInterval(timeout)
+    while element.exists && Date.now < deadline {
+      usleep(100_000)
+    }
+    return !element.exists
+  }
+
   private func attachScreenshot(_ element: XCUIElement, named name: String) {
     let attachment = XCTAttachment(screenshot: element.screenshot())
     attachment.name = name

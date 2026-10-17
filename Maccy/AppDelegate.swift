@@ -15,6 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     statusItem.button?.image = Defaults[.menuIcon].image
     statusItem.button?.imagePosition = .imageLeft
     statusItem.button?.target = self
+    statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp]) // Pastronaut: right-click menu
     return statusItem
   }()
 
@@ -194,6 +195,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let modifierFlags = (NSApp.currentEvent?.modifierFlags ?? [])
       .union(NSEvent.modifierFlags)
       .intersection(.deviceIndependentFlagsMask)
+
+    // Pastronaut: right-click or ⌃-click opens a menu with timed pause, settings and quit.
+    if NSApp.currentEvent?.type == .rightMouseUp || modifierFlags == .control {
+      statusItem.menu = StatusItemMenu.make { [weak self] in
+        guard let self else { return }
+        panel.toggle(height: AppState.shared.popup.height, at: .statusItem)
+      }
+      statusItem.button?.performClick(nil)
+      statusItem.menu = nil
+      return
+    }
 
     if modifierFlags.contains(.option) {
       Defaults[.ignoreEvents].toggle()

@@ -111,6 +111,11 @@ struct StorageSettingsPane: View {
         }
       }
 
+      // Pastronaut: time-based retention next to Maccy's item limit.
+      Settings.Section(label: { Text("Keep history", tableName: "Pastronaut") }) {
+        HistoryAgeSetting()
+      }
+
       Settings.Section(label: { Text("SortBy", tableName: "StorageSettings") }) {
         Picker("", selection: $sortBy) {
           ForEach(Sorter.By.allCases) { mode in

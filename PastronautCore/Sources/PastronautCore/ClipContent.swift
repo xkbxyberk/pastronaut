@@ -43,11 +43,18 @@ public enum ClipContent: Equatable, Sendable {
   }
 
   /// `#RGB`, `#RRGGBB` or `#RRGGBBAA`.
+  ///
+  /// Without `#`, only six hex characters mixing digits and the letters A–F count: "c0ffee" is a color, but
+  /// "235442" stays text (it is more likely a one-time code) and so does "facade" (a word).
   private static func hexColor(_ text: String) -> String? {
-    guard text.hasPrefix("#") else { return nil }
-    let digits = text.dropFirst()
-    guard [3, 6, 8].contains(digits.count), digits.allSatisfy(\.isHexDigit) else { return nil }
-    return text.uppercased()
+    if text.hasPrefix("#") {
+      let digits = text.dropFirst()
+      guard [3, 6, 8].contains(digits.count), digits.allSatisfy(\.isHexDigit) else { return nil }
+      return text.uppercased()
+    }
+    guard text.count == 6, text.allSatisfy({ $0.isASCII && $0.isHexDigit }),
+          text.contains(where: \.isNumber), text.contains(where: \.isLetter) else { return nil }
+    return "#" + text.uppercased()
   }
 
   private static func isEmail(_ text: String) -> Bool {

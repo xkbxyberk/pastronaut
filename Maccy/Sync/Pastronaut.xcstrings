@@ -12,6 +12,79 @@
         }
       }
     },
+    "%lld unpinned items are older than %@ and will be deleted from this Mac and iCloud. This can't be undone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld unpinned item is older than %@ and will be deleted from this Mac and iCloud. This can't be undone."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld unpinned items are older than %@ and will be deleted from this Mac and iCloud. This can't be undone."
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenmemiş %lld öğe %@ süresinden eski. Bu Mac'ten ve iCloud'dan silinecek; bu işlem geri alınamaz."
+          }
+        }
+      }
+    },
+    "1 Day": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Gün"
+          }
+        }
+      }
+    },
+    "1 Month": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Ay"
+          }
+        }
+      }
+    },
+    "1 Week": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Hafta"
+          }
+        }
+      }
+    },
+    "1 Year": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Yıl"
+          }
+        }
+      }
+    },
     "All": {
       "extractionState": "manual",
       "localizations": {
@@ -19,6 +92,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tümü"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vazgeç"
+          }
+        }
+      }
+    },
+    "Clip text is stored encrypted in iCloud. Copies from password managers are never synced.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğe metinleri iCloud'da şifreli saklanır. Parola yöneticilerinden yapılan kopyalar hiç eşitlenmez."
           }
         }
       }
@@ -100,6 +195,17 @@
         }
       }
     },
+    "Copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyala"
+          }
+        }
+      }
+    },
     "Copy on your Mac, then type it on your iPhone with one tap on the Pastronaut keyboard.": {
       "extractionState": "manual",
       "localizations": {
@@ -107,6 +213,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mac'te kopyala, iPhone'da Pastronaut klavyesinde tek dokunuşla yaz."
+          }
+        }
+      }
+    },
+    "Copy Text from Image": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görseldeki Metni Kopyala"
+          }
+        }
+      }
+    },
+    "Copying paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalama duraklatıldı"
+          }
+        }
+      }
+    },
+    "Copying paused until %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalama duraklatıldı (bitiş: %@)"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sil"
           }
         }
       }
@@ -133,6 +283,17 @@
         }
       }
     },
+    "Delete older items?": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eski öğeler silinsin mi?"
+          }
+        }
+      }
+    },
     "Delete synced clips from iCloud?": {
       "extractionState": "manual",
       "localizations": {
@@ -140,6 +301,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eşitlenen öğeler iCloud'dan silinsin mi?"
+          }
+        }
+      }
+    },
+    "Deleted %lld items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Deleted %lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Deleted %lld items"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld öğe silindi"
           }
         }
       }
@@ -210,13 +400,46 @@
         }
       }
     },
-    "Everything stays in your own iCloud, end-to-end encrypted.": {
+    "Everything stays in your own iCloud, and the text of your clips is stored encrypted.": {
       "extractionState": "manual",
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Her şey kendi iCloud'unda, uçtan uca şifreli kalır."
+            "value": "Her şey kendi iCloud'unuzda kalır; öğelerin metni şifreli saklanır."
+          }
+        }
+      }
+    },
+    "For 1 Hour": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Saat"
+          }
+        }
+      }
+    },
+    "For 15 Minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 Dakika"
+          }
+        }
+      }
+    },
+    "Forever": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Süresiz"
           }
         }
       }
@@ -265,6 +488,17 @@
         }
       }
     },
+    "Hide during screen sharing and recording": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekran paylaşımında ve kayıtta gizle"
+          }
+        }
+      }
+    },
     "History stays on this Mac; your iPhone shows only what you pin.": {
       "extractionState": "manual",
       "localizations": {
@@ -272,6 +506,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geçmiş bu Mac'te kalır; iPhone'da yalnızca sabitlediklerin görünür."
+          }
+        }
+      }
+    },
+    "iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone"
+          }
+        }
+      }
+    },
+    "Keep history": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmişi sakla"
           }
         }
       }
@@ -309,6 +565,17 @@
         }
       }
     },
+    "Older items are deleted on all your devices. Pinned items are always kept.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha eski öğeler tüm cihazlarınızdan silinir. Sabitlenen öğeler her zaman kalır."
+          }
+        }
+      }
+    },
     "On": {
       "extractionState": "manual",
       "localizations": {
@@ -316,6 +583,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Açık"
+          }
+        }
+      }
+    },
+    "Open Pastronaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'u Aç"
+          }
+        }
+      }
+    },
+    "Other people in a call, and screenshots, won't see your clipboard history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görüşmedeki kişiler ve ekran görüntüleri pano geçmişinizi görmez."
           }
         }
       }
@@ -331,6 +620,39 @@
         }
       }
     },
+    "Paste": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yapıştır"
+          }
+        }
+      }
+    },
+    "Paste as Plain Text": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düz Metin Olarak Yapıştır"
+          }
+        }
+      }
+    },
+    "Pause Copying": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalamayı Duraklat"
+          }
+        }
+      }
+    },
     "Phone": {
       "extractionState": "manual",
       "localizations": {
@@ -338,6 +660,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Telefon"
+          }
+        }
+      }
+    },
+    "Pin": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitle"
           }
         }
       }
@@ -375,6 +708,39 @@
         }
       }
     },
+    "Quit Pastronaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'tan Çık"
+          }
+        }
+      }
+    },
+    "Resume": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sürdür"
+          }
+        }
+      }
+    },
+    "Resume Copying": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalamayı Sürdür"
+          }
+        }
+      }
+    },
     "Scan with your iPhone's camera. The app walks you through setting up the keyboard.": {
       "extractionState": "manual",
       "localizations": {
@@ -393,6 +759,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Makas"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar…"
+          }
+        }
+      }
+    },
+    "Show in History": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmişte Göster"
           }
         }
       }
@@ -430,28 +818,6 @@
         }
       }
     },
-    "Sync Now": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Şimdi eşitle"
-          }
-        }
-      }
-    },
-    "Sync Settings…": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eşitleme ayarları…"
-          }
-        }
-      }
-    },
     "Sync history with iCloud": {
       "extractionState": "manual",
       "localizations": {
@@ -463,6 +829,17 @@
         }
       }
     },
+    "Sync Now": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi eşitle"
+          }
+        }
+      }
+    },
     "Sync pinned items only": {
       "extractionState": "manual",
       "localizations": {
@@ -470,6 +847,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yalnızca sabitlenenleri eşitle"
+          }
+        }
+      }
+    },
+    "Sync Settings…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşitleme ayarları…"
           }
         }
       }
@@ -529,17 +917,6 @@
         }
       }
     },
-    "Text is end-to-end encrypted; only your devices can read it. Copies from password managers are never synced.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metinler uçtan uca şifrelenir; yalnızca senin cihazların okuyabilir. Parola yöneticilerinden yapılan kopyalar hiç eşitlenmez."
-          }
-        }
-      }
-    },
     "Text that looks like a card number or IBAN stays on this Mac.": {
       "extractionState": "manual",
       "localizations": {
@@ -595,6 +972,39 @@
         }
       }
     },
+    "Undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri Al"
+          }
+        }
+      }
+    },
+    "Unpin": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlemeyi Kaldır"
+          }
+        }
+      }
+    },
+    "Until I Resume": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ben Sürdürene Kadar"
+          }
+        }
+      }
+    },
     "Until the App Store release, this opens the project page.": {
       "extractionState": "manual",
       "localizations": {
@@ -602,6 +1012,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "App Store yayınına kadar proje sayfasını açar."
+          }
+        }
+      }
+    },
+    "Until Tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yarına Kadar"
           }
         }
       }
@@ -646,17 +1067,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mac'teki pano geçmişin, artık iPhone'unda da."
-          }
-        }
-      }
-    },
-    "iPhone": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iPhone"
           }
         }
       }

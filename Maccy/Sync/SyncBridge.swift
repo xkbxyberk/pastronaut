@@ -45,6 +45,7 @@ final class SyncBridge {
   /// Call once at launch. Follows the setting for the rest of the session.
   func start() {
     guard observation == nil else { return }
+    PopupExtras.start()
     #if DEBUG
     // Tests run inside the app and clear History constantly; they must never reach the user's iCloud
     // data or the sync mirror, which share this app's container.

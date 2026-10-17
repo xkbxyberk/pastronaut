@@ -215,12 +215,15 @@ private struct InfoList: View {
 struct ClipEditor: View {
   @Environment(\.dismiss) private var dismiss
   @State private var draft: String
+  @FocusState private var isFocused: Bool
   private let original: String
+  private let title: LocalizedStringKey
   private let onSave: (String) -> Void
 
-  init(text: String, onSave: @escaping (String) -> Void) {
+  init(text: String, title: LocalizedStringKey = "Edit", onSave: @escaping (String) -> Void) {
     _draft = State(initialValue: text)
     original = text
+    self.title = title
     self.onSave = onSave
   }
 
@@ -229,7 +232,10 @@ struct ClipEditor: View {
       TextEditor(text: $draft)
         .font(.body)
         .padding(.horizontal)
-        .navigationTitle("Edit")
+        .focused($isFocused)
+        .onAppear { isFocused = true }
+        .accessibilityIdentifier("clipEditor")
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
@@ -240,7 +246,8 @@ struct ClipEditor: View {
               onSave(draft)
               dismiss()
             }
-            .disabled(draft.isEmpty || draft == original)
+            .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || draft == original)
+            .accessibilityIdentifier("saveClipButton")
           }
         }
     }

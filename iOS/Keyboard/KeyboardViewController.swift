@@ -86,7 +86,7 @@ final class KeyboardModel {
   private let cloud: KeyboardCloud?
   /// Writable only with Full Access, like the rest of the App Group.
   private let defaults = UserDefaults(suiteName: PastronautIDs.appGroup)
-  private let lastCapturedChangeCountKey = "keyboardLastCapturedChangeCount"
+  private let lastCapturedChangeCountKey = AutoCapture.lastChangeCountKey
   @ObservationIgnored private var lastCloudRefresh = Date.distantPast
 
   init() {
@@ -137,6 +137,13 @@ final class KeyboardModel {
     let pasteboard = UIPasteboard.general
     let lastCaptured = defaults?.object(forKey: lastCapturedChangeCountKey) as? Int
     hasNewClip = hasFullAccess && pasteboard.hasStrings && pasteboard.changeCount != lastCaptured
+    // "Save Clipboard on Opening" (app settings): save the new copy without waiting for the Paste button.
+    // Texts already in the history (often a Mac copy brought by Universal Clipboard) are left alone.
+    if hasNewClip, defaults?.bool(forKey: AutoCapture.settingKey) == true,
+       let text = pasteboard.string, AutoCapture.allows(text),
+       !clips.contains(where: { $0.id == Clip.id(for: text) }) {
+      capture([text])
+    }
     refreshFromCloud()
   }
 

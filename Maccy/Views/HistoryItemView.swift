@@ -61,6 +61,7 @@ struct HistoryItemView: View {
     }
     .accessibilityIdentifier("copy-history-item")
     .buttonAction(performSelect)
+    .contextMenu { HistoryItemContextMenu(item: item) } // Pastronaut
     .onAppear {
       item.ensureThumbnailImage()
     }

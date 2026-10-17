@@ -54,4 +54,15 @@ import Testing
     #expect(!pinnedOnly.allows("merhaba", pinned: false))
     #expect(pinnedOnly.allows("merhaba", pinned: true))
   }
+
+  @Test func autoCaptureSkipsSensitiveText() {
+    #expect(AutoCapture.allows("Toplantı Perşembe 14:00'te"))
+    #expect(AutoCapture.allows("https://example.com"))
+    #expect(!AutoCapture.allows("482913"))
+    #expect(!AutoCapture.allows("Doğrulama kodunuz: 482913"))
+    #expect(!AutoCapture.allows("4111 1111 1111 1111"))
+    #expect(!AutoCapture.allows("TR33 0006 1005 1978 6457 8413 26"))
+    #expect(!AutoCapture.allows("   \n"))
+    #expect(!AutoCapture.allows(String(repeating: "a", count: 200_000)))
+  }
 }

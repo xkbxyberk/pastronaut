@@ -65,7 +65,7 @@ private struct OnboardingView: View {
         feature("arrow.down.left.and.arrow.up.right",
                 Text("Copies you save on your iPhone show up here, marked with an iPhone.", tableName: "Pastronaut"))
         feature("lock",
-                Text("Everything stays in your own iCloud, end-to-end encrypted.", tableName: "Pastronaut"))
+                Text("Everything stays in your own iCloud, and the text of your clips is stored encrypted.", tableName: "Pastronaut"))
       }
       .frame(maxWidth: .infinity, alignment: .leading)
 

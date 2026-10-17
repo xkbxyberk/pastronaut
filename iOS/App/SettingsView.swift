@@ -1,9 +1,13 @@
+import PastronautCore
 import SwiftUI
 import UIKit
 
 struct SettingsView: View {
   @Environment(ClipStore.self) private var store
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.openURL) private var openURL
+  @AppStorage(AutoCapture.settingKey, store: UserDefaults(suiteName: PastronautIDs.appGroup))
+  private var autoSave = false
   private let setup = KeyboardSetup.shared
 
   var body: some View {
@@ -29,27 +33,45 @@ struct SettingsView: View {
         } header: {
           Text("Sync")
         } footer: {
-          Text("Text clips sync through your private iCloud database. Clip text is end-to-end encrypted.")
+          Text("Text clips sync through your private iCloud database. Clip text is stored encrypted.")
+        }
+
+        Section {
+          Toggle("Save Clipboard on Opening", isOn: $autoSave)
+            .accessibilityIdentifier("autoSaveToggle")
+          if autoSave {
+            Button("Allow Pasting Without Asking…") {
+              if let url = URL(string: UIApplication.openSettingsURLString) {
+                openURL(url)
+              }
+            }
+          }
+        } header: {
+          Text("Clipboard")
+        } footer: {
+          Text("When you open Pastronaut or its keyboard, a new copy is saved by itself. One-time codes, card numbers and IBANs are skipped. iPhone can't read the clipboard in the background, so if you copy several things in a row only the last one is saved; use the Share menu or the Paste button for the others. To stop iOS from asking each time, set Paste from Other Apps to Allow.")
         }
 
         Section {
           NavigationLink {
             KeyboardSetupView()
           } label: {
-            LabeledContent("Set Up Keyboard") {
+            // A plain row: LabeledContent inside a NavigationLink grew to several lines on iOS 27.
+            HStack {
+              Text("Set Up Keyboard")
+              Spacer()
               if setup.isComplete {
                 Label("Ready", systemImage: "checkmark.circle.fill")
                   .foregroundStyle(.green)
               } else {
                 Text("Not finished")
+                  .foregroundStyle(.secondary)
               }
             }
           }
           .accessibilityIdentifier("setupKeyboard")
         } header: {
           Text("Keyboard")
-        } footer: {
-          Text("To save copies without tapping the paste button, set Settings › Pastronaut › Paste from Other Apps to Allow. iOS then shows a short notice each time.")
         }
 
         Section("About") {

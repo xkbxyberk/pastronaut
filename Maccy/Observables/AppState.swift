@@ -97,6 +97,7 @@ class AppState: Sendable {
   func deleteSelection() {
     guard let leadItem = navigator.leadHistoryItem else { return }
     let nextUnselectedItem = history.nearestVisible(to: leadItem) { !$0.isSelected }
+    RecentlyDeleted.shared.remember(navigator.selection.items) // Pastronaut: undo
 
     withTransaction(Transaction()) {
       navigator.selection.forEach { _, item in

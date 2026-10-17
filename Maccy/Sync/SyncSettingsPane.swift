@@ -70,7 +70,7 @@ struct SyncSettingsPane: View {
         Text("Privacy", tableName: "Pastronaut")
       } footer: {
         Label {
-          Text("Text is end-to-end encrypted; only your devices can read it. Copies from password managers are never synced.", tableName: "Pastronaut")
+          Text("Clip text is stored encrypted in iCloud. Copies from password managers are never synced.", tableName: "Pastronaut")
         } icon: {
           Image(systemName: "lock")
         }

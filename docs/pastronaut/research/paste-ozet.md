@@ -36,10 +36,10 @@ yüzeylerine** (etkileşimli widget, Denetim Merkezi, Action Button) girmek ve e
 | Paylaşılan koleksiyon | iCloud paylaşımı (büyük olasılıkla `CKShare`), okuma/yazma izinleri | Yok | Eksik (düşük öncelik) |
 | İçerik türleri (eşitleme) | Metin, bağlantı, görsel, dosya, renk | Yalnızca metin (≤100 KB) | **Eksik**, ama güvenilirlik avantajı da var |
 | Bağlantı önizlemesi | Küçük resim + başlık, dahili tarayıcı | Tür simgesi + "Bağlantıyı Aç" | Eksik |
-| OCR | Görsel içi metin aranır, önizlemede metin çıkarılır | Yok | Eksik |
+| OCR | Görsel içi metin aranır, önizlemede metin çıkarılır | Mac: Maccy görseldeki metni Vision ile tanıyıp başlık yapıyor, yani aranabiliyor (`HistoryItem.recognizeText`). "Metni kopyala" eylemi yok | Kısmen |
 | Arama | Yazım hatasına toleranslı, vurgulu, filtre jetonları (tür/uygulama/cihaz/tarih/koleksiyon), "geçmişte göster" | Maccy araması + cihaz filtresi | **Kısmen** |
 | Düzenleme | Başlık verme, içerik düzenleme, yeni öğe (⌘N), görsel döndürme, renk seçici, Writing Tools | Mac: başlık düzenleme (Maccy). iOS: içerik düzenleme | Kısmen |
-| Sıralı yapıştırma | Var (ters yön, kopyaları ayıklama) | Doğrulanmalı (Maccy'de olup olmadığı kontrol edilecek) | ? |
+| Sıralı yapıştırma | Var (ters yön, kopyaları ayıklama) | Maccy'de kod var (`PasteStack`) ama çoklu seçimle başlıyor ve çoklu seçim kapalı, yani kullanılamıyor | Kısmen |
 | Çoklu seçim | ⌘/⇧ ile, toplu sil/pinle/yapıştır | Kod var ama kapalı (`AppState.multiSelectionEnabled = false`) | Kısmen |
 | Gizlilik: uygulama dışlama, gizli/geçici türler | Var | Var (Maccy) | Eşit |
 | Zamanlı duraklatma | 15 dk / 1 sa / elle | Maccy'de yalnızca aç/kapat ("ignoreEvents") | Eksik |
@@ -116,9 +116,8 @@ B büyük). "Nasıl" kısmındaki Apple API'leri herkese açık, belgelenmiş AP
   doldurdu" hatası var). Bağlantı önizlemesi büyük olasılıkla `LPMetadataProvider`, OCR ise Vision
   (`VNRecognizeTextRequest` ya da iOS/macOS 26'nın `RecognizeDocumentsRequest`'i).
 - **Bizde:**
-  - **OCR (yalnız Mac, yalnız yerel):** Mac'te zaten görsel geçmişi var. Görselin metni Vision ile çıkarılıp
-    aranabilir hale getirilir ve önizlemede "Metni kopyala" düğmesi eklenir. Ağ yok, eşitleme şeması değişmez.
-    **Efor: O.** Değer/efor oranı en yüksek "zengin içerik" maddesi bu.
+  - **OCR (yalnız Mac, yalnız yerel):** Kodu okuyunca görüldü: Maccy görselin metnini zaten Vision ile tanıyıp
+    öğe başlığı yapıyor, bu yüzden aranabiliyor. Eksik olan yalnızca önizlemede "Metni kopyala" düğmesi. **Efor: K.**
   - **Bağlantı önizlemesi:** Siteye istek atar, yani kopyalanan bağlantı üçüncü taraf sunucuya gider.
     Gizlilik çizgimizle çelişebilir. **Varsayılan kapalı** bir seçenek olabilir. **Efor: O.**
   - **Görsel eşitleme:** `CKAsset` + boyut sınırı (ör. 5 MB) + küçük resim. Klavyenin bellek sınırı yüzünden
@@ -299,7 +298,7 @@ kopyalar**. Tanıtımda ve kurulum rehberinde bu farkı anlatmalıyız.
 
 **Dalga 3: büyük yapısal işler**
 1. Koleksiyonlar + HMAC kimlik geçişi (tek şema değişikliği).
-2. Mac'te OCR (yerel).
+2. Mac önizlemesinde "Görseldeki metni kopyala" (OCR Maccy'de zaten var).
 3. Spotlight (isteğe bağlı, yalnız pinler).
 4. iPad: kenar çubuğu, görünürken yakalama, sürükle-bırak.
 5. Dışa/içe aktarma.
@@ -316,3 +315,13 @@ kopyalar**. Tanıtımda ve kurulum rehberinde bu farkı anlatmalıyız.
 3. iOS'ta "Açılınca panoyu kaydet" varsayılan olarak **kapalı** mı gelsin (önerim), yoksa açık mı?
 4. Görsel eşitleme 1.0'a girsin mi, yoksa "yalnız metin = güvenilir" mesajıyla 1.0 sonrasına mı kalsın (önerim)?
 5. Yerel MCP sunucusu ilginizi çekiyor mu? (Varsayılan kapalı ve yalnızca yerel olur.)
+
+---
+
+## Ek: geliştirme sırasında görülenler (2026-10-17)
+
+- **Maccy'den gelen bir pencere hatası:** Önizleme paneli solda açılırken (popup ekranın sağ kenarındayken) hemen
+  arama yazılırsa pencere sağa kayıp ekrandan çıkabiliyor (`SlideoutController.togglePreview`, animasyon sürerken
+  ikinci değişiklik). Bizim kodumuz değil; upstream'de aranıp gerekirse ayrı bir düzeltme olarak ele alınacak.
+- **Popup'taki mavi leke:** Ekran görüntülerinde görülen mavi bulanıklık bir hata değil. Popup'ın camı yarı saydam
+  olduğu için arkadaki pencerenin mavi düğmesi bulanık olarak görünüyor.
