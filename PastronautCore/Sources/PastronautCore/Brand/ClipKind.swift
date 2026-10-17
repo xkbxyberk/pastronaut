@@ -70,3 +70,32 @@ public extension Color {
     #endif
   }
 }
+
+public extension ClipCollection {
+  /// A color of the collection's own, the same on every device: picked from its ID, so nothing is stored or synced.
+  var tint: Color {
+    let (light, dark) = Self.tints[tintIndex]
+    return Color.pastronaut(light: light, dark: dark)
+  }
+
+  /// The light-mode color in both modes, for text on a white key.
+  var deepTint: Color {
+    Color.pastronaut(light: Self.tints[tintIndex].0, dark: Self.tints[tintIndex].0)
+  }
+
+  /// First letter of the name, upper-cased the Turkish way ("iş" → "İ").
+  var initial: String {
+    let first = name.trimmingCharacters(in: .whitespacesAndNewlines).first.map(String.init) ?? "?"
+    return first.uppercased(with: Locale(identifier: "tr_TR"))
+  }
+
+  internal var tintIndex: Int {
+    let hash = id.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0x7FFF_FFFF }
+    return hash % Self.tints.count
+  }
+
+  internal static let tints: [(Int, Int)] = [
+    (0xC0570F, 0xFFAA5C), (0x2364D2, 0x7FB0FF), (0x7349D0, 0xB9A1FF), (0x0B7F88, 0x56D3CC),
+    (0x2A8540, 0x72D98A), (0xB23A7A, 0xF28BC4), (0x8A6A2E, 0xD9B872), (0x5E6878, 0xA3ADBB)
+  ]
+}

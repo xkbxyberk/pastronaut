@@ -10,6 +10,7 @@ struct SettingsView: View {
   @AppStorage(AutoCapture.settingKey, store: UserDefaults(suiteName: PastronautIDs.appGroup))
   private var autoSave = false
   @AppStorage(SpotlightIndex.settingKey) private var spotlight = false
+  @AppStorage(PreviewChoice.key) private var previewChoice = PreviewChoice.unasked.rawValue
   @State private var isImporting = false
   @State private var importMessage: String?
   private let setup = KeyboardSetup.shared
@@ -39,6 +40,21 @@ struct SettingsView: View {
           Text("Sync")
         } footer: {
           Text("Text clips sync through your private iCloud database. Clip text and collection names are end-to-end encrypted, and iCloud can't tell which texts you saved.")
+        }
+
+        Section {
+          Toggle("Link and Map Previews", isOn: Binding(
+            get: { previewChoice == PreviewChoice.on.rawValue },
+            set: { isOn in
+              previewChoice = isOn ? PreviewChoice.on.rawValue : PreviewChoice.off.rawValue
+              if !isOn { PreviewStore.shared.clear() }
+            }
+          ))
+          .accessibilityIdentifier("previewsToggle")
+        } header: {
+          Text("Appearance")
+        } footer: {
+          Text("With previews on, the history shows cards: links with their page, addresses with a map, code in color. This iPhone opens the link and asks Apple Maps for the address; sign-in and reset links are never opened. With previews off, the history is a compact list.")
         }
 
         Section {

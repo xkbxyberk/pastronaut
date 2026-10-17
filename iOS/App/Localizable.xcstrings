@@ -1767,6 +1767,94 @@
           }
         }
       }
+    },
+    "Show link and map previews?": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı ve harita önizlemeleri gösterilsin mi?"
+          }
+        }
+      }
+    },
+    "Links and addresses can show their page and a map inside their cards. For that, this iPhone opens the link and asks Apple Maps where the address is. Links that look like sign-in or reset links are never opened.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantılar sayfalarını, adresler haritalarını kartın içinde gösterebilir. Bunun için iPhone bağlantıyı açar ve adresin yerini Apple Haritalar'a sorar. Giriş ya da sıfırlama bağlantısına benzeyenler hiç açılmaz."
+          }
+        }
+      }
+    },
+    "Show Previews": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önizlemeleri Göster"
+          }
+        }
+      }
+    },
+    "Not Now": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi Değil"
+          }
+        }
+      }
+    },
+    "You can change this in Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu Ayarlar'dan değiştirebilirsin."
+          }
+        }
+      }
+    },
+    "Link and Map Previews": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı ve Harita Önizlemeleri"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görünüm"
+          }
+        }
+      }
+    },
+    "With previews on, the history shows cards: links with their page, addresses with a map, code in color. This iPhone opens the link and asks Apple Maps for the address; sign-in and reset links are never opened. With previews off, the history is a compact list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önizlemeler açıkken geçmiş kartlar halinde görünür: bağlantılar sayfasıyla, adresler haritasıyla, kodlar renkli. iPhone bağlantıyı açar ve adresi Apple Haritalar'a sorar; giriş ve sıfırlama bağlantıları hiç açılmaz. Önizlemeler kapalıyken geçmiş sade bir listedir."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

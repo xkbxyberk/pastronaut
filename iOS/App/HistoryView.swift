@@ -19,6 +19,7 @@ struct HistoryView: View {
   @State private var confirmsBulkDelete = false
   @State private var tokens: [ClipSearchToken] = []
   @AppStorage("setupGuideShown") private var setupGuideShown = false
+  @AppStorage(PreviewChoice.key) private var previewChoice = PreviewChoice.unasked.rawValue
 
   init(scope: Binding<HistoryScope>, showsScopeBar: Bool) {
     _scope = scope
@@ -28,28 +29,13 @@ struct HistoryView: View {
   var body: some View {
     @Bindable var store = store
     NavigationStack {
-      List(selection: $selection) {
-        if #unavailable(iOS 26.0), showsScopeBar {
-          // Before Liquid Glass the filter scrolls with the list.
-          Section {
-            filterBar
-              .listRowInsets(EdgeInsets())
-              .listRowBackground(Color.clear)
-          }
-        }
-        ForEach(sections) { section in
-          Section {
-            ForEach(section.clips, id: \.id) { clip in
-              row(clip)
-            }
-          } header: {
-            Text(section.title)
-          }
-          .headerProminence(.increased)
+      Group {
+        if usesCards {
+          cards
+        } else {
+          list
         }
       }
-      // Separate cards instead of one grouped block: each clip is its own rounded surface.
-      .listRowSpacing(10)
       .modifier(FilterBarPlacement(isShown: showsScopeBar) { filterBar })
       // Text dropped here (iPad, or from another app) is saved, into the collection on screen if there is one.
       .dropDestination(for: String.self) { texts, _ in
@@ -359,36 +345,124 @@ struct HistoryView: View {
       }
       .accessibilityIdentifier("deleteAction")
     }
-    .contextMenu {
-      Button {
-        copy(clip)
-      } label: {
-        Label("Copy", systemImage: "doc.on.doc")
-      }
-      Button {
-        detail = clip
-      } label: {
-        Label("Show Details", systemImage: "info.circle")
-      }
-      .accessibilityIdentifier("showDetails")
-      Button {
-        store.togglePin(clip)
-      } label: {
-        if clip.pinned {
-          Label("Unpin", systemImage: "pin.slash")
-        } else {
-          Label("Pin", systemImage: "pin")
-        }
-      }
-      CollectionMenu(clips: [clip])
-      ShareLink(item: clip.text)
-      Divider()
-      Button(role: .destructive) {
-        store.delete(clip)
-      } label: {
-        Label("Delete", systemImage: "trash")
+    .contextMenu { clipMenu(clip) }
+  }
+
+  /// Touch and hold, for list rows and cards alike.
+  @ViewBuilder
+  private func clipMenu(_ clip: Clip) -> some View {
+    Button {
+      copy(clip)
+    } label: {
+      Label("Copy", systemImage: "doc.on.doc")
+    }
+    Button {
+      detail = clip
+    } label: {
+      Label("Show Details", systemImage: "info.circle")
+    }
+    .accessibilityIdentifier("showDetails")
+    Button {
+      store.togglePin(clip)
+    } label: {
+      if clip.pinned {
+        Label("Unpin", systemImage: "pin.slash")
+      } else {
+        Label("Pin", systemImage: "pin")
       }
     }
+    CollectionMenu(clips: [clip])
+    ShareLink(item: clip.text)
+    Divider()
+    Button(role: .destructive) {
+      store.delete(clip)
+    } label: {
+      Label("Delete", systemImage: "trash")
+    }
+  }
+
+  // MARK: - List (previews off)
+
+  private var list: some View {
+    List(selection: $selection) {
+      if #unavailable(iOS 26.0), showsScopeBar {
+        // Before Liquid Glass the filter scrolls with the list.
+        Section {
+          filterBar
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+        }
+      }
+      if showsPreviewPrompt {
+        Section {
+          PreviewPromptCard()
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+        }
+      }
+      ForEach(sections) { section in
+        Section {
+          ForEach(section.clips, id: \.id) { clip in
+            row(clip)
+          }
+        } header: {
+          Text(section.title)
+        }
+        .headerProminence(.increased)
+      }
+    }
+    // Separate cards instead of one grouped block: each clip is its own rounded surface.
+    .listRowSpacing(10)
+  }
+
+  // MARK: - Cards (previews on)
+
+  private var choice: PreviewChoice {
+    PreviewChoice.override ?? PreviewChoice(rawValue: previewChoice) ?? .unasked
+  }
+
+  private var usesCards: Bool { choice == .on }
+
+  /// Asked once, and only when there is something to preview.
+  private var showsPreviewPrompt: Bool {
+    guard choice == .unasked else { return false }
+    return store.clips.contains { clip in
+      switch clip.content {
+      case .link, .address: true
+      default: false
+      }
+    }
+  }
+
+  private var cards: some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: 12) {
+        if #unavailable(iOS 26.0), showsScopeBar {
+          filterBar
+        }
+        ForEach(sections) { section in
+          Text(section.title)
+            .font(.title3.weight(.bold))
+            .padding(.horizontal, 6)
+            .padding(.top, 6)
+          CardColumns(clips: section.clips) { clip in
+            ClipCard(clip: clip, isEditing: isEditing, isSelected: selection.contains(clip.id)) {
+              if isEditing {
+                if selection.contains(clip.id) { selection.remove(clip.id) } else { selection.insert(clip.id) }
+              } else {
+                copy(clip)
+              }
+            }
+            .contextMenu { if !isEditing { clipMenu(clip) } }
+            .accessibilityIdentifier(clip.pinned ? "card.pinned" : "card.unpinned")
+          }
+        }
+      }
+      .padding(.horizontal, 14)
+      .padding(.bottom, 24)
+    }
+    // White cards on the grouped grey, like the list's rows.
+    .background(Color(uiColor: .systemGroupedBackground))
   }
 
   private func copy(_ clip: Clip) {

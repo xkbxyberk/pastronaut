@@ -158,6 +158,27 @@ final class SyncStepTests: XCTestCase {
       }
       chip.tap()
       report(["ok": row(match).waitForExistence(timeout: timeout)])
+    case "cardsShots":
+      // Design review: the previews question, then the history as cards (previews on) in light and dark.
+      defer { XCUIDevice.shared.appearance = .dark }
+      XCUIDevice.shared.appearance = .light
+      for (name, mode) in [("prompt", "ask"), ("cards", "1")] {
+        app.terminate()
+        app.launchEnvironment["PT_E2E_PREVIEWS"] = mode
+        app.launch()
+        // Previews come from the network the first time.
+        Thread.sleep(forTimeInterval: mode == "1" ? 10 : 2)
+        attachScreenshot(named: "\(name)-light")
+      }
+      app.swipeUp()
+      Thread.sleep(forTimeInterval: 3)
+      attachScreenshot(named: "cards-scrolled-light")
+      XCUIDevice.shared.appearance = .dark
+      app.terminate()
+      app.launch()
+      Thread.sleep(forTimeInterval: 4)
+      attachScreenshot(named: "cards-dark")
+      report(["ok": true])
     case "collectionShots":
       // Design review: the scope bar with a collection, the row menu, the clip's details and Settings › Your Data.
       app.activate()

@@ -45,7 +45,7 @@ private final class ClickInputView: UIInputView, UIInputViewAudioFeedback {
 }
 
 enum KeyboardMetrics {
-  static let height: CGFloat = 300
+  static let height: CGFloat = 318
   static let keyHeight: CGFloat = 42
   static let spacing: CGFloat = 6
   /// Close to the system keys on iOS 26 and later.
@@ -358,86 +358,41 @@ struct KeyboardView: View {
   }
 }
 
-/// Default view: latest Mac copy, tabs, the list and the basic input row.
+/// Default view: a title for what is shown, the clips as a two-column grid (with the latest Mac copy on top), a bar
+/// of categories and collections, and a row of typing keys.
 private struct BrowsePanel: View {
   let model: KeyboardModel
 
   var body: some View {
     VStack(spacing: KeyboardMetrics.spacing) {
-      if let clip = model.latestFromMac {
-        Button {
-          model.type(clip)
-        } label: {
-          HStack(spacing: 8) {
-            Image(systemName: "laptopcomputer")
-              .foregroundStyle(Color.accentColor)
-            VStack(alignment: .leading, spacing: 0) {
-              Text("From Mac")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-              Text(clip.text.keyboardPreview)
-                .font(.system(size: 15))
-                .lineLimit(1)
-            }
-            Spacer(minLength: 4)
-            Image(systemName: "return.left")
-              .font(.footnote)
-              .foregroundStyle(.secondary)
+      HStack(spacing: 6) {
+        Group {
+          if model.tab == .collections, let collection = model.selectedCollection {
+            Text(verbatim: collection.name)
+          } else {
+            Text(model.tab.title)
           }
-          .padding(.horizontal, 12)
-          .frame(maxWidth: .infinity, minHeight: 40)
-          .keyBackground(radius: 14)
         }
-        .buttonStyle(.plain)
-        .padding(.horizontal, KeyboardMetrics.topRowInset)
-        .accessibilityIdentifier("fromMacChip")
-      }
-
-      HStack(spacing: 4) {
-        ForEach(model.tabs) { tab in
-          Button {
-            model.tab = tab
-          } label: {
-            Group {
-              if tab == .collections {
-                Image(systemName: model.tab == tab ? "folder.fill" : "folder")
-                  .accessibilityLabel(Text(tab.title))
-              } else {
-                Text(tab.title)
-              }
-            }
-              .font(.system(size: 14, weight: model.tab == tab ? .semibold : .regular))
-              .frame(maxWidth: .infinity, minHeight: 30)
-              .background {
-                if model.tab == tab {
-                  Capsule().fill(KeyStyle.key)
-                }
-              }
-          }
-          .buttonStyle(.plain)
-          .accessibilityIdentifier("tab.\(tab.rawValue)")
-          .accessibilityAddTraits(model.tab == tab ? .isSelected : [])
-        }
-        Button {
-          model.beginSearch()
-        } label: {
-          Image(systemName: "magnifyingglass")
-            .frame(width: 44, height: 30)
-            .background(KeyStyle.function, in: Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text("Search"))
-        .accessibilityIdentifier("searchKey")
+        .font(.system(size: 11, weight: .bold))
+        .textCase(.uppercase)
+        .tracking(0.6)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+        Spacer(minLength: 4)
         if model.hasNewClip {
           PasteButton(payloadType: String.self) { strings in
             Task { @MainActor in model.capture(strings) }
           }
           .labelStyle(.iconOnly)
           .buttonBorderShape(.capsule)
-          .controlSize(.small)
+          .controlSize(.mini)
         }
+        Text(model.visibleClips.count, format: .number)
+          .font(.system(size: 11).monospacedDigit())
+          .foregroundStyle(.secondary)
       }
-      .padding(.horizontal, KeyboardMetrics.topRowInset)
+      .frame(minHeight: 18)
+      .padding(.horizontal, KeyboardMetrics.topRowInset + 2)
 
       if !model.hasFullAccess {
         Text("Turn on Allow Full Access in Settings to save new copies from this keyboard.")
@@ -448,32 +403,94 @@ private struct BrowsePanel: View {
           .padding(.horizontal, 4)
       }
 
-      if model.tab == .collections {
-        CollectionPicker(model: model)
-      }
+      ClipGrid(model: model)
 
-      ClipList(model: model)
+      CategoryBar(model: model)
 
       HStack(spacing: KeyboardMetrics.spacing) {
         if model.showsNextKeyboard {
           FunctionKey(systemImage: "globe", label: "Next keyboard") { model.nextKeyboard() }
-            .frame(width: 44)
+            .frame(width: 42)
         }
+        FunctionKey(systemImage: "magnifyingglass", label: "Search") { model.beginSearch() }
+          .frame(width: 42)
+          .accessibilityIdentifier("searchKey")
         CharacterKey(title: "space", fontSize: 16) { model.typeKey(" ") }
           .accessibilityIdentifier("spaceKey")
         FunctionKey(systemImage: "delete.left", label: "Delete") { model.deleteKey() }
-          .frame(width: 52)
+          .frame(width: 48)
           .accessibilityIdentifier("deleteKey")
         FunctionKey(systemImage: "return", label: "Return") { model.typeKey("\n") }
-          .frame(width: 72)
+          .frame(width: 58)
           .accessibilityIdentifier("returnKey")
       }
     }
   }
 }
 
-private struct ClipList: View {
+/// Recent, pinned, Mac, iPhone, then one colored initial per collection, like the emoji keyboard's categories.
+private struct CategoryBar: View {
   let model: KeyboardModel
+
+  var body: some View {
+    HStack(spacing: 2) {
+      ForEach([KeyboardModel.Tab.recent, .pinned, .mac, .iphone]) { tab in
+        let isSelected = model.tab == tab
+        Button {
+          model.tab = tab
+        } label: {
+          Image(systemName: tab.symbol)
+            .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
+            .frame(width: 36, height: 32)
+            .background {
+              if isSelected { Capsule().fill(KeyStyle.function) }
+            }
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+        .accessibilityLabel(Text(tab.title))
+        .accessibilityIdentifier("tab.\(tab.rawValue)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+      }
+      if !model.collections.isEmpty {
+        Rectangle()
+          .fill(KeyStyle.function)
+          .frame(width: 1, height: 20)
+          .padding(.horizontal, 4)
+        ScrollView(.horizontal) {
+          HStack(spacing: 4) {
+            ForEach(model.collections) { collection in
+              let isSelected = model.tab == .collections && model.selectedCollection?.id == collection.id
+              Button {
+                model.collectionID = collection.id
+                model.tab = .collections
+              } label: {
+                Text(verbatim: collection.initial)
+                  .font(.system(size: 14, weight: .bold))
+                  .frame(width: 30, height: 30)
+                  .foregroundStyle(isSelected ? Color.white : collection.tint)
+                  .background(Circle().fill(isSelected ? AnyShapeStyle(collection.deepTint) : AnyShapeStyle(collection.tint.opacity(0.2))))
+              }
+              .buttonStyle(.plain)
+              .accessibilityLabel(Text(verbatim: collection.name))
+              .accessibilityIdentifier("collection.\(collection.name)")
+              .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+          }
+        }
+        .scrollIndicators(.hidden)
+      }
+      Spacer(minLength: 0)
+    }
+    .padding(.horizontal, KeyboardMetrics.topRowInset)
+    .frame(height: 34)
+  }
+}
+
+private struct ClipGrid: View {
+  let model: KeyboardModel
+  private let columns = [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)]
 
   var body: some View {
     let clips = model.visibleClips
@@ -497,9 +514,14 @@ private struct ClipList: View {
           .frame(maxWidth: .infinity, maxHeight: .infinity)
       } else {
         ScrollView {
-          LazyVStack(spacing: 5) {
-            ForEach(clips, id: \.id) { clip in
-              ClipKey(clip: clip) { model.type(clip) } onLongPress: { model.focused = clip }
+          VStack(spacing: 6) {
+            if (model.tab == .recent || model.tab == .mac), let latest = model.latestFromMac {
+              LatestFromMacKey(clip: latest) { model.type(latest) }
+            }
+            LazyVGrid(columns: columns, spacing: 6) {
+              ForEach(clips, id: \.id) { clip in
+                ClipTile(clip: clip) { model.type(clip) } onLongPress: { model.focused = clip }
+              }
             }
           }
           .padding(.horizontal, 1)
@@ -513,43 +535,83 @@ private struct ClipList: View {
   }
 }
 
-/// One clip, drawn like a key: tap types it, long press opens its actions.
-private struct ClipKey: View {
+/// The most common thing to paste on the iPhone: what was just copied on the Mac.
+private struct LatestFromMacKey: View {
+  let clip: Clip
+  let onTap: () -> Void
+
+  var body: some View {
+    Button(action: onTap) {
+      HStack(spacing: 9) {
+        Image(systemName: "laptopcomputer")
+          .font(.system(size: 15, weight: .semibold))
+        VStack(alignment: .leading, spacing: 1) {
+          Text("From Mac")
+            .font(.system(size: 10, weight: .semibold))
+            .textCase(.uppercase)
+            .opacity(0.85)
+          Text(clip.text.keyboardPreview)
+            .font(.system(size: 15, weight: .semibold))
+            .lineLimit(1)
+        }
+        Spacer(minLength: 4)
+        Image(systemName: "return.left")
+          .font(.footnote.weight(.semibold))
+          .opacity(0.85)
+      }
+      .foregroundStyle(Color.onAccent)
+      .padding(.horizontal, 12)
+      .frame(maxWidth: .infinity, minHeight: 44)
+      .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+    .buttonStyle(.plain)
+    .accessibilityIdentifier("fromMacChip")
+  }
+}
+
+/// One clip as a key in the grid: its kind in color on top, two lines of text. Tap types it, long press opens its
+/// actions. Colors are drawn in their own color.
+private struct ClipTile: View {
   let clip: Clip
   let onTap: () -> Void
   let onLongPress: () -> Void
 
   var body: some View {
-    HStack(spacing: 8) {
-      // Same content icon as the app: a swatch for colors, a symbol for links, code, text…
-      ClipIcon(content: clip.content, size: 26)
-      Text(clip.text.keyboardPreview)
-        .font(.system(size: 15))
-        .lineLimit(1)
-        .frame(maxWidth: .infinity, alignment: .leading)
-      if clip.pinned {
-        Image(systemName: "pin.fill")
-          .font(.caption2)
-          .foregroundStyle(Color.pin)
-          .accessibilityIdentifier("pinIcon")
-      }
-      HStack(spacing: 3) {
-        // Only Mac copies know their app; iOS does not tell which app wrote to the pasteboard.
-        if let app = clip.sourceAppName {
-          Text(verbatim: app)
-            .lineLimit(1)
-            .frame(maxWidth: 80, alignment: .trailing)
+    let content = clip.content
+    let swatch: Color? = if case .color(let hex) = content { Color(hex: hex) } else { nil }
+    VStack(alignment: .leading, spacing: 3) {
+      HStack(spacing: 4) {
+        Image(systemName: content.symbolName)
+        Text(content.kindName)
+          .lineLimit(1)
+        Spacer(minLength: 2)
+        if clip.pinned {
+          Image(systemName: "pin.fill")
+            .foregroundStyle(swatch == nil ? Color.pin : Color.white)
+            .accessibilityIdentifier("pinIcon")
         }
-        Image(systemName: clip.sourceDevice == .mac ? "laptopcomputer" : "iphone")
-          .accessibilityHidden(true)
       }
-      .font(.caption2)
-      .foregroundStyle(.secondary)
+      .font(.system(size: 11, weight: .semibold))
+      .foregroundStyle(swatch == nil ? AnyShapeStyle(content.kind.tint) : AnyShapeStyle(Color.white.opacity(0.9)))
+      Text(clip.text.keyboardPreview)
+        .font(content.usesMonospacedFont ? .system(size: 13, design: .monospaced) : .system(size: 13))
+        .foregroundStyle(swatch == nil ? Color.primary : Color.white)
+        .lineLimit(2)
+        .multilineTextAlignment(.leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .padding(.leading, 6)
-    .padding(.trailing, 10)
-    .frame(minHeight: 38)
-    .keyBackground()
+    .padding(.horizontal, 9)
+    .padding(.vertical, 7)
+    .frame(maxWidth: .infinity, minHeight: 56, alignment: .topLeading)
+    .background {
+      if let swatch {
+        RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous).fill(swatch)
+      } else {
+        RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous)
+          .fill(KeyStyle.key)
+          .shadow(color: KeyStyle.shadow, radius: 0, x: 0, y: 1)
+      }
+    }
     .contentShape(Rectangle())
     .onTapGesture(perform: onTap)
     .onLongPressGesture(minimumDuration: 0.4, perform: onLongPress)
@@ -825,34 +887,15 @@ private extension KeyboardModel.Tab {
     case .collections: "Collections"
     }
   }
-}
 
-/// The collections tab's row of names.
-private struct CollectionPicker: View {
-  let model: KeyboardModel
-
-  var body: some View {
-    ScrollView(.horizontal) {
-      HStack(spacing: 4) {
-        ForEach(model.collections) { collection in
-          let isSelected = model.selectedCollection?.id == collection.id
-          Button {
-            model.collectionID = collection.id
-          } label: {
-            Text(verbatim: collection.name)
-              .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-              .lineLimit(1)
-              .padding(.horizontal, 12)
-              .frame(minHeight: 26)
-              .background(Capsule().fill(isSelected ? KeyStyle.key : KeyStyle.function.opacity(0.5)))
-          }
-          .buttonStyle(.plain)
-          .accessibilityAddTraits(isSelected ? .isSelected : [])
-        }
-      }
-      .padding(.horizontal, KeyboardMetrics.topRowInset)
+  var symbol: String {
+    switch self {
+    case .pinned: "pin"
+    case .recent: "clock"
+    case .mac: "laptopcomputer"
+    case .iphone: "iphone"
+    case .collections: "folder"
     }
-    .scrollIndicators(.hidden)
-    .accessibilityIdentifier("collectionPicker")
   }
 }
+

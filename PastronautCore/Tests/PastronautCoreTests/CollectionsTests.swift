@@ -223,3 +223,13 @@ import Testing
     #expect(ClipArchive.suggestedFileName(on: date).hasSuffix(".json"))
   }
 }
+
+@Suite struct CollectionLookTests {
+  @Test func tintIsStableAndInitialIsTurkish() {
+    let work = ClipCollection(id: "col-1234", name: "iş", order: 1)
+    #expect(work.tintIndex == ClipCollection(id: "col-1234", name: "renamed", order: 9).tintIndex)
+    #expect((0..<ClipCollection.tints.count).contains(work.tintIndex))
+    #expect(work.initial == "İ")
+    #expect(ClipCollection(id: "col-x", name: "  adresler", order: 1).initial == "A")
+  }
+}

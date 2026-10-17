@@ -1,0 +1,335 @@
+import PastronautCore
+import SwiftUI
+import UIKit
+
+// The history as cards (previews on): each kind draws its own content, links and addresses with their preview.
+// With previews off the history stays a list (HistoryView.row).
+
+/// Two columns that fill top to bottom; clips alternate between them.
+struct CardColumns<Card: View>: View {
+  let clips: [Clip]
+  @ViewBuilder let card: (Clip) -> Card
+
+  var body: some View {
+    HStack(alignment: .top, spacing: 10) {
+      VStack(spacing: 10) {
+        ForEach(Array(clips.enumerated()).filter { $0.offset % 2 == 0 }.map(\.element), id: \.id, content: card)
+      }
+      .frame(maxWidth: .infinity, alignment: .top)
+      VStack(spacing: 10) {
+        ForEach(Array(clips.enumerated()).filter { $0.offset % 2 == 1 }.map(\.element), id: \.id, content: card)
+      }
+      .frame(maxWidth: .infinity, alignment: .top)
+    }
+  }
+}
+
+struct ClipCard: View {
+  let clip: Clip
+  var isEditing = false
+  var isSelected = false
+  let onTap: () -> Void
+  @Environment(\.openURL) private var openURL
+  @Environment(\.colorScheme) private var colorScheme
+
+  private var content: ClipContent { clip.content }
+  private var preview: PreviewStore.Preview? { PreviewStore.shared.preview(for: clip) }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      Button(action: onTap) {
+        VStack(alignment: .leading, spacing: 0) {
+          media
+          main
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+            .padding(.bottom, 4)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      if let action = CardAction(content), !isEditing {
+        Button {
+          openURL(action.url)
+        } label: {
+          Label(action.title, systemImage: action.systemImage)
+            .font(.subheadline.weight(.semibold))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .foregroundStyle(.white)
+            .background(content.kind.deepTint, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 14)
+        .padding(.top, 4)
+      }
+      footer
+        .padding(.horizontal, 14)
+        .padding(.top, 6)
+        .padding(.bottom, 12)
+    }
+    .foregroundStyle(foreground)
+    .background(background, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+    .overlay {
+      if isEditing {
+        RoundedRectangle(cornerRadius: 22, style: .continuous)
+          .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 3)
+      }
+    }
+    .overlay(alignment: .topTrailing) {
+      if isEditing {
+        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+          .font(.title3)
+          .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+          .background(Circle().fill(.background).padding(2))
+          .padding(10)
+      }
+    }
+    .task(id: clip.id) { await PreviewStore.shared.load(clip) }
+    .accessibilityElement(children: .combine)
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
+  }
+
+  // MARK: - Parts
+
+  @ViewBuilder
+  private var media: some View {
+    switch content {
+    case .address:
+      if let image = preview?.image {
+        Image(uiImage: image)
+          .resizable()
+          .scaledToFill()
+          .frame(height: 112)
+          .frame(maxWidth: .infinity)
+          .clipped()
+      } else if PreviewStore.isEnabled {
+        ZStack {
+          Color(red: 0.93, green: 0.91, blue: 0.87)
+          Image(systemName: "mappin.circle.fill")
+            .font(.title)
+            .foregroundStyle(ClipKind.address.deepTint)
+        }
+        .frame(height: 112)
+      }
+    case .link:
+      if let image = preview?.image {
+        Image(uiImage: image)
+          .resizable()
+          .scaledToFill()
+          .frame(height: 100)
+          .frame(maxWidth: .infinity)
+          .clipped()
+      }
+    default:
+      EmptyView()
+    }
+  }
+
+  @ViewBuilder
+  private var main: some View {
+    switch content {
+    case .link(let url):
+      VStack(alignment: .leading, spacing: 6) {
+        if let title = preview?.title {
+          Text(verbatim: title)
+            .font(.subheadline.weight(.bold))
+            .lineLimit(3)
+        }
+        Label {
+          Text(verbatim: url.host() ?? url.absoluteString)
+            .lineLimit(1)
+        } icon: {
+          Image(systemName: "link")
+        }
+        .font(.footnote.weight(.semibold))
+        .foregroundStyle(ClipKind.link.tint)
+        if preview?.title == nil, !url.path().isEmpty, url.path() != "/" {
+          Text(verbatim: url.path())
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+        }
+      }
+    case .code:
+      VStack(alignment: .leading, spacing: 6) {
+        Text(verbatim: CodeHighlighter.language(of: clip.text).title.uppercased())
+          .font(.caption2.weight(.bold))
+          .foregroundStyle(Color(red: 0.73, green: 0.63, blue: 1))
+        Text(CodeText.attributed(clip.text))
+          .font(.system(size: 12, design: .monospaced))
+          .lineLimit(9)
+      }
+    case .color(let hex):
+      VStack(alignment: .leading, spacing: 4) {
+        Spacer().frame(height: 56)
+        Text(verbatim: hex.uppercased())
+          .font(.system(.title3, design: .monospaced).weight(.semibold))
+        if let rgb = Self.rgb(hex) {
+          Text(verbatim: "RGB \(rgb.0) \(rgb.1) \(rgb.2)")
+            .font(.caption)
+            .opacity(0.85)
+        }
+      }
+    case .phone, .email:
+      Text(verbatim: clip.preview)
+        .font(.title3.weight(.medium))
+        .lineLimit(2)
+        .minimumScaleFactor(0.8)
+    case .address:
+      Text(verbatim: clip.preview)
+        .font(.subheadline.weight(.semibold))
+        .lineLimit(4)
+    case .text:
+      Text(verbatim: clip.preview)
+        .font(.subheadline)
+        .lineLimit(7)
+    }
+  }
+
+  private var footer: some View {
+    HStack(spacing: 5) {
+      Image(systemName: content.symbolName)
+        .foregroundStyle(onDarkCard ? AnyShapeStyle(.white.opacity(0.85)) : AnyShapeStyle(content.kind.tint))
+      Text(content.kindName)
+      Text(verbatim: "·")
+      Text(clip.lastCopiedAt, format: .relative(presentation: .named, unitsStyle: .abbreviated))
+        .lineLimit(1)
+      Spacer(minLength: 0)
+      if clip.pinned {
+        Image(systemName: "pin.fill")
+          .foregroundStyle(onDarkCard ? Color.white : Color.pin)
+          .accessibilityLabel(Text("Pinned clip"))
+      }
+      Image(systemName: clip.isFromMac ? "laptopcomputer" : "iphone")
+        .accessibilityLabel(Text(verbatim: clip.isFromMac ? "Mac" : "iPhone"))
+    }
+    .font(.caption)
+    .foregroundStyle(onDarkCard ? AnyShapeStyle(.white.opacity(0.8)) : AnyShapeStyle(.secondary))
+  }
+
+  // MARK: - Colors
+
+  private var onDarkCard: Bool {
+    switch content {
+    case .code: true
+    case .color(let hex): !Self.isLight(hex)
+    default: false
+    }
+  }
+
+  private var background: AnyShapeStyle {
+    switch content {
+    case .code: AnyShapeStyle(Color(red: 0.114, green: 0.153, blue: 0.2))
+    case .color(let hex): AnyShapeStyle(Color(hex: hex) ?? .gray)
+    default: AnyShapeStyle(Color(uiColor: .secondarySystemGroupedBackground))
+    }
+  }
+
+  private var foreground: Color {
+    if case .color(let hex) = content, Self.isLight(hex) { return .black }
+    return onDarkCard ? .white : .primary
+  }
+
+  static func rgb(_ hex: String) -> (Int, Int, Int)? {
+    var digits = hex.dropFirst().map(String.init)
+    if digits.count == 3 { digits = digits.flatMap { [$0, $0] } }
+    guard digits.count >= 6, let value = Int(digits.prefix(6).joined(), radix: 16) else { return nil }
+    return ((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF)
+  }
+
+  /// Light colors get dark text (relative luminance above 0.6).
+  static func isLight(_ hex: String) -> Bool {
+    guard let (r, g, b) = rgb(hex) else { return false }
+    return (0.299 * Double(r) + 0.587 * Double(g) + 0.114 * Double(b)) / 255 > 0.6
+  }
+}
+
+/// Call, write, or get directions, inside the card.
+private struct CardAction {
+  let title: LocalizedStringKey
+  let systemImage: String
+  let url: URL
+
+  init?(_ content: ClipContent) {
+    switch content {
+    case .phone(let number):
+      guard let url = URL(string: "tel:\(number.filter { $0.isNumber || $0 == "+" })") else { return nil }
+      (title, systemImage, self.url) = ("Call", "phone.fill", url)
+    case .email(let address):
+      guard let url = URL(string: "mailto:\(address)") else { return nil }
+      (title, systemImage, self.url) = ("Write Email", "envelope.fill", url)
+    case .address(let address):
+      var components = URLComponents(string: "https://maps.apple.com/")
+      components?.queryItems = [URLQueryItem(name: "daddr", value: address)]
+      guard let url = components?.url else { return nil }
+      (title, systemImage, self.url) = ("Get Directions", "arrow.triangle.turn.up.right.diamond.fill", url)
+    default:
+      return nil
+    }
+  }
+}
+
+/// Code colored on the device (CodeHighlighter), for the dark code cards.
+enum CodeText {
+  static func attributed(_ text: String) -> AttributedString {
+    let plain = UIColor(red: 0.847, green: 0.882, blue: 0.918, alpha: 1)
+    let string = NSMutableAttributedString(string: text, attributes: [.foregroundColor: plain])
+    for token in CodeHighlighter.tokens(in: text) {
+      string.addAttribute(.foregroundColor, value: color(token.kind), range: token.range)
+    }
+    return (try? AttributedString(string, including: \.uiKit)) ?? AttributedString(text)
+  }
+
+  private static func color(_ kind: CodeHighlighter.TokenKind) -> UIColor {
+    switch kind {
+    case .keyword: UIColor(red: 1, green: 0.54, blue: 0.79, alpha: 1)
+    case .type: UIColor(red: 0.5, green: 0.82, blue: 0.91, alpha: 1)
+    case .string: UIColor(red: 0.95, green: 0.76, blue: 0.55, alpha: 1)
+    case .number: UIColor(red: 0.77, green: 0.69, blue: 1, alpha: 1)
+    case .comment: UIColor(red: 0.54, green: 0.6, blue: 0.66, alpha: 1)
+    }
+  }
+}
+
+/// Asked once, at the top of the history: previews need the network, so the person decides.
+struct PreviewPromptCard: View {
+  @AppStorage(PreviewChoice.key) private var choice = PreviewChoice.unasked.rawValue
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      Label("Show link and map previews?", systemImage: "rectangle.and.text.magnifyingglass")
+        .font(.headline)
+      Text("Links and addresses can show their page and a map inside their cards. For that, this iPhone opens the link and asks Apple Maps where the address is. Links that look like sign-in or reset links are never opened.")
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+      HStack(spacing: 10) {
+        Button {
+          withAnimation(.snappy) { choice = PreviewChoice.on.rawValue }
+        } label: {
+          Text("Show Previews")
+            .frame(maxWidth: .infinity)
+        }
+        .primaryActionStyle()
+        .accessibilityIdentifier("previewsOnButton")
+        Button {
+          withAnimation(.snappy) { choice = PreviewChoice.off.rawValue }
+        } label: {
+          Text("Not Now")
+            .frame(maxWidth: .infinity)
+        }
+        .secondaryActionStyle()
+        .accessibilityIdentifier("previewsOffButton")
+      }
+      .controlSize(.large)
+      Text("You can change this in Settings.")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+    .padding(16)
+    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+  }
+}
