@@ -23,7 +23,7 @@ Hedef platformlar: macOS 14+ (mevcut uygulama), iOS 17+ (yeni uygulama ve klavye
 - Test: `xcodebuild -project Maccy.xcodeproj -scheme Maccy test`
 
 ## Upstream ile birleştirme
-1. `git fetch upstream && git merge upstream/master` komutlarını çalıştır. Çakışan çeviri dosyalarında upstream sürümünü al.
+1. `git fetch upstream && git merge upstream/master` komutlarını çalıştır. Çakışan çeviri dosyalarında upstream sürümünü al. `README.md` ve `LICENSE` çakışırsa bizim sürümümüz kalır (Pastronaut README'si, ek telif satırı).
 2. `scripts/pastronaut-rebrand.sh` betiğini çalıştır. Betik kimlik, ad ve besleme adresini yeniden uygular; tekrar çalıştırmak güvenlidir.
 3. Paket bağımlılıkları değiştiyse `scripts/generate-acknowledgements.sh` betiğini çalıştır.
 4. Derle ve testleri çalıştır: `xcodebuild … -only-testing:MaccyTests test`.

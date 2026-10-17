@@ -87,6 +87,7 @@ struct KeyboardSetupView: View {
       .padding()
     }
     .background(Color(uiColor: .systemGroupedBackground))
+    .solidTopEdge()
     .toolbar {
       if isSheet {
         ToolbarItem(placement: .confirmationAction) {
@@ -223,5 +224,18 @@ private struct IPhoneLimitsCard: View {
     }
     .font(.footnote)
     .foregroundStyle(.secondary)
+  }
+}
+
+private extension View {
+  /// The heading scrolls under the back button: on iOS 26 and later a hard edge keeps the button on a calm band
+  /// instead of over the large text.
+  @ViewBuilder
+  func solidTopEdge() -> some View {
+    if #available(iOS 26.0, *) {
+      scrollEdgeEffectStyle(.hard, for: .top)
+    } else {
+      self
+    }
   }
 }
