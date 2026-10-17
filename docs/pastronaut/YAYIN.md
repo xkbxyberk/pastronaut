@@ -14,21 +14,23 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
 - ✅ İmza: anahtar zincirinde "Developer ID Application" sertifikası var (Mac'i App Store dışında dağıtmak için).
 
 ## B. Onay ya da kullanıcı adımı gerekenler (dışa dönük)
-1. ⏳ **GitHub depo bilgileri:** açıklama hâlâ Maccy'nin ("Lightweight clipboard manager for macOS"), ana sayfa
+1. ✅ **GitHub depo bilgileri** (2026-10-17: açıklama Pastronaut, ana sayfa Pages, varsayılan dal `pastronaut`): açıklama hâlâ Maccy'nin ("Lightweight clipboard manager for macOS"), ana sayfa
    `maccy.app`, varsayılan dal `master`. Öneri: açıklama Pastronaut'a, ana sayfa Pages adresine, varsayılan dal
    `pastronaut` (`gh repo edit`).
-2. ⏳ **GitHub Pages:** `gh-pages` dalında Maccy'nin sitesi ve `CNAME = maccy.app` duruyor; bu haliyle açmak Maccy'yi
+2. ✅ **GitHub Pages** (2026-10-17: yayında, `gh-pages` = `docs/site`, CNAME yok): `gh-pages` dalında Maccy'nin sitesi ve `CNAME = maccy.app` duruyor; bu haliyle açmak Maccy'yi
    taklit etmek olur. Öneri: dalın içeriğini `docs/site/` ile değiştirmek (CNAME yok), Pages'i açmak.
    Adres: `https://xkbxyberk.github.io/pastronaut/` ve `…/privacy.html` (App Store'un istediği gizlilik adresi).
 3. ⏳ **CloudKit Production şeması:** App Store, TestFlight ve Developer ID sürümleri Production ortamını kullanır;
    şema oraya gönderilmeden bu sürümlerde eşitleme çalışmaz. CloudKit Console › Pastronaut kapsayıcısı › "Deploy
    Schema Changes" (tarayıcıdan, senin hesabınla). Geri alınamaz: Production'a giden alan ve tür silinemez.
-4. ⏳ **Sparkle güncelleme anahtarı:** Mac güncellemelerini imzalamak için EdDSA anahtar çifti (`generate_keys`).
+4. ✅ **Sparkle güncelleme anahtarı** (2026-10-17: anahtar zincirinde `pastronaut` hesabı; açık anahtar
+   `Info.plist` ve rebrand betiğinde. Gizli anahtarın yedeği kullanıcıda): Mac güncellemelerini imzalamak için EdDSA anahtar çifti (`generate_keys`).
    Gizli anahtar anahtar zincirine yazılır ve **yedeklenmelidir** (kaybolursa eski sürümler güncelleme alamaz);
    açık anahtar `Info.plist`'e `SUPublicEDKey` olarak girer.
 5. ⏳ **Notarization bilgileri:** `xcrun notarytool store-credentials pastronaut --apple-id <e-posta> --team-id
    V88QY49A4T` (Apple Hesabı'nda üretilen uygulamaya özel parola ile; parolayı yalnızca sen girersin).
-6. ⬜ **Mac sürümü 0.1.0:** arşivle → Developer ID ile dışa aktar → notarize et → staple → zip/dmg → Sparkle imzası →
+6. ⏳ **Mac sürümü 0.1.0** (arşiv ve Developer ID dışa aktarımı hazır: imza doğru, Production ortamı; notarization
+   bilgileri bekleniyor): arşivle → Developer ID ile dışa aktar → notarize et → staple → zip/dmg → Sparkle imzası →
    `pastronaut-appcast.xml` girdisi → GitHub Release. Homebrew tap sonra.
 7. ⬜ **App Store Connect:** uygulama kaydı (iOS; Mac App Store sonra), gizlilik etiketi "Veri Toplanmıyor",
    gizlilik adresi (madde 2), kategori, yaş derecesi, açıklama ve ekran görüntüleri (TR/EN).

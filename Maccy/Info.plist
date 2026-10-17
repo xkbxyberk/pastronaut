@@ -34,6 +34,8 @@
 	<true/>
 	<key>SUFeedURL</key>
 	<string>https://raw.githubusercontent.com/xkbxyberk/pastronaut/pastronaut/pastronaut-appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>pnm+kxry9YU9uqHZByp3pXDQx4VYfNY8PRKBLdzQH8E=</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

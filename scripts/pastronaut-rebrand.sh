@@ -22,7 +22,8 @@ perl -0pi -e "
   s{Maccy\.app/\\\$\(BUNDLE_EXECUTABLE_FOLDER_PATH\)/Maccy\"}{Pastronaut.app/\\\$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pastronaut\"}g;
 " "$PBX"
 
-# 2. Info.plist: copyright, update feed, exported pin-reorder type.
+# 2. Info.plist: copyright, update feed, update-signing key, exported pin-reorder type.
+SPARKLE_PUBLIC_KEY="pnm+kxry9YU9uqHZByp3pXDQx4VYfNY8PRKBLdzQH8E="
 PLIST="Maccy/Info.plist"
 /usr/libexec/PlistBuddy \
   -c "Set :NSHumanReadableCopyright 'Copyright © Alexey Rodionov (Maccy). Pastronaut changes © xkbxyberk.'" \
@@ -30,6 +31,10 @@ PLIST="Maccy/Info.plist"
   -c "Set :UTExportedTypeDeclarations:0:UTTypeIdentifier $NEW_ID.pin-reorder" \
   -c "Set :UTExportedTypeDeclarations:0:UTTypeDescription 'Pastronaut Pin Reorder Type'" \
   "$PLIST"
+# Sparkle: the public half of the update-signing key (the private half is in the release Mac's keychain,
+# account "pastronaut"). Add or Set, so the step is safe to repeat.
+/usr/libexec/PlistBuddy -c "Add :SUPublicEDKey string $SPARKLE_PUBLIC_KEY" "$PLIST" 2>/dev/null \
+  || /usr/libexec/PlistBuddy -c "Set :SUPublicEDKey $SPARKLE_PUBLIC_KEY" "$PLIST"
 sed -i '' "s/UTType(exportedAs: \"$OLD_ID.pin-reorder\")/UTType(exportedAs: \"$NEW_ID.pin-reorder\")/" Maccy/Views/PinsView.swift
 
 # 3. Visible app name in UI strings (all languages) and the list header.
