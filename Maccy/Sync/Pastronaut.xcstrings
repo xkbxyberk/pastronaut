@@ -1401,28 +1401,6 @@
         }
       }
     },
-    "Clip text and collection names are end-to-end encrypted in iCloud, and iCloud can't tell which texts you saved. Copies from password managers are never synced.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Öğe metinleri ve koleksiyon adları iCloud'da uçtan uca şifrelenir; iCloud hangi metinleri kaydettiğinizi anlayamaz. Parola yöneticilerinden yapılan kopyalar hiç eşitlenmez."
-          }
-        }
-      }
-    },
-    "Everything stays in your own iCloud, and the text of your clips is end-to-end encrypted.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Her şey kendi iCloud'unuzda kalır; öğelerin metni uçtan uca şifrelenir."
-          }
-        }
-      }
-    },
     "Address": {
       "extractionState": "manual",
       "localizations": {
@@ -1595,6 +1573,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sıranın ⌘V'yi görmesi için izin gerekli"
+          }
+        }
+      }
+    },
+    "Everything stays in your own iCloud, and the text of your clips is encrypted on this Mac before it's uploaded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her şey kendi iCloud'unda kalır; öğelerin metni yüklenmeden önce bu Mac'te şifrelenir."
+          }
+        }
+      }
+    },
+    "Clip text and collection names are encrypted on this Mac before they reach iCloud (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved. Copies from password managers are never synced.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğe metinleri ve koleksiyon adları iCloud'a gitmeden önce bu Mac'te şifrelenir (Gelişmiş Veri Koruması açıksa uçtan uca); iCloud hangi metinleri kaydettiğini anlayamaz. Parola yöneticilerinden yapılan kopyalar hiç eşitlenmez."
+          }
+        }
+      }
+    },
+    "Privacy Policy": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizlilik Politikası"
           }
         }
       }

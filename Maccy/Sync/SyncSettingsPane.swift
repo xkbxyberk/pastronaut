@@ -70,11 +70,14 @@ struct SyncSettingsPane: View {
         Text("Privacy", tableName: "Pastronaut")
       } footer: {
         Label {
-          Text("Clip text and collection names are end-to-end encrypted in iCloud, and iCloud can't tell which texts you saved. Copies from password managers are never synced.", tableName: "Pastronaut")
+          Text("Clip text and collection names are encrypted on this Mac before they reach iCloud (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved. Copies from password managers are never synced.", tableName: "Pastronaut")
         } icon: {
           Image(systemName: "lock")
         }
         .foregroundStyle(.secondary)
+        Link(destination: URL(string: "https://xkbxyberk.github.io/pastronaut/privacy.html")!) {
+          Text("Privacy Policy", tableName: "Pastronaut")
+        }
       }
 
       CollectionsSettingsSection()

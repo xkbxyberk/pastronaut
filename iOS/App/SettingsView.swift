@@ -39,7 +39,7 @@ struct SettingsView: View {
         } header: {
           Text("Sync")
         } footer: {
-          Text("Text clips sync through your private iCloud database. Clip text and collection names are end-to-end encrypted, and iCloud can't tell which texts you saved.")
+          Text("Text clips sync through your private iCloud database. Clip text and collection names are encrypted on this device before upload (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved.")
         }
 
         Section {
@@ -132,6 +132,8 @@ struct SettingsView: View {
 
         Section("About") {
           LabeledContent("Version", value: Self.version)
+          Link("Privacy Policy", destination: URL(string: "https://xkbxyberk.github.io/pastronaut/privacy.html")!)
+            .accessibilityIdentifier("privacyPolicy")
           Link("Pastronaut on GitHub", destination: URL(string: "https://github.com/xkbxyberk/pastronaut")!)
           NavigationLink("Licenses") {
             LicensesView()

@@ -57,7 +57,7 @@ through your own iCloud — with a one-tap keyboard, widgets and Shortcuts.
 - **Your Mac's clipboard, in your pocket.** Everything you copy on the Mac shows up on the iPhone — in the app, in a
   keyboard that types it with one tap, in widgets and in Shortcuts. Copies made on the iPhone come back to the Mac.
 - **Private by design.** No accounts, no servers of ours, no analytics. Clips travel through your own private iCloud
-  database, with the text end-to-end encrypted.
+  database, with the text encrypted on your device (end-to-end with Advanced Data Protection).
 - **Free and open source.** No subscription, no in-app purchases, MIT licensed. Built on
   [Maccy](https://github.com/p0deje/Maccy), the lightweight clipboard manager for macOS.
 
@@ -134,7 +134,8 @@ flowchart LR
 
 1. The Mac app keeps your history like Maccy does. Items that pass the ignore rules (password managers' concealed
    copies never enter the history) are synced with Apple's CloudKit to the **private** database of your iCloud account.
-2. Text, source app and collection names are **end-to-end encrypted**; record names are derived with a key unique to
+2. Text, source app and collection names are **encrypted on your device** before upload, with keys in your iCloud
+   Keychain — **end-to-end** when you turn on Advanced Data Protection. Record names are derived with a key unique to
    your account, so even short texts can't be guessed from them.
 3. The iPhone app, its keyboard and widgets read the same history. Copies you save on the iPhone go the other way.
 
@@ -187,7 +188,8 @@ is sent anywhere). The app walks you through it.
 - **No data collected.** No analytics, no tracking, no servers of ours. The iPhone app's privacy label is "Data Not
   Collected". Read the [privacy policy](https://xkbxyberk.github.io/pastronaut/privacy.html).
 - **Your iCloud only.** Clips live on your devices and in the private CloudKit database of your Apple Account.
-- **Encrypted.** Text, source app and collection names use CloudKit's end-to-end encrypted fields.
+- **Encrypted.** Text, source app and collection names use CloudKit's encrypted fields: encrypted on your device,
+  end-to-end with [Advanced Data Protection](https://support.apple.com/en-us/102651).
 - **Sensitive copies stay out.** Concealed copies from password managers are never saved. Optionally keep one-time
   codes and card numbers out of sync, or sync only pinned items.
 - **Previews are opt-in.** Link and map previews on the iPhone are off until you allow them, and sign-in, reset or
@@ -206,8 +208,8 @@ or the Action button. Copies from the Mac always arrive on their own.
 <details>
 <summary><b>Can you read my clips?</b></summary>
 
-No. There is no Pastronaut server; clips go to your own private iCloud database, and their text is end-to-end
-encrypted.
+No. There is no Pastronaut server; clips go to your own private iCloud database, and their text is encrypted on your
+device before upload (end-to-end with Advanced Data Protection).
 </details>
 
 <details>
@@ -266,7 +268,7 @@ Released under the [MIT License](LICENSE). Pastronaut is not affiliated with Mac
 
 **Mac'te kopyala, iPhone'da yapıştır.** Pastronaut, Mac'in pano geçmişini kendi iCloud'un üzerinden iPhone ve iPad'e
 taşıyan ücretsiz ve açık kaynak bir uygulamadır: Mac'te menü çubuğunda hızlı bir geçmiş; iPhone'da kartlar, tek
-dokunuşla yazan bir klavye, widget'lar ve Kestirmeler. Sunucumuz yok, izleme yok; metinler uçtan uca şifreli olarak
-yalnızca senin iCloud'unda durur. Uygulama Türkçe ve İngilizce; Türk adreslerini de tanır.
+dokunuşla yazan bir klavye, widget'lar ve Kestirmeler. Sunucumuz yok, izleme yok; metinler cihazında şifrelenip
+yalnızca senin iCloud'unda durur (Gelişmiş Veri Koruması açıksa uçtan uca). Uygulama Türkçe ve İngilizce; Türk adreslerini de tanır.
 [Mac için indir](https://github.com/xkbxyberk/pastronaut/releases/latest) ·
 [Gizlilik politikası](https://xkbxyberk.github.io/pastronaut/privacy.html)

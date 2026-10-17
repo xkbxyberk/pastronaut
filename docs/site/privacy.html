@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pastronaut Gizlilik</title>
-  <meta name="description" content="Pastronaut gizlilik politikası / privacy policy">
+  <title>Pastronaut Privacy Policy</title>
+  <meta name="description" content="Privacy policy for Pastronaut for Mac, iPhone and iPad: what the apps store, where, who can see it, and how to delete it.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,103 +15,322 @@
       <img class="wordmark dark" src="wordmark-dark.svg" alt="Pastronaut">
     </a>
     <nav>
-      <a href="#tr">Türkçe</a>
       <a href="#en">English</a>
+      <a href="#tr">Türkçe</a>
     </nav>
   </header>
 
-  <section id="tr">
-    <span class="lang">Türkçe</span>
-    <h1>Gizlilik politikası</h1>
-    <p class="muted">Son güncelleme: 17 Ekim 2026. Bu politika Pastronaut'un Mac uygulamasını, iPhone ve iPad uygulamasını, klavyesini, widget'larını ve Paylaş uzantısını kapsar.</p>
+  <!-- ============================== ENGLISH ============================== -->
+  <article id="en" lang="en">
+    <h1>Privacy Policy</h1>
+    <p class="meta">
+      Effective October 18, 2026 · Last updated October 18, 2026 ·
+      <a href="https://github.com/xkbxyberk/pastronaut/commits/gh-pages/privacy.html">Version history</a> ·
+      <a href="https://github.com/xkbxyberk/pastronaut">Source code</a>
+    </p>
 
-    <div class="card">
-      <strong>Kısaca:</strong> Pastronaut senin hakkında hiçbir veri toplamaz. Kopyaladıkların cihazında ve kendi iCloud hesabında durur. Bizim bir sunucumuz, analiz ya da reklam aracımız yoktur; seni kimseyle izlemeyiz.
+    <div class="glance">
+      <strong>At a glance</strong>
+      <ul>
+        <li>Pastronaut has <strong>no accounts, no servers, no analytics, no ads and no third-party SDKs</strong>. We don't sell, share or look at your data.</li>
+        <li>Your clipboard history stays <strong>on your devices</strong> and, if you turn on sync, in the <strong>private iCloud database of your own Apple Account</strong>. We cannot access it.</li>
+        <li>Clip text is <strong>encrypted on your device</strong> before it's uploaded; it is <strong>end-to-end encrypted</strong> when you turn on Apple's Advanced Data Protection.</li>
+        <li>The apps connect only to Apple's iCloud, to websites and Apple Maps for <strong>optional</strong> previews you turn on, and to GitHub to check for Mac updates.</li>
+        <li>The only personal data we ever receive is what you send us when you contact us, and crash reports if you choose to share them with developers in your device's settings.</li>
+        <li>Pastronaut is open source, so you can check every statement here in the code.</li>
+      </ul>
     </div>
 
-    <h2>Neyi nerede saklıyoruz</h2>
+    <ol class="toc">
+      <li><a href="#en-who">Who we are and what this covers</a></li>
+      <li><a href="#en-summary">Your data at a glance</a></li>
+      <li><a href="#en-device">On your devices</a></li>
+      <li><a href="#en-icloud">iCloud sync</a></li>
+      <li><a href="#en-keyboard">iPhone keyboard and Full Access</a></li>
+      <li><a href="#en-system">Widgets, Shortcuts, Share and Spotlight</a></li>
+      <li><a href="#en-previews">Optional link and map previews</a></li>
+      <li><a href="#en-mac">The Mac app</a></li>
+      <li><a href="#en-contact-data">When you contact us; crash reports</a></li>
+      <li><a href="#en-third">Third parties</a></li>
+      <li><a href="#en-dont">What we never do</a></li>
+      <li><a href="#en-choices">Your choices: delete and turn off</a></li>
+      <li><a href="#en-rights">Your rights</a></li>
+      <li><a href="#en-children">Children</a></li>
+      <li><a href="#en-security">Security</a></li>
+      <li><a href="#en-changes">Changes to this policy</a></li>
+      <li><a href="#en-contact">Contact</a></li>
+    </ol>
+
+    <h2 id="en-who">1. Who we are and what this covers</h2>
+    <p>Pastronaut is a free, open-source clipboard manager made by <strong>Berk Akbay</strong>, an individual developer in Türkiye (“we”, “us”). For the little personal data described in <a href="#en-contact-data">section 9</a>, he is the data controller. Contact: <a href="mailto:sberkakbay@gmail.com">sberkakbay@gmail.com</a>.</p>
+    <p>This policy covers Pastronaut for Mac, Pastronaut for iPhone and iPad, its keyboard, widgets, Control Center control, Share extension and Shortcuts actions, and this website. Pastronaut is based on the open-source app Maccy and is not affiliated with it.</p>
+
+    <h2 id="en-summary">2. Your data at a glance</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>Where it is</th><th>Who can read it</th><th>How to delete it</th></tr></thead>
+        <tbody>
+          <tr><td>Clipboard history (text, links, images, files on the Mac), pins, collections, settings</td><td>Your devices</td><td>You</td><td>Delete items or clear the history in the app; removing the app removes them</td></tr>
+          <tr><td>Synced text clips, pins and collections</td><td>Private database of your iCloud account (only if sync is on)</td><td>You; Apple stores it under its own policy; <strong>not us</strong></td><td>Delete in the app, “Delete iCloud Data” on the Mac, or iCloud settings › Manage Storage</td></tr>
+          <tr><td>Link and map previews</td><td>Your iPhone (cache)</td><td>You</td><td>Turn previews off; they are removed from the device</td></tr>
+          <tr><td>Messages you send us</td><td>Our email inbox or GitHub</td><td>Us</td><td>Ask us to delete them</td></tr>
+          <tr><td>Crash reports you choose to share</td><td>Apple, shown to us without your identity</td><td>Apple and us</td><td>Stop sharing in your device's privacy settings</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="en-device">3. On your devices</h2>
+    <p>The Mac app watches the clipboard and keeps a history of what you copy, as any clipboard manager does. Copies that password managers and other apps mark as concealed or temporary are never saved, and you can add apps and types to ignore. The history lives in the app's own storage on your Mac; by default it keeps the latest 200 unpinned items, and you can choose a shorter time limit (for example one week). Text found in copied images is recognized on the Mac itself.</p>
+    <p>On iPhone and iPad, the app keeps the synced history in the app's storage and shares it with its own keyboard, widgets and Share extension through an App Group container on the device. If you turn on “Save Clipboard on Opening”, the app (and, with Full Access, its keyboard) saves new text from the clipboard when you open it; one-time codes, card numbers and IBANs are skipped. iOS shows its own notice when an app reads the clipboard.</p>
+
+    <h2 id="en-icloud">4. iCloud sync</h2>
     <ul>
-      <li><strong>Cihazında:</strong> pano geçmişin (metin, görsel, dosya bağlantıları), sabitlediklerin, koleksiyonların ve ayarların. Görseller ve dosyalar yalnızca Mac'te kalır.</li>
-      <li><strong>Kendi iCloud'unda:</strong> eşitlemeyi açarsan metin öğelerin, sabitleme durumları ve koleksiyonların Apple'ın CloudKit hizmetiyle senin <em>özel</em> iCloud veritabanına yazılır. Metin, kaynak uygulama ve koleksiyon adları uçtan uca şifrelenir; kayıt adları hesabına özel bir anahtarla üretilir. Biz bu verilere erişemeyiz. Tarih, tür ve sabitleme gibi alanlar şifresiz tutulur ama yalnızca senin hesabında durur.</li>
-      <li><strong>Atlananlar:</strong> parola yöneticilerinin "gizli" diye işaretlediği kopyalar geçmişe girmez. İstersen tek kullanımlık kodları ve kart numaralarını eşitlemeden, iPhone'da da kaydetmeden atlayabilirsin.</li>
+      <li><strong>Off until you turn it on.</strong> When on, text clips, their pin state, the collections you create and their timestamps are synced through Apple's CloudKit to the <em>private</em> database of your Apple Account. Images and files are not synced.</li>
+      <li><strong>Encryption.</strong> Clip text, the source app and collection names are written to CloudKit's encrypted fields: they are encrypted on your device before upload, with keys kept in your iCloud Keychain. When you turn on <a href="https://support.apple.com/en-us/102651">Advanced Data Protection</a>, only your devices hold those keys (end-to-end encryption). Dates, the kind of clip (for example “link”), the device it came from and the pin state are stored without that extra encryption. Record names are derived with a key unique to your account, so they don't reveal the text.</li>
+      <li><strong>Who can see it.</strong> We have no access to your private iCloud database and no copy of its contents. Apple stores it under the <a href="https://www.apple.com/legal/privacy/">Apple Privacy Policy</a> and iCloud terms.</li>
+      <li><strong>Optional filters.</strong> On the Mac you can keep one-time codes (also removed from the Mac after 5 minutes) and card numbers out of sync, or sync only pinned items.</li>
+      <li><strong>Retention.</strong> Synced items stay until you delete them; deleting or clearing on one device deletes them from iCloud and your other devices. Turning sync off doesn't delete iCloud data; use “Delete iCloud Data” in the Mac app's sync settings, or your device's iCloud settings › Manage Storage.</li>
     </ul>
 
-    <h2>Ağ bağlantıları</h2>
+    <h2 id="en-keyboard">5. iPhone keyboard and Full Access</h2>
+    <p>When you allow Full Access, iOS warns that a keyboard could transmit what you type. Here is exactly what Pastronaut's keyboard does with it:</p>
     <ul>
-      <li><strong>iCloud (Apple):</strong> yalnızca eşitleme için.</li>
-      <li><strong>Bağlantı ve harita önizlemeleri (iPhone, isteğe bağlı):</strong> açarsan, kopyaladığın bağlantının sayfası doğrudan o siteden açılır ve adresin konumu Apple Haritalar'a sorulur. Giriş, şifre sıfırlama ya da tek kullanımlık görünen bağlantılar hiç açılmaz. Önizlemeler yalnızca cihazında saklanır, eşitlenmez.</li>
-      <li><strong>Güncelleme denetimi (Mac, GitHub sürümü):</strong> uygulama yeni sürüm olup olmadığını GitHub'daki bir dosyadan okur. Sistem bilgisi gönderilmez.</li>
-      <li>Bir bağlantıyı aç, yol tarifi al, ara ya da e-posta yaz düğmeleri yalnızca sen dokunduğunda ilgili uygulamayı açar.</li>
+      <li><strong>Why it asks:</strong> to read and update the history it shares with the Pastronaut app, to fetch your latest clips from your own iCloud database, to save a new copy when you tap Paste (or on opening, if you turned that on), and to pin or delete items.</li>
+      <li><strong>What it never does:</strong> it doesn't record, store or send what you type, has no other network connection than your own iCloud, and doesn't use your typing for anything else.</li>
+      <li><strong>Without Full Access</strong> the keyboard still shows the history the app last saved and types any item; it can't save new copies, change pins or fetch from iCloud.</li>
     </ul>
 
-    <h2>Klavye ve Tam Erişim</h2>
-    <p>Pastronaut klavyesi yazdıklarını kaydetmez ve hiçbir yere göndermez. Tam Erişim, klavyenin geçmişini uygulamayla paylaştığı alandan okuması ve iCloud'daki en yeni öğeleri kendisi alabilmesi içindir.</p>
+    <h2 id="en-system">6. Widgets, Shortcuts, Share and Spotlight</h2>
+    <p>Widgets show your latest clips on the Home Screen and Lock Screen; with the Face ID lock on, they hide clip text. Shortcuts actions, Siri, the Control Center button and the Share extension run on your device and only read or save clips at your request. Spotlight indexing is off by default; when on, it adds only pinned items to your device's search index. Face ID is handled by iOS; the app only receives a yes or no.</p>
 
-    <h2>Cihazda kalan diğer özellikler</h2>
+    <h2 id="en-previews">7. Optional link and map previews (iPhone and iPad)</h2>
+    <p>Previews are off until you choose to show them. When on:</p>
     <ul>
-      <li>Face ID kilidi ve görsellerdeki metni tanıma cihazında çalışır.</li>
-      <li>Spotlight (isteğe bağlı) yalnızca sabitlediğin öğeleri cihazdaki aramaya ekler.</li>
-      <li>Mac'te sırayla yapıştırma için istenen Erişilebilirlik izni yalnızca ⌘V'ye basıldığını görmek ve yapıştırmak için kullanılır; yazdıkların kaydedilmez.</li>
+      <li>for a copied link, your device loads the page directly from that website to show its title and image. The website sees an ordinary request from your device, including your IP address. Links that look like sign-in, password-reset, verification or other one-time links are never opened;</li>
+      <li>for a copied address, the address text is sent to Apple Maps to find it on a map, under <a href="https://www.apple.com/legal/privacy/data/en/apple-maps/">Apple's Maps privacy terms</a>. Copied coordinates are used directly.</li>
+    </ul>
+    <p>Previews are stored only on your device and are never synced. Nothing passes through us.</p>
+
+    <h2 id="en-mac">8. The Mac app</h2>
+    <ul>
+      <li><strong>Accessibility access</strong> (“Device Control and Data Access” on macOS 27) is used only to paste for you and to notice ⌘V while you paste a queue. Keystrokes are not recorded.</li>
+      <li><strong>Update checks:</strong> the version downloaded from GitHub uses Sparkle to check a file on GitHub for new versions, after asking you whether to check automatically. GitHub receives an ordinary web request, including your IP address and the app version. No system profile is sent. A version from the Mac App Store, if offered, updates through the App Store instead.</li>
+      <li><strong>Universal Clipboard</strong> is Apple's feature; Pastronaut only labels copies that arrive through it.</li>
     </ul>
 
-    <h2>Silme ve kontrol</h2>
-    <p>Geçmişi istediğin zaman temizleyebilir, öğe silebilir, eşitlemeyi kapatabilir ya da Ayarlar'dan iCloud verilerini tüm cihazlar için silebilirsin. Uygulamayı kaldırmak cihazdaki verileri de kaldırır. iCloud'daki veriyi Apple Hesabı ayarlarından da yönetebilirsin.</p>
+    <h2 id="en-contact-data">9. When you contact us; crash reports</h2>
+    <p>If you email us or open an issue on GitHub, we receive what you send (your email address or GitHub username and your message) and use it only to answer you and fix problems. GitHub issues are public. We delete emails when they are no longer needed, at the latest 12 months after the conversation ends, unless the law requires otherwise.</p>
+    <p>If you turn on “Share With App Developers” in your device's Analytics &amp; Improvements settings, Apple may give us crash reports and usage statistics without your identity; we use them only to fix bugs. You can turn this off at any time. See <a href="https://www.apple.com/legal/privacy/data/en/app-analytics/">Apple's description</a>.</p>
+    <p><strong>Legal bases:</strong> answering you and fixing bugs are our legitimate interests (GDPR and UK GDPR Art. 6(1)(f); KVKK Art. 5(2)(f)). Our email is provided by Google, and GitHub and Apple are in the United States, so messages and reports may be processed outside your country under those providers' safeguards.</p>
 
-    <h2>Çocuklar</h2>
-    <p>Pastronaut kimseden kişisel veri toplamadığı için çocuklardan da toplamaz.</p>
+    <h2 id="en-third">10. Third parties</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Who</th><th>When</th><th>What they receive</th><th>Their policy</th></tr></thead>
+        <tbody>
+          <tr><td>Apple (iCloud, Maps, App Store, crash reports)</td><td>Sync on; map previews on; downloads and updates from the App Store; crash sharing on</td><td>Your synced data in your own account; address text; App Store data; anonymous crash reports</td><td><a href="https://www.apple.com/legal/privacy/">apple.com/legal/privacy</a></td></tr>
+          <tr><td>GitHub (website, downloads, Mac updates, issues)</td><td>Visiting this site; downloading or checking for Mac updates; opening an issue</td><td>Ordinary web request data such as your IP address; what you write in an issue</td><td><a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub Privacy Statement</a></td></tr>
+          <tr><td>Websites you copy links to</td><td>Link previews on</td><td>An ordinary page request, including your IP address</td><td>That website's policy</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>We don't send your data to any of them: these are direct connections made by your device, and each company acts independently under its own policy. Pastronaut contains no analytics, advertising or tracking SDKs, so no other company receives data from the apps.</p>
 
-    <h2>Değişiklikler ve iletişim</h2>
-    <p>Bu politika değişirse bu sayfa ve tarih güncellenir. Sorular için: <a href="https://github.com/xkbxyberk/pastronaut/issues">GitHub'da bir konu aç</a>.</p>
-  </section>
+    <h2 id="en-dont">11. What we never do</h2>
+    <ul>
+      <li>Read, collect or store your clipboard history or what you type.</li>
+      <li>Sell, rent, share or trade personal data, or use it for advertising.</li>
+      <li>Track you across apps or websites, build profiles, or use analytics.</li>
+      <li>Require an account or sign-in.</li>
+      <li>Use cookies or trackers on this website.</li>
+    </ul>
+
+    <h2 id="en-choices">12. Your choices: delete and turn off</h2>
+    <ul>
+      <li>Delete single items, clear the history (pinned items too, if you choose) or set a time limit in the app.</li>
+      <li>Turn iCloud sync off in the app; delete synced data with “Delete iCloud Data” on the Mac or in your device's iCloud settings › Manage Storage.</li>
+      <li>Turn previews, “Save Clipboard on Opening” and Spotlight off in the iPhone app's Settings.</li>
+      <li>Remove Full Access or the keyboard in iOS Settings › General › Keyboard.</li>
+      <li>Turn off automatic update checks in the Mac app's settings.</li>
+      <li>Removing the apps removes their data from your devices.</li>
+    </ul>
+
+    <h2 id="en-rights">13. Your rights</h2>
+    <p>Depending on where you live (for example under the EU and UK GDPR or Türkiye's KVKK), you can ask us whether we hold personal data about you, get a copy, have it corrected or deleted, restrict or object to its use, receive it in a portable form, and learn who it was shared with. Since we hold nothing but messages you sent us, most requests are about those. Email <a href="mailto:sberkakbay@gmail.com">sberkakbay@gmail.com</a>; we answer free of charge within 30 days.</p>
+    <p>Please tell us first if you are unhappy with how we handled your data. You may also complain to your data protection authority: in the EU, <a href="https://www.edpb.europa.eu/about-edpb/about-edpb/members_en">your national authority</a>; in the UK, the <a href="https://ico.org.uk/make-a-complaint/">ICO</a>; in Türkiye, the <a href="https://www.kvkk.gov.tr">Personal Data Protection Authority (KVKK)</a>.</p>
+    <p><strong>California:</strong> we don't sell or share personal information. Because we don't track you, “Do Not Track” signals don't change anything.</p>
+
+    <h2 id="en-children">14. Children</h2>
+    <p>Pastronaut is a general-purpose utility, not directed to children under 13 (or under 16 where that applies). It collects no personal data from anyone, including children. If you believe a child has sent us personal data, email us and we will delete it.</p>
+
+    <h2 id="en-security">15. Security</h2>
+    <p>Data in iCloud is protected by Apple's account security and encryption as described above. The apps run in Apple's app sandbox, and the source code is public so anyone can review how data is handled. Please report security issues privately by email.</p>
+
+    <h2 id="en-changes">16. Changes to this policy</h2>
+    <p>If this policy changes, we update this page and the date at the top, and mention important changes in the release notes. Every earlier version is in the <a href="https://github.com/xkbxyberk/pastronaut/commits/gh-pages/privacy.html">version history</a>. This policy is available in English and Turkish; if they differ, the English version prevails unless the law requires otherwise.</p>
+
+    <h2 id="en-contact">17. Contact</h2>
+    <p>Berk Akbay, Türkiye · <a href="mailto:sberkakbay@gmail.com">sberkakbay@gmail.com</a> · <a href="https://github.com/xkbxyberk/pastronaut/issues">GitHub Issues</a> (public)</p>
+  </article>
 
   <hr>
 
-  <section id="en" lang="en">
-    <span class="lang">English</span>
-    <h1>Privacy policy</h1>
-    <p class="muted">Last updated: October 17, 2026. This policy covers Pastronaut for Mac, for iPhone and iPad, its keyboard, widgets and Share extension.</p>
+  <!-- ============================== TÜRKÇE ============================== -->
+  <article id="tr" lang="tr">
+    <h1>Gizlilik Politikası</h1>
+    <p class="meta">
+      Yürürlük: 18 Ekim 2026 · Son güncelleme: 18 Ekim 2026 ·
+      <a href="https://github.com/xkbxyberk/pastronaut/commits/gh-pages/privacy.html">Sürüm geçmişi</a> ·
+      <a href="https://github.com/xkbxyberk/pastronaut">Kaynak kod</a>
+    </p>
 
-    <div class="card">
-      <strong>In short:</strong> Pastronaut collects no data about you. What you copy stays on your devices and in your own iCloud account. We run no servers, analytics or ads, and we don't track you.
+    <div class="glance">
+      <strong>Kısaca</strong>
+      <ul>
+        <li>Pastronaut'ta <strong>hesap, sunucu, analiz, reklam ve üçüncü taraf SDK yoktur</strong>. Verilerini satmayız, paylaşmayız, onlara bakmayız.</li>
+        <li>Pano geçmişin <strong>cihazlarında</strong> ve eşitlemeyi açarsan <strong>kendi Apple Hesabının özel iCloud veritabanında</strong> durur. Biz ona erişemeyiz.</li>
+        <li>Öğe metinleri yüklenmeden önce <strong>cihazında şifrelenir</strong>; Apple'ın Gelişmiş Veri Koruması'nı açarsan <strong>uçtan uca şifreli</strong> olur.</li>
+        <li>Uygulamalar yalnızca Apple'ın iCloud'una, <strong>isteğe bağlı</strong> önizlemeler için web sitelerine ve Apple Haritalar'a, Mac güncellemeleri için de GitHub'a bağlanır.</li>
+        <li>Elimize geçen tek kişisel veri, bize yazdığında gönderdiklerin ve cihaz ayarlarında geliştiricilerle paylaşmayı seçersen çökme raporlarıdır.</li>
+        <li>Pastronaut açık kaynaktır; buradaki her ifadeyi kodda doğrulayabilirsin.</li>
+      </ul>
     </div>
 
-    <h2>What is stored where</h2>
+    <ol class="toc">
+      <li><a href="#tr-who">Biz kimiz, bu politika neyi kapsar</a></li>
+      <li><a href="#tr-summary">Verilerin bir bakışta</a></li>
+      <li><a href="#tr-device">Cihazlarında</a></li>
+      <li><a href="#tr-icloud">iCloud eşitlemesi</a></li>
+      <li><a href="#tr-keyboard">iPhone klavyesi ve Tam Erişim</a></li>
+      <li><a href="#tr-system">Widget'lar, Kestirmeler, Paylaş ve Spotlight</a></li>
+      <li><a href="#tr-previews">İsteğe bağlı bağlantı ve harita önizlemeleri</a></li>
+      <li><a href="#tr-mac">Mac uygulaması</a></li>
+      <li><a href="#tr-contact-data">Bize yazdığında; çökme raporları</a></li>
+      <li><a href="#tr-third">Üçüncü taraflar</a></li>
+      <li><a href="#tr-dont">Asla yapmadıklarımız</a></li>
+      <li><a href="#tr-choices">Seçeneklerin: silme ve kapatma</a></li>
+      <li><a href="#tr-rights">Hakların</a></li>
+      <li><a href="#tr-children">Çocuklar</a></li>
+      <li><a href="#tr-security">Güvenlik</a></li>
+      <li><a href="#tr-changes">Bu politikadaki değişiklikler</a></li>
+      <li><a href="#tr-contact">İletişim</a></li>
+    </ol>
+
+    <h2 id="tr-who">1. Biz kimiz, bu politika neyi kapsar</h2>
+    <p>Pastronaut, Türkiye'de bireysel geliştirici <strong>Berk Akbay</strong> (“biz”) tarafından geliştirilen ücretsiz ve açık kaynak bir pano yöneticisidir. <a href="#tr-contact-data">9. bölümde</a> anlatılan sınırlı kişisel veri için veri sorumlusu odur. İletişim: <a href="mailto:sberkakbay@gmail.com">sberkakbay@gmail.com</a>.</p>
+    <p>Bu politika Mac için Pastronaut'u, iPhone ve iPad için Pastronaut'u, klavyesini, widget'larını, Denetim Merkezi düğmesini, Paylaş uzantısını, Kestirmeler eylemlerini ve bu web sitesini kapsar. Pastronaut açık kaynak Maccy uygulamasına dayanır, onunla bağlantılı değildir.</p>
+
+    <h2 id="tr-summary">2. Verilerin bir bakışta</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Veri</th><th>Nerede</th><th>Kim okuyabilir</th><th>Nasıl silinir</th></tr></thead>
+        <tbody>
+          <tr><td>Pano geçmişi (metin, bağlantı; Mac'te görsel ve dosya), sabitlenenler, koleksiyonlar, ayarlar</td><td>Cihazların</td><td>Sen</td><td>Uygulamada öğe sil ya da geçmişi temizle; uygulamayı kaldırmak da siler</td></tr>
+          <tr><td>Eşitlenen metin öğeleri, sabitleme durumu, koleksiyonlar</td><td>iCloud hesabının özel veritabanı (yalnızca eşitleme açıksa)</td><td>Sen; Apple kendi politikasıyla saklar; <strong>biz değil</strong></td><td>Uygulamada sil, Mac'te “iCloud Verilerini Sil”, ya da iCloud ayarları › Saklama Alanını Yönet</td></tr>
+          <tr><td>Bağlantı ve harita önizlemeleri</td><td>iPhone'un (önbellek)</td><td>Sen</td><td>Önizlemeleri kapat; cihazdan silinir</td></tr>
+          <tr><td>Bize gönderdiğin mesajlar</td><td>E-posta kutumuz ya da GitHub</td><td>Biz</td><td>Silmemizi iste</td></tr>
+          <tr><td>Paylaşmayı seçtiğin çökme raporları</td><td>Apple; bize kimliğin olmadan gösterilir</td><td>Apple ve biz</td><td>Cihazının gizlilik ayarlarından paylaşmayı kapat</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="tr-device">3. Cihazlarında</h2>
+    <p>Mac uygulaması, her pano yöneticisi gibi panoyu izler ve kopyaladıklarının geçmişini tutar. Parola yöneticilerinin ve başka uygulamaların gizli ya da geçici diye işaretlediği kopyalar hiç kaydedilmez; yok sayılacak uygulama ve türler ekleyebilirsin. Geçmiş, uygulamanın Mac'teki kendi depolama alanında durur; varsayılan olarak sabitlenmemiş son 200 öğeyi tutar, istersen daha kısa bir süre sınırı seçebilirsin (örneğin bir hafta). Kopyalanan görsellerdeki metin Mac'in kendisinde tanınır.</p>
+    <p>iPhone ve iPad'de uygulama, eşitlenen geçmişi kendi depolama alanında tutar ve cihazdaki bir App Group alanı üzerinden yalnızca kendi klavyesi, widget'ları ve Paylaş uzantısıyla paylaşır. “Açılınca Panoyu Kaydet”i açarsan uygulama (ve Tam Erişim'le klavyesi) açıldığında panodaki yeni metni kaydeder; tek kullanımlık kodlar, kart numaraları ve IBAN'lar atlanır. Bir uygulama panoyu okuduğunda iOS kendi bildirimini gösterir.</p>
+
+    <h2 id="tr-icloud">4. iCloud eşitlemesi</h2>
     <ul>
-      <li><strong>On your device:</strong> your clipboard history (text, images, file references), pins, collections and settings. Images and files stay on the Mac.</li>
-      <li><strong>In your own iCloud:</strong> if you turn on sync, text clips, pins and collections are written to your <em>private</em> iCloud database with Apple's CloudKit. Text, source app and collection names are end-to-end encrypted; record names are derived with a key unique to your account. We cannot access this data. Fields such as dates, kind and pin state are not encrypted but stay in your account only.</li>
-      <li><strong>Skipped:</strong> copies that password managers mark as concealed never enter the history. Optionally, one-time codes and card numbers are kept out of sync and out of the iPhone's saved copies.</li>
+      <li><strong>Sen açana kadar kapalıdır.</strong> Açıkken metin öğeleri, sabitleme durumları, oluşturduğun koleksiyonlar ve tarihleri Apple'ın CloudKit hizmetiyle Apple Hesabının <em>özel</em> veritabanına eşitlenir. Görseller ve dosyalar eşitlenmez.</li>
+      <li><strong>Şifreleme.</strong> Öğe metni, kaynak uygulama ve koleksiyon adları CloudKit'in şifreli alanlarına yazılır: yüklenmeden önce cihazında, anahtarları iCloud Anahtar Zinciri'nde tutulan bir şifreyle şifrelenir. <a href="https://support.apple.com/tr-tr/102651">Gelişmiş Veri Koruması</a>'nı açtığında bu anahtarlar yalnızca senin cihazlarında bulunur (uçtan uca şifreleme). Tarihler, öğenin türü (örneğin “bağlantı”), geldiği cihaz ve sabitleme durumu bu ek şifreleme olmadan saklanır. Kayıt adları hesabına özel bir anahtarla üretilir; metni ele vermez.</li>
+      <li><strong>Kim görebilir.</strong> Özel iCloud veritabanına erişimimiz ve içeriğinin bir kopyası yoktur. Apple onu <a href="https://www.apple.com/tr/legal/privacy/">Apple Gizlilik Politikası</a> ve iCloud koşullarıyla saklar.</li>
+      <li><strong>İsteğe bağlı süzgeçler.</strong> Mac'te tek kullanımlık kodları (5 dakika sonra Mac'ten de silinir) ve kart numaralarını eşitlemenin dışında tutabilir ya da yalnızca sabitlenenleri eşitleyebilirsin.</li>
+      <li><strong>Saklama süresi.</strong> Eşitlenen öğeler sen silene kadar durur; bir cihazda silmek ya da temizlemek onları iCloud'dan ve diğer cihazlarından da siler. Eşitlemeyi kapatmak iCloud verisini silmez; bunun için Mac uygulamasının eşitleme ayarlarındaki “iCloud Verilerini Sil”i ya da cihazının iCloud ayarları › Saklama Alanını Yönet'i kullan.</li>
     </ul>
 
-    <h2>Network connections</h2>
+    <h2 id="tr-keyboard">5. iPhone klavyesi ve Tam Erişim</h2>
+    <p>Tam Erişim'e izin verdiğinde iOS, bir klavyenin yazdıklarını gönderebileceği uyarısını gösterir. Pastronaut klavyesinin bu izinle tam olarak yaptıkları:</p>
     <ul>
-      <li><strong>iCloud (Apple):</strong> for sync only.</li>
-      <li><strong>Link and map previews (iPhone, optional):</strong> when turned on, a copied link's page is opened directly from its site and an address is looked up in Apple Maps. Sign-in, password-reset and other one-time-looking links are never opened. Previews are kept on the device only and are not synced.</li>
-      <li><strong>Update check (Mac, GitHub release):</strong> the app reads a file on GitHub to see whether a new version exists. No system profile is sent.</li>
-      <li>Open link, directions, call and email buttons open the matching app only when you tap them.</li>
+      <li><strong>Neden ister:</strong> Pastronaut uygulamasıyla paylaştığı geçmişi okumak ve güncellemek, en yeni öğeleri kendi iCloud veritabanından almak, Yapıştır'a dokunduğunda (ya da bunu açtıysan açılışta) yeni kopyayı kaydetmek, öğe sabitlemek ve silmek için.</li>
+      <li><strong>Asla yapmadıkları:</strong> yazdıklarını kaydetmez, saklamaz, göndermez; kendi iCloud'un dışında hiçbir ağ bağlantısı kurmaz; yazdıklarını başka hiçbir amaçla kullanmaz.</li>
+      <li><strong>Tam Erişim olmadan</strong> klavye, uygulamanın en son kaydettiği geçmişi gösterir ve istediğin öğeyi yazar; yeni kopya kaydedemez, sabitleme değiştiremez, iCloud'dan veri alamaz.</li>
     </ul>
 
-    <h2>Keyboard and Full Access</h2>
-    <p>The Pastronaut keyboard doesn't record what you type and sends nothing anywhere. Full Access lets it read the history the app shares with it and fetch the newest clips from your iCloud itself.</p>
+    <h2 id="tr-system">6. Widget'lar, Kestirmeler, Paylaş ve Spotlight</h2>
+    <p>Widget'lar son öğelerini Ana Ekran'da ve Kilitli Ekran'da gösterir; Face ID kilidi açıksa öğe metnini gizler. Kestirmeler eylemleri, Siri, Denetim Merkezi düğmesi ve Paylaş uzantısı cihazında çalışır ve öğeleri yalnızca senin isteğinle okur ya da kaydeder. Spotlight dizinlemesi varsayılan olarak kapalıdır; açıkken yalnızca sabitlenen öğeleri cihazının aramasına ekler. Face ID'yi iOS yürütür; uygulama yalnızca evet ya da hayır yanıtı alır.</p>
 
-    <h2>Other on-device features</h2>
+    <h2 id="tr-previews">7. İsteğe bağlı bağlantı ve harita önizlemeleri (iPhone ve iPad)</h2>
+    <p>Önizlemeler sen göstermeyi seçene kadar kapalıdır. Açıkken:</p>
     <ul>
-      <li>Face ID lock and text recognition in images run on the device.</li>
-      <li>Spotlight (optional) adds only your pinned clips to on-device search.</li>
-      <li>On the Mac, the Accessibility access requested for pasting in order is used only to notice ⌘V and to paste; keystrokes are not recorded.</li>
+      <li>kopyaladığın bir bağlantı için cihazın, başlığını ve görselini göstermek üzere sayfayı doğrudan o siteden yükler. Site, cihazından gelen sıradan bir isteği ve IP adresini görür. Giriş, parola sıfırlama, doğrulama ya da başka tek kullanımlık görünen bağlantılar hiç açılmaz;</li>
+      <li>kopyaladığın bir adres için adres metni, haritada bulunması için <a href="https://www.apple.com/legal/privacy/data/tr/apple-maps/">Apple Haritalar'ın gizlilik koşullarıyla</a> Apple Haritalar'a gönderilir. Kopyalanan koordinatlar doğrudan kullanılır.</li>
+    </ul>
+    <p>Önizlemeler yalnızca cihazında saklanır, hiç eşitlenmez. Hiçbir şey bizden geçmez.</p>
+
+    <h2 id="tr-mac">8. Mac uygulaması</h2>
+    <ul>
+      <li><strong>Erişilebilirlik izni</strong> (macOS 27'de “Aygıt Denetimi ve Veri Erişimi”) yalnızca senin yerine yapıştırmak ve sırayla yapıştırırken ⌘V'yi fark etmek için kullanılır. Tuş vuruşları kaydedilmez.</li>
+      <li><strong>Güncelleme denetimi:</strong> GitHub'dan indirilen sürüm, otomatik denetlemek isteyip istemediğini sorduktan sonra Sparkle ile GitHub'daki bir dosyadan yeni sürüm olup olmadığına bakar. GitHub, IP adresin ve uygulama sürümü dahil sıradan bir web isteği alır. Sistem bilgisi gönderilmez. Mac App Store sürümü sunulursa o sürüm App Store üzerinden güncellenir.</li>
+      <li><strong>Evrensel Pano</strong> Apple'ın özelliğidir; Pastronaut yalnızca bu yolla gelen kopyaları etiketler.</li>
     </ul>
 
-    <h2>Deletion and control</h2>
-    <p>You can clear the history, delete clips, turn off sync, or delete the iCloud data for all devices in Settings at any time. Removing the app removes its data from the device. You can also manage iCloud data in your Apple Account settings.</p>
+    <h2 id="tr-contact-data">9. Bize yazdığında; çökme raporları</h2>
+    <p>Bize e-posta gönderirsen ya da GitHub'da bir konu açarsan gönderdiklerini (e-posta adresin ya da GitHub kullanıcı adın ve mesajın) alırız ve yalnızca sana yanıt vermek ve sorunları düzeltmek için kullanırız. GitHub konuları herkese açıktır. E-postaları artık gerekmediğinde, en geç yazışma bittikten 12 ay sonra, yasa aksini gerektirmedikçe sileriz.</p>
+    <p>Cihazının Analiz ve İyileştirmeler ayarlarında “Uygulama Geliştiricileriyle Paylaş”ı açarsan Apple bize kimliğin olmadan çökme raporları ve kullanım istatistikleri verebilir; bunları yalnızca hataları düzeltmek için kullanırız. Bunu istediğin zaman kapatabilirsin. Bkz. <a href="https://www.apple.com/legal/privacy/data/tr/app-analytics/">Apple'ın açıklaması</a>.</p>
+    <p><strong>Hukuki sebepler:</strong> sana yanıt vermek ve hataları düzeltmek meşru menfaatimizdir (KVKK m. 5/2-f; GDPR ve UK GDPR m. 6/1-f). E-posta hizmetimizi Google sağlar; GitHub ve Apple Amerika Birleşik Devletleri'ndedir. Bu nedenle mesajlar ve raporlar, bu sağlayıcıların güvenceleriyle yurt dışında işlenebilir.</p>
 
-    <h2>Children</h2>
-    <p>Pastronaut collects no personal data from anyone, including children.</p>
+    <h2 id="tr-third">10. Üçüncü taraflar</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Kim</th><th>Ne zaman</th><th>Ne alır</th><th>Politikası</th></tr></thead>
+        <tbody>
+          <tr><td>Apple (iCloud, Haritalar, App Store, çökme raporları)</td><td>Eşitleme açık; harita önizlemeleri açık; App Store'dan indirme ve güncelleme; çökme paylaşımı açık</td><td>Kendi hesabındaki eşitlenmiş verin; adres metni; App Store verisi; kimliksiz çökme raporları</td><td><a href="https://www.apple.com/tr/legal/privacy/">apple.com/tr/legal/privacy</a></td></tr>
+          <tr><td>GitHub (web sitesi, indirmeler, Mac güncellemeleri, konular)</td><td>Bu siteyi ziyaret; Mac için indirme ya da güncelleme denetimi; konu açma</td><td>IP adresi gibi sıradan web isteği bilgileri; bir konuda yazdıkların</td><td><a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub Gizlilik Bildirimi</a></td></tr>
+          <tr><td>Bağlantısını kopyaladığın web siteleri</td><td>Bağlantı önizlemeleri açık</td><td>IP adresin dahil sıradan bir sayfa isteği</td><td>O sitenin politikası</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Verilerini bunların hiçbirine biz göndermeyiz: bunlar cihazının kurduğu doğrudan bağlantılardır ve her şirket kendi politikasıyla bağımsız olarak hareket eder. Pastronaut'ta analiz, reklam ya da izleme SDK'sı yoktur; uygulamalardan başka hiçbir şirkete veri gitmez.</p>
 
-    <h2>Changes and contact</h2>
-    <p>If this policy changes, this page and its date are updated. Questions: <a href="https://github.com/xkbxyberk/pastronaut/issues">open an issue on GitHub</a>.</p>
-  </section>
+    <h2 id="tr-dont">11. Asla yapmadıklarımız</h2>
+    <ul>
+      <li>Pano geçmişini ya da yazdıklarını okumak, toplamak ya da saklamak.</li>
+      <li>Kişisel verileri satmak, kiralamak, paylaşmak, takas etmek ya da reklam için kullanmak.</li>
+      <li>Seni uygulamalar ve siteler arasında izlemek, profil çıkarmak, analiz aracı kullanmak.</li>
+      <li>Hesap ya da oturum açma istemek.</li>
+      <li>Bu sitede çerez ya da izleyici kullanmak.</li>
+    </ul>
+
+    <h2 id="tr-choices">12. Seçeneklerin: silme ve kapatma</h2>
+    <ul>
+      <li>Uygulamada tek tek öğe sil, geçmişi temizle (istersen sabitlenenleri de) ya da bir süre sınırı belirle.</li>
+      <li>iCloud eşitlemesini uygulamadan kapat; eşitlenen veriyi Mac'te “iCloud Verilerini Sil” ile ya da cihazının iCloud ayarları › Saklama Alanını Yönet'ten sil.</li>
+      <li>Önizlemeleri, “Açılınca Panoyu Kaydet”i ve Spotlight'ı iPhone uygulamasının Ayarlar'ından kapat.</li>
+      <li>Tam Erişim'i ya da klavyeyi iOS Ayarlar › Genel › Klavye'den kaldır.</li>
+      <li>Otomatik güncelleme denetimini Mac uygulamasının ayarlarından kapat.</li>
+      <li>Uygulamaları kaldırmak verilerini cihazlarından da kaldırır.</li>
+    </ul>
+
+    <h2 id="tr-rights">13. Hakların</h2>
+    <p>6698 sayılı KVKK'nın 11. maddesi ve yaşadığın yere göre AB ve Birleşik Krallık GDPR'ı kapsamında; hakkında kişisel veri işlenip işlenmediğini öğrenme, işlenmişse bilgi ve kopya isteme, işlenme amacını ve amaca uygun kullanılıp kullanılmadığını öğrenme, yurt içinde ya da yurt dışında aktarıldığı kişileri bilme, eksik ya da yanlışsa düzeltilmesini, silinmesini ya da yok edilmesini ve bunun aktarılan kişilere bildirilmesini isteme, işlemeye itiraz etme ya da kısıtlanmasını isteme, verini taşınabilir biçimde alma ve kanuna aykırı işleme nedeniyle zarara uğrarsan bunun giderilmesini talep etme hakların vardır. Elimizde yalnızca bize gönderdiğin mesajlar bulunduğundan taleplerin çoğu bunlarla ilgili olacaktır. <a href="mailto:sberkakbay@gmail.com">sberkakbay@gmail.com</a> adresine yaz; en geç 30 gün içinde ücretsiz yanıt veririz.</p>
+    <p>Verilerinle ilgili bir şikâyetin varsa önce bize bildir. Ayrıca veri koruma otoritesine başvurabilirsin: Türkiye'de <a href="https://www.kvkk.gov.tr">Kişisel Verileri Koruma Kurumu</a> (KVKK m. 13–14 uyarınca önce bize başvurduktan sonra), AB'de <a href="https://www.edpb.europa.eu/about-edpb/about-edpb/members_en">ülkendeki otorite</a>, Birleşik Krallık'ta <a href="https://ico.org.uk/make-a-complaint/">ICO</a>.</p>
+    <p><strong>Kaliforniya:</strong> kişisel bilgileri satmayız ve paylaşmayız. Seni izlemediğimiz için “Do Not Track” (İzleme) sinyalleri hiçbir şeyi değiştirmez.</p>
+
+    <h2 id="tr-children">14. Çocuklar</h2>
+    <p>Pastronaut genel amaçlı bir araçtır; 13 yaşın (geçerli olduğu yerlerde 16 yaşın) altındaki çocuklara yönelik değildir. Çocuklar dahil kimseden kişisel veri toplamaz. Bir çocuğun bize kişisel veri gönderdiğini düşünüyorsan bize yaz, sileriz.</p>
+
+    <h2 id="tr-security">15. Güvenlik</h2>
+    <p>iCloud'daki veriler, yukarıda anlatıldığı gibi Apple'ın hesap güvenliği ve şifrelemesiyle korunur. Uygulamalar Apple'ın uygulama korumalı alanında (sandbox) çalışır ve kaynak kodu herkese açıktır; verilerin nasıl işlendiğini herkes inceleyebilir. Güvenlik sorunlarını lütfen e-postayla, gizli olarak bildir.</p>
+
+    <h2 id="tr-changes">16. Bu politikadaki değişiklikler</h2>
+    <p>Bu politika değişirse bu sayfayı ve üstteki tarihi güncelleriz, önemli değişiklikleri sürüm notlarında belirtiriz. Önceki her sürüm <a href="https://github.com/xkbxyberk/pastronaut/commits/gh-pages/privacy.html">sürüm geçmişinde</a> durur. Bu politika İngilizce ve Türkçe yayımlanır; iki metin farklıysa, yasa aksini gerektirmedikçe İngilizce metin esas alınır.</p>
+
+    <h2 id="tr-contact">17. İletişim</h2>
+    <p>Berk Akbay, Türkiye · <a href="mailto:sberkakbay@gmail.com">sberkakbay@gmail.com</a> · <a href="https://github.com/xkbxyberk/pastronaut/issues">GitHub Issues</a> (herkese açık)</p>
+  </article>
 
   <footer>
-    Pastronaut is based on <a href="https://github.com/p0deje/Maccy">Maccy</a> (MIT) and is not affiliated with it.
+    Pastronaut is based on <a href="https://github.com/p0deje/Maccy">Maccy</a> (MIT) and is not affiliated with it. ·
+    <a href="index.html">Home</a>
   </footer>
 </main>
 </body>

@@ -15,7 +15,7 @@ public enum ClipRecord {
   public static var legacyZoneID: CKRecordZone.ID { CKRecordZone.ID(zoneName: legacyZoneName) }
 
   enum Field {
-    // Encrypted (end-to-end, not visible in the CloudKit console).
+    // Encrypted on the device (CloudKit encryptedValues; end-to-end with Advanced Data Protection). Not visible in the CloudKit console.
     static let text = "text"
     static let sourceApp = "sourceApp"
     static let sourceAppName = "sourceAppName"

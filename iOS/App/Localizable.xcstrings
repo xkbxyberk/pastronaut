@@ -1724,17 +1724,6 @@
         }
       }
     },
-    "Text clips sync through your private iCloud database. Clip text and collection names are end-to-end encrypted, and iCloud can't tell which texts you saved.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metin öğeleri özel iCloud veritabanın üzerinden eşitlenir. Öğe metinleri ve koleksiyon adları uçtan uca şifrelenir; iCloud hangi metinleri kaydettiğini anlayamaz."
-          }
-        }
-      }
-    },
     "Address": {
       "extractionState": "manual",
       "localizations": {
@@ -2050,6 +2039,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Herhangi bir uygulamadan metni Pastronaut'la paylaş."
+          }
+        }
+      }
+    },
+    "Text clips sync through your private iCloud database. Clip text and collection names are encrypted on this device before upload (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin öğeleri özel iCloud veritabanın üzerinden eşitlenir. Öğe metinleri ve koleksiyon adları yüklenmeden önce bu cihazda şifrelenir (Gelişmiş Veri Koruması açıksa uçtan uca); iCloud hangi metinleri kaydettiğini anlayamaz."
+          }
+        }
+      }
+    },
+    "Privacy Policy": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizlilik Politikası"
           }
         }
       }
