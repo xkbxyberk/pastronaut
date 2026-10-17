@@ -191,6 +191,40 @@ final class SyncStepTests: XCTestCase {
       Thread.sleep(forTimeInterval: 1)
       attachScreenshot(named: "settings-privacy-link")
       report(["ok": link.exists])
+    case "keyboardCheck":
+      // The keyboard with whatever Full Access the device has now (App Review 4.4.1: it must work without it),
+      // on made-up clips: it should list them and type one into the app's search field.
+      defer {
+        app.terminate()
+        app.launchEnvironment["PT_DEMO"] = nil
+        app.launch()
+        Thread.sleep(forTimeInterval: 3)
+      }
+      app.launchEnvironment["PT_DEMO"] = "1"
+      app.launch()
+      let search = app.searchFields.firstMatch
+      guard search.waitForExistence(timeout: 5) else {
+        report(["ok": false, "reason": "no search field"])
+        return
+      }
+      search.tap()
+      guard showPastronautKeyboard(in: app) else {
+        report(["ok": false, "reason": "keyboard not shown"])
+        return
+      }
+      Thread.sleep(forTimeInterval: 2)
+      attachScreenshot(named: "kb-check")
+      let tiles = app.descendants(matching: .any).matching(identifier: "kbClip")
+      let count = tiles.count
+      var typed = ""
+      if count > 0 {
+        tiles.element(boundBy: 0).tap()
+        Thread.sleep(forTimeInterval: 1)
+        typed = (search.value as? String) ?? ""
+        attachScreenshot(named: "kb-check-typed")
+      }
+      let fromMac = app.descendants(matching: .any)["fromMacChip"].firstMatch.exists
+      report(["ok": count > 0 && !typed.isEmpty, "tiles": count, "fromMacChip": fromMac, "typed": String(typed.prefix(40))])
     case "readmeShots":
       // README and store pictures: made-up clips (PT_DEMO, no sync), English, cards and list, light and dark,
       // a collection, the keyboard. Ends by launching normally, which puts the real history back for the keyboard.
