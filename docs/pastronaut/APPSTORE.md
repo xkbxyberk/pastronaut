@@ -1,7 +1,16 @@
-# App Store Connect: Pastronaut for iPhone and iPad (draft, 2026-10-18)
+# App Store Connect: Pastronaut for iPhone (draft, 2026-10-18)
 
 Copy-ready metadata (English primary, Turkish localization) and the answers for App Store Connect. Character limits
 in brackets. Checked against the app as of commit `daf0da7`.
+
+## Where each field goes in App Store Connect
+- **App Information** (General): name, subtitle, category, content rights, age rating, license agreement (Apple's
+  standard EULA). Encryption documentation: nothing to upload (only the OS's encryption; Info.plist says so).
+  Digital Services Act: non-trader (free, non-commercial). Server notifications, shared secret: not used.
+- **iOS App › 1.0 Prepare for Submission**: screenshots, promotional text, description, keywords, support and
+  marketing URLs, copyright, App Review information (sign-in not required, contact, notes), build.
+- **Trust & Safety › App Privacy**: privacy policy URL, data collection ("No").
+- **Monetization › Pricing and Availability**: free, all countries.
 
 ## App information
 - **Name** [30]: `Pastronaut` · TR: `Pastronaut: Pano Geçmişi` (24). App names are unique per localization, and
@@ -34,7 +43,7 @@ TR: `pano,pano yöneticisi,kopyala,yapıştır,geçmiş,klavye,mac,eşitleme,not
 ## Description [4000]
 ### English
 ```
-Pastronaut brings your Mac's clipboard history to your iPhone and iPad through your own iCloud.
+Pastronaut brings your Mac's clipboard history to your iPhone through your own iCloud.
 
 Everything you copy on your Mac shows up here: in the app, in a keyboard that types any item with one tap, in widgets and in Shortcuts. Copies you save on your iPhone go back to the Mac.
 
@@ -62,7 +71,7 @@ Pastronaut is free, with no in-app purchases, and its source code is public. It 
 
 ### Türkçe
 ```
-Pastronaut, Mac'inin pano geçmişini kendi iCloud'un üzerinden iPhone ve iPad'ine taşır.
+Pastronaut, Mac'inin pano geçmişini kendi iCloud'un üzerinden iPhone'una taşır.
 
 Mac'te kopyaladığın her şey burada: uygulamada, herhangi bir öğeyi tek dokunuşla yazan klavyede, widget'larda ve Kestirmeler'de. iPhone'da kaydettiğin kopyalar da Mac'e geri gider.
 
