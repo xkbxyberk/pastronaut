@@ -13,6 +13,8 @@ Keep the iPhone unlocked and connected. Usage:
 """
 
 import argparse
+import base64
+import hashlib
 import json
 import os
 import subprocess
@@ -56,12 +58,12 @@ def mac_copy(text, concealed=False):
 _dump_counter = 0
 
 
-def mac_state(prefix="PTEST", op="dump", text=None):
+def mac_state(prefix="PTEST", op="dump", text=None, **extra):
     """Sends a command and returns the state the Mac logs right after it."""
     global _dump_counter
     _dump_counter += 1
     tag = f"d{_dump_counter}"
-    command = {"op": op, "prefix": prefix, "tag": tag}
+    command = {"op": op, "prefix": prefix, "tag": tag, **extra}
     if text is not None:
         command["text"] = text
     mac_post(command)
@@ -129,8 +131,9 @@ def ios_step(op, text="", match="", timeout=30, on_ready=None, action=""):
     xcodebuild sometimes hangs before the test starts (seen once with the iPhone connected and unlocked);
     such a step is stopped and tried once more instead of blocking the whole run."""
     result = _ios_step_once(op, text, match, timeout, on_ready, action)
-    if result.get("reason") == "xcodebuild hung":
-        log(f"  {op}: xcodebuild hung, trying once more")
+    if result.get("reason") == "xcodebuild hung" or "failed to initialize for UI testing" in result.get("tail", ""):
+        # The second case: "Timed out while enabling automation mode", before the step itself ran.
+        log(f"  {op}: {result.get('reason')}, trying once more")
         result = _ios_step_once(op, text, match, timeout, on_ready, action)
     return result
 
@@ -206,6 +209,20 @@ def ios_mirror():
     """Clips the iPhone app holds in its sync mirror (its view of iCloud)."""
     state = ios_file("clip-sync.json") or {}
     return [entry["clip"] for entry in state.get("entries", {}).values()]
+
+
+def ios_collections():
+    """Collection names in the iPhone's mirror, and clip text → its collection names."""
+    state = ios_file("clip-sync.json") or {}
+    names = {key: entry["collection"]["name"] for key, entry in state.get("collections", {}).items()}
+    members = {entry["clip"]["text"]: [names.get(i, "?") for i in entry["clip"].get("collectionIDs", [])]
+               for entry in state.get("entries", {}).values()}
+    return set(names.values()), members, state
+
+
+def ios_key_fingerprint():
+    key = (ios_file("sync-key.json") or {}).get("data")
+    return hashlib.sha256(base64.b64decode(key)).hexdigest()[:16] if key else None
 
 
 def ios_snapshot():
@@ -485,6 +502,56 @@ def main():
           not r.get("visible") and not on_iphone and not on_mac,
           f"row {r.get('visible')}, iPhone {on_iphone}, Mac {on_mac}")
 
+    # 30. Record names are private: keyed on both devices with the same key, and the original zone is gone.
+    state = mac_state()
+    _, _, ios_state = ios_collections()
+    mac_fp, ios_fp = state.get("keyFingerprint"), ios_key_fingerprint()
+    keyed = all(item.get("keyedName") for item in state["mirror"])
+    check("T30", "Record names keyed with one shared key; original zone removed",
+          state.get("hasKey") and mac_fp and mac_fp == ios_fp and keyed
+          and state.get("oldZoneCleared") and ios_state.get("needsLegacyCleanup") is False,
+          f"mac={mac_fp} iphone={ios_fp} keyed={keyed} macOldZoneCleared={state.get('oldZoneCleared')} "
+          f"iphoneNeedsCleanup={ios_state.get('needsLegacyCleanup')}")
+
+    # 31. A collection made on the Mac reaches the iPhone with its clip.
+    col_mac = f"PTEST {run} Mac"
+    m1 = f"{prefix} M1 in a Mac collection"
+    mac_copy(m1)
+    time.sleep(2)
+    mac_state(op="collect", text=m1, name=col_mac)
+    r = ios_step("openCollection", m1, action=col_mac, timeout=90)
+    names, members, _ = ios_collections()
+    check("T31", "Collection made on Mac → iPhone (chip and membership)",
+          r.get("ok") and col_mac in names and col_mac in members.get(m1, []), f"{r} names={names}")
+
+    # 32. A collection made on the iPhone reaches the Mac.
+    col_ios = f"PTEST {run} iPhone"
+    m2 = f"{prefix} M2 in an iPhone collection"
+    mac_copy(m2)
+    ios_step("waitVisible", m2, timeout=90)
+    r = ios_step("collect", m2, action=col_ios, timeout=30)
+
+    def mac_has_membership(s):
+        clip = next((item for item in s["mirror"] if m2 in item["text"]), None)
+        return col_ios in s.get("collections", []) and clip is not None and col_ios in clip.get("collections", [])
+    ok, secs, s = mac_wait("iPhone collection", mac_has_membership, 90)
+    kept = (mac_item(s, m2) or {}).get("kept") if s else None
+    check("T32", "Collection made on iPhone → Mac, clip is kept there",
+          r.get("ok") and ok and kept is True, f"{secs}s step={r} kept={kept}")
+
+    # 33. Deleting a collection keeps its clips everywhere.
+    mac_state(op="deleteCollection", name=col_mac)
+    r = ios_step("waitVisible", m1, timeout=60)
+    deadline = time.time() + 60
+    while time.time() < deadline:
+        names, members, _ = ios_collections()
+        if col_mac not in names:
+            break
+        time.sleep(3)
+    check("T33", "Deleted collection leaves its clips (iPhone keeps the clip, drops the collection)",
+          r.get("ok") and col_mac not in names and m1 in members, f"names={names} clipThere={m1 in members}")
+    mac_state(op="deleteCollection", name=col_ios)
+
     # 15. Changes made while the Mac app is closed arrive when it starts.
     mac_quit()
     r1 = ios_step("save", g)
@@ -493,10 +560,10 @@ def main():
     ok, secs, _ = mac_wait("catch-up", lambda s: mac_item(s, g) is not None
                            and (mac_item(s, a) or {}).get("pinned") is True, 90)
     check("T15", "Mac catches up on launch (save + pin made while it was closed)",
-          r1.get("ok") and r2.get("ok") and ok, f"{secs}s")
+          r1.get("ok") and r2.get("ok") and ok, f"{secs}s save={r1} pin={r2}")
 
     # 16. Clean up through the Mac; the iPhone must follow.
-    for text in (a, c, g, f, k, y, n, auto):
+    for text in (a, c, g, f, k, y, n, auto, m1, m2):
         mac_state(op="delete", text=text)
     r = ios_step("waitGone", a, timeout=120)
     time.sleep(5)

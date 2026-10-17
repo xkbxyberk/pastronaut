@@ -65,6 +65,13 @@ final class SyncStepTests: XCTestCase {
       element.swipeRight()
       // Identifiers, not labels: the app follows the device language.
       let button = app.buttons["pinAction"].firstMatch
+      if !button.waitForExistence(timeout: 3) {
+        // A row found by scrolling can sit under the filter bar or at the edge: bring it nearer the middle.
+        let middle = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        let shift: CGFloat = element.frame.midY < app.frame.height / 2 ? 250 : -250
+        middle.press(forDuration: 0.1, thenDragTo: middle.withOffset(CGVector(dx: 0, dy: shift)))
+        element.swipeRight()
+      }
       XCTAssertTrue(button.waitForExistence(timeout: 5), "\(op) action missing")
       button.tap()
       let expected = op == "pin" ? "clip.pinned" : "clip.unpinned"
@@ -118,6 +125,68 @@ final class SyncStepTests: XCTestCase {
       allowPasteIfAsked()
       let saved = row(match).waitForExistence(timeout: timeout)
       report(["ok": saved, "visible": saved])
+    case "collect":
+      // Touch and hold the row, Add to Collection, then the collection named PT_ACTION, or New Collection… with
+      // that name when it doesn't exist yet.
+      let name = env["PT_ACTION"] ?? "PTEST"
+      try existingRow().press(forDuration: 1.2)
+      let menu = menuButton("collectionMenu", labels: ["Add to Collection", "Koleksiyona Ekle"])
+      XCTAssertTrue(menu.waitForExistence(timeout: 5), "Add to Collection missing")
+      menu.tap()
+      let existing = app.buttons[name].firstMatch
+      if existing.waitForExistence(timeout: 2) {
+        existing.tap()
+      } else {
+        menuButton("newCollectionMenuItem", labels: ["New Collection…", "Yeni Koleksiyon…"]).tap()
+        // Alert fields and buttons don't keep their identifiers.
+        let alert = app.alerts.firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout: 5), "name prompt missing")
+        let field = alert.textFields.firstMatch
+        field.tap()
+        field.typeText(name)
+        alert.buttons.matching(NSPredicate(format: "label IN %@", ["Create", "Oluştur"])).firstMatch.tap()
+      }
+      let chip = app.buttons["collection.\(name)"].firstMatch
+      report(["ok": chip.waitForExistence(timeout: 10)])
+    case "openCollection":
+      // Taps the collection's chip and waits for the row inside it.
+      app.activate()
+      let chip = app.buttons["collection.\(env["PT_ACTION"] ?? "")"].firstMatch
+      guard chip.waitForExistence(timeout: timeout) else {
+        report(["ok": false, "reason": "no chip"])
+        return
+      }
+      chip.tap()
+      report(["ok": row(match).waitForExistence(timeout: timeout)])
+    case "collectionShots":
+      // Design review: the scope bar with a collection, the row menu, the clip's details and Settings › Your Data.
+      app.activate()
+      let name = env["PT_ACTION"] ?? ""
+      let chip = app.buttons["collection.\(name)"].firstMatch
+      if chip.waitForExistence(timeout: 10) { chip.tap() }
+      Thread.sleep(forTimeInterval: 1)
+      attachScreenshot(named: "collection-scope")
+      try existingRow().press(forDuration: 1.2)
+      let menu = menuButton("collectionMenu", labels: ["Add to Collection", "Koleksiyona Ekle"])
+      if menu.waitForExistence(timeout: 5) { menu.tap() }
+      Thread.sleep(forTimeInterval: 1)
+      attachScreenshot(named: "collection-menu")
+      app.terminate()
+      app.launch()
+      try existingRow().press(forDuration: 1.2)
+      let details = app.buttons["showDetails"].firstMatch
+      if details.waitForExistence(timeout: 5) { details.tap() }
+      Thread.sleep(forTimeInterval: 1.5)
+      attachScreenshot(named: "clip-detail")
+      app.terminate()
+      app.launch()
+      app.buttons["settingsButton"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1)
+      app.swipeUp()
+      app.swipeUp()
+      Thread.sleep(forTimeInterval: 1.5)
+      attachScreenshot(named: "settings-data")
+      report(["ok": true])
     case "selectShots":
       // Design review: select mode, the new clip sheet and the clipboard settings.
       app.activate()
@@ -320,6 +389,13 @@ final class SyncStepTests: XCTestCase {
       .firstMatch
   }
 
+  /// Menu items keep their identifiers on some systems and only their labels on others.
+  private func menuButton(_ identifier: String, labels: [String]) -> XCUIElement {
+    let byIdentifier = app.buttons[identifier].firstMatch
+    if byIdentifier.waitForExistence(timeout: 2) { return byIdentifier }
+    return app.buttons.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
+  }
+
   /// Taps "Allow Paste" when iOS asks whether Pastronaut may read another app's copy.
   private func allowPasteIfAsked() {
     let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
@@ -338,11 +414,19 @@ final class SyncStepTests: XCTestCase {
   private func existingRow() throws -> XCUIElement {
     app.activate()
     let row = row(match)
-    guard row.waitForExistence(timeout: timeout) else {
-      report(["ok": false, "reason": "row missing"])
-      throw XCTSkip("row missing")
+    if row.waitForExistence(timeout: min(timeout, 10)) || scrollToFind(row) { return row }
+    report(["ok": false, "reason": "row missing"])
+    throw XCTSkip("row missing")
+  }
+
+  /// The list is lazy: rows off screen are not in the hierarchy until scrolled to. The app may still be scrolled
+  /// from an earlier step, so this looks towards the top first, then down.
+  private func scrollToFind(_ row: XCUIElement) -> Bool {
+    for index in 0..<24 {
+      if index < 8 { app.swipeDown() } else { app.swipeUp() }
+      if row.waitForExistence(timeout: 1) { return true }
     }
-    return row
+    return false
   }
 
   /// Waits for a row condition with the app in the foreground and reports how long it took.
@@ -359,13 +443,15 @@ final class SyncStepTests: XCTestCase {
     report(["ok": met, "seconds": Date().timeIntervalSince(start).rounded()])
   }
 
+  /// A pinned row moves to the top and an unpinned one into the days below, so the row is looked for again
+  /// when it left the screen.
   private func waitIdentifier(of element: XCUIElement, equals value: String) -> Bool {
     let deadline = Date().addingTimeInterval(5)
     while Date() < deadline {
-      if element.identifier == value { return true }
+      if element.exists, element.identifier == value { return true }
       Thread.sleep(forTimeInterval: 0.25)
     }
-    return false
+    return scrollToFind(element) && element.identifier == value
   }
 
   // MARK: - Keyboard

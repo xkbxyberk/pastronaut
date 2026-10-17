@@ -116,6 +116,11 @@ struct StorageSettingsPane: View {
         HistoryAgeSetting()
       }
 
+      // Pastronaut: export and import of text clips.
+      Settings.Section(label: { Text("Export", tableName: "Pastronaut") }) {
+        HistoryArchiveSetting()
+      }
+
       Settings.Section(label: { Text("SortBy", tableName: "StorageSettings") }) {
         Picker("", selection: $sortBy) {
           ForEach(Sorter.By.allCases) { mode in

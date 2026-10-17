@@ -202,7 +202,7 @@ enum HistoryRetention {
     let age = Defaults[.historyAge]
     guard age != .forever else { return }
     let expired = AppState.shared.history.allItems.filter {
-      age.isExpired(lastCopiedAt: $0.item.lastCopiedAt, pinned: $0.isPinned, now: now)
+      age.isExpired(lastCopiedAt: $0.item.lastCopiedAt, pinned: $0.isPinned || SyncedCollections.shared.isKept($0.item), now: now)
     }
     guard !expired.isEmpty else { return }
     expired.forEach(AppState.shared.history.delete)
@@ -211,7 +211,7 @@ enum HistoryRetention {
   @MainActor
   static func expiredCount(for age: HistoryAge, now: Date = .now) -> Int {
     AppState.shared.history.allItems.filter {
-      age.isExpired(lastCopiedAt: $0.item.lastCopiedAt, pinned: $0.isPinned, now: now)
+      age.isExpired(lastCopiedAt: $0.item.lastCopiedAt, pinned: $0.isPinned || SyncedCollections.shared.isKept($0.item), now: now)
     }.count
   }
 }
@@ -502,7 +502,9 @@ struct HistoryItemContextMenu: View {
         Label { Text("Pin", tableName: "Pastronaut") } icon: { Image(systemName: "pin") }
       }
     }
-    if !history.searchQuery.isEmpty || history.deviceFilter != .all {
+    CollectionsContextMenu(item: item)
+    if !history.searchQuery.isEmpty || history.deviceFilter != .all || !history.tokenFilter.isEmpty
+      || history.collectionFilter != nil {
       Button {
         Self.reveal(item)
       } label: {
@@ -538,11 +540,58 @@ struct HistoryItemContextMenu: View {
   static func reveal(_ item: HistoryItemDecorator) {
     let history = AppState.shared.history
     history.deviceFilter = .all
+    history.tokenFilter = []
+    history.collectionFilter = nil
     history.searchQuery = ""
     Task {
       // Clearing the search is throttled (0.2 s) and then selects the first item; select ours after that.
       try? await Task.sleep(for: .milliseconds(350))
       AppState.shared.navigator.select(item: item)
+    }
+  }
+}
+
+// MARK: - Text in images
+
+/// Under an image's preview: the text Maccy recognized in it (also its searchable title), with a copy button.
+struct RecognizedTextPreview: View {
+  let item: HistoryItemDecorator
+  @State private var copied = false
+
+  var body: some View {
+    let text = item.item.title.trimmingCharacters(in: .whitespacesAndNewlines)
+    if !text.isEmpty {
+      VStack(alignment: .leading, spacing: 6) {
+        HStack {
+          Label { Text("Text in Image", tableName: "Pastronaut") } icon: { Image(systemName: "text.viewfinder") }
+            .font(.caption.weight(.semibold))
+          Spacer()
+          Button {
+            Clipboard.shared.copyInMaccy(text)
+            copied = true
+            Task {
+              try? await Task.sleep(for: .seconds(1.5))
+              copied = false
+            }
+          } label: {
+            Label {
+              copied ? Text("Copied", tableName: "Pastronaut") : Text("Copy Text", tableName: "Pastronaut")
+            } icon: {
+              Image(systemName: copied ? "checkmark" : "doc.on.doc")
+            }
+          }
+          .controlSize(.small)
+          .accessibilityIdentifier("preview-copy-text")
+        }
+        ScrollView {
+          Text(verbatim: text)
+            .font(.callout)
+            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxHeight: 120)
+      }
+      .padding(.top, 10)
     }
   }
 }

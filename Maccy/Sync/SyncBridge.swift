@@ -93,7 +93,7 @@ final class SyncBridge {
     guard Defaults[.iCloudSync] else { return }
     let privacy = privacy
     let blocked = await sync.clips
-      .filter { $0.sourceDevice == .mac && !privacy.allows($0.text, pinned: $0.pinned) }
+      .filter { $0.sourceDevice == .mac && !privacy.allows($0.text, pinned: $0.isKept) }
       .map(\.id)
     if !blocked.isEmpty {
       logger.info("Privacy change removes \(blocked.count) clips from iCloud")
@@ -145,6 +145,7 @@ final class SyncBridge {
         await SyncBridge.shared.apply(changes)
       }
       await sync.start()
+      await refreshCollections()
       uploadExistingHistory()
       // Catch up on changes made while this app was closed; the engine alone waits for a push.
       try? await sync.syncNow()
@@ -152,6 +153,7 @@ final class SyncBridge {
       await sync.setChangeHandler(nil)
       await sync.stop()
     }
+    await refreshCollections()
   }
 
   // MARK: - Settings
@@ -175,14 +177,17 @@ final class SyncBridge {
   func didAdd(_ item: HistoryItem) {
     scheduleRemovalIfOneTimeCode(item)
     guard isEnabled, let clip = Self.clip(for: item, modifiedAt: item.lastCopiedAt),
-          privacy.allows(clip.text, pinned: clip.pinned) else { return }
-    enqueue { await $0.upsert(clip) }
+          privacy.allows(clip.text, pinned: clip.pinned || SyncedCollections.shared.isKept(item)) else { return }
+    // A copy: the pin and collections iCloud already has for this text stay (this Mac may have had no pin key
+    // left for it, and it doesn't keep collections itself).
+    enqueue { await $0.recordCopy(clip) }
   }
 
   func didChangePin(_ item: HistoryItem) {
     guard isEnabled, let clip = Self.clip(for: item, modifiedAt: .now) else { return }
-    if privacy.allows(clip.text, pinned: clip.pinned) {
-      enqueue { await $0.upsert(clip) }
+    if privacy.allows(clip.text, pinned: clip.pinned || SyncedCollections.shared.isKept(item)) {
+      let pinned = clip.pinned
+      enqueue { await $0.modify(clipID: clip.id, fallback: clip) { $0.pinned = pinned } }
     } else if clip.sourceDevice == .mac {
       // E.g. unpinned while "Sync pinned items only" is on.
       enqueue { await $0.delete(ids: [clip.id]) }
@@ -196,6 +201,20 @@ final class SyncBridge {
     enqueue { await $0.delete(ids: ids) }
   }
 
+  /// Clear (unpinned items): clips in a collection are kept, like pinned ones, so they stay in iCloud and
+  /// `didClear` puts them back.
+  func willClear(_ items: [HistoryItem]) {
+    willDelete(items.filter { !SyncedCollections.shared.isKept($0) })
+  }
+
+  func didClear() {
+    guard isEnabled else { return }
+    Task {
+      let kept = await sync.clips.filter { !$0.collectionIDs.isEmpty }
+      apply(kept.map { .upserted($0) })
+    }
+  }
+
   func didEdit(_ item: HistoryItem, previousClipID: String?) {
     guard isEnabled else { return }
     let clip = Self.clip(for: item, modifiedAt: .now)
@@ -203,21 +222,149 @@ final class SyncBridge {
       enqueue { await $0.delete(ids: [previousClipID]) }
     }
     if let clip, privacy.allows(clip.text, pinned: clip.pinned) {
-      enqueue { await $0.upsert(clip) }
+      // The edited text is a new clip; it stays in the old one's collections.
+      enqueue { sync in
+        var edited = clip
+        if let previousClipID, let previous = await sync.clip(withID: previousClipID) {
+          edited.collectionIDs = previous.collectionIDs
+        }
+        await sync.upsert(edited)
+      }
     }
+  }
+
+  // MARK: - Collections
+
+  /// Text this Mac may sync can go into a collection; images, files and blocked text can't.
+  func canCollect(_ item: HistoryItem) -> Bool {
+    guard Defaults[.iCloudSync], let text = Self.syncableText(of: item) else { return false }
+    // Putting something in a collection is a decision to keep it, like a pin.
+    return privacy.allows(text, pinned: true)
+  }
+
+  func setMembership(_ isMember: Bool, of items: [HistoryItem], in collectionID: String) {
+    let clips = items.filter(canCollect).compactMap { Self.clip(for: $0, modifiedAt: $0.lastCopiedAt) }
+    guard !clips.isEmpty else { return }
+    enqueue { sync in
+      for clip in clips {
+        await sync.modify(clipID: clip.id, fallback: clip) { clip in
+          if isMember {
+            clip.collectionIDs.append(collectionID)
+          } else {
+            clip.collectionIDs.removeAll { $0 == collectionID }
+          }
+        }
+      }
+    }
+    collectionsChanged()
+  }
+
+  func createCollection(named name: String, with items: [HistoryItem]) {
+    let collection = ClipCollection(name: name, order: SyncedCollections.shared.collections.nextOrder)
+    enqueue { await $0.upsertCollection(collection) }
+    if items.isEmpty {
+      collectionsChanged()
+    } else {
+      setMembership(true, of: items, in: collection.id)
+    }
+  }
+
+  func rename(_ collection: ClipCollection, to name: String) {
+    var renamed = collection
+    renamed.name = name
+    renamed.modifiedAt = .now
+    let change = renamed
+    enqueue { await $0.upsertCollection(change) }
+    collectionsChanged()
+  }
+
+  func deleteCollection(_ collection: ClipCollection) {
+    let id = collection.id
+    enqueue { await $0.deleteCollection(id: id) }
+    collectionsChanged()
+  }
+
+  /// After a change made here: show it, and send it now rather than in a few seconds.
+  private func collectionsChanged() {
+    enqueue { sync in
+      await SyncBridge.shared.refreshCollections()
+      try? await sync.sendNow()
+    }
+  }
+
+  func refreshCollections() async {
+    let enabled = Defaults[.iCloudSync]
+    let collections = enabled ? await sync.collections : []
+    let clips = enabled ? await sync.clips : []
+    SyncedCollections.shared.update(collections: collections, clips: clips, isAvailable: enabled)
+  }
+
+  // MARK: - Export and import
+
+  /// Every text item in this Mac's history, with pins and collections.
+  func makeArchive() -> ClipArchive {
+    let collections = SyncedCollections.shared
+    let clips = History.shared.allItems.compactMap { decorator -> Clip? in
+      guard var clip = Self.clip(for: decorator.item, modifiedAt: decorator.item.lastCopiedAt) else { return nil }
+      clip.collectionIDs = collections.collectionIDs(of: decorator.item)
+      return clip
+    }
+    return ClipArchive(clips: clips, collections: collections.collections)
+  }
+
+  /// Adds an export's clips to this Mac's history (and to iCloud, with its collections, when sync is on).
+  /// Returns how many clips were new.
+  @discardableResult
+  func importArchive(_ archive: ClipArchive) -> Int {
+    let collections = SyncedCollections.shared
+    let existing = History.shared.allItems.compactMap { decorator -> Clip? in
+      guard var clip = Self.clip(for: decorator.item, modifiedAt: decorator.item.lastCopiedAt) else { return nil }
+      clip.collectionIDs = collections.collectionIDs(of: decorator.item)
+      return clip
+    }
+    let plan = archive.importPlan(existingClips: existing, existingCollections: collections.collections, device: .mac)
+    logger.info("Importing \(plan.clips.count) clips, \(plan.collections.count) new collections")
+
+    // Local history first, without echoing every item; the whole plan goes to iCloud below.
+    isApplyingRemote = true
+    for clip in plan.clips.reversed() {
+      if let local = decorator(for: clip.id) {
+        if clip.pinned, !local.isPinned, !HistoryItem.availablePins.isEmpty {
+          History.shared.togglePin(local)
+        }
+      } else {
+        insert(clip)
+      }
+    }
+    isApplyingRemote = false
+
+    guard Defaults[.iCloudSync] else { return plan.newClipCount }
+    let privacy = privacy
+    let newCollections = plan.collections
+    let clips = plan.clips.filter { privacy.allows($0.text, pinned: $0.isKept) }
+    enqueue { sync in
+      for collection in newCollections {
+        await sync.upsertCollection(collection)
+      }
+      await sync.upsert(contentsOf: clips)
+    }
+    collectionsChanged()
+    return plan.newClipCount
   }
 
   private func uploadExistingHistory() {
     let privacy = privacy
     let clips = History.shared.allItems
-      .compactMap { Self.clip(for: $0.item, modifiedAt: $0.item.lastCopiedAt) }
-      .filter { privacy.allows($0.text, pinned: $0.pinned) }
-    logger.info("Uploading \(clips.count) existing clips")
-    enqueue { sync in
-      for clip in clips {
-        await sync.upsert(clip)
+      .compactMap { decorator -> Clip? in
+        guard let clip = Self.clip(for: decorator.item, modifiedAt: decorator.item.lastCopiedAt),
+              privacy.allows(clip.text, pinned: clip.pinned || SyncedCollections.shared.isKept(decorator.item)) else {
+          return nil
+        }
+        return clip
       }
-    }
+    logger.info("Uploading \(clips.count) existing clips")
+    // As copies, so pins and collections iCloud has stay.
+    enqueue { await $0.recordCopies(clips) }
   }
 
   private func enqueue(_ operation: @escaping @Sendable (ClipSync) async -> Void) {
@@ -233,7 +380,10 @@ final class SyncBridge {
 
   private func apply(_ changes: [ClipChange]) {
     isApplyingRemote = true
-    defer { isApplyingRemote = false }
+    defer {
+      isApplyingRemote = false
+      Task { await refreshCollections() }
+    }
 
     for change in changes {
       switch change {
@@ -249,6 +399,9 @@ final class SyncBridge {
         if let local = decorator(for: id) {
           History.shared.delete(local)
         }
+      case .collectionUpserted, .collectionDeleted:
+        // Shown from the mirror by refreshCollections.
+        break
       }
     }
   }
@@ -308,7 +461,7 @@ final class SyncBridge {
     return FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: "")
   }
 
-  private static func syncableText(of item: HistoryItem) -> String? {
+  static func syncableText(of item: HistoryItem) -> String? {
     guard item.fileURLs.isEmpty, item.imageData == nil, let text = item.text, !text.isEmpty else { return nil }
     return text
   }
@@ -361,6 +514,8 @@ enum E2EControl {
     var text: String?
     var prefix: String?
     var tag: String?
+    /// Collection name for "collect" and "uncollect".
+    var name: String?
   }
 
   private static func handle(_ object: String?) {
@@ -392,6 +547,18 @@ enum E2EControl {
         default: break
         }
       }
+    case "collect", "uncollect":
+      // {"op":"collect","text":"…","name":"PTEST Collection"}: creates the collection when needed.
+      guard let item, let name = command.name else { break }
+      if let collection = SyncedCollections.shared.collections.first(where: { $0.name == name }) {
+        SyncBridge.shared.setMembership(command.op == "collect", of: [item.item], in: collection.id)
+      } else if command.op == "collect" {
+        SyncBridge.shared.createCollection(named: name, with: [item.item])
+      }
+    case "deleteCollection":
+      if let collection = SyncedCollections.shared.collections.first(where: { $0.name == command.name }) {
+        SyncBridge.shared.deleteCollection(collection)
+      }
     case "sync":
       Task { try? await SyncBridge.shared.syncNow() }
     default:
@@ -406,10 +573,25 @@ enum E2EControl {
     func summary(_ text: String) -> String { text.count > 80 ? "\(text.prefix(80))…(\(text.count))" : text }
     let history: [[String: Any]] = History.shared.allItems.compactMap { decorator in
       guard let text = decorator.item.text, text.hasPrefix(prefix) else { return nil }
-      return ["text": summary(text), "pinned": decorator.item.pin != nil, "length": text.count]
+      return [
+        "text": summary(text),
+        "pinned": decorator.item.pin != nil,
+        "length": text.count,
+        "kept": SyncedCollections.shared.isKept(decorator.item)
+      ]
     }
-    let cloud: [[String: Any]] = mirrored.filter { $0.text.hasPrefix(prefix) }.map {
-      ["text": summary($0.text), "pinned": $0.pinned, "device": $0.sourceDevice.rawValue]
+    let collections = await sync?.collections ?? []
+    let names = Dictionary(uniqueKeysWithValues: collections.map { ($0.id, $0.name) })
+    var cloud: [[String: Any]] = []
+    for clip in mirrored where clip.text.hasPrefix(prefix) {
+      cloud.append([
+        "text": summary(clip.text),
+        "pinned": clip.pinned,
+        "device": clip.sourceDevice.rawValue,
+        "collections": clip.collectionIDs.compactMap { names[$0] },
+        // Must not be the content hash: record names are keyed (SyncKey).
+        "keyedName": await sync?.recordName(forClipID: clip.id).map { $0 != clip.id && !$0.contains(clip.id.dropFirst(5)) } ?? false
+      ])
     }
     let state: [String: Any] = [
       "tag": tag,
@@ -418,6 +600,11 @@ enum E2EControl {
       "synced": status.syncedClips,
       "historyCount": History.shared.allItems.count,
       "lastError": status.lastError ?? NSNull(),
+      "hasKey": status.hasKey,
+      "keyFingerprint": await sync?.keyFingerprint ?? NSNull(),
+      "movingOldClips": status.isMovingOldClips,
+      "oldZoneCleared": status.oldZoneCleared,
+      "collections": collections.map(\.name).filter { $0.hasPrefix(prefix) },
       "history": history,
       "mirror": cloud
     ]

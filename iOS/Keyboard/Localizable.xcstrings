@@ -264,6 +264,28 @@
           }
         }
       }
+    },
+    "Collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyonlar"
+          }
+        }
+      }
+    },
+    "No clips in this collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu koleksiyonda öğe yok"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -35,6 +35,7 @@ struct PreviewItemView: View {
         }
         .padding(.bottom, 8)
       }
+      CollectionBadges(item: item.item) // Pastronaut
 
       if item.hasImage {
         AsyncView<NSImage?, _, _>(id: item.id) {
@@ -72,6 +73,7 @@ struct PreviewItemView: View {
             }
           }
         }
+        RecognizedTextPreview(item: item) // Pastronaut
       } else {
         if item.previewText.byteCount >= Self.largeTextThreshold {
           LargeTextView(text: item.previewText.string)

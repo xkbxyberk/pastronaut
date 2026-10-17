@@ -45,6 +45,13 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
       filtersChanged()
     }
   }
+  // Pastronaut: one collection from the filter menu.
+  var collectionFilter: String? {
+    didSet {
+      guard collectionFilter != oldValue else { return }
+      filtersChanged()
+    }
+  }
 
   private func filtersChanged() {
     updateUnpinnedShortcuts()
@@ -168,7 +175,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
   @MainActor
   private func limitHistorySize(to maxSize: Int) {
     if allUnpinnedItems.count >= maxSize {
-      allUnpinnedItems[maxSize...].forEach(delete)
+      allUnpinnedItems[maxSize...].filter { !SyncedCollections.shared.isKept($0.item) }.forEach(delete) // Pastronaut
     }
   }
 
@@ -261,7 +268,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
 
   @MainActor
   func clear() {
-    SyncBridge.shared.willDelete(allUnpinnedItems.map(\.item)) // Pastronaut
+    SyncBridge.shared.willClear(allUnpinnedItems.map(\.item)) // Pastronaut
     withLogging("Clearing history") {
       allUnpinnedItems.forEach(cleanup)
       allUnpinnedItems.removeAll()
@@ -284,6 +291,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
 
     Clipboard.shared.clear()
     AppState.shared.popup.close()
+    SyncBridge.shared.didClear() // Pastronaut
     Task {
       AppState.shared.popup.needsResize = true
     }

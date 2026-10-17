@@ -1,9 +1,13 @@
+import CoreSpotlight
 import PastronautCore
 import SwiftUI
 
 struct HistoryView: View {
   @Environment(ClipStore.self) private var store
-  @State private var filter: DeviceFilter = .all
+  @Environment(CollectionActions.self) private var actions
+  @Binding private var scope: HistoryScope
+  /// False next to the iPad's sidebar, which shows the same choices.
+  private let showsScopeBar: Bool
   @State private var showsSettings = false
   @State private var toast: ToastContent?
   @State private var hideToast: Task<Void, Never>?
@@ -16,11 +20,16 @@ struct HistoryView: View {
   @State private var tokens: [ClipSearchToken] = []
   @AppStorage("setupGuideShown") private var setupGuideShown = false
 
+  init(scope: Binding<HistoryScope>, showsScopeBar: Bool) {
+    _scope = scope
+    self.showsScopeBar = showsScopeBar
+  }
+
   var body: some View {
     @Bindable var store = store
     NavigationStack {
       List(selection: $selection) {
-        if #unavailable(iOS 26.0) {
+        if #unavailable(iOS 26.0), showsScopeBar {
           // Before Liquid Glass the filter scrolls with the list.
           Section {
             filterBar
@@ -41,7 +50,12 @@ struct HistoryView: View {
       }
       // Separate cards instead of one grouped block: each clip is its own rounded surface.
       .listRowSpacing(10)
-      .modifier(FilterBarPlacement { filterBar })
+      .modifier(FilterBarPlacement(isShown: showsScopeBar) { filterBar })
+      // Text dropped here (iPad, or from another app) is saved, into the collection on screen if there is one.
+      .dropDestination(for: String.self) { texts, _ in
+        store.addDropped(texts, to: scope.collectionID)
+        return !texts.isEmpty
+      }
       .overlay {
         if store.clips.isEmpty {
           ContentUnavailableView(
@@ -51,7 +65,16 @@ struct HistoryView: View {
           )
         } else if sections.isEmpty {
           if store.searchText.isEmpty && tokens.isEmpty {
-            ContentUnavailableView("Nothing from this device", systemImage: filter.systemImage)
+            switch scope {
+            case .device(let filter):
+              ContentUnavailableView("Nothing from this device", systemImage: filter.systemImage)
+            case .collection:
+              ContentUnavailableView(
+                "No clips in this collection",
+                systemImage: "folder",
+                description: Text("Touch and hold a clip and choose Add to Collection.")
+              )
+            }
           } else {
             ContentUnavailableView.search(text: store.searchText)
           }
@@ -78,7 +101,13 @@ struct HistoryView: View {
         Label(token.title, systemImage: token.systemImage)
       }
       .refreshable { await store.refresh() }
-      .navigationTitle(Text(verbatim: "Pastronaut"))
+      .navigationTitle(title)
+      .onContinueUserActivity(CSSearchableItemActionType) { activity in
+        // A pinned clip chosen in Spotlight is copied.
+        if let id = SpotlightIndex.clipID(from: activity), let clip = store.clips.first(where: { $0.id == id }) {
+          copy(clip)
+        }
+      }
       .navigationDestination(item: $detail) { clip in
         ClipDetailView(clipID: clip.id)
       }
@@ -139,7 +168,15 @@ struct HistoryView: View {
   }
 
   private var sections: [ClipSection] {
-    matchedClips.filter(filter.includes).sectioned()
+    matchedClips.filter(scope.includes).sectioned()
+  }
+
+  private var title: Text {
+    guard !showsScopeBar else { return Text(verbatim: "Pastronaut") }
+    switch scope {
+    case .device(let filter): return Text(filter.title)
+    case .collection(let id): return Text(verbatim: store.collections.first { $0.id == id }?.name ?? "")
+    }
   }
 
   private var filterBar: some View {
@@ -147,7 +184,10 @@ struct HistoryView: View {
     let counts = Dictionary(uniqueKeysWithValues: DeviceFilter.allCases.map { filter in
       (filter, clips.filter(filter.includes).count)
     })
-    return DeviceFilterBar(selection: $filter, counts: counts)
+    let collectionCounts = Dictionary(uniqueKeysWithValues: store.collections.map { collection in
+      (collection.id, clips.count { $0.isIn(collection.id) })
+    })
+    return ScopeBar(scope: $scope, counts: counts, collectionCounts: collectionCounts)
   }
 
   private var isEditing: Bool { editMode.isEditing }
@@ -222,6 +262,11 @@ struct HistoryView: View {
       }
       .disabled(selection.isEmpty)
       .accessibilityIdentifier("bulkPin")
+      CollectionMenu(clips: selectedClips) {
+        Label("Add to Collection", systemImage: "folder.badge.plus")
+      }
+      .disabled(selection.isEmpty)
+      .accessibilityIdentifier("bulkCollect")
       Spacer()
       Text("\(selection.count) selected")
         .font(.subheadline)
@@ -264,6 +309,8 @@ struct HistoryView: View {
   private func cardRow(_ content: some View, clip: Clip) -> some View {
     content
     .foregroundStyle(.primary)
+    // iPad: drag a clip into another app, or onto a collection in the sidebar.
+    .modifier(DraggableOnPad(text: clip.text))
     .listRowInsets(EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 16))
     .listRowBackground(
       // White cards on the grey grouped background in light mode, raised grey in dark mode.
@@ -316,6 +363,7 @@ struct HistoryView: View {
           Label("Pin", systemImage: "pin")
         }
       }
+      CollectionMenu(clips: [clip])
       ShareLink(item: clip.text)
       Divider()
       Button(role: .destructive) {
@@ -441,13 +489,14 @@ extension Array where Element == Clip {
 /// On iOS 26 and later the filter is a glass bar under the navigation bar that takes part in the scroll
 /// edge effect; earlier systems show it at the top of the list instead.
 private struct FilterBarPlacement<Bar: View>: ViewModifier {
+  let isShown: Bool
   @ViewBuilder let bar: () -> Bar
 
   func body(content: Content) -> some View {
-    if #available(iOS 26.0, *) {
+    if #available(iOS 26.0, *), isShown {
       content.safeAreaBar(edge: .top, alignment: .leading) {
+        // The bar scrolls sideways and keeps its own margins.
         bar()
-          .padding(.horizontal)
           .padding(.vertical, 6)
       }
     } else {
@@ -488,6 +537,20 @@ extension ClipSearchToken {
     case .color: "paintpalette"
     case .code: "chevron.left.forwardslash.chevron.right"
     case .text: "text.alignleft"
+    }
+  }
+}
+
+/// Rows are draggable on iPad only. On iPhone, a long press on a draggable row keeps the context menu "busy"
+/// (found by the UI test, which then waited a minute per tap), and dragging between apps is an iPad habit.
+private struct DraggableOnPad: ViewModifier {
+  let text: String
+
+  func body(content: Content) -> some View {
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      content.draggable(text)
+    } else {
+      content
     }
   }
 }

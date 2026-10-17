@@ -18,7 +18,8 @@ settings:
     SWIFT_EMIT_LOC_STRINGS: YES
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
-    TARGETED_DEVICE_FAMILY: "1"
+    # iPhone and iPad.
+    TARGETED_DEVICE_FAMILY: "1,2"
 targets:
   Pastronaut:
     type: application
@@ -54,6 +55,12 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # iPad: every orientation, so it can share the screen with other apps (Split View, Stage Manager).
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         UIBackgroundModes: [remote-notification]
         ITSAppUsesNonExemptEncryption: false
         NSFaceIDUsageDescription: Pastronaut can ask for Face ID before showing your clipboard history.

@@ -53,7 +53,9 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
 extension History {
   /// The device filter and the filter menu's chips, applied on top of the search.
   func passesFilters(_ item: HistoryItemDecorator) -> Bool {
-    deviceFilter.includes(item) && ClipSearchToken.allMatch(
+    deviceFilter.includes(item)
+      && collectionFilter.map { SyncedCollections.shared.contains(item.item, in: $0) } ?? true
+      && ClipSearchToken.allMatch(
       tokenFilter,
       text: item.item.imageData == nil && item.item.fileURLs.isEmpty ? item.item.text : nil,
       pinned: item.isPinned,
@@ -68,7 +70,9 @@ struct ClipFilterMenu: View {
 
   var body: some View {
     let tokens = appState.history.tokenFilter
+    let isFiltering = !tokens.isEmpty || appState.history.collectionFilter != nil
     Menu {
+      CollectionFilterSection()
       Section {
         toggle(.pinned)
         toggle(.today)
@@ -77,17 +81,18 @@ struct ClipFilterMenu: View {
       Section {
         ForEach([ClipSearchToken.link, .email, .phone, .color, .code, .text], id: \.self, content: toggle)
       }
-      if !tokens.isEmpty {
+      if isFiltering {
         Divider()
         Button {
           appState.history.tokenFilter = []
+          appState.history.collectionFilter = nil
         } label: {
           Text("Clear Filters", tableName: "Pastronaut")
         }
       }
     } label: {
-      Image(systemName: tokens.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
-        .foregroundStyle(tokens.isEmpty ? Color.secondary : Color.accentColor)
+      Image(systemName: isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+        .foregroundStyle(isFiltering ? Color.accentColor : Color.secondary)
     }
     .menuStyle(.borderlessButton)
     .menuIndicator(.hidden)

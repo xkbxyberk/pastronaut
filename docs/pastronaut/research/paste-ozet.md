@@ -296,7 +296,7 @@ kopyalar**. Tanıtımda ve kurulum rehberinde bu farkı anlatmalıyız.
 5. Filtre jetonlu arama (iOS `.searchable(tokens:)`, Mac önek sözdizimi).
 6. Face ID kilidi (zaten planlı).
 
-**Dalga 3: büyük yapısal işler**
+**Dalga 3: büyük yapısal işler** (2026-10-17'de uygulandı; ayrıntı TASARIM §8 durum 4.7)
 1. Koleksiyonlar + HMAC kimlik geçişi (tek şema değişikliği).
 2. Mac önizlemesinde "Görseldeki metni kopyala" (OCR Maccy'de zaten var).
 3. Spotlight (isteğe bağlı, yalnız pinler).

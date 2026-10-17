@@ -70,12 +70,14 @@ struct SyncSettingsPane: View {
         Text("Privacy", tableName: "Pastronaut")
       } footer: {
         Label {
-          Text("Clip text is stored encrypted in iCloud. Copies from password managers are never synced.", tableName: "Pastronaut")
+          Text("Clip text and collection names are end-to-end encrypted in iCloud, and iCloud can't tell which texts you saved. Copies from password managers are never synced.", tableName: "Pastronaut")
         } icon: {
           Image(systemName: "lock")
         }
         .foregroundStyle(.secondary)
       }
+
+      CollectionsSettingsSection()
 
       Section {
         HStack(spacing: 14) {
@@ -126,7 +128,7 @@ struct SyncSettingsPane: View {
       }
     }
     .formStyle(.grouped)
-    .frame(width: 520, height: 640)
+    .frame(width: 520, height: 700)
     .confirmationDialog(Text("Delete synced clips from iCloud?", tableName: "Pastronaut"), isPresented: $confirmsDeletion) {
       Button(role: .destructive) {
         run { try await SyncBridge.shared.deleteCloudData() }

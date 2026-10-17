@@ -60,11 +60,14 @@ enum KeyboardMetrics {
 @Observable
 final class KeyboardModel {
   enum Tab: String, CaseIterable, Identifiable {
-    case pinned, recent, mac, iphone
+    case pinned, recent, mac, iphone, collections
     var id: Self { self }
   }
 
   private(set) var clips: [Clip] = []
+  private(set) var collections: [ClipCollection] = []
+  /// The collection shown on the collections tab; the first one until another is chosen.
+  var collectionID: String?
   private(set) var hasFullAccess = false
   private(set) var showsNextKeyboard = true
   /// The pasteboard changed since the last capture. Detected from metadata only, so iOS shows no prompt.
@@ -110,7 +113,19 @@ final class KeyboardModel {
     case .recent: return newestFirst
     case .mac: return newestFirst.filter { $0.sourceDevice == .mac }
     case .iphone: return newestFirst.filter { $0.sourceDevice != .mac }
+    case .collections:
+      guard let id = selectedCollection?.id else { return [] }
+      return newestFirst.filter { $0.isIn(id) }
     }
+  }
+
+  /// The collections tab only shows up once there is a collection.
+  var tabs: [Tab] {
+    Tab.allCases.filter { $0 != .collections || !collections.isEmpty }
+  }
+
+  var selectedCollection: ClipCollection? {
+    collections.first { $0.id == collectionID } ?? collections.first
   }
 
   var searchResults: [Clip] {
@@ -306,7 +321,11 @@ final class KeyboardModel {
     for clip in base + files.readInbox() {
       byID[clip.id] = byID[clip.id].map { $0.merged(with: clip) } ?? clip
     }
-    clips = Array(byID.values.inHistoryOrder.prefix(200))
+    // Clips in a collection stay reachable from its tab even when older than the newest 200.
+    let ordered = byID.values.inHistoryOrder
+    clips = Array(ordered.prefix(200)) + ordered.dropFirst(200).filter { !$0.collectionIDs.isEmpty }
+    collections = files.currentCollections(useKeyboardCache: hasFullAccess)
+    if tab == .collections && collections.isEmpty { tab = .recent }
     if let focused, !clips.contains(where: { $0.id == focused.id }) { self.focused = nil }
   }
 }
@@ -375,11 +394,18 @@ private struct BrowsePanel: View {
       }
 
       HStack(spacing: 4) {
-        ForEach(KeyboardModel.Tab.allCases) { tab in
+        ForEach(model.tabs) { tab in
           Button {
             model.tab = tab
           } label: {
-            Text(tab.title)
+            Group {
+              if tab == .collections {
+                Image(systemName: model.tab == tab ? "folder.fill" : "folder")
+                  .accessibilityLabel(Text(tab.title))
+              } else {
+                Text(tab.title)
+              }
+            }
               .font(.system(size: 14, weight: model.tab == tab ? .semibold : .regular))
               .frame(maxWidth: .infinity, minHeight: 30)
               .background {
@@ -422,6 +448,10 @@ private struct BrowsePanel: View {
           .padding(.horizontal, 4)
       }
 
+      if model.tab == .collections {
+        CollectionPicker(model: model)
+      }
+
       ClipList(model: model)
 
       HStack(spacing: KeyboardMetrics.spacing) {
@@ -461,7 +491,7 @@ private struct ClipList: View {
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       } else if clips.isEmpty {
-        Text(model.tab == .pinned ? "No pinned clips" : "Nothing here yet")
+        Text(model.tab == .pinned ? "No pinned clips" : model.tab == .collections ? "No clips in this collection" : "Nothing here yet")
           .font(.footnote)
           .foregroundStyle(.secondary)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -792,6 +822,37 @@ private extension KeyboardModel.Tab {
     case .recent: "Recent"
     case .mac: "Mac"
     case .iphone: "iPhone"
+    case .collections: "Collections"
     }
+  }
+}
+
+/// The collections tab's row of names.
+private struct CollectionPicker: View {
+  let model: KeyboardModel
+
+  var body: some View {
+    ScrollView(.horizontal) {
+      HStack(spacing: 4) {
+        ForEach(model.collections) { collection in
+          let isSelected = model.selectedCollection?.id == collection.id
+          Button {
+            model.collectionID = collection.id
+          } label: {
+            Text(verbatim: collection.name)
+              .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+              .lineLimit(1)
+              .padding(.horizontal, 12)
+              .frame(minHeight: 26)
+              .background(Capsule().fill(isSelected ? KeyStyle.key : KeyStyle.function.opacity(0.5)))
+          }
+          .buttonStyle(.plain)
+          .accessibilityAddTraits(isSelected ? .isSelected : [])
+        }
+      }
+      .padding(.horizontal, KeyboardMetrics.topRowInset)
+    }
+    .scrollIndicators(.hidden)
+    .accessibilityIdentifier("collectionPicker")
   }
 }

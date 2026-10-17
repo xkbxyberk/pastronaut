@@ -10,7 +10,7 @@ struct PastronautApp: App {
 
   var body: some Scene {
     WindowGroup {
-      HistoryView()
+      RootView()
         .environment(ClipStore.shared)
         .overlay {
           // Also hides the history in the app switcher while the lock is on.

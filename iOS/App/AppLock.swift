@@ -24,6 +24,8 @@ final class AppLock {
         SharedSettings.defaults?.set(newValue, forKey: SharedSettings.appLockKey)
       }
       WidgetCenter.shared.reloadAllTimelines()
+      // Spotlight would show what the lock hides.
+      SpotlightIndex.update(with: ClipStore.shared.clips)
     }
   }
 

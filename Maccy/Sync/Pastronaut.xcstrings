@@ -118,17 +118,6 @@
         }
       }
     },
-    "Clip text is stored encrypted in iCloud. Copies from password managers are never synced.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Öğe metinleri iCloud'da şifreli saklanır. Parola yöneticilerinden yapılan kopyalar hiç eşitlenmez."
-          }
-        }
-      }
-    },
     "Clipboard": {
       "extractionState": "manual",
       "localizations": {
@@ -429,17 +418,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "E-postalar"
-          }
-        }
-      }
-    },
-    "Everything stays in your own iCloud, and the text of your clips is stored encrypted.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Her şey kendi iCloud'unuzda kalır; öğelerin metni şifreli saklanır."
           }
         }
       }
@@ -1133,6 +1111,314 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mac'teki pano geçmişin, artık iPhone'unda da."
+          }
+        }
+      }
+    },
+    "Name": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ad"
+          }
+        }
+      }
+    },
+    "New Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Koleksiyon"
+          }
+        }
+      }
+    },
+    "Create": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oluştur"
+          }
+        }
+      }
+    },
+    "Rename Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyonu Yeniden Adlandır"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Adlandır"
+          }
+        }
+      }
+    },
+    "New Collection…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Koleksiyon…"
+          }
+        }
+      }
+    },
+    "Add to Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyona Ekle"
+          }
+        }
+      }
+    },
+    "Collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyonlar"
+          }
+        }
+      }
+    },
+    "Right-click a clip and choose Add to Collection to start one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlamak için bir öğeye sağ tıklayıp Koleksiyona Ekle'yi seçin."
+          }
+        }
+      }
+    },
+    "Rename…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Adlandır…"
+          }
+        }
+      }
+    },
+    "Delete…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sil…"
+          }
+        }
+      }
+    },
+    "Collections sync with your iPhone. Clips in a collection are kept like pinned ones: the history limit, Keep history and Clear leave them alone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyonlar iPhone'unuzla eşitlenir. Koleksiyondaki öğeler sabitlenmiş öğeler gibi saklanır: geçmiş sınırı, Geçmişi sakla ve Temizle onlara dokunmaz."
+          }
+        }
+      }
+    },
+    "Delete \"%@\"?": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" silinsin mi?"
+          }
+        }
+      }
+    },
+    "Delete Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyonu Sil"
+          }
+        }
+      }
+    },
+    "The collection is removed from all your devices. Its clips stay in your history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyon tüm aygıtlarınızdan silinir. İçindeki öğeler geçmişinizde kalır."
+          }
+        }
+      }
+    },
+    "Export": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dışa aktar"
+          }
+        }
+      }
+    },
+    "Export…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dışa Aktar…"
+          }
+        }
+      }
+    },
+    "Import…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İçe Aktar…"
+          }
+        }
+      }
+    },
+    "Text clips, pins and collections. Images and files are not included.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin öğeleri, sabitlemeler ve koleksiyonlar. Görseller ve dosyalar dahil değildir."
+          }
+        }
+      }
+    },
+    "Exported %lld clips.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld öğe dışa aktarıldı."
+          }
+        }
+      }
+    },
+    "Imported %lld new clips.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld yeni öğe içe aktarıldı."
+          }
+        }
+      }
+    },
+    "This file was made by a newer Pastronaut.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosya Pastronaut'un daha yeni bir sürümüyle oluşturulmuş."
+          }
+        }
+      }
+    },
+    "This isn't a Pastronaut export.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bir Pastronaut dışa aktarma dosyası değil."
+          }
+        }
+      }
+    },
+    "Text in Image": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görseldeki Metin"
+          }
+        }
+      }
+    },
+    "Copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalandı"
+          }
+        }
+      }
+    },
+    "Copy Text": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metni Kopyala"
+          }
+        }
+      }
+    },
+    "Clip text and collection names are end-to-end encrypted in iCloud, and iCloud can't tell which texts you saved. Copies from password managers are never synced.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğe metinleri ve koleksiyon adları iCloud'da uçtan uca şifrelenir; iCloud hangi metinleri kaydettiğinizi anlayamaz. Parola yöneticilerinden yapılan kopyalar hiç eşitlenmez."
+          }
+        }
+      }
+    },
+    "Everything stays in your own iCloud, and the text of your clips is end-to-end encrypted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her şey kendi iCloud'unuzda kalır; öğelerin metni uçtan uca şifrelenir."
           }
         }
       }

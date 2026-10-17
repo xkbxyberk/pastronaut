@@ -7,18 +7,40 @@ import os
 /// Written only by the keyboard. A full fetch replaces the clips; later fetches apply changes since `token`.
 public struct KeyboardCache: Codable, Equatable, Sendable {
   public var clips: [Clip] = []
+  public var collections: [ClipCollection] = []
   /// Archived `CKServerChangeToken` of the last fetch; nil means the next fetch is a full one.
   public var token: Data?
   public var fetchedAt: Date?
+  /// The zone `token` belongs to. A cache from the original zone starts over with a full fetch.
+  public var zone: String?
 
-  public init(clips: [Clip] = [], token: Data? = nil, fetchedAt: Date? = nil) {
+  public init(clips: [Clip] = [], collections: [ClipCollection] = [], token: Data? = nil, fetchedAt: Date? = nil) {
     self.clips = clips
+    self.collections = collections
     self.token = token
     self.fetchedAt = fetchedAt
+    self.zone = ClipRecord.zoneName
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    clips = try container.decodeIfPresent([Clip].self, forKey: .clips) ?? []
+    collections = try container.decodeIfPresent([ClipCollection].self, forKey: .collections) ?? []
+    token = try container.decodeIfPresent(Data.self, forKey: .token)
+    fetchedAt = try container.decodeIfPresent(Date.self, forKey: .fetchedAt)
+    zone = try container.decodeIfPresent(String.self, forKey: .zone)
   }
 
   /// Applies one fetch. A full fetch is the whole zone, so clips it does not mention are gone.
-  public mutating func apply(fetched: [Clip], deletedIDs: [String], isFullFetch: Bool, token: Data?, at date: Date) {
+  public mutating func apply(
+    fetched: [Clip],
+    deletedIDs: [String],
+    fetchedCollections: [ClipCollection] = [],
+    deletedCollectionIDs: [String] = [],
+    isFullFetch: Bool,
+    token: Data?,
+    at date: Date
+  ) {
     var byID = isFullFetch ? [:] : Dictionary(clips.map { ($0.id, $0) }, uniquingKeysWith: { $0.merged(with: $1) })
     for clip in fetched {
       byID[clip.id] = byID[clip.id].map { $0.merged(with: clip) } ?? clip
@@ -27,7 +49,18 @@ public struct KeyboardCache: Codable, Equatable, Sendable {
       byID[id] = nil
     }
     clips = Array(byID.values)
+
+    var collectionsByID = isFullFetch ? [:] : Dictionary(collections.map { ($0.id, $0) }, uniquingKeysWith: { $0.merged(with: $1) })
+    for collection in fetchedCollections {
+      collectionsByID[collection.id] = collectionsByID[collection.id].map { $0.merged(with: collection) } ?? collection
+    }
+    for id in deletedCollectionIDs {
+      collectionsByID[id] = nil
+    }
+    collections = collectionsByID.values.ordered
+
     self.token = token
+    zone = ClipRecord.zoneName
     fetchedAt = date
   }
 
@@ -64,26 +97,45 @@ public actor KeyboardCloud {
     self.policy = policy
   }
 
+  /// The account's record-name key: the app's copy in the App Group, or read from iCloud when the app has not
+  /// synced since it was updated.
+  private func currentKey() async throws -> SyncKey {
+    let file = SyncKeyFile(directory: files.directory)
+    if let key = file.read() { return key }
+    let (key, _) = try await SettingsRecord.fetchOrCreateKey(in: database)
+    file.write(key)
+    return key
+  }
+
   /// Fetches changes since the last call and stores them in the keyboard cache.
   @discardableResult
   public func refresh() async throws -> KeyboardCache {
     var cache = files.readKeyboardCache() ?? KeyboardCache()
+    if cache.zone != ClipRecord.zoneName {
+      cache.token = nil
+    }
+    let key = try? await currentKey()
     var token = cache.token.flatMap {
       try? NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: $0)
     }
     let isFullFetch = token == nil
     var fetched: [Clip] = []
-    var deleted: [String] = []
+    var fetchedCollections: [ClipCollection] = []
+    var deletedNames: [String] = []
     var moreComing = true
     do {
       while moreComing {
         let changes = try await database.recordZoneChanges(inZoneWith: ClipRecord.zoneID, since: token)
         for (_, result) in changes.modificationResultsByID {
-          if case .success(let modification) = result, let clip = ClipRecord.clip(from: modification.record) {
+          guard case .success(let modification) = result else { continue }
+          let record = modification.record
+          if let clip = ClipRecord.clip(from: record), key.map({ ClipRecord.isNamed(record, for: clip, key: $0) }) ?? true {
             fetched.append(clip)
+          } else if let collection = CollectionRecord.collection(from: record) {
+            fetchedCollections.append(collection)
           }
         }
-        deleted += changes.deletions.map(\.recordID.recordName)
+        deletedNames += changes.deletions.map(\.recordID.recordName)
         token = changes.changeToken
         moreComing = changes.moreComing
       }
@@ -98,10 +150,25 @@ public actor KeyboardCloud {
       return cache
     }
 
+    // Deletions only carry record names; map them back through the key.
+    var idsByName: [String: String] = [:]
+    if let key {
+      for clip in cache.clips + fetched {
+        idsByName[key.recordName(forClipID: clip.id)] = clip.id
+      }
+    }
     let archived = token.flatMap { try? NSKeyedArchiver.archivedData(withRootObject: $0, requiringSecureCoding: true) }
-    cache.apply(fetched: fetched, deletedIDs: deleted, isFullFetch: isFullFetch, token: archived, at: .now)
+    cache.apply(
+      fetched: fetched,
+      deletedIDs: deletedNames.compactMap { idsByName[$0] },
+      fetchedCollections: fetchedCollections,
+      deletedCollectionIDs: deletedNames.filter(ClipCollection.isValidID),
+      isFullFetch: isFullFetch,
+      token: archived,
+      at: .now
+    )
     try files.writeKeyboardCache(cache)
-    logger.notice("Keyboard fetched \(fetched.count) changes, \(deleted.count) deletions (full: \(isFullFetch))")
+    logger.notice("Keyboard fetched \(fetched.count) changes, \(deletedNames.count) deletions (full: \(isFullFetch))")
     return cache
   }
 
@@ -136,7 +203,7 @@ public actor KeyboardCloud {
 
   /// Deletes a clip for every device. A clip already gone from iCloud counts as deleted.
   public func delete(id: String) async throws {
-    let recordID = ClipRecord.recordID(for: id)
+    let recordID = ClipRecord.recordID(forClipID: id, key: try await currentKey())
     let result = try await database.modifyRecords(saving: [], deleting: [recordID])
     if case .failure(let error)? = result.deleteResults[recordID], (error as? CKError)?.code != .unknownItem {
       throw error
@@ -150,8 +217,9 @@ public actor KeyboardCloud {
     guard policy.isEligible(clip.text) else { throw SaveError.notEligible }
     var clip = clip
     var base: CKRecord?
+    var key = try await currentKey()
     for _ in 0..<3 {
-      let record = ClipRecord.record(for: clip, updating: base)
+      let record = ClipRecord.record(for: clip, key: key, updating: base)
       let result: Result<CKRecord, Error>
       do {
         // Per-record failures are returned, not thrown (learned in Faz 0).
@@ -172,7 +240,10 @@ public actor KeyboardCloud {
         clip = merge(remote, clip)
         base = server
       case .failure(let error as CKError) where error.code == .zoneNotFound:
-        _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: ClipRecord.zoneID)], deleting: [])
+        // iCloud data was deleted, and the key with it: start over with a new one (this creates the zone).
+        SyncKeyFile(directory: files.directory).write(nil)
+        key = try await currentKey()
+        base = nil
       case .failure(let error):
         throw error
       }

@@ -61,8 +61,14 @@ bir dokunuşla yazdığı alana ekler.
 ### 4.2 Kimlik ve tekrarlar
 - `clipID = SHA-256(normalize(birincil içerik))`. Birincil içerik düz metin ya da URL; normalize etme yalnızca satır
   sonlarını tekleştirmek demek, boşluklara dokunulmaz.
-- CloudKit kayıt adı = `clipID`. Aynı metin hangi cihazda kopyalanırsa kopyalansın tek kayda düşer
-  (cihazlar arası tekrar birleştirme kendiliğinden olur).
+- CloudKit kayıt adı (Dalga 3'ten beri) = `"c-" + HMAC-SHA256(hesap anahtarı, clipID)`. Hesap anahtarı (`SyncKey`,
+  256 bit) "Library" bölgesindeki tek `Settings` kaydının şifreli `idKey` alanında durur; ilk cihaz oluşturur, aynı
+  anda oluşturan ikinci cihazın kaydı sunucuda reddedilir ve o cihaz kaydedilmiş anahtarı alır. Aynı metin yine her
+  cihazda aynı kayda düşer (cihazlar arası tekrar birleştirme kendiliğinden olur), ama ad anahtarsız bir şey söylemez.
+  Yerelde (ayna, App Group dosyaları, Mac geçmişi) kimlik hâlâ `clipID`'dir. iOS uzantıları anahtarı App Group'taki
+  `sync-key.json`'dan okur; yoksa `Settings` kaydından alır.
+- Anahtar başka bir cihazca değiştirilmişse (iCloud verisi silinip yeniden kurulduğunda) cihaz eski adlı kayıtlarını
+  siler ve yenileriyle yeniden yazar; başka anahtarla yazılmış bir kayıt görülürse içeriği alınır, kayıt doğru ada taşınır.
 - Mac'te bir öğe silinip "aynısı" eklendiğinde aynı `clipID` üretilir. Bu bulutta bir **güncelleme** olur
   (lastCopiedAt), silme olmaz.
 
@@ -75,7 +81,12 @@ bir dokunuşla yazdığı alana ekler.
 | sourceDevice | String | hayır | `mac` / `iphone` / `ipad` |
 | firstCopiedAt, lastCopiedAt | Date | hayır | Çakışmada lastCopiedAt büyük olan kazanır |
 | pinned | Bool | hayır | Harf eşitlenmez |
+| collections | [String] | evet | Koleksiyon kimlikleri (`col-<UUID>`); pin gibi en yeni değişiklik kazanır (Dalga 3) |
 | deleted | — | — | Silme, kaydın silinmesiyle yayılır |
+
+Koleksiyon kaydı (`Collection`, ad = `col-<UUID>`): `name` (şifreli), `order`, `createdAt`, `modifiedAt`. Koleksiyonu
+silmek öğelerini silmez; silen cihaz üyelikleri de temizler. Koleksiyondaki öğe "saklanır": Mac'te geçmiş sınırı,
+"Geçmişi sakla" ve Temizle ona dokunmaz (Tümünü Temizle dokunur). Açık bir silme her yerden siler.
 
 Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi eşitlemede tutarlı kalmıyor.
 
@@ -104,6 +115,8 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
 - Yalnızca Mac'te yok sayma kurallarından geçip geçmişe giren öğeler eşitlenir. Gizli işaretli kopyalar zaten geçmişe girmez.
 - iPhone'da yakalanan kopyalar için de aynı düzenli ifade kuralları uygulanır (kurallar eşitlenen bir ayar kaydında tutulur; Sonra).
 - Şifreli alanlar Apple'ın uçtan uca şifrelemesiyle korunur; geliştirici CloudKit panosunda içeriği göremez.
+- **Kapandı (Dalga 3):** kayıt adları artık anahtarlı (§4.2). Aşağıdaki not tarihçe için duruyor. Arayüz yeniden
+  "uçtan uca şifreli" diyor; kapsamı: metin, kaynak uygulama ve koleksiyon adları. Tarihler, tür ve pin düz kalır.
 - **Açık (2026-10-17, Paste araştırmasında bulundu):** kayıt adı (`recordName`) metnin tuzsuz SHA-256'sı ve şifrelenmez.
   Kısa metinler (6 haneli kod, kısa parola, kart) bu özetten geri bulunabilir. Çözüm: kimliği kullanıcıya özel bir
   anahtarla HMAC-SHA256 olarak üretmek; anahtar şifreli alanlı tek bir ayar kaydında eşitlenir. Geçiş arka planda,
@@ -144,7 +157,7 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
 - Eşitleme: CKSyncEngine yalnızca uygulamada çalışır. Sessiz anlık bildirimle uyanır; iOS arka plan push'larını
   kıstığı için bu en iyi çabadır (Faz 2, T13).
 - **Klavyenin kendi bulut erişimi (Faz 3, `KeyboardCloud`), yalnızca Tam Erişim'le:**
-  - Klavye açılınca (en sık 5 sn'de bir) "Clips" bölgesini kendi değişiklik işaretiyle çeker ve `keyboard-cache.json`'a
+  - Klavye açılınca (en sık 5 sn'de bir) "Library" bölgesini (Dalga 3 öncesi "Clips") kendi değişiklik işaretiyle çeker ve `keyboard-cache.json`'a
     yazar. Liste, uygulamanın anlık görüntüsünden ya da daha yeniyse bu önbellekten oluşur, üstüne gelen kutusu eklenir.
   - Yakalanan kopya önce gelen kutusuna yazılır (kaybolmasın), sonra tek kayıt olarak doğrudan buluta kaydedilir;
     başarılıysa gelen kutusundan çıkarılır. Çevrimdışıysa uygulama sonra gönderir.
@@ -287,8 +300,35 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
       Face ID isteyemez); E2E sırasında devre dışı.
     - Testler: çekirdek 43/43, Mac 104/104, Mac UI `testPastronautFilterMenu`, E2E 31/31 (+T13 uyarısı). Widget,
       kontrol, Paylaş, Siri ve Face ID sistem yüzeyleri olduğu için elle denenir.
-  - 4.7 Dalga 3: koleksiyonlar + HMAC kimlik geçişi (tek şema değişikliği), Mac'te yerel OCR, isteğe bağlı Spotlight,
-    iPad, dışa/içe aktarma.
+  - 4.7 Dalga 3 (2026-10-17, uygulandı; iPad elle doğrulanmadı):
+    - Gizli kayıt adları ve yeni bölge: kayıtlar "Library" bölgesinde, adları hesap anahtarıyla HMAC (§4.2). Sürüm 1
+      verisi arka planda taşınır: ayna `clip-sync-v1.json` olarak yedeklenir, eski bölge okunur, öğeler yeni bölgeye
+      yazılır, hepsi gönderilince eski "Clips" bölgesi silinir. Taşıma sırasında silinenler geri gelmez
+      (`legacyTombstones`). Henüz güncellenmemiş bir cihaz eski bölgeye yazarsa yeni cihazlar onu yine taşır; güncellenmemiş
+      cihaz yerel geçmişini korur ama yeni bölgeyi göremez (tüm cihazlar güncellenmeli). Bilinen sınır: bir cihaz
+      taşındıktan sonra silinen bir öğe, geç taşınan başka bir cihazın aynasından geri gelebilir.
+      Gerçek veride denendi: iPhone 56 öğe, Mac 56 öğe ve 62 öğelik geçmiş aynen korundu; iki cihaz aynı anahtarda.
+    - Koleksiyonlar: iPhone'da cihaz çiplerinin yanında koleksiyon çipleri (+ yeni), satır menüsünde ve seçim modunda
+      "Koleksiyona Ekle", ayrıntıda koleksiyon satırı, çipte basılı tutunca Yeniden Adlandır/Sil. Mac'te satır sağ tık
+      menüsü, filtre menüsünde Koleksiyonlar bölümü, önizlemede koleksiyon adları, Ayarlar › Eşitleme'de yönetim.
+      Klavyede koleksiyon sekmesi (klasör simgesi, yalnızca koleksiyon varsa). Mac'te koleksiyonlar iCloud eşitlemesi
+      açıkken vardır.
+    - Mac önizlemesinde "Görseldeki Metin" ve "Metni Kopyala" (Maccy'nin tanıdığı metin).
+    - Dışa/içe aktarma: `ClipArchive` (JSON, `pastronaut-archive` sürüm 1). Mac: Ayarlar › Depolama › Dışa aktar;
+      iPhone: Ayarlar › Verilerin. İçe aktarma yalnızca ekler, aynı adlı koleksiyonu yeniden kullanır, iki kez
+      aktarmak bir şey değiştirmez.
+    - Spotlight (iPhone, varsayılan kapalı): yalnızca sabitlenenler; seçilen sonuç kopyalanır; Face ID kilidi
+      açıkken dizin boşaltılır.
+    - iPad: `TARGETED_DEVICE_FAMILY 1,2`, geniş ekranda kenar çubuğu (cihazlar + koleksiyonlar, koleksiyona
+      bırakma), sürükle-bırak (satırlar yalnızca iPad'de sürüklenir: iPhone'da sürükleme bağlam menüsünü "meşgul"
+      tutup UI testini dakikalarca bekletiyordu), "Açılınca kaydet" açıkken uygulama ekrandayken yeni kopyaları
+      kaydeder. Bu Mac'te iOS simülatörü yüklü olmadığından iPad yalnızca derlendi.
+    - Testler: çekirdek 69/69, Mac 108/108, Mac UI `testPastronautPopupExtras` ve `testPastronautFilterMenu`. E2E son
+      tur 34 geçti + T13 uyarısı; yeni T30–T33 (ortak anahtar ve eski bölgenin silinmesi, koleksiyon Mac→iPhone,
+      iPhone→Mac ve koleksiyon silme) üç turda da geçti. T15 yalnızca test adımı yüzünden düştü (eski satır ekran
+      dışındaydı); adım düzeltildi ve senaryo tek başına 3/3 geçti.
+    - Turlarda bulunan hatalar: iPhone'da açık koleksiyon başka cihazda silinince liste boş kalıyordu (artık Tümü'ne
+      döner); iPhone'da sürüklenebilir satırlar bağlam menüsünü kilitliyordu (sürükleme yalnızca iPad'de).
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
   TestFlight ve App Store; Mac için GitHub Releases, Homebrew tap, Mac App Store.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.
@@ -323,6 +363,9 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
   bağlı kalmalı; ~13 dk sürer. Mac yalnızca Debug derlemesindeki `E2EControl` ile, iPhone XCUITest adımlarıyla
   (`iOS/UITests`) sürülür; durum Mac'te birleşik günlükten, iPhone'da `devicectl` ile App Group dosyalarından okunur.
   `test-without-building` değişen uygulamayı her zaman yeniden kurmuyor; betik bu yüzden önce `devicectl` ile kurar.
+- **UI otomasyon izni (2026-10-17):** macOS'ta Otomasyon Modu parolasız açılacak şekilde ayarlandı
+  (`sudo automationmodetool enable-automationmode-without-authentication`, kullanıcı onayıyla). Bu ayar yokken Mac ve
+  iPhone UI testleri "Timed out while enabling automation mode" ile başlamadan düşüyor. Durum: `automationmodetool`.
 - Xcode 27.1 `/Applications/Xcode.app` içinde. `xcode-select` Komut Satırı Araçları'nı gösteriyor; bu yüzden komutlar
   `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` ile çalıştırılır.
 - iOS SDK 27.1 kurulu. iOS simülatör çalışma zamanı **yok**. Faz 0 için ya simülatör indirilecek (birkaç GB, onay gerekir)

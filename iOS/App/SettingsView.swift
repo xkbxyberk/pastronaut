@@ -1,6 +1,7 @@
 import PastronautCore
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
   @Environment(ClipStore.self) private var store
@@ -8,6 +9,9 @@ struct SettingsView: View {
   @Environment(\.openURL) private var openURL
   @AppStorage(AutoCapture.settingKey, store: UserDefaults(suiteName: PastronautIDs.appGroup))
   private var autoSave = false
+  @AppStorage(SpotlightIndex.settingKey) private var spotlight = false
+  @State private var isImporting = false
+  @State private var importMessage: String?
   private let setup = KeyboardSetup.shared
   private let lock = AppLock.shared
 
@@ -34,7 +38,7 @@ struct SettingsView: View {
         } header: {
           Text("Sync")
         } footer: {
-          Text("Text clips sync through your private iCloud database. Clip text is stored encrypted.")
+          Text("Text clips sync through your private iCloud database. Clip text and collection names are end-to-end encrypted, and iCloud can't tell which texts you saved.")
         }
 
         Section {
@@ -58,10 +62,34 @@ struct SettingsView: View {
             Text("Lock with \(lock.methodName)")
           }
           .accessibilityIdentifier("appLockToggle")
+          Toggle("Show Pinned Clips in Search", isOn: $spotlight)
+            .disabled(lock.isEnabled)
+            .onChange(of: spotlight) { SpotlightIndex.update(with: store.clips) }
+            .accessibilityIdentifier("spotlightToggle")
         } header: {
           Text("Privacy")
         } footer: {
-          Text("Pastronaut asks for \(lock.methodName) when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for \(lock.methodName).")
+          Text("Pastronaut asks for \(lock.methodName) when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for \(lock.methodName). Pinned clips can show up when you search your iPhone; choosing one copies it. Search stays off while the lock is on.")
+        }
+
+        Section {
+          ShareLink(
+            item: ArchiveFile(archive: store.makeArchive()),
+            preview: SharePreview(Text(verbatim: ClipArchive.suggestedFileName()), image: Image(systemName: "doc.text"))
+          ) {
+            Label("Export History", systemImage: "square.and.arrow.up")
+          }
+          .accessibilityIdentifier("exportButton")
+          Button {
+            isImporting = true
+          } label: {
+            Label("Import…", systemImage: "square.and.arrow.down")
+          }
+          .accessibilityIdentifier("importButton")
+        } header: {
+          Text("Your Data")
+        } footer: {
+          Text("Text clips, pins and collections in one file, for a backup or another device. Importing only adds; nothing is removed.")
         }
 
         Section {
@@ -105,6 +133,35 @@ struct SettingsView: View {
         }
       }
       .onAppear { setup.update() }
+      .fileImporter(isPresented: $isImporting, allowedContentTypes: [.json]) { result in
+        guard case .success(let url) = result else { return }
+        importFile(at: url)
+      }
+      .alert(
+        Text(importMessage ?? ""),
+        isPresented: Binding(get: { importMessage != nil }, set: { if !$0 { importMessage = nil } })
+      ) {
+        Button("OK", role: .cancel) { importMessage = nil }
+      }
+    }
+  }
+
+  private func importFile(at url: URL) {
+    let isScoped = url.startAccessingSecurityScopedResource()
+    let data = Result { try Data(contentsOf: url) }
+    if isScoped { url.stopAccessingSecurityScopedResource() }
+    Task {
+      do {
+        let archive = try ClipArchive.decode(data.get())
+        let added = await store.importArchive(archive)
+        importMessage = String(localized: "Imported \(added) new clips.")
+      } catch ClipArchive.ReadError.newerVersion {
+        importMessage = String(localized: "This file was made by a newer Pastronaut.")
+      } catch ClipArchive.ReadError.notAnArchive {
+        importMessage = String(localized: "This isn't a Pastronaut export.")
+      } catch {
+        importMessage = error.localizedDescription
+      }
     }
   }
 
@@ -133,5 +190,17 @@ struct LicensesView: View {
         .padding()
     }
     .navigationTitle("Licenses")
+  }
+}
+
+/// The export as a file for the share sheet (Save to Files, AirDrop, Mail…).
+struct ArchiveFile: Transferable {
+  let archive: ClipArchive
+
+  static var transferRepresentation: some TransferRepresentation {
+    DataRepresentation(exportedContentType: .json) { file in
+      try file.archive.encoded()
+    }
+    .suggestedFileName(ClipArchive.suggestedFileName())
   }
 }

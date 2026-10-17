@@ -822,17 +822,6 @@
         }
       }
     },
-    "Pastronaut asks for %@ when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for %@.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pastronaut açılırken %1$@ ister ve widget'lar öğelerini gizler. Klavye kullanılabilir kalır, çünkü iPhone klavyeleri %2$@ isteyemez."
-          }
-        }
-      }
-    },
     "Pastronaut is locked": {
       "extractionState": "manual",
       "localizations": {
@@ -1218,17 +1207,6 @@
         }
       }
     },
-    "Text clips sync through your private iCloud database. Clip text is stored encrypted.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metin öğeleri özel iCloud veritabanın üzerinden eşitlenir. Metinler şifreli saklanır."
-          }
-        }
-      }
-    },
     "The clipboard has no text": {
       "extractionState": "manual",
       "localizations": {
@@ -1456,6 +1434,303 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dün"
+          }
+        }
+      }
+    },
+    "New Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Koleksiyon"
+          }
+        }
+      }
+    },
+    "Name": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ad"
+          }
+        }
+      }
+    },
+    "Create": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oluştur"
+          }
+        }
+      }
+    },
+    "Clips in a collection are kept until you delete them, like pinned ones, and sync to your Mac.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyondaki öğeler, sabitlenenler gibi sen silene kadar saklanır ve Mac'inle eşitlenir."
+          }
+        }
+      }
+    },
+    "Rename Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyonu Yeniden Adlandır"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Adlandır"
+          }
+        }
+      }
+    },
+    "Delete \"%@\"?": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" silinsin mi?"
+          }
+        }
+      }
+    },
+    "Delete Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyonu Sil"
+          }
+        }
+      }
+    },
+    "The collection is removed from all your devices. Its clips stay in your history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyon tüm aygıtlarından silinir. İçindeki öğeler geçmişinde kalır."
+          }
+        }
+      }
+    },
+    "New Collection…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Koleksiyon…"
+          }
+        }
+      }
+    },
+    "Add to Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyona Ekle"
+          }
+        }
+      }
+    },
+    "Collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyonlar"
+          }
+        }
+      }
+    },
+    "Rename…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Adlandır…"
+          }
+        }
+      }
+    },
+    "Delete…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sil…"
+          }
+        }
+      }
+    },
+    "No clips in this collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu koleksiyonda öğe yok"
+          }
+        }
+      }
+    },
+    "Touch and hold a clip and choose Add to Collection.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir öğeye basılı tut ve Koleksiyona Ekle'yi seç."
+          }
+        }
+      }
+    },
+    "Show Pinned Clips in Search": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenenleri Aramada Göster"
+          }
+        }
+      }
+    },
+    "Pastronaut asks for %@ when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for %@. Pinned clips can show up when you search your iPhone; choosing one copies it. Search stays off while the lock is on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut açılırken %1$@ ister ve widget'lar öğelerini gizler. Klavye kullanılabilir kalır, çünkü iPhone klavyeleri %2$@ isteyemez. Sabitlenen öğeler iPhone'da aramada çıkabilir; birini seçmek onu kopyalar. Kilit kullanılırken arama kapalı kalır."
+          }
+        }
+      }
+    },
+    "Export History": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmişi Dışa Aktar"
+          }
+        }
+      }
+    },
+    "Import…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İçe Aktar…"
+          }
+        }
+      }
+    },
+    "Your Data": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verilerin"
+          }
+        }
+      }
+    },
+    "Text clips, pins and collections in one file, for a backup or another device. Importing only adds; nothing is removed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin öğeleri, sabitlemeler ve koleksiyonlar tek bir dosyada; yedek için ya da başka bir aygıt için. İçe aktarma yalnızca ekler, hiçbir şeyi silmez."
+          }
+        }
+      }
+    },
+    "Imported %lld new clips.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld yeni öğe içe aktarıldı."
+          }
+        }
+      }
+    },
+    "This file was made by a newer Pastronaut.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosya Pastronaut'un daha yeni bir sürümüyle oluşturulmuş."
+          }
+        }
+      }
+    },
+    "This isn't a Pastronaut export.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bir Pastronaut dışa aktarma dosyası değil."
+          }
+        }
+      }
+    },
+    "OK": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamam"
+          }
+        }
+      }
+    },
+    "Text clips sync through your private iCloud database. Clip text and collection names are end-to-end encrypted, and iCloud can't tell which texts you saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin öğeleri özel iCloud veritabanın üzerinden eşitlenir. Öğe metinleri ve koleksiyon adları uçtan uca şifrelenir; iCloud hangi metinleri kaydettiğini anlayamaz."
           }
         }
       }

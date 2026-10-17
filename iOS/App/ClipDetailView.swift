@@ -97,6 +97,11 @@ struct ClipDetailView: View {
           .tint(.red)
         }
 
+        CollectionMenu(clips: [clip]) {
+          CollectionsRow(names: store.collections.filter { clip.isIn($0.id) }.map(\.name))
+        }
+        .buttonStyle(.plain)
+
         InfoList(clip: clip)
       }
       .padding()
@@ -168,6 +173,34 @@ private struct ActionTile: View {
         .minimumScaleFactor(0.8)
     }
     .frame(maxWidth: .infinity, minHeight: 52)
+  }
+}
+
+/// The clip's collections; opens "Add to Collection".
+private struct CollectionsRow: View {
+  let names: [String]
+
+  var body: some View {
+    HStack(spacing: 10) {
+      Image(systemName: names.isEmpty ? "folder.badge.plus" : "folder")
+        .foregroundStyle(Color.accentColor)
+      if names.isEmpty {
+        Text("Add to Collection")
+      } else {
+        Text(verbatim: names.formatted(.list(type: .and)))
+          .lineLimit(2)
+      }
+      Spacer()
+      Image(systemName: "chevron.up.chevron.down")
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+    }
+    .font(.subheadline)
+    .padding(.horizontal, 16)
+    .padding(.vertical, 14)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+    .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
   }
 }
 

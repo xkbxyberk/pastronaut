@@ -78,53 +78,102 @@ import Testing
 
 @Suite struct ClipRecordTests {
   let date = Date(timeIntervalSince1970: 1_700_000_000)
+  let key = SyncKey(data: Data(repeating: 7, count: 32))!
 
   @Test func roundTrip() throws {
     let clip = Clip(text: "merhaba\ndünya", sourceApp: "com.apple.Notes", sourceAppName: "Notlar", sourceDevice: .iphone,
                     firstCopiedAt: date, lastCopiedAt: date.addingTimeInterval(60),
-                    modifiedAt: date.addingTimeInterval(90), pinned: true)
-    let record = ClipRecord.record(for: clip)
+                    modifiedAt: date.addingTimeInterval(90), pinned: true, collectionIDs: ["col-b", "col-a"])
+    let record = ClipRecord.record(for: clip, key: key)
 
     #expect(record.recordType == ClipRecord.recordType)
     #expect(record.recordID.zoneID == ClipRecord.zoneID)
-    #expect(record.recordID.recordName == clip.id)
+    #expect(record.recordID.recordName == key.recordName(forClipID: clip.id))
+    #expect(ClipRecord.isNamed(record, for: clip, key: key))
     #expect(try #require(ClipRecord.clip(from: record)) == clip)
   }
 
-  @Test func textAndSourceAppAreEncrypted() {
-    let record = ClipRecord.record(for: Clip(text: "secret", sourceApp: "app", sourceAppName: "App", sourceDevice: .mac))
+  @Test func recordNamesRevealNothingWithoutTheKey() {
+    let clip = Clip(text: "123456", sourceDevice: .iphone)
+    let name = ClipRecord.record(for: clip, key: key).recordID.recordName
+    #expect(!name.contains(clip.id.dropFirst("clip-".count)))
+    #expect(name.hasPrefix("c-") && name.count == 66)
+    #expect(name != SyncKey(data: Data(repeating: 8, count: 32))!.recordName(forClipID: clip.id))
+    #expect(name == key.recordName(forClipID: Clip.id(for: "123456")))
+  }
+
+  @Test func textSourceAndCollectionsAreEncrypted() {
+    let clip = Clip(text: "secret", sourceApp: "app", sourceAppName: "App", sourceDevice: .mac, collectionIDs: ["col-1"])
+    let record = ClipRecord.record(for: clip, key: key)
     #expect(record["text"] == nil)
     #expect(record["sourceApp"] == nil)
     #expect(record["sourceAppName"] == nil)
+    #expect(record["collections"] == nil)
     #expect(record.encryptedValues["sourceAppName"] as? String == "App")
     #expect(record.encryptedValues["text"] as? String == "secret")
+    #expect(record.encryptedValues["collections"] as? [String] == ["col-1"])
   }
 
-  @Test func rejectsRecordsWhoseIDDoesNotMatchTheText() {
-    let record = ClipRecord.record(for: Clip(text: "one", sourceDevice: .mac))
-    record.encryptedValues["text"] = "two"
-    #expect(ClipRecord.clip(from: record) == nil)
+  @Test func noCollectionsStoresNoList() {
+    let record = ClipRecord.record(for: Clip(text: "x", sourceDevice: .mac), key: key)
+    #expect(record.encryptedValues["collections"] == nil)
+  }
+
+  @Test func recordsNamedWithAnotherKeyAreNoticed() throws {
+    let other = SyncKey(data: Data(repeating: 9, count: 32))!
+    let clip = Clip(text: "one", sourceDevice: .mac)
+    let record = ClipRecord.record(for: clip, key: other)
+    #expect(!ClipRecord.isNamed(record, for: clip, key: key))
+    // Its content is still readable, so the clip can be moved to the right name.
+    #expect(try #require(ClipRecord.clip(from: record)).text == "one")
+  }
+
+  @Test func legacyRecordsAreNamedAfterTheClipID() throws {
+    let clip = Clip(text: "old", sourceDevice: .mac)
+    let record = CKRecord(recordType: ClipRecord.recordType, recordID: CKRecord.ID(recordName: clip.id, zoneID: ClipRecord.legacyZoneID))
+    record.encryptedValues["text"] = "old"
+    let read = try #require(ClipRecord.clip(from: record))
+    #expect(ClipRecord.isLegacyRecord(record, of: read))
+    record.encryptedValues["text"] = "changed"
+    #expect(!ClipRecord.isLegacyRecord(record, of: try #require(ClipRecord.clip(from: record))))
   }
 
   @Test func rejectsOtherRecordTypes() {
-    let record = CKRecord(recordType: "Other", recordID: ClipRecord.recordID(for: Clip.id(for: "x")))
+    let record = CKRecord(recordType: "Other", recordID: ClipRecord.recordID(forClipID: Clip.id(for: "x"), key: key))
     record.encryptedValues["text"] = "x"
     #expect(ClipRecord.clip(from: record) == nil)
   }
 
   @Test func systemFieldsRoundTripKeepTheRecordID() throws {
-    let record = ClipRecord.record(for: Clip(text: "x", sourceDevice: .mac))
+    let record = ClipRecord.record(for: Clip(text: "x", sourceDevice: .mac), key: key)
     let restored = try #require(ClipRecord.record(fromSystemFields: ClipRecord.systemFields(of: record)))
     #expect(restored.recordID == record.recordID)
     #expect(restored.recordType == record.recordType)
   }
 
   @Test func updatingAnExistingRecordKeepsItsIdentity() {
-    let existing = ClipRecord.record(for: Clip(text: "x", sourceDevice: .mac))
-    let updated = ClipRecord.record(for: Clip(text: "x", sourceDevice: .iphone, pinned: true), updating: existing)
+    let existing = ClipRecord.record(for: Clip(text: "x", sourceDevice: .mac), key: key)
+    let updated = ClipRecord.record(for: Clip(text: "x", sourceDevice: .iphone, pinned: true), key: key, updating: existing)
     #expect(updated === existing)
     #expect(updated["sourceDevice"] as? String == "iphone")
     #expect(updated["pinned"] as? Int64 == 1)
+  }
+
+  @Test func collectionRoundTripWithEncryptedName() throws {
+    let collection = ClipCollection(name: "Adresler", order: 2, createdAt: date, modifiedAt: date.addingTimeInterval(5))
+    let record = CollectionRecord.record(for: collection)
+    #expect(record.recordID.recordName == collection.id)
+    #expect(record.recordID.zoneID == ClipRecord.zoneID)
+    #expect(record["name"] == nil)
+    #expect(record.encryptedValues["name"] as? String == "Adresler")
+    #expect(try #require(CollectionRecord.collection(from: record)) == collection)
+  }
+
+  @Test func settingsRecordCarriesTheKeyEncrypted() throws {
+    let record = SettingsRecord.record(with: key)
+    #expect(record.recordID == SettingsRecord.recordID)
+    #expect(record["idKey"] == nil)
+    #expect(SettingsRecord.key(from: record) == key)
   }
 }
 

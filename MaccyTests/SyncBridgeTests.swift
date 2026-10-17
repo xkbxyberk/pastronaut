@@ -74,4 +74,34 @@ class SyncBridgeTests: XCTestCase {
     NSPasteboard.general.setString("hunter2", forType: .string)
     waitForExpectations(timeout: 2)
   }
+
+  // MARK: - Collections and export
+
+  func testCollectionsNeedSyncAndText() {
+    let saved = Defaults[.iCloudSync]
+    defer { Defaults[.iCloudSync] = saved }
+    let text = item([(.string, Data("hello".utf8))])
+    let image = item([(.png, Data([0x89, 0x50, 0x4E, 0x47]))])
+    Defaults[.iCloudSync] = false
+    XCTAssertFalse(SyncBridge.shared.canCollect(text))
+    Defaults[.iCloudSync] = true
+    XCTAssertTrue(SyncBridge.shared.canCollect(text))
+    XCTAssertFalse(SyncBridge.shared.canCollect(image))
+  }
+
+  func testMembershipIgnoresUnknownCollections() {
+    let hello = item([(.string, Data("hello".utf8))])
+    let other = item([(.string, Data("other".utf8))])
+    let collections = SyncedCollections.shared
+    collections.update(
+      collections: [ClipCollection(id: "col-a", name: "A", order: 1)],
+      clips: [Clip(text: "hello", sourceDevice: .mac, collectionIDs: ["col-a", "col-deleted"])],
+      isAvailable: true
+    )
+    defer { collections.update(collections: [], clips: [], isAvailable: false) }
+    XCTAssertEqual(collections.collectionIDs(of: hello), ["col-a"])
+    XCTAssertTrue(collections.isKept(hello))
+    XCTAssertFalse(collections.isKept(other))
+    XCTAssertEqual(collections.count(in: "col-a"), 1)
+  }
 }

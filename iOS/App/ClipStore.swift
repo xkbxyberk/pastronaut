@@ -12,6 +12,8 @@ final class ClipStore {
   static let shared = ClipStore()
 
   private(set) var clips: [Clip] = []
+  /// In list order.
+  private(set) var collections: [ClipCollection] = []
   private(set) var status: SyncStatus?
   private(set) var accountStatus: String = "…"
   enum Notice: Equatable {
@@ -60,10 +62,16 @@ final class ClipStore {
 
   func reload() async {
     let latest = await sync.clips.inHistoryOrder
+    let latestCollections = await sync.collections
     let changed = latest != clips
     clips = latest
+    if latestCollections != collections {
+      collections = latestCollections
+    }
     status = await sync.status
     try? files?.writeSnapshot(clips)
+    try? files?.writeCollections(collections)
+    SpotlightIndex.update(with: clips)
     if changed {
       // Reloads requested by the app in front don't use up the widgets' daily refresh budget.
       WidgetCenter.shared.reloadAllTimelines()
@@ -103,7 +111,8 @@ final class ClipStore {
       firstCopiedAt: clip.firstCopiedAt,
       lastCopiedAt: clip.lastCopiedAt,
       modifiedAt: .now,
-      pinned: clip.pinned
+      pinned: clip.pinned,
+      collectionIDs: clip.collectionIDs
     )
     clips.removeAll { $0.id == clip.id }
     clips.append(edited)
@@ -143,6 +152,105 @@ final class ClipStore {
       await reload()
       await upload()
     }
+  }
+
+  // MARK: - Collections
+
+  func clips(in collectionID: String) -> [Clip] {
+    clips.filter { $0.isIn(collectionID) }
+  }
+
+  /// Creates a collection at the end of the list and puts `members` in it.
+  @discardableResult
+  func createCollection(named name: String, with members: [Clip] = []) -> ClipCollection? {
+    guard let name = ClipCollection.cleanName(name) else { return nil }
+    let collection = ClipCollection(name: name, order: collections.nextOrder)
+    collections.append(collection)
+    let ids = members.map(\.id)
+    Task {
+      await sync.upsertCollection(collection)
+      await sync.setMembership(true, of: ids, in: collection.id)
+      await reload()
+      await upload()
+    }
+    return collection
+  }
+
+  func rename(_ collection: ClipCollection, to name: String) {
+    guard let name = ClipCollection.cleanName(name), name != collection.name else { return }
+    var renamed = collection
+    renamed.name = name
+    renamed.modifiedAt = .now
+    let change = renamed
+    Task {
+      await sync.upsertCollection(change)
+      await reload()
+      await upload()
+    }
+  }
+
+  /// Removes the collection everywhere; its clips stay in the history.
+  func deleteCollection(_ collection: ClipCollection) {
+    collections.removeAll { $0.id == collection.id }
+    Task {
+      await sync.deleteCollection(id: collection.id)
+      await reload()
+      await upload()
+    }
+  }
+
+  func setMembership(_ isMember: Bool, of members: [Clip], in collectionID: String) {
+    let ids = members.map(\.id)
+    Task {
+      await sync.setMembership(isMember, of: ids, in: collectionID)
+      await reload()
+      await upload()
+    }
+  }
+
+  /// Adds every clip when any of them is outside the collection, otherwise takes them all out.
+  func toggleMembership(of members: [Clip], in collectionID: String) {
+    setMembership(members.contains { !$0.isIn(collectionID) }, of: members, in: collectionID)
+  }
+
+  /// Text dropped on the history or on a collection (iPad drag and drop): saved when new, and added to the
+  /// collection. Dragging an existing clip onto a collection doesn't count as copying it again.
+  func addDropped(_ texts: [String], to collectionID: String?) {
+    let eligible = texts.filter { SyncPolicy.default.isEligible($0) }
+    guard !eligible.isEmpty else { return }
+    Task {
+      await start()
+      for text in eligible {
+        let id = Clip.id(for: text)
+        if await sync.clip(withID: id) == nil {
+          await sync.recordCopy(Clip(text: text, sourceDevice: .iphone))
+        }
+        if let collectionID {
+          await sync.setMembership(true, of: [id], in: collectionID)
+        }
+      }
+      await reload()
+      await upload()
+    }
+  }
+
+  // MARK: - Export and import
+
+  func makeArchive() -> ClipArchive {
+    ClipArchive(clips: clips, collections: collections)
+  }
+
+  /// Adds an export's clips and collections. Returns how many clips were new.
+  func importArchive(_ archive: ClipArchive) async -> Int {
+    await start()
+    let plan = archive.importPlan(existingClips: clips, existingCollections: collections, device: .iphone)
+    for collection in plan.collections {
+      await sync.upsertCollection(collection)
+    }
+    await sync.upsert(contentsOf: plan.clips)
+    await reload()
+    await upload()
+    return plan.newClipCount
   }
 
   // MARK: - Saving the clipboard on request

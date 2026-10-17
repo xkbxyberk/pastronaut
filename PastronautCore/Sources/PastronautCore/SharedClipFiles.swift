@@ -44,6 +44,7 @@ public struct SharedClipFiles: Sendable {
   }
 
   var snapshotURL: URL { directory.appending(path: "clips.json") }
+  var collectionsURL: URL { directory.appending(path: "collections.json") }
   var inboxURL: URL { directory.appending(path: "inbox.json") }
 
   // MARK: - Snapshot
@@ -75,6 +76,24 @@ public struct SharedClipFiles: Sendable {
       byID[clip.id] = byID[clip.id].map { $0.merged(with: clip) } ?? clip
     }
     return byID.values.inHistoryOrder
+  }
+
+  // MARK: - Collections
+
+  /// Written by the app next to the snapshot, in list order.
+  public func writeCollections(_ collections: [ClipCollection]) throws {
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    try encode(collections, to: collectionsURL)
+  }
+
+  /// The app's list, or the keyboard's own fetch when that is newer (same rule as `currentClips`).
+  public func currentCollections(useKeyboardCache: Bool = true) -> [ClipCollection] {
+    let snapshot = (try? decode([ClipCollection].self, from: collectionsURL)) ?? []
+    if useKeyboardCache, let cache = readKeyboardCache(), let fetchedAt = cache.fetchedAt,
+       fetchedAt > snapshotDate ?? .distantPast {
+      return cache.collections
+    }
+    return snapshot.ordered
   }
 
   // MARK: - Keyboard cache

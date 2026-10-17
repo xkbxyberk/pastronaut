@@ -1,5 +1,6 @@
 import XCTest
 import Defaults
+import PastronautCore
 import SwiftData
 @testable import Maccy
 
@@ -267,6 +268,41 @@ class HistoryTests: XCTestCase { // swiftlint:disable:this type_body_length
     XCTAssertTrue(history.items.contains(items[10]))
     XCTAssertTrue(history.items.contains(items[0]))
     XCTAssertFalse(history.items.contains(items[1]))
+  }
+
+  // Pastronaut: clips in a collection are kept like pinned ones.
+  func testMaxSizeKeepsClipsInACollection() {
+    let kept = history.add(historyItem("in a collection"))
+    SyncedCollections.shared.update(
+      collections: [ClipCollection(id: "col-test", name: "Test", order: 1)],
+      clips: [Clip(text: "in a collection", sourceDevice: .mac, collectionIDs: ["col-test"])],
+      isAvailable: true
+    )
+    defer { SyncedCollections.shared.update(collections: [], clips: [], isAvailable: false) }
+    var items: [HistoryItemDecorator] = []
+    for index in 1...11 {
+      items.append(history.add(historyItem(String(index))))
+    }
+
+    XCTAssertTrue(history.items.contains(kept))
+    XCTAssertTrue(history.items.contains(items[10]))
+    XCTAssertFalse(history.items.contains(items[0]))
+  }
+
+  func testRetentionKeepsClipsInACollection() {
+    let old = Date.now.addingTimeInterval(-3 * 86_400)
+    let kept = history.add(historyItem("kept"))
+    kept.item.lastCopiedAt = old
+    let expired = history.add(historyItem("expired"))
+    expired.item.lastCopiedAt = old
+    SyncedCollections.shared.update(
+      collections: [ClipCollection(id: "col-test", name: "Test", order: 1)],
+      clips: [Clip(text: "kept", sourceDevice: .mac, collectionIDs: ["col-test"])],
+      isAvailable: true
+    )
+    defer { SyncedCollections.shared.update(collections: [], clips: [], isAvailable: false) }
+
+    XCTAssertEqual(HistoryRetention.expiredCount(for: .day), 1)
   }
 
   func testPinningUpdatesPinOrder() {
