@@ -1,235 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/gh-fork-ribbon.css" />
-    <script src="https://gumroad.com/js/gumroad.js" defer></script>
-    <link href="https://fonts.googleapis.com/css?family=Lato:400,700|Lora" rel="stylesheet">
-    <link rel="icon" type="image/png" href="Logo-favicon-16w.png" sizes="16x16" />
-    <link rel="icon" type="image/png" href="Logo-favicon-32w.png" sizes="32x32" />
-    <meta name="generator" content="Unicorn Platform" />
-    <meta name="description" content="Clipboard manager for macOS which does one job - keep your copy history at hand. Lightweight. Open source. No fluff." />
-    <title>Maccy - macOS clipboard manager</title>
-  </head>
-  <body>
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pastronaut</title>
+  <meta name="description" content="Mac'te kopyaladığın her şey, iCloud üzerinden iPhone'da. Ücretsiz ve açık kaynak.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header>
+    <span>
+      <img class="wordmark light" src="wordmark-light.svg" alt="Pastronaut">
+      <img class="wordmark dark" src="wordmark-dark.svg" alt="Pastronaut">
+    </span>
+    <nav>
+      <a href="privacy.html">Gizlilik / Privacy</a>
+      <a href="https://github.com/xkbxyberk/pastronaut">GitHub</a>
+    </nav>
+  </header>
 
-    <!-- START OF: Header 25 =====-->
-    <header class="header-25 js-scroll-this-box">
-      <div id="malwarewarning" role="alert">
-        <div class="malwarewarning__inner">
-          <p class="malwarewarning__text">
-            Beware of fake websites impersonating Maccy.<br/> <a href="https://maccy.app" aria-label="Official Maccy website">maccy.app</a> is the only official website.
-          </p>
-        </div>
-      </div>
+  <h1>Mac'te kopyala, iPhone'da yapıştır.</h1>
+  <p class="muted">Pastronaut, Mac'in pano geçmişini kendi iCloud'un üzerinden iPhone'a taşır. Ücretsiz, açık kaynak ve reklamsız.</p>
 
-      <div class="container container--large header-25__container">
-        <div class="header-25__left">
-          <div class="header-25__left_content">
-            <img src="img/maccy/Logo.png" alt="logo" />
-            <h1 class="heading heading--accent header-25__heading">
-              Maccy
-            </h1>
-            <p class="header-25__text">Clipboard manager for macOS which does one job - keep your copy history at hand. Period.</p>
-            <p class="header-25__text">Lightweight. Open source. No fluff.</p>
-            <div class="buttons-set">
-              <ul class="buttons-set__list">
-                <li class="buttons-set__item">
-                  <a class="button button--accent-bg button--large button--vendor-logo" href="https://apps.apple.com/us/app/maccy/id1527619437" aria-label="App Store Page">
-                    <div class="button__system_icon">
-                      <svg viewBox="0 0 21 18" xmlns="http://www.w3.org/2000/svg">
-                        <g id="Symbols" fill="none" fill-rule="evenodd">
-                          <g id="Button--accent-mac" transform="translate(-20 -16)" fill="#FFF">
-                            <g id="Button">
-                              <g id="ios-10" transform="translate(20 16)">
-                                <g id="icon">
-                                  <path d="M14.205 5.946c-1.067-1.505-2.721-1.71-3.302-1.727-1.39-.141-2.737.804-3.444.804-.722 0-1.812-.79-2.986-.767-1.511.023-2.925.87-3.7 2.184-1.6 2.68-.407 6.619 1.126 8.785.767 1.062 1.663 2.246 2.836 2.204 1.148-.045 1.576-.707 2.961-.707 1.372 0 1.775.707 2.97.68 1.232-.018 2.008-1.065 2.748-2.136.886-1.215 1.242-2.414 1.256-2.476-.028-.009-2.391-.881-2.415-3.52-.02-2.202 1.864-3.274 1.95-3.324z" id="Fill-2"/><path d="M9.995 2.794c.617-.747 1.04-1.763.923-2.794-.894.038-2.01.598-2.654 1.328-.57.644-1.078 1.699-.947 2.69 1.004.073 2.034-.489 2.678-1.224" id="Fill-3"/>
-                                </g>
-                              </g>
-                            </g>
-                          </g>
-                        </g>
-                      </svg>
-                    </div>
-                    <span>Get in App Store</span>
-                  </a>
-                </li>
-                <li class="buttons-set__item">
-                  <a href="https://www.producthunt.com/posts/maccy?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-maccy" target="_blank" rel="noopener" aria-label="ProductHunt Page">
-                  <a class="button button--accent-outline button--large" href="https://gum.co/Apsra" target="_blank" rel="noopener" aria-label="Download Now" data-gumroad-single-product="true">Download now</a>
-                </li>
-              </ul>
-              <div class="buttons-set__info">Requires macOS Sonoma 14 or higher</div>
-            </div>
-          </div>
-        </div>
-        <div class="header-25__right">
-          <video class="header-25__img" autoplay loop muted playsinline preload>
-            <source src="img/maccy/Demo.webm" type="video/webm">
-            <source src="img/maccy/Demo.mp4" type="video/mp4">
-          </video>
-        </div>
-      </div>
-      <a class="github-fork-ribbon" href="https://github.com/p0deje/Maccy" data-ribbon="Fork me on GitHub" title="Fork me on GitHub" target="_blank" rel="noopener" aria-label-"Fork me on GitHub">Fork me on GitHub</a>
-    </header>
-    <!-- ===== END OF: Header 25-->
+  <div class="grid">
+    <div class="card"><strong>Mac</strong><br><span class="muted">Menü çubuğunda pano geçmişi: arama, sabitleme, koleksiyonlar, sırayla yapıştırma.</span></div>
+    <div class="card"><strong>iPhone</strong><br><span class="muted">Geçmiş kartlar halinde; tek dokunuşla yazan klavye, widget'lar ve Kestirmeler.</span></div>
+    <div class="card"><strong>Gizli</strong><br><span class="muted">Metinler şifreli olarak yalnızca senin iCloud'unda durur. Sunucumuz yok, izleme yok.</span></div>
+  </div>
 
-    <!-- START OF: Features 1 =====-->
-    <div class="features-01">
-      <a name="features-01" aria-label="Features"></a>
-      <div class="container container--small">
-        <div class="features-01__title_box">
-          <h2 class="heading">Why?</h2>
-        </div>
-      </div>
-      <div class="container">
-        <ul class="features-01__items">
-          <li class="features-01__item">
-            <div class="feature">
-              <h3 class="feature__title"><img class="feature__icon" src="img/icons/abstract_icons/abstract-icon-7.svg" alt="" /><span class="feature__title_text">No fluff</span>
-              </h3>
-              <p class="feature__content"><span>Unlike other Mac clipboard managers, Maccy does only one job - keep your copy history and let you access it fast. You won't be overloaded by unnecessary features.</span></p>
-            </div>
-          </li>
-          <li class="features-01__item">
-            <div class="feature">
-              <h3 class="feature__title"><img class="feature__icon" src="img/icons/abstract_icons/abstract-icon-8.svg" alt="" /><span class="feature__title_text">Lightweight and fast</span>
-              </h3>
-              <p class="feature__content"><span>Maccy works blazingly fast. You can open and search your entire clipboard history in just a fraction of a second. Nothing should distract you from what you're focused on.</span></p>
-            </div>
-          </li>
-          <li class="features-01__item">
-            <div class="feature">
-              <h3 class="feature__title"><img class="feature__icon" src="img/icons/abstract_icons/abstract-icon-1.svg" alt="" /><span class="feature__title_text">Keyboard-first</span>
-              </h3>
-              <p class="feature__content"><span>Just type what you want to find in history and hit Enter. You don't need to use your mouse. Don't waste your time moving your hands away from the keyboard.</span></p>
-            </div>
-          </li>
-          <li class="features-01__item">
-            <div class="feature">
-              <h3 class="feature__title"><img class="feature__icon" src="img/icons/abstract_icons/abstract-icon-11.svg" alt="" /><span class="feature__title_text">Secure and Private</span>
-              </h3>
-              <p class="feature__content"><span>Maccy respects your privacy. If your password manager removes a copied password from the clipboard, so will Maccy. Everything is stored on your computer.</span></p>
-            </div>
-          </li>
-          <li class="features-01__item">
-            <div class="feature">
-              <h3 class="feature__title"><img class="feature__icon" src="img/icons/abstract_icons/abstract-icon-6.svg" alt="" /><span class="feature__title_text">Native</span>
-              </h3>
-              <p class="feature__content"><span>Maccy is built using native macOS UI. It is minimalistic. It looks and feels exactly as you'd expect. Don't get distracted by a sophisticated design.</span></p>
-            </div>
-          </li>
-          <li class="features-01__item">
-            <div class="feature">
-              <h3 class="feature__title"><img class="feature__icon" src="img/icons/abstract_icons/abstract-icon-2.svg" alt="" /><span class="feature__title_text">Open Source</span>
-              </h3>
-              <p class="feature__content"><span>Maccy is an open source application using the MIT license. It is and will always be free. Its full source code is available at <a href="https://github.com/p0deje/Maccy" aria-label="GitHub Page">GitHub</a>. You can inspect or change it however you want.</span></p>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <!-- ===== END OF: Features 1-->
+  <hr>
 
-    <!-- START OF: Photos 03 =====-->
-    <div class="photos-03">
-      <div class="container container--small">
-        <div class="photos-03__title_box">
-          <h1 class="heading">How?</h1>
-        </div>
-      </div>
-      <div class="container">
-        <div class="photos-03__img_box">
-          <img class="photos-03__img" src="img/maccy/Instructions.png" alt="instructions" />
-        </div>
-      </div>
-    </div>
-    <!-- ===== END OF: Photos 03-->
+  <span class="lang">English</span>
+  <h2>Copy on your Mac, paste on your iPhone.</h2>
+  <p class="muted">Pastronaut brings your Mac's clipboard history to your iPhone through your own iCloud. Free, open source and ad-free: a history in the menu bar on the Mac, cards, a keyboard, widgets and Shortcuts on the iPhone. Your text is stored encrypted in your private iCloud database only; there are no servers of ours and no tracking.</p>
 
-    <!-- START OF: Testimonials 01 =====-->
-    <div class="testimonials-01">
-      <div class="container container--small">
-        <div class="title-box title-box--center">
-          <h2 class="heading">What People Say?</h2>
-        </div>
-      </div>
-      <div class="testimonials-01__container container">
-        <div class="testimonials-01__item">
-          <p class="testimonials-01__text">Maccy is hands down the best clipboard manager I've ever used, across all platforms! As a writer by profession, I cannot function effectively without a clipboard manager. All the apps I tried from the App Store or elsewhere were not bloated and required unnecessary permissions. Maccy is lean and clean yet feature packed!</p>
-          <div class="testimonials-01__author">Jatan Mehta<br/><a href="https://www.buymeacoffee.com/p0deje/c/380297" aria-label="BuyMeCoffee Review">Science Writer</a></div>
-        </div>
-        <div class="testimonials-01__item">
-          <p class="testimonials-01__text">If you are looking for a clipboard manager with a modern design and UI, you should check out Maccy. Though very simple and has a minimal system footprint, Maccy gets the job done. More importantly, Maccy is free, lightweight, and open-source.</p>
-          <div class="testimonials-01__author">Andy Lee<br/><a href="https://thesweetbits.com/best-clipboard-manager-mac/#maccy" aria-label="The SweetBits Review">The Sweet Bits</a></div>
-        </div>
-      </div>
-      <div class="testimonials-01__container container">
-        <div class="testimonials-01__item">
-          <p class="testimonials-01__text">About two weeks into using Maccy, I began to realise I couldn't do without it - not only as a Mac clipboard manager, but as a very minimalist note taker and a security blanket from silly mistakes. It stays out of the way, is super fast, and does exactly what it needs to.</p>
-          <div class="testimonials-01__author">Raphael Kabo<br/><a href="http://twitter.com/lowercasename" aria-label="Twitter Review">@lowercasename</a></div>
-        </div>
-        <div class="testimonials-01__item">
-          <p class="testimonials-01__text">Maccy does exactly what it should do, in the simplest way. That's why I like it. Lightweight, performant and open source, it's all I want from a Mac clipboard manager.</p>
-          <div class="testimonials-01__author">Saeed Seyfi<br/><a href="http://saeedseyfi.com" aria-label="Personal Page">JavaScript Engineer</a></div>
-        </div>
-      </div>
-    </div>
-    <!-- ===== END OF: Testimonials 01-->
-
-    <!-- START OF: Button 21 =====-->
-    <div class="container container--large container--center cta_button-21">
-      <div class="buttons-set">
-        <ul class="buttons-set__list">
-          <li class="buttons-set__item">
-            <a class="button button--accent-bg button--large button--vendor-logo" href="https://apps.apple.com/us/app/maccy/id1527619437" aria-label="App Store Page">
-              <div class="button__system_icon">
-                <svg viewBox="0 0 21 18" xmlns="http://www.w3.org/2000/svg">
-                  <g id="Symbols" fill="none" fill-rule="evenodd">
-                    <g id="Button--accent-mac" transform="translate(-20 -16)" fill="#FFF">
-                      <g id="Button">
-                        <g id="ios-10" transform="translate(20 16)">
-                          <g id="icon">
-                            <path d="M14.205 5.946c-1.067-1.505-2.721-1.71-3.302-1.727-1.39-.141-2.737.804-3.444.804-.722 0-1.812-.79-2.986-.767-1.511.023-2.925.87-3.7 2.184-1.6 2.68-.407 6.619 1.126 8.785.767 1.062 1.663 2.246 2.836 2.204 1.148-.045 1.576-.707 2.961-.707 1.372 0 1.775.707 2.97.68 1.232-.018 2.008-1.065 2.748-2.136.886-1.215 1.242-2.414 1.256-2.476-.028-.009-2.391-.881-2.415-3.52-.02-2.202 1.864-3.274 1.95-3.324z" id="Fill-2"></path><path d="M9.995 2.794c.617-.747 1.04-1.763.923-2.794-.894.038-2.01.598-2.654 1.328-.57.644-1.078 1.699-.947 2.69 1.004.073 2.034-.489 2.678-1.224" id="Fill-3"></path>
-                          </g>
-                        </g>
-                      </g>
-                    </g>
-                  </g>
-                </svg>
-              </div>
-              <span>Get in App Store</span>
-            </a>
-          </li>
-          <li class="buttons-set__item">
-            <a class="button button--accent-outline button--large" href="https://gum.co/Apsra" target="_blank" rel="noopener" data-gumroad-single-product="true" aria-label="Download Now">
-              <span>Download now</span>
-            </a>
-          </li>
-          <li class="buttons-set__item">
-            <a class="button button--accent-outline button--large" href="https://github.com/p0deje/Maccy/blob/master/README.md" target="" aria-label="README">
-              <span>Documentation</span>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <!-- ===== END OF: Button 21-->
-
-    <!-- START OF: Footer 01 =====-->
-    <div class="footer-01">
-      <div class="container">
-        <div class="footer-01__wrapper">
-          <div class="footer-01__text">&copy; 2024&nbsp;<a class="footer-01__link" href="mailto:p0deje@gmail.com" aria-label="Support Email Address">Alex Rodionov</a>.
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- ===== END OF: Footer 01-->
-
-    <div class="via-unicorn-platform">
-      <a class="via-unicorn-platform__link" href="https://unicornplatform.com/" target="_blank" rel="noopener" title="This page was generated via Unicorn Platform" aria-label="Unicorn Platform">Page via <b>Unicorn Platform</b></a>
-    </div>
-  </body>
+  <footer>
+    Pastronaut is based on <a href="https://github.com/p0deje/Maccy">Maccy</a> (MIT) and is not affiliated with it.
+    Source and license: <a href="https://github.com/xkbxyberk/pastronaut">github.com/xkbxyberk/pastronaut</a>.
+  </footer>
+</main>
+</body>
 </html>
