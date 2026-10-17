@@ -7,7 +7,8 @@ public enum ClipContent: Equatable, Sendable {
   case email(String)
   case phone(String)
   case color(hex: String)
-  /// A postal address, found by the system's data detector (works offline, also for Turkish addresses).
+  /// A postal address (the system's data detector and Turkish rules, offline), or coordinates copied from a
+  /// map app (`Coordinates`).
   case address(String)
   case code
   case text
@@ -29,7 +30,9 @@ public enum ClipContent: Equatable, Sendable {
         return
       }
     }
-    if Self.isPhone(trimmed) {
+    if Coordinates.parse(trimmed) != nil {
+      self = .address(trimmed)
+    } else if Self.isPhone(trimmed) {
       self = .phone(trimmed)
     } else if Self.isAddress(trimmed) {
       self = .address(trimmed)

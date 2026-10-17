@@ -276,9 +276,7 @@ private struct CardAction {
       guard let url = URL(string: "mailto:\(address)") else { return nil }
       (title, systemImage, self.url) = ("Write Email", "envelope.fill", url)
     case .address(let address):
-      var components = URLComponents(string: "https://maps.apple.com/")
-      components?.queryItems = [URLQueryItem(name: "daddr", value: address)]
-      guard let url = components?.url else { return nil }
+      guard let url = Coordinates.directionsURL(to: address) else { return nil }
       (title, systemImage, self.url) = ("Get Directions", "arrow.triangle.turn.up.right.diamond.fill", url)
     default:
       return nil

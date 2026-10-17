@@ -1576,6 +1576,28 @@
           }
         }
       }
+    },
+    "Allow…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin Ver…"
+          }
+        }
+      }
+    },
+    "The queue needs permission to notice ⌘V": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıranın ⌘V'yi görmesi için izin gerekli"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

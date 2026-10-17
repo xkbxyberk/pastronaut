@@ -727,9 +727,7 @@ private struct PreviewAction {
       guard let url = URL(string: "tel:\(number.filter { $0.isNumber || $0 == "+" })") else { return nil }
       (title, systemImage, self.url) = ("Call", "phone", url)
     case .address(let address):
-      var components = URLComponents(string: "https://maps.apple.com/")
-      components?.queryItems = [URLQueryItem(name: "daddr", value: address)]
-      guard let url = components?.url else { return nil }
+      guard let url = Coordinates.directionsURL(to: address) else { return nil }
       (title, systemImage, self.url) = ("Get Directions", "arrow.triangle.turn.up.right.diamond", url)
     case .code, .color, .text:
       return nil
@@ -761,6 +759,20 @@ enum QuickPreviewKey {
 struct QueueNotice: View {
   var body: some View {
     let appState = AppState.shared
+    let isQueueing = appState.history.pasteStack.map { !$0.items.isEmpty } ?? false
+      || appState.navigator.selection.count > 1
+    if isQueueing && !QueuePermission.isGranted {
+      StatusNotice(symbol: "exclamationmark.triangle.fill", tint: .orange) {
+        Text("The queue needs permission to notice ⌘V", tableName: "Pastronaut")
+      } action: {
+        Button {
+          QueuePermission.request()
+        } label: {
+          Text("Allow…", tableName: "Pastronaut")
+        }
+        .accessibilityIdentifier("queue-permission")
+      }
+    }
     if let stack = appState.history.pasteStack, !stack.items.isEmpty {
       StatusNotice(symbol: "list.number", tint: .accentColor) {
         Text("Queue: \(stack.items.count) left · ⌘V pastes the next", tableName: "Pastronaut")
@@ -786,5 +798,23 @@ struct QueueNotice: View {
       }
       .accessibilityIdentifier("queue-hint")
     }
+  }
+}
+
+/// Seeing ⌘V in other apps (to move the queue on) needs Accessibility access, like pasting does. Without it
+/// the first item stays on the clipboard and every ⌘V pastes it again.
+enum QueuePermission {
+  static var isGranted: Bool { AXIsProcessTrusted() }
+
+  /// Shows the system's request and opens the switch's page (Privacy & Security › Accessibility; "Device
+  /// Control and Data Access" from macOS 27). The request doesn't always add the app to that list (seen with
+  /// the app in ~/Applications), so the app is also shown in Finder, ready to drag onto the list.
+  static func request() {
+    let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+    _ = AXIsProcessTrustedWithOptions(options)
+    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+      NSWorkspace.shared.open(url)
+    }
+    NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
   }
 }

@@ -124,7 +124,11 @@ final class PreviewStore {
     // Turkish addresses often hold more than the map knows (building, floor, flat): try simpler forms in turn,
     // and show a wider area when only the district was found.
     var found: (CLLocationCoordinate2D, Int)?
-    for (index, candidate) in TurkishAddress.geocodingCandidates(for: address).prefix(4).enumerated() {
+    // Coordinates copied from a map app need no lookup.
+    if let coordinates = Coordinates.parse(address) {
+      found = (CLLocationCoordinate2D(latitude: coordinates.latitude, longitude: coordinates.longitude), 0)
+    }
+    for (index, candidate) in TurkishAddress.geocodingCandidates(for: address).prefix(4).enumerated() where found == nil {
       if let coordinate = await Self.geocode(candidate) {
         found = (coordinate, index)
         break

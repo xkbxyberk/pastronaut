@@ -369,6 +369,12 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
       ve koleksiyona katar), "Son Öğeleri Al"a koleksiyon seçeneği. Widget "Son Öğeler" bir koleksiyonu
       gösterebilir (başlıkta koleksiyon adı). Koleksiyon seçimi `CollectionEntity` (app group'taki collections.json).
     - Klavye aramasında 123/ABC tuşu: rakamlar ve aranan işaretler (- / : ; ( ) ₺ & @ " . , ? ! ' # % +).
+    - Elle denemeden sonra: harita uygulamalarından kopyalanan koordinatlar (Google `38.4237, 27.1428` ve
+      `38°25'25.3"N 27°08'34.1"E`, Apple `38,4237° K, 27,1428° D`) adres türü sayılır; iPhone haritası koordinatı
+      doğrudan kullanır, yol tarifi koordinata gider (`Coordinates`). Sıra, Erişilebilirlik izni yoksa ⌘V'yi
+      göremez ve hep ilk öğe yapıştırılır: seçim/sıra satırının üstünde uyarı ve "İzin Ver…" (sistem isteği, izin
+      sayfası ve uygulamayı Finder'da gösterme). macOS 27'de sayfanın adı "Aygıt Denetimi ve Veri Erişimi"; uygulama
+      ~/Applications'tayken istek onu listeye eklemedi, sürükleyerek eklendi. Elle denendi: sıralı yapıştırma çalışıyor.
     - Kurulum rehberinde "iPhone'da ne beklemeli" kartı: Mac'ten gelen kendiliğinden; iPhone'dan kopya tek dokunuşla
       (açılınca kaydet, klavyede Yapıştır, Denetim Merkezi/Arkaya Dokun/Eylem düğmesi, Paylaş).
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
