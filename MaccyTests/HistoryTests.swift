@@ -454,6 +454,28 @@ class HistoryTests: XCTestCase { // swiftlint:disable:this type_body_length
     try assertStorageCounts(items: 1, contents: 1)
   }
 
+  // Pastronaut: the queue copies the first item, and each paste moves the next one to the clipboard.
+  func testQueue() async throws {
+    let one = history.add(historyItem("queue one"))
+    let two = history.add(historyItem("queue two"))
+    let three = history.add(historyItem("queue three"))
+    var selection = Selection<HistoryItemDecorator>(items: [one, two, three])
+    history.startPasteStack(selection: &selection, flags: [])
+    defer { history.interruptPasteStack() }
+    XCTAssertEqual(NSPasteboard.general.string(forType: .string), "queue one")
+    XCTAssertEqual(history.pasteStack?.items.count, 3)
+
+    for expected in ["queue two", "queue three"] {
+      history.handlePasteStack()
+      try await Task.sleep(for: .milliseconds(200))
+      XCTAssertEqual(NSPasteboard.general.string(forType: .string), expected)
+    }
+    XCTAssertEqual(history.pasteStack?.items.count, 1)
+    history.handlePasteStack()
+    XCTAssertNil(history.pasteStack)
+    XCTAssertEqual(NSPasteboard.general.string(forType: .string), "queue three")
+  }
+
   private func assertStorageCounts(
     items: Int,
     contents: Int,

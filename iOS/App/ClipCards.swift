@@ -181,8 +181,8 @@ struct ClipCard: View {
       VStack(alignment: .leading, spacing: 6) {
         Text(verbatim: CodeHighlighter.language(of: clip.text).title.uppercased())
           .font(.caption2.weight(.bold))
-          .foregroundStyle(Color(red: 0.73, green: 0.63, blue: 1))
-        Text(CodeText.attributed(clip.text))
+          .foregroundStyle(CodeTheme.label)
+        Text(CodeTheme.attributed(clip.text))
           .font(.system(size: 12, design: .monospaced))
           .lineLimit(9)
       }
@@ -246,7 +246,7 @@ struct ClipCard: View {
 
   private var background: AnyShapeStyle {
     switch content {
-    case .code: AnyShapeStyle(Color(red: 0.114, green: 0.153, blue: 0.2))
+    case .code: AnyShapeStyle(CodeTheme.background)
     case .color(let hex): AnyShapeStyle(Color(hex: hex) ?? .gray)
     default: AnyShapeStyle(Color(uiColor: .secondarySystemGroupedBackground))
     }
@@ -257,18 +257,8 @@ struct ClipCard: View {
     return onDarkCard ? .white : .primary
   }
 
-  static func rgb(_ hex: String) -> (Int, Int, Int)? {
-    var digits = hex.dropFirst().map(String.init)
-    if digits.count == 3 { digits = digits.flatMap { [$0, $0] } }
-    guard digits.count >= 6, let value = Int(digits.prefix(6).joined(), radix: 16) else { return nil }
-    return ((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF)
-  }
-
-  /// Light colors get dark text (relative luminance above 0.6).
-  static func isLight(_ hex: String) -> Bool {
-    guard let (r, g, b) = rgb(hex) else { return false }
-    return (0.299 * Double(r) + 0.587 * Double(g) + 0.114 * Double(b)) / 255 > 0.6
-  }
+  static func rgb(_ hex: String) -> (Int, Int, Int)? { HexColor.rgb(hex) }
+  static func isLight(_ hex: String) -> Bool { HexColor.isLight(hex) }
 }
 
 /// Call, write, or get directions, inside the card.
@@ -297,27 +287,6 @@ private struct CardAction {
 }
 
 /// Code colored on the device (CodeHighlighter), for the dark code cards.
-enum CodeText {
-  static func attributed(_ text: String) -> AttributedString {
-    let plain = UIColor(red: 0.847, green: 0.882, blue: 0.918, alpha: 1)
-    let string = NSMutableAttributedString(string: text, attributes: [.foregroundColor: plain])
-    for token in CodeHighlighter.tokens(in: text) {
-      string.addAttribute(.foregroundColor, value: color(token.kind), range: token.range)
-    }
-    return (try? AttributedString(string, including: \.uiKit)) ?? AttributedString(text)
-  }
-
-  private static func color(_ kind: CodeHighlighter.TokenKind) -> UIColor {
-    switch kind {
-    case .keyword: UIColor(red: 1, green: 0.54, blue: 0.79, alpha: 1)
-    case .type: UIColor(red: 0.5, green: 0.82, blue: 0.91, alpha: 1)
-    case .string: UIColor(red: 0.95, green: 0.76, blue: 0.55, alpha: 1)
-    case .number: UIColor(red: 0.77, green: 0.69, blue: 1, alpha: 1)
-    case .comment: UIColor(red: 0.54, green: 0.6, blue: 0.66, alpha: 1)
-    }
-  }
-}
-
 /// Asked once, at the top of the history: previews need the network, so the person decides.
 struct PreviewPromptCard: View {
   @AppStorage(PreviewChoice.key) private var choice = PreviewChoice.unasked.rawValue

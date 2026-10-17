@@ -23,6 +23,50 @@ enum ClipSourceOption: String, AppEnum {
   var source: ClipSource { ClipSource(rawValue: rawValue) ?? .all }
 }
 
+/// A collection for Shortcuts parameters and the widget's settings, read from the app group's collections.json.
+struct CollectionEntity: AppEntity {
+  static let typeDisplayRepresentation: TypeDisplayRepresentation = "Collection"
+  static let defaultQuery = CollectionEntityQuery()
+
+  let id: String
+  let name: String
+
+  init(_ collection: ClipCollection) {
+    id = collection.id
+    name = collection.name
+  }
+
+  var displayRepresentation: DisplayRepresentation {
+    DisplayRepresentation(title: "\(name)", image: .init(systemName: "folder"))
+  }
+
+  static var all: [CollectionEntity] {
+    (SharedClipFiles()?.currentCollections() ?? []).sorted { $0.order < $1.order }.map(CollectionEntity.init)
+  }
+}
+
+struct CollectionEntityQuery: EntityStringQuery {
+  func entities(for identifiers: [String]) async throws -> [CollectionEntity] {
+    CollectionEntity.all.filter { identifiers.contains($0.id) }
+  }
+
+  func entities(matching string: String) async throws -> [CollectionEntity] {
+    CollectionEntity.all.filter { $0.name.localizedStandardContains(string) }
+  }
+
+  func suggestedEntities() async throws -> [CollectionEntity] {
+    CollectionEntity.all
+  }
+}
+
+extension ClipSourceOption {
+  /// The newest `count` clips from this source, only those in `collection` when one is given.
+  func latest(in collection: CollectionEntity?, count: Int) -> [Clip] {
+    let clips = ClipClipboard.clips.filter { clip in collection.map { clip.isIn($0.id) } ?? true }
+    return source.latest(from: clips, count: count)
+  }
+}
+
 enum ClipClipboard {
   /// Puts a clip on the clipboard and notes it, so "Save Clipboard on Opening" doesn't save it again.
   static func copy(_ text: String) {

@@ -314,11 +314,14 @@ final class ClipStore {
 
   /// Saves and uploads a copy, keeping the pin if the text is already in the history. Used by the
   /// Paste button and the Shortcuts action, which waits for the upload before it finishes.
-  func saveNow(_ text: String) async -> SaveResult {
+  func saveNow(_ text: String, to collectionID: String? = nil) async -> SaveResult {
     guard !text.isEmpty else { return .empty }
     guard SyncPolicy.default.isEligible(text) else { return .tooLarge }
     await start()
     await sync.recordCopy(Clip(text: text, sourceDevice: .iphone))
+    if let collectionID {
+      await sync.setMembership(true, of: [Clip.id(for: text)], in: collectionID)
+    }
     await reload()
     await upload()
     return .saved

@@ -761,9 +761,18 @@ private struct SearchPanel: View {
 
 private struct LetterKeys: View {
   let model: KeyboardModel
+  /// Digits and the punctuation people search for (order numbers, times, prices, addresses).
+  @State private var showsDigits = false
+
+  private static let digitRows: [[String]] = [
+    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+    ["-", "/", ":", ";", "(", ")", "₺", "&", "@", "\""],
+    [".", ",", "?", "!", "'", "#", "%", "+"]
+  ]
 
   /// Turkish Q layout on Turkish devices, QWERTY elsewhere.
   private var rows: [[String]] {
+    if showsDigits { return Self.digitRows }
     if Locale.current.language.languageCode?.identifier == "tr" {
       return [
         ["q", "w", "e", "r", "t", "y", "u", "ı", "o", "p", "ğ", "ü"],
@@ -794,7 +803,21 @@ private struct LetterKeys: View {
           }
         }
       }
-      CharacterKey(title: "space", fontSize: 16) { model.searchType(" ") }
+      HStack(spacing: 5) {
+        Button {
+          showsDigits.toggle()
+        } label: {
+          Text(verbatim: showsDigits ? "ABC" : "123")
+            .font(.system(size: 16))
+            .frame(maxWidth: .infinity, minHeight: KeyboardMetrics.keyHeight)
+            .background(KeyStyle.function, in: RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .frame(width: 64)
+        .accessibilityLabel(showsDigits ? Text("Letters") : Text("Numbers"))
+        .accessibilityIdentifier("digitsKey")
+        CharacterKey(title: "space", fontSize: 16) { model.searchType(" ") }
+      }
     }
   }
 }

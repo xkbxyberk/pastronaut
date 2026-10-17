@@ -623,6 +623,121 @@ class MaccyUITests: XCTestCase {
     XCTAssertTrue(historyRow("copied after resuming").waitForExistence(timeout: 3))
   }
 
+  // Pastronaut: Space shows the preview while the search is empty, and the preview fits the kind.
+  func testPastronautQuickPreview() throws {
+    // Without the automatic preview (it opens after 1.5 s), so each Space below opens or closes it.
+    app.terminate()
+    app.launchArguments += ["-openPreviewAutomatically", "<false/>"]
+    app.launch()
+    for text in ["func greet() {\n  print(\"hi\")\n}", "#2364D2", "https://example.com/preview"] {
+      copyToClipboard(text)
+    }
+    popUpWithMouse()
+    XCTAssertTrue(historyRow("https://example.com/preview").waitForExistence(timeout: 3))
+    app.typeKey(.downArrow, modifierFlags: [])
+    app.typeKey(.upArrow, modifierFlags: [])
+
+    // The link (first row): Space opens the preview with its button, Space again closes it.
+    app.typeKey(.space, modifierFlags: [])
+    let action = app.descendants(matching: .any)["preview-action"].firstMatch
+    XCTAssertTrue(action.waitForExistence(timeout: 3))
+    attachScreenshot(app.dialogs.firstMatch, named: "preview-link")
+    app.typeKey(.space, modifierFlags: [])
+    XCTAssertTrue(waitForNonExistence(action, timeout: 3))
+
+    // The color, then the code.
+    app.typeKey(.downArrow, modifierFlags: [])
+    app.typeKey(.space, modifierFlags: [])
+    XCTAssertTrue(app.descendants(matching: .any)["preview-swatch"].firstMatch.waitForExistence(timeout: 3))
+    attachScreenshot(app.dialogs.firstMatch, named: "preview-color")
+    app.typeKey(.downArrow, modifierFlags: [])
+    XCTAssertTrue(app.descendants(matching: .any)["preview-code"].firstMatch.waitForExistence(timeout: 3))
+    attachScreenshot(app.dialogs.firstMatch, named: "preview-code")
+    app.typeKey(.space, modifierFlags: [])
+    XCTAssertTrue(waitForNonExistence(app.descendants(matching: .any)["preview-code"].firstMatch, timeout: 3))
+
+    // With something typed, Space goes into the search.
+    search("let")
+    app.typeKey(.space, modifierFlags: [])
+    assertSearchFieldValue("let ")
+    XCTAssertFalse(app.descendants(matching: .any)["preview-code"].firstMatch.exists)
+  }
+
+  // Pastronaut: select several rows, Return starts a queue, each ⌘V elsewhere moves the next one to the clipboard.
+  func testPastronautQueue() throws {
+    for text in ["queue three", "queue two", "queue one"] {
+      copyToClipboard(text)
+    }
+    popUpWithMouse()
+    let one = historyRow("queue one"), two = historyRow("queue two"), three = historyRow("queue three")
+    XCTAssertTrue(three.waitForExistence(timeout: 3))
+    one.hover()
+    XCUIElement.perform(withKeyModifiers: .command) {
+      two.click()
+      three.click()
+    }
+    let hint = app.descendants(matching: .any)["queue-hint"].firstMatch
+    XCTAssertTrue(hint.waitForExistence(timeout: 3))
+    XCTAssertTrue(hint.staticTexts.matching(NSPredicate(format: "value BEGINSWITH '3'")).firstMatch.exists)
+    attachScreenshot(app.dialogs.firstMatch, named: "queue-selected")
+    app.typeKey(.return, modifierFlags: [])
+    assertPopupDismissed()
+    assertPasteboardStringEquals("queue one")
+
+    popUpWithMouse()
+    XCTAssertTrue(app.descendants(matching: .any)["queue-notice"].firstMatch.waitForExistence(timeout: 3))
+    attachScreenshot(app.dialogs.firstMatch, named: "queue-running")
+    // Each ⌘V in another app moves the next one to the clipboard: HistoryTests.testQueue (a UI test's keystrokes
+    // don't reach the global key monitor).
+    let end = app.descendants(matching: .any)["queue-end"].firstMatch
+    XCTAssertTrue(end.waitForExistence(timeout: 3))
+    end.click()
+    XCTAssertTrue(waitForNonExistence(end, timeout: 3))
+    app.typeKey(.escape, modifierFlags: [])
+
+    // A queue started from the keyboard and the notice's button.
+    popUpWithMouse()
+    XCTAssertFalse(app.descendants(matching: .any)["queue-notice"].firstMatch.exists)
+    app.typeKey(.downArrow, modifierFlags: [])
+    app.typeKey(.upArrow, modifierFlags: [])
+    app.typeKey(.downArrow, modifierFlags: .shift)
+    let start = app.descendants(matching: .any)["queue-start"].firstMatch
+    XCTAssertTrue(start.waitForExistence(timeout: 3))
+    start.click()
+    assertPopupDismissed()
+    assertPasteboardStringEquals("queue one")
+  }
+
+  // Pastronaut: filters typed into the search (type:, tür:, app:) and ⌘G back to the whole history.
+  func testPastronautTypedFilters() throws {
+    for text in ["plain typed words", "#FF8800", "https://example.com/typed"] {
+      copyToClipboard(text)
+    }
+    popUpWithMouse()
+    XCTAssertTrue(historyRow("plain typed words").waitForExistence(timeout: 3))
+
+    search("type:link")
+    XCTAssertTrue(waitForNonExistence(historyRow("plain typed words"), timeout: 3))
+    XCTAssertTrue(historyRow("https://example.com/typed").exists)
+    XCTAssertFalse(historyRow("#FF8800").exists)
+
+    app.typeKey("u", modifierFlags: .control)
+    search("tür:renk")
+    XCTAssertTrue(historyRow("#FF8800").waitForExistence(timeout: 3))
+    XCTAssertTrue(waitForNonExistence(historyRow("https://example.com/typed"), timeout: 3))
+    attachScreenshot(app.dialogs.firstMatch, named: "typed-filter-color")
+
+    // ⌘G: the color among the rest, search cleared.
+    app.typeKey("g", modifierFlags: .command)
+    XCTAssertTrue(historyRow("plain typed words").waitForExistence(timeout: 3))
+    assertSearchFieldValue("")
+
+    search("app:no-such-app")
+    XCTAssertTrue(waitForNonExistence(historyRow("plain typed words"), timeout: 3))
+    app.typeKey("u", modifierFlags: .control)
+    XCTAssertTrue(historyRow("plain typed words").waitForExistence(timeout: 3))
+  }
+
   private func historyRow(_ text: String) -> XCUIElement {
     app.dialogs.firstMatch.descendants(matching: .any)
       .matching(identifier: "copy-history-item")

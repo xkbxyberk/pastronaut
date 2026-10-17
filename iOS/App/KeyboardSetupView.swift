@@ -74,6 +74,8 @@ struct KeyboardSetupView: View {
           }
         }
 
+        IPhoneLimitsCard()
+
         Label {
           Text("Even with Full Access, nothing you type is sent anywhere. The keyboard only reads your history in your own iCloud and writes the copies you capture there.")
         } icon: {
@@ -167,5 +169,59 @@ private struct StepCard<Actions: View>: View {
         .frame(width: 28, height: 28)
         .overlay(Circle().strokeBorder(.secondary, lineWidth: 1.5))
     }
+  }
+}
+
+/// What syncs by itself and what needs a tap: iPhone lets only the app in front read the clipboard, so copies
+/// made on the iPhone are saved through one of these doors. Said plainly so nobody waits for an automatic sync
+/// that iOS doesn't allow.
+private struct IPhoneLimitsCard: View {
+  var body: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("What to expect on iPhone")
+        .font(.headline)
+      row("laptopcomputer.and.arrow.down", "From your Mac: automatic",
+          "Everything you copy on your Mac appears here and in the keyboard, without opening anything.")
+      row("hand.tap", "From your iPhone: one tap",
+          "iPhone doesn't let apps read the clipboard in the background, so save a copy in one of these ways:")
+      VStack(alignment: .leading, spacing: 6) {
+        bullet("Open Pastronaut: with “Save Clipboard on Opening” on, it saves what you copied.")
+        bullet("In the keyboard, tap Paste when it offers the new copy.")
+        bullet("Use the Save Clipboard button in Control Center, Back Tap or the Action button.")
+        bullet("Share text to Pastronaut from any app.")
+      }
+      .padding(.leading, 34)
+    }
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+    .accessibilityElement(children: .contain)
+    .accessibilityIdentifier("iphoneLimits")
+  }
+
+  private func row(_ symbol: String, _ title: LocalizedStringKey, _ detail: LocalizedStringKey) -> some View {
+    HStack(alignment: .top, spacing: 12) {
+      Image(systemName: symbol)
+        .font(.body.weight(.semibold))
+        .foregroundStyle(Color.accentColor)
+        .frame(width: 22)
+      VStack(alignment: .leading, spacing: 3) {
+        Text(title).font(.subheadline.weight(.semibold))
+        Text(detail)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+    }
+  }
+
+  private func bullet(_ text: LocalizedStringKey) -> some View {
+    HStack(alignment: .firstTextBaseline, spacing: 6) {
+      Text(verbatim: "•")
+      Text(text)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    .font(.footnote)
+    .foregroundStyle(.secondary)
   }
 }

@@ -311,10 +311,16 @@ final class SyncStepTests: XCTestCase {
       Thread.sleep(forTimeInterval: 1)
       attachScreenshot(named: "settings")
       let setupRow = app.descendants(matching: .any)["setupKeyboard"].firstMatch
+      for _ in 0..<4 where !setupRow.isHittable {
+        app.swipeUp()
+      }
       if setupRow.waitForExistence(timeout: 3) {
         setupRow.tap()
         Thread.sleep(forTimeInterval: 1)
         attachScreenshot(named: "setup")
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "setup-scrolled")
       }
       report(["ok": true])
     case "keyboardShots":
@@ -350,6 +356,13 @@ final class SyncStepTests: XCTestCase {
           }
           Thread.sleep(forTimeInterval: 1)
           attachScreenshot(named: "kb-search-\(name)")
+          let digits = app.descendants(matching: .any)["digitsKey"].firstMatch
+          if digits.exists {
+            digits.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+            attachScreenshot(named: "kb-digits-\(name)")
+            digits.tap()
+          }
           app.descendants(matching: .any)["searchDone"].firstMatch.tap()
         }
         let row = app.descendants(matching: .any)["kbClip"].firstMatch

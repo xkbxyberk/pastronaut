@@ -385,6 +385,28 @@
           }
         }
       }
+    },
+    "Letters": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harfler"
+          }
+        }
+      }
+    },
+    "Numbers": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rakamlar"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

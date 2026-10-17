@@ -350,6 +350,27 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
       gider). Logotip seçimi sürüyor (sekiz seçenek).
     - Klavye: iki sütunlu ızgara + alt kategori çubuğu (son, sabit, Mac, iPhone, koleksiyonlar renkli baş harfle) +
       tuş sırası (ara, boşluk, sil, satır başı); üstte "Mac'ten son" kutusu.
+  - 4.9 Dalga 5 (2026-10-17, uygulandı; iPhone eylemleri ve widget elle denenecek):
+    - Mac, Space ile önizleme: arama kutusu boşken Space önizlemeyi açıp kapatır (⌃Space de çalışır; yazı varken
+      Space aramaya gider). Önizleme türe göre: kod koyu panelde renkli (iPhone kartlarıyla aynı `CodeTheme`), renk
+      büyük örnek + RGB, bağlantı/adres/e-posta/telefon için tek düğme (Bağlantıyı Aç, Yol Tarifi, E-posta Yaz, Ara).
+    - Mac, Sıra: ⌘-tık ya da ⇧↑/⇧↓ ile birkaç satır seçilir, Return (ya da alttaki "Sırayı Başlat") ilkini panoya
+      koyar; başka uygulamada her ⌘V'den sonra sıradaki panoya geçer, son öğede sıra biter. Maccy'nin kapatılmış
+      çoklu seçim ve yapıştırma yığını altyapısı açıldı; eklenenler: açıklayan alt satır ("3 seçili · Return ile
+      sıra başlar", "Sıra: 2 kaldı", Sırayı Bitir), ⌘ basılıyken fareyle geçilen satırın seçimi değiştirmemesi ve
+      sıranın başında otomatik yapıştırma yapılmaması (sıradaki öğe yapıştırma bitmeden panoya geçebiliyordu).
+      Başka bir kopya sırayı bitirir. Genel ⌘V dinleyicisi Erişilebilirlik izni ister (yapıştırma için zaten var).
+    - Mac, arama filtreleri: `app:`/`uygulama:`, `type:`/`tür:` (bağlantı, kod, renk, adres, e-posta, telefon,
+      metin, görsel, dosya), `date:`/`tarih:` (bugün, dün, hafta), `from:`/`cihaz:` (mac, iphone); boşluklu değer
+      tırnakla. Bilinmeyen anahtar ya da değer düz metin kalır, filtre yoksa arama metni hiç değişmez (Maccy'nin
+      tam ve regex aramaları için). Ayrıştırıcı çekirdekte (`ClipQuery`). ⌘G: arama/filtre varken seçili satırı
+      geçmişteki yerinde gösterir. Filtre menüsünün altında örnek satırı.
+    - iPhone Kısayollar: "Öğe Al" (n'inci öğe; kaynak ve isteğe bağlı koleksiyon), "Koleksiyona Ekle" (metni kaydeder
+      ve koleksiyona katar), "Son Öğeleri Al"a koleksiyon seçeneği. Widget "Son Öğeler" bir koleksiyonu
+      gösterebilir (başlıkta koleksiyon adı). Koleksiyon seçimi `CollectionEntity` (app group'taki collections.json).
+    - Klavye aramasında 123/ABC tuşu: rakamlar ve aranan işaretler (- / : ; ( ) ₺ & @ " . , ? ! ' # % +).
+    - Kurulum rehberinde "iPhone'da ne beklemeli" kartı: Mac'ten gelen kendiliğinden; iPhone'dan kopya tek dokunuşla
+      (açılınca kaydet, klavyede Yapıştır, Denetim Merkezi/Arkaya Dokun/Eylem düğmesi, Paylaş).
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,
   TestFlight ve App Store; Mac için GitHub Releases, Homebrew tap, Mac App Store.
 - **Sonra:** görseller, sabit bölümü, Paylaş uzantısı, iPad, Mac App Store.

@@ -410,6 +410,7 @@ struct PopupStatusArea: View {
           .accessibilityIdentifier("resume-button")
         }
       }
+      QueueNotice()
       if RecentlyDeleted.shared.canUndo {
         notice(symbol: "trash", tint: .secondary) {
           Text("Deleted \(RecentlyDeleted.shared.count) items", tableName: "Pastronaut")
@@ -434,14 +435,33 @@ struct PopupStatusArea: View {
     @ViewBuilder text: () -> some View,
     @ViewBuilder action: () -> some View
   ) -> some View {
+    StatusNotice(symbol: symbol, tint: tint, text: text, action: action)
+  }
+}
+
+/// One line above the sync status: a symbol, a short text and a small button.
+struct StatusNotice<Label: View, Action: View>: View {
+  let symbol: String
+  let tint: Color
+  let text: Label
+  let action: Action
+
+  init(symbol: String, tint: Color, @ViewBuilder text: () -> Label, @ViewBuilder action: () -> Action) {
+    self.symbol = symbol
+    self.tint = tint
+    self.text = text()
+    self.action = action()
+  }
+
+  var body: some View {
     HStack(spacing: 6) {
       Image(systemName: symbol)
         .foregroundStyle(tint)
-      text()
+      text
         .lineLimit(1)
         .foregroundStyle(.secondary)
       Spacer(minLength: 4)
-      action()
+      action
         .buttonStyle(.borderless)
         .controlSize(.small)
     }
@@ -503,13 +523,13 @@ struct HistoryItemContextMenu: View {
       }
     }
     CollectionsContextMenu(item: item)
-    if !history.searchQuery.isEmpty || history.deviceFilter != .all || !history.tokenFilter.isEmpty
-      || history.collectionFilter != nil {
+    if Self.isFiltered {
       Button {
         Self.reveal(item)
       } label: {
         Label { Text("Show in History", tableName: "Pastronaut") } icon: { Image(systemName: "list.bullet.below.rectangle") }
       }
+      .keyboardShortcut("g", modifiers: .command)
       .accessibilityIdentifier("context-reveal")
     }
     Divider()
@@ -519,6 +539,13 @@ struct HistoryItemContextMenu: View {
       Label { Text("Delete", tableName: "Pastronaut") } icon: { Image(systemName: "trash") }
     }
     .accessibilityIdentifier("context-delete")
+  }
+
+  /// A search or a filter hides part of the history, so "Show in History" (⌘G) has something to show.
+  static var isFiltered: Bool {
+    let history = AppState.shared.history
+    return !history.searchQuery.isEmpty || history.deviceFilter != .all || !history.tokenFilter.isEmpty
+      || history.collectionFilter != nil
   }
 
   /// Deletes one row and, like the delete shortcut, keeps the selection in the list instead of the footer.
@@ -592,6 +619,172 @@ struct RecognizedTextPreview: View {
         .frame(maxHeight: 120)
       }
       .padding(.top, 10)
+    }
+  }
+}
+
+// MARK: - Preview by kind
+
+/// The preview's body for clips with a kind of their own: code in color on a dark panel, a color as a swatch, and
+/// links, addresses, emails and phone numbers with a button that opens them. Plain text keeps Maccy's preview.
+struct KindPreview: View {
+  /// Longer code stays plain (coloring is a regex pass over the whole text).
+  private static let maxCodeLength = 20_000
+
+  let content: ClipContent
+  let text: String
+
+  static func handles(_ content: ClipContent, text: String) -> Bool {
+    switch content {
+    case .text: false
+    case .code: text.utf16.count <= maxCodeLength
+    default: true
+    }
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      switch content {
+      case .code:
+        code
+      case .color(let hex):
+        swatch(hex)
+      default:
+        ScrollView {
+          Text(verbatim: text)
+            .font(.body)
+            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxHeight: 220)
+        .fixedSize(horizontal: false, vertical: true)
+      }
+      if let action = PreviewAction(content) {
+        Button {
+          AppState.shared.popup.close()
+          NSWorkspace.shared.open(action.url)
+        } label: {
+          Label { Text(action.title, tableName: "Pastronaut") } icon: { Image(systemName: action.systemImage) }
+        }
+        .controlSize(.regular)
+        .accessibilityIdentifier("preview-action")
+      }
+    }
+  }
+
+  private var code: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text(verbatim: CodeHighlighter.language(of: text).title.uppercased())
+        .font(.caption2.weight(.bold))
+        .foregroundStyle(CodeTheme.label)
+      ScrollView([.vertical, .horizontal]) {
+        Text(CodeTheme.attributed(text))
+          .font(.system(size: 12, design: .monospaced))
+          .textSelection(.enabled)
+          .frame(maxWidth: .infinity, alignment: .leading)
+      }
+    }
+    .padding(12)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(CodeTheme.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .accessibilityIdentifier("preview-code")
+  }
+
+  private func swatch(_ hex: String) -> some View {
+    VStack(alignment: .leading, spacing: 4) {
+      Spacer(minLength: 0)
+      Text(verbatim: hex.uppercased())
+        .font(.system(.title2, design: .monospaced).weight(.semibold))
+      if let (r, g, b) = HexColor.rgb(hex) {
+        Text(verbatim: "RGB \(r) \(g) \(b)")
+          .font(.callout)
+          .opacity(0.85)
+      }
+    }
+    .foregroundStyle(HexColor.isLight(hex) ? Color.black : Color.white)
+    .padding(14)
+    .frame(maxWidth: .infinity, minHeight: 130, idealHeight: 130, maxHeight: 130, alignment: .bottomLeading)
+    .background(NSColor(hexString: hex).map { Color(nsColor: $0) } ?? .gray, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(.separator))
+    .accessibilityIdentifier("preview-swatch")
+  }
+}
+
+/// Open a link, write an email, call, or get directions: what the preview's button does.
+private struct PreviewAction {
+  let title: LocalizedStringKey
+  let systemImage: String
+  let url: URL
+
+  init?(_ content: ClipContent) {
+    switch content {
+    case .link(let url):
+      (title, systemImage, self.url) = ("Open Link", "safari", url)
+    case .email(let address):
+      guard let url = URL(string: "mailto:\(address)") else { return nil }
+      (title, systemImage, self.url) = ("Write Email", "envelope", url)
+    case .phone(let number):
+      guard let url = URL(string: "tel:\(number.filter { $0.isNumber || $0 == "+" })") else { return nil }
+      (title, systemImage, self.url) = ("Call", "phone", url)
+    case .address(let address):
+      var components = URLComponents(string: "https://maps.apple.com/")
+      components?.queryItems = [URLQueryItem(name: "daddr", value: address)]
+      guard let url = components?.url else { return nil }
+      (title, systemImage, self.url) = ("Get Directions", "arrow.triangle.turn.up.right.diamond", url)
+    case .code, .color, .text:
+      return nil
+    }
+  }
+}
+
+/// ⌘G: show the selected row among its neighbours, search and filters cleared.
+enum RevealKey {
+  static func matches(_ event: NSEvent?) -> Bool {
+    guard let event, event.type == .keyDown, event.keyCode == 5 else { return false } // kVK_ANSI_G
+    return event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command
+  }
+}
+
+/// Space alone, like Quick Look in Finder.
+enum QuickPreviewKey {
+  static func matches(_ event: NSEvent?) -> Bool {
+    guard let event, event.type == .keyDown, event.keyCode == 49 else { return false } // kVK_Space
+    return event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty
+  }
+}
+
+// MARK: - Queue
+
+/// Pasting several clips in order: select them with ⌘-click or ⇧↑ ⇧↓, press Return, then every ⌘V in any app
+/// pastes the next one. Built on Maccy's multiple selection and its stack of items to paste; this adds the notices
+/// that explain it and copies only (no automatic first paste, so the next item can't replace it mid-paste).
+struct QueueNotice: View {
+  var body: some View {
+    let appState = AppState.shared
+    if let stack = appState.history.pasteStack, !stack.items.isEmpty {
+      StatusNotice(symbol: "list.number", tint: .accentColor) {
+        Text("Queue: \(stack.items.count) left · ⌘V pastes the next", tableName: "Pastronaut")
+      } action: {
+        Button {
+          appState.removePasteStack()
+        } label: {
+          Text("End Queue", tableName: "Pastronaut")
+        }
+        .accessibilityIdentifier("queue-end")
+      }
+      .accessibilityIdentifier("queue-notice")
+    } else if appState.navigator.selection.count > 1 {
+      StatusNotice(symbol: "list.number", tint: .accentColor) {
+        Text("\(appState.navigator.selection.count) selected · Return starts a queue", tableName: "Pastronaut")
+      } action: {
+        Button {
+          appState.select(flags: [])
+        } label: {
+          Text("Start Queue", tableName: "Pastronaut")
+        }
+        .accessibilityIdentifier("queue-start")
+      }
+      .accessibilityIdentifier("queue-hint")
     }
   }
 }

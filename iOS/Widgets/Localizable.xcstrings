@@ -363,6 +363,17 @@
           }
         }
       }
+    },
+    "Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyon"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

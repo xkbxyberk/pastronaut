@@ -28,6 +28,17 @@ struct KeyHandlingView<Content: View>: View {
           }
         }
 
+        // Pastronaut: with nothing typed in the search, Space shows and hides the preview (⌃Space works too).
+        if searchQuery.isEmpty, QuickPreviewKey.matches(NSApp.currentEvent) {
+          appState.preview.togglePreview()
+          return .handled
+        }
+        if RevealKey.matches(NSApp.currentEvent), HistoryItemContextMenu.isFiltered,
+           let item = appState.navigator.leadHistoryItem {
+          HistoryItemContextMenu.reveal(item)
+          return .handled
+        }
+
         switch KeyChord(NSApp.currentEvent) {
         case .clearHistory:
           if let item = appState.footer.items.first(where: { $0.title == "clear" }),

@@ -6,7 +6,8 @@ private struct HoverSelectionModifier: ViewModifier {
 
   func body(content: Content) -> some View {
     content.onHover { hovering in
-      if hovering && !appState.navigator.isDragAndDropInProgress {
+      // Pastronaut: holding ⌘ to pick rows for a queue, passing over a row doesn't select it.
+      if hovering && !appState.navigator.isDragAndDropInProgress && !NSEvent.modifierFlags.contains(.command) {
         if !appState.navigator.isKeyboardNavigating && !appState.navigator.isMultiSelectInProgress {
           appState.navigator.selectWithoutScrolling(id: id)
         } else {

@@ -22,7 +22,7 @@ struct GetLatestClipIntent: AppIntent {
   }
 }
 
-/// Shortcuts: several recent clips as a list.
+/// Shortcuts: several recent clips as a list, from all clips or one collection.
 struct GetRecentClipsIntent: AppIntent {
   static let title: LocalizedStringResource = "Get Recent Clips"
   static let description = IntentDescription("Returns your most recent clips, newest first.")
@@ -34,12 +34,76 @@ struct GetRecentClipsIntent: AppIntent {
   @Parameter(title: "From", default: .all)
   var source: ClipSourceOption
 
+  @Parameter(title: "Collection")
+  var collection: CollectionEntity?
+
   static var parameterSummary: some ParameterSummary {
-    Summary("Get \(\.$count) recent clips from \(\.$source)")
+    Summary("Get \(\.$count) recent clips from \(\.$source)") {
+      \.$collection
+    }
   }
 
   func perform() async throws -> some IntentResult & ReturnsValue<[String]> {
-    .result(value: source.source.latest(from: ClipClipboard.clips, count: count).map(\.text))
+    .result(value: source.latest(in: collection, count: count).map(\.text))
+  }
+}
+
+/// Shortcuts: one clip by its place in the list, 1 being the newest ("the third clip from my Mac").
+struct GetClipIntent: AppIntent {
+  static let title: LocalizedStringResource = "Get Clip"
+  static let description = IntentDescription("Returns the clip at a position in your history: 1 is the newest, 2 the one before it.")
+  static let authenticationPolicy = IntentAuthenticationPolicy.requiresAuthentication
+
+  @Parameter(title: "Position", default: 1, inclusiveRange: (1, 50))
+  var position: Int
+
+  @Parameter(title: "From", default: .all)
+  var source: ClipSourceOption
+
+  @Parameter(title: "Collection")
+  var collection: CollectionEntity?
+
+  static var parameterSummary: some ParameterSummary {
+    Summary("Get clip \(\.$position) from \(\.$source)") {
+      \.$collection
+    }
+  }
+
+  func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
+    let clips = source.latest(in: collection, count: position)
+    guard clips.count == position, let clip = clips.last else {
+      return .result(value: "", dialog: "There is no clip at that position.")
+    }
+    return .result(value: clip.text, dialog: IntentDialog(stringLiteral: clip.preview))
+  }
+}
+
+/// Shortcuts: save text into a collection ("Get Clipboard" → "Add to Collection"). New text is also saved to
+/// the history, like "Save to Pastronaut"; text already there keeps its pin and joins the collection.
+struct AddToCollectionIntent: AppIntent {
+  static let title: LocalizedStringResource = "Add to Collection"
+  static let description = IntentDescription("Saves text to your Pastronaut history and adds it to a collection.")
+
+  @Parameter(title: "Text", inputOptions: String.IntentInputOptions(multiline: true))
+  var text: String
+
+  @Parameter(title: "Collection")
+  var collection: CollectionEntity
+
+  static var parameterSummary: some ParameterSummary {
+    Summary("Add \(\.$text) to \(\.$collection)")
+  }
+
+  @MainActor
+  func perform() async throws -> some IntentResult & ProvidesDialog {
+    switch await ClipStore.shared.saveNow(text, to: collection.id) {
+    case .saved:
+      return .result(dialog: "Added to \(collection.name).")
+    case .empty:
+      return .result(dialog: "There was no text to save.")
+    case .tooLarge:
+      return .result(dialog: "This text is too large to sync, so it was not saved.")
+    }
   }
 }
 

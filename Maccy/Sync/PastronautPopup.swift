@@ -51,7 +51,7 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
 }
 
 extension History {
-  /// The device filter and the filter menu's chips, applied on top of the search.
+  /// The device filter, the filter menu's chips and the filters typed into the search, on top of the search.
   func passesFilters(_ item: HistoryItemDecorator) -> Bool {
     deviceFilter.includes(item)
       && collectionFilter.map { SyncedCollections.shared.contains(item.item, in: $0) } ?? true
@@ -61,6 +61,41 @@ extension History {
       pinned: item.isPinned,
       lastCopiedAt: item.item.lastCopiedAt
     )
+      && passesTypedFilters(item)
+  }
+
+  /// `app:`, `type:`, `date:` and `from:` from the search field (ClipQuery), parsed once per query.
+  var typedFilters: ClipQuery {
+    if let (query, parsed) = Self.lastTypedFilters, query == searchQuery { return parsed }
+    let parsed = ClipQuery.parse(searchQuery)
+    Self.lastTypedFilters = (searchQuery, parsed)
+    return parsed
+  }
+
+  nonisolated(unsafe) private static var lastTypedFilters: (String, ClipQuery)?
+
+  private func passesTypedFilters(_ item: HistoryItemDecorator) -> Bool {
+    let query = typedFilters
+    guard query.hasFilters else { return true }
+    if let device = query.device, (device == .iphone) != item.item.isFromIPhone { return false }
+    if !query.matchesDay(item.item.lastCopiedAt) { return false }
+    if query.app != nil {
+      let bundle = item.item.application
+      guard query.matchesApp(name: bundle.flatMap { AppNames.name(for: $0) }, bundleIdentifier: bundle) else {
+        return false
+      }
+    }
+    if !query.kinds.isEmpty {
+      let kind: ClipKind? = if item.item.imageData != nil {
+        .image
+      } else if !item.item.fileURLs.isEmpty {
+        .file
+      } else {
+        item.item.text.map { ClipContent($0).kind }
+      }
+      guard let kind, query.kinds.contains(kind) else { return false }
+    }
+    return true
   }
 }
 
@@ -89,6 +124,11 @@ struct ClipFilterMenu: View {
         } label: {
           Text("Clear Filters", tableName: "Pastronaut")
         }
+      }
+      Section {
+        Text("app:Safari · type:link · date:yesterday · from:iphone", tableName: "Pastronaut")
+      } header: {
+        Text("Or type in the search", tableName: "Pastronaut")
       }
     } label: {
       Image(systemName: isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")

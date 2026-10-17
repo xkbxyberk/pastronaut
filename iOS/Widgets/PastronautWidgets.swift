@@ -20,6 +20,8 @@ struct ClipsEntry: TimelineEntry {
   let date: Date
   let clips: [Clip]
   let source: ClipSourceOption
+  /// The collection the widget shows, if one was chosen.
+  var collectionName: String?
   let isLocked: Bool
   /// The row a widget button just copied; shows a check mark for a moment.
   let copiedID: String?
@@ -32,26 +34,34 @@ struct ClipsEntry: TimelineEntry {
       Clip(text: "#87CEEB", sourceDevice: .mac)
     ],
     source: .all,
+    collectionName: nil,
     isLocked: false,
     copiedID: nil
   )
 }
 
 enum ClipsTimeline {
-  static func entries(source: ClipSourceOption, count: Int) -> [ClipsEntry] {
+  static func entries(source: ClipSourceOption, collection: CollectionEntity? = nil, count: Int) -> [ClipsEntry] {
     let now = Date.now
     let locked = SharedSettings.isAppLockEnabled
-    let clips = locked ? [] : source.source.latest(from: SharedClipFiles()?.currentClips() ?? [], count: count)
+    let clips = locked ? [] : source.latest(in: collection, count: count)
+    // The name as it is now (renamed on another device since the widget was set up).
+    let collectionName = collection.map { chosen in CollectionEntity.all.first { $0.id == chosen.id }?.name ?? chosen.name }
     let defaults = SharedSettings.defaults
     var copiedID: String?
     if let copiedAt = defaults?.object(forKey: SharedSettings.widgetCopiedAtKey) as? Date,
        now.timeIntervalSince(copiedAt) < 3 {
       copiedID = defaults?.string(forKey: SharedSettings.widgetCopiedIDKey)
     }
-    let entry = ClipsEntry(date: now, clips: clips, source: source, isLocked: locked, copiedID: copiedID)
+    let entry = ClipsEntry(
+      date: now, clips: clips, source: source, collectionName: collectionName, isLocked: locked, copiedID: copiedID
+    )
     guard copiedID != nil else { return [entry] }
     // The check mark goes away after a moment.
-    let plain = ClipsEntry(date: now.addingTimeInterval(2), clips: clips, source: source, isLocked: locked, copiedID: nil)
+    let plain = ClipsEntry(
+      date: now.addingTimeInterval(2), clips: clips, source: source, collectionName: collectionName, isLocked: locked,
+      copiedID: nil
+    )
     return [entry, plain]
   }
 
@@ -79,6 +89,9 @@ struct RecentClipsConfiguration: WidgetConfigurationIntent {
 
   @Parameter(title: "Show", default: .all)
   var source: ClipSourceOption
+
+  @Parameter(title: "Collection")
+  var collection: CollectionEntity?
 }
 
 struct RecentClipsProvider: AppIntentTimelineProvider {
@@ -86,12 +99,16 @@ struct RecentClipsProvider: AppIntentTimelineProvider {
 
   func snapshot(for configuration: RecentClipsConfiguration, in context: Context) async -> ClipsEntry {
     if context.isPreview && (SharedClipFiles()?.currentClips().isEmpty ?? true) { return .placeholder }
-    return ClipsTimeline.entries(source: configuration.source, count: ClipsTimeline.rowCount(for: context.family))[0]
+    return ClipsTimeline.entries(
+      source: configuration.source, collection: configuration.collection, count: ClipsTimeline.rowCount(for: context.family)
+    )[0]
   }
 
   func timeline(for configuration: RecentClipsConfiguration, in context: Context) async -> Timeline<ClipsEntry> {
     Timeline(
-      entries: ClipsTimeline.entries(source: configuration.source, count: ClipsTimeline.rowCount(for: context.family)),
+      entries: ClipsTimeline.entries(
+        source: configuration.source, collection: configuration.collection, count: ClipsTimeline.rowCount(for: context.family)
+      ),
       policy: ClipsTimeline.policy()
     )
   }
@@ -122,7 +139,7 @@ struct RecentClipsView: View {
       SmallClipView(clip: clip, copied: entry.copiedID == clip.id)
     } else {
       VStack(alignment: .leading, spacing: 6) {
-        Header(source: entry.source)
+        Header(source: entry.source, collectionName: entry.collectionName)
         ForEach(entry.clips, id: \.id) { clip in
           ClipWidgetRow(clip: clip, copied: entry.copiedID == clip.id)
         }
@@ -134,11 +151,22 @@ struct RecentClipsView: View {
 
 private struct Header: View {
   let source: ClipSourceOption
+  let collectionName: String?
 
   var body: some View {
     HStack(spacing: 5) {
-      Image(systemName: source.systemImage)
-      Text(source.title)
+      if let collectionName {
+        Image(systemName: "folder.fill")
+        Text(verbatim: collectionName)
+          .lineLimit(1)
+        if source != .all {
+          Text(verbatim: "·")
+          Text(source.title)
+        }
+      } else {
+        Image(systemName: source.systemImage)
+        Text(source.title)
+      }
       Spacer()
     }
     .font(.caption.weight(.semibold))

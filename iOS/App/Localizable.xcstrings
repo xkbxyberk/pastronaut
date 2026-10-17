@@ -1855,6 +1855,204 @@
           }
         }
       }
+    },
+    "Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyon"
+          }
+        }
+      }
+    },
+    "Get Clip": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğe Al"
+          }
+        }
+      }
+    },
+    "Returns the clip at a position in your history: 1 is the newest, 2 the one before it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmişte belirli sıradaki öğeyi verir: 1 en yenisi, 2 ondan öncekidir."
+          }
+        }
+      }
+    },
+    "Position": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıra"
+          }
+        }
+      }
+    },
+    "Get clip ${position} from ${source}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${source} içinden ${position}. öğeyi al"
+          }
+        }
+      }
+    },
+    "There is no clip at that position.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O sırada bir öğe yok."
+          }
+        }
+      }
+    },
+    "Saves text to your Pastronaut history and adds it to a collection.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metni Pastronaut geçmişine kaydeder ve bir koleksiyona ekler."
+          }
+        }
+      }
+    },
+    "Add ${text} to ${collection}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${text} öğesini ${collection} koleksiyonuna ekle"
+          }
+        }
+      }
+    },
+    "Added to %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ koleksiyonuna eklendi."
+          }
+        }
+      }
+    },
+    "What to expect on iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone'da ne beklemeli"
+          }
+        }
+      }
+    },
+    "From your Mac: automatic": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'ten: kendiliğinden"
+          }
+        }
+      }
+    },
+    "Everything you copy on your Mac appears here and in the keyboard, without opening anything.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'te kopyaladığın her şey, hiçbir şey açmana gerek kalmadan burada ve klavyede görünür."
+          }
+        }
+      }
+    },
+    "From your iPhone: one tap": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone'dan: tek dokunuş"
+          }
+        }
+      }
+    },
+    "iPhone doesn't let apps read the clipboard in the background, so save a copy in one of these ways:": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone, uygulamaların panoyu arka planda okumasına izin vermez. Bu yüzden bir kopyayı şu yollardan biriyle kaydet:"
+          }
+        }
+      }
+    },
+    "Open Pastronaut: with “Save Clipboard on Opening” on, it saves what you copied.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'u aç: “Açılınca Panoyu Kaydet” açıksa kopyaladığını kaydeder."
+          }
+        }
+      }
+    },
+    "In the keyboard, tap Paste when it offers the new copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavyede yeni kopya önerildiğinde Yapıştır'a dokun."
+          }
+        }
+      }
+    },
+    "Use the Save Clipboard button in Control Center, Back Tap or the Action button.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denetim Merkezi'ndeki Panoyu Kaydet düğmesini, Arkaya Dokun'u ya da Eylem düğmesini kullan."
+          }
+        }
+      }
+    },
+    "Share text to Pastronaut from any app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herhangi bir uygulamadan metni Pastronaut'la paylaş."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

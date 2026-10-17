@@ -442,7 +442,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
       case .pasteWithoutFormatting:
         AppState.shared.popup.close()
         Clipboard.shared.copy(item.item, removeFormatting: true)
-        Clipboard.shared.paste()
+        // Pastronaut: no automatic paste; the next item would replace this one while the app is still pasting.
       case .unknown:
         return
       }
@@ -562,10 +562,10 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
 
   private func updateSearchResults() {
     filteredPinnedItems = filteredItems(
-      from: search.search(string: searchQuery, within: allPinnedItems)
+      from: search.search(string: typedFilters.text, within: allPinnedItems) // Pastronaut: without app:, type:…
     )
     filteredUnpinnedItems = filteredItems(
-      from: search.search(string: searchQuery, within: allUnpinnedItems)
+      from: search.search(string: typedFilters.text, within: allUnpinnedItems)
     )
 
     updateUnpinnedShortcuts()
@@ -574,7 +574,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
   private func filteredItems(from results: [Search.SearchResult]) -> [HistoryItemDecorator] {
     results.map { result in
       let item = result.object
-      item.highlight(searchQuery, result.ranges)
+      item.highlight(typedFilters.text, result.ranges) // Pastronaut
 
       return item
     }

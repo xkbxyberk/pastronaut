@@ -177,7 +177,7 @@ struct ToolbarView: View {
         } label: {
           Image(systemName: "stop")
         }
-        .accessibilityLabel(Text("toolbar_remove_paste_stack_action"))
+        .accessibilityLabel(Text("End Queue", tableName: "Pastronaut")) // Pastronaut
       }
     }
     .sheet(item: $editingItem, onDismiss: {

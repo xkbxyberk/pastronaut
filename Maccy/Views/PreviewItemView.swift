@@ -74,6 +74,10 @@ struct PreviewItemView: View {
           }
         }
         RecognizedTextPreview(item: item) // Pastronaut
+      } else if let content = ClipRowInfo(item)?.content, // Pastronaut: code, colors, links, addresses
+                KindPreview.handles(content, text: item.item.text ?? "") {
+        KindPreview(content: content, text: item.item.text ?? "")
+          .id("kindpreview-\(item.id)")
       } else {
         if item.previewText.byteCount >= Self.largeTextThreshold {
           LargeTextView(text: item.previewText.string)

@@ -1466,6 +1466,116 @@
           }
         }
       }
+    },
+    "Open Link": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantıyı Aç"
+          }
+        }
+      }
+    },
+    "Write Email": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-posta Yaz"
+          }
+        }
+      }
+    },
+    "Call": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ara"
+          }
+        }
+      }
+    },
+    "Get Directions": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yol Tarifi"
+          }
+        }
+      }
+    },
+    "Queue: %lld left · ⌘V pastes the next": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıra: %lld kaldı · ⌘V sıradakini yapıştırır"
+          }
+        }
+      }
+    },
+    "End Queue": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sırayı Bitir"
+          }
+        }
+      }
+    },
+    "%lld selected · Return starts a queue": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld seçili · Return ile sıra başlar"
+          }
+        }
+      }
+    },
+    "Start Queue": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sırayı Başlat"
+          }
+        }
+      }
+    },
+    "app:Safari · type:link · date:yesterday · from:iphone": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "uygulama:Safari · tür:bağlantı · tarih:dün · cihaz:iphone"
+          }
+        }
+      }
+    },
+    "Or type in the search": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya da aramaya yazın"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
