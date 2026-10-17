@@ -111,6 +111,17 @@
         }
       }
     },
+    "All Devices": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm Cihazlar"
+          }
+        }
+      }
+    },
     "Allow Pasting Without Asking…": {
       "extractionState": "manual",
       "localizations": {
@@ -166,6 +177,17 @@
         }
       }
     },
+    "Clip": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğe"
+          }
+        }
+      }
+    },
     "Clipboard": {
       "extractionState": "manual",
       "localizations": {
@@ -199,6 +221,17 @@
         }
       }
     },
+    "Colors": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renkler"
+          }
+        }
+      }
+    },
     "Copied": {
       "extractionState": "manual",
       "localizations": {
@@ -206,6 +239,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kopyalandı"
+          }
+        }
+      }
+    },
+    "Copied: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalandı: %@"
           }
         }
       }
@@ -221,6 +265,17 @@
         }
       }
     },
+    "Copies your most recent clip, for example the last one from your Mac.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En son öğeni kopyalar; örneğin Mac'ten gelen sonuncuyu."
+          }
+        }
+      }
+    },
     "Copy": {
       "extractionState": "manual",
       "localizations": {
@@ -228,6 +283,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kopyala"
+          }
+        }
+      }
+    },
+    "Copy Clip": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğeyi Kopyala"
+          }
+        }
+      }
+    },
+    "Copy Latest Clip": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son Öğeyi Kopyala"
+          }
+        }
+      }
+    },
+    "Copy latest clip from ${source}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son öğeyi kopyala: ${source}"
+          }
+        }
+      }
+    },
+    "Count": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayı"
           }
         }
       }
@@ -349,6 +448,17 @@
         }
       }
     },
+    "Emails": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-postalar"
+          }
+        }
+      }
+    },
     "Encrypted": {
       "extractionState": "manual",
       "localizations": {
@@ -382,6 +492,61 @@
         }
       }
     },
+    "From": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaynak"
+          }
+        }
+      }
+    },
+    "Get ${count} recent clips from ${source}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son ${count} öğeyi al: ${source}"
+          }
+        }
+      }
+    },
+    "Get Latest Clip": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son Öğeyi Al"
+          }
+        }
+      }
+    },
+    "Get latest clip from ${source}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son öğeyi al: ${source}"
+          }
+        }
+      }
+    },
+    "Get Recent Clips": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son Öğeleri Al"
+          }
+        }
+      }
+    },
     "In Shortcuts, make a shortcut with “Get Clipboard” and “Save to Pastronaut”. Add it to Back Tap or the Action button to save with one gesture.": {
       "extractionState": "manual",
       "localizations": {
@@ -389,6 +554,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kestirmeler'de “Panoyu Al” ve “Pastronaut'a kaydet” eylemleriyle bir kestirme oluştur. Tek hareketle kaydetmek için Arkaya Dokun'a ya da Eylem düğmesine ata."
+          }
+        }
+      }
+    },
+    "iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone"
           }
         }
       }
@@ -492,6 +668,39 @@
         }
       }
     },
+    "Links": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantılar"
+          }
+        }
+      }
+    },
+    "Lock with %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ile Kilitle"
+          }
+        }
+      }
+    },
+    "Mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        }
+      }
+    },
     "New Clip": {
       "extractionState": "manual",
       "localizations": {
@@ -591,6 +800,50 @@
         }
       }
     },
+    "Opens Pastronaut and saves what's on the clipboard to your history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'u açar ve panodakini geçmişine kaydeder."
+          }
+        }
+      }
+    },
+    "Passcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parola"
+          }
+        }
+      }
+    },
+    "Pastronaut asks for %@ when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut açılırken %1$@ ister ve widget'lar öğelerini gizler. Klavye kullanılabilir kalır, çünkü iPhone klavyeleri %2$@ isteyemez."
+          }
+        }
+      }
+    },
+    "Pastronaut is locked": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut kilitli"
+          }
+        }
+      }
+    },
     "Pastronaut on GitHub": {
       "extractionState": "manual",
       "localizations": {
@@ -609,6 +862,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Telefon"
+          }
+        }
+      }
+    },
+    "Phone Numbers": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon Numaraları"
           }
         }
       }
@@ -646,6 +910,17 @@
         }
       }
     },
+    "Privacy": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizlilik"
+          }
+        }
+      }
+    },
     "Ready": {
       "extractionState": "manual",
       "localizations": {
@@ -668,6 +943,28 @@
         }
       }
     },
+    "Returns the text of your most recent clip.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En son öğenin metnini verir."
+          }
+        }
+      }
+    },
+    "Returns your most recent clips, newest first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En son öğelerini, en yenisi önce gelecek şekilde verir."
+          }
+        }
+      }
+    },
     "Save": {
       "extractionState": "manual",
       "localizations": {
@@ -686,6 +983,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "${text} metnini Pastronaut'a kaydet"
+          }
+        }
+      }
+    },
+    "Save Clipboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panoyu Kaydet"
           }
         }
       }
@@ -921,6 +1229,28 @@
         }
       }
     },
+    "The clipboard has no text": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panoda metin yok"
+          }
+        }
+      }
+    },
+    "There are no clips yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz öğe yok."
+          }
+        }
+      }
+    },
     "There was no text to save.": {
       "extractionState": "manual",
       "localizations": {
@@ -987,6 +1317,17 @@
         }
       }
     },
+    "Too large to sync": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşitlemek için çok büyük"
+          }
+        }
+      }
+    },
     "Turn on Full Access": {
       "extractionState": "manual",
       "localizations": {
@@ -1009,6 +1350,17 @@
         }
       }
     },
+    "Turn on the lock for Pastronaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut kilidini etkinleştir"
+          }
+        }
+      }
+    },
     "Type what you copied on your Mac with a single tap on iPhone.": {
       "extractionState": "manual",
       "localizations": {
@@ -1027,6 +1379,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bilinmiyor"
+          }
+        }
+      }
+    },
+    "Unlock with %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ile Aç"
+          }
+        }
+      }
+    },
+    "Unlock your clipboard history": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pano geçmişinin kilidini aç"
           }
         }
       }

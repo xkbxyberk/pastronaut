@@ -1,0 +1,83 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Clips up to 100 KB are synced.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 KB'a kadar öğeler eşitlenir."
+          }
+        }
+      }
+    },
+    "It reaches your Mac the next time Pastronaut opens.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut bir sonraki açılışında Mac'ine ulaşır."
+          }
+        }
+      }
+    },
+    "Nothing to save": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydedilecek bir şey yok"
+          }
+        }
+      }
+    },
+    "Pastronaut saves text and links.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut metin ve bağlantı kaydeder."
+          }
+        }
+      }
+    },
+    "Saved to Pastronaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'a kaydedildi"
+          }
+        }
+      }
+    },
+    "Saving…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydediliyor…"
+          }
+        }
+      }
+    },
+    "Too large to sync": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşitlemek için çok büyük"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -2,6 +2,7 @@ import CloudKit
 import PastronautCore
 import SwiftUI
 import UIKit
+import WidgetKit
 
 final class KeyboardViewController: UIInputViewController {
   private let model = KeyboardModel()
@@ -265,6 +266,7 @@ final class KeyboardModel {
         // Makes the cache newer than the app's snapshot, so the saved clip stays listed.
         _ = try? await cloud.refresh()
         reload()
+        WidgetCenter.shared.reloadAllTimelines()
       } catch {
         // Offline or not eligible: the inbox keeps it for the app.
         cloudStatus = "cloud: save failed \(Self.describe(error))"

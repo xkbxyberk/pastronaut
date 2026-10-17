@@ -107,6 +107,17 @@
         }
       }
     },
+    "Clear Filters": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtreleri Temizle"
+          }
+        }
+      }
+    },
     "Clip text is stored encrypted in iCloud. Copies from password managers are never synced.": {
       "extractionState": "manual",
       "localizations": {
@@ -169,6 +180,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Renk"
+          }
+        }
+      }
+    },
+    "Colors": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renkler"
           }
         }
       }
@@ -400,6 +422,17 @@
         }
       }
     },
+    "Emails": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-postalar"
+          }
+        }
+      }
+    },
     "Everything stays in your own iCloud, and the text of your clips is stored encrypted.": {
       "extractionState": "manual",
       "localizations": {
@@ -407,6 +440,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Her şey kendi iCloud'unuzda kalır; öğelerin metni şifreli saklanır."
+          }
+        }
+      }
+    },
+    "Filter": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrele"
           }
         }
       }
@@ -554,6 +598,17 @@
         }
       }
     },
+    "Links": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantılar"
+          }
+        }
+      }
+    },
     "Off": {
       "extractionState": "manual",
       "localizations": {
@@ -660,6 +715,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Telefon"
+          }
+        }
+      }
+    },
+    "Phone Numbers": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon Numaraları"
           }
         }
       }

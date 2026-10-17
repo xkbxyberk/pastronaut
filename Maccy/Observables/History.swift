@@ -1,6 +1,7 @@
 // swiftlint:disable file_length
 import AppKit.NSRunningApplication
 import Defaults
+import PastronautCore // Pastronaut
 import Foundation
 import Logging
 import Observation
@@ -24,20 +25,31 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
     }
   }
   var pinnedItems: [HistoryItemDecorator] {
-    (searchQuery.isEmpty ? allPinnedItems : filteredPinnedItems).filter(deviceFilter.includes) // Pastronaut
+    (searchQuery.isEmpty ? allPinnedItems : filteredPinnedItems).filter(passesFilters) // Pastronaut
   }
   var unpinnedItems: [HistoryItemDecorator] {
-    (searchQuery.isEmpty ? allUnpinnedItems : filteredUnpinnedItems).filter(deviceFilter.includes) // Pastronaut
+    (searchQuery.isEmpty ? allUnpinnedItems : filteredUnpinnedItems).filter(passesFilters) // Pastronaut
   }
 
   // Pastronaut: All / This Mac / iPhone, applied on top of the search.
   var deviceFilter: DeviceFilter = .all {
     didSet {
       guard deviceFilter != oldValue else { return }
-      updateUnpinnedShortcuts()
-      AppState.shared.navigator.select(item: firstUnpinnedItem ?? firstPinnedItem)
-      AppState.shared.popup.needsResize = true
+      filtersChanged()
     }
+  }
+  // Pastronaut: kind, date and pin chips from the filter menu next to the device filter.
+  var tokenFilter: [ClipSearchToken] = [] {
+    didSet {
+      guard tokenFilter != oldValue else { return }
+      filtersChanged()
+    }
+  }
+
+  private func filtersChanged() {
+    updateUnpinnedShortcuts()
+    AppState.shared.navigator.select(item: firstUnpinnedItem ?? firstPinnedItem)
+    AppState.shared.popup.needsResize = true
   }
   var availablePins: [String] { pinManager.availablePins }
 

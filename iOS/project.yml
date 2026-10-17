@@ -26,6 +26,7 @@ targets:
     sources:
       - App
       - Shared
+      - Intents
       - path: ../Maccy/Acknowledgements.txt
         buildPhase: resources
       # One layered Icon Composer icon for Mac and iOS (Liquid Glass; Xcode renders flat icons for iOS 17-25).
@@ -35,6 +36,8 @@ targets:
     dependencies:
       - package: PastronautCore
       - target: PastronautKeyboard
+      - target: PastronautWidgets
+      - target: PastronautShare
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut
@@ -53,6 +56,7 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIBackgroundModes: [remote-notification]
         ITSAppUsesNonExemptEncryption: false
+        NSFaceIDUsageDescription: Pastronaut can ask for Face ID before showing your clipboard history.
     entitlements:
       path: App/Pastronaut.entitlements
       properties:
@@ -90,6 +94,69 @@ targets:
       properties:
         com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]
         # Direct fetch and upload with Full Access (Faz 3, KeyboardCloud).
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.xkbxyberk.pastronaut]
+        com.apple.developer.icloud-services: [CloudKit]
+  # Home and Lock Screen widgets, and the Save Clipboard control (Control Center, Action button).
+  PastronautWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Widgets
+      - Intents
+      - Shared
+      # Colors used by Shared/ClipVisuals.swift (PinColor, AccentColor, AccentForeground).
+      - App/Assets.xcassets
+    dependencies:
+      - package: PastronautCore
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.widgets
+        PRODUCT_NAME: PastronautWidgets
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # Intents shared with the app skip the parts that only the app can run.
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) WIDGET_EXTENSION
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Pastronaut
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widgets/PastronautWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]
+  # Share › Pastronaut: saves shared text or links straight to iCloud.
+  PastronautShare:
+    type: app-extension
+    platform: iOS
+    sources: [Share]
+    dependencies:
+      - package: PastronautCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.share
+        PRODUCT_NAME: PastronautShare
+    info:
+      path: Share/Info.plist
+      properties:
+        CFBundleDisplayName: Pastronaut
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+    entitlements:
+      path: Share/PastronautShare.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]
         com.apple.developer.icloud-container-identifiers: [iCloud.com.xkbxyberk.pastronaut]
         com.apple.developer.icloud-services: [CloudKit]
   # Driven step by step by scripts/e2e/sync_e2e.py for the two-device sync test.

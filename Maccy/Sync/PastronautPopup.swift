@@ -50,6 +50,99 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
   }
 }
 
+extension History {
+  /// The device filter and the filter menu's chips, applied on top of the search.
+  func passesFilters(_ item: HistoryItemDecorator) -> Bool {
+    deviceFilter.includes(item) && ClipSearchToken.allMatch(
+      tokenFilter,
+      text: item.item.imageData == nil && item.item.fileURLs.isEmpty ? item.item.text : nil,
+      pinned: item.isPinned,
+      lastCopiedAt: item.item.lastCopiedAt
+    )
+  }
+}
+
+/// Kind, date and pin chips in a menu next to the device filter, the Mac side of the iPhone's search chips.
+struct ClipFilterMenu: View {
+  @Environment(AppState.self) private var appState
+
+  var body: some View {
+    let tokens = appState.history.tokenFilter
+    Menu {
+      Section {
+        toggle(.pinned)
+        toggle(.today)
+        toggle(.thisWeek)
+      }
+      Section {
+        ForEach([ClipSearchToken.link, .email, .phone, .color, .code, .text], id: \.self, content: toggle)
+      }
+      if !tokens.isEmpty {
+        Divider()
+        Button {
+          appState.history.tokenFilter = []
+        } label: {
+          Text("Clear Filters", tableName: "Pastronaut")
+        }
+      }
+    } label: {
+      Image(systemName: tokens.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+        .foregroundStyle(tokens.isEmpty ? Color.secondary : Color.accentColor)
+    }
+    .menuStyle(.borderlessButton)
+    .menuIndicator(.hidden)
+    .fixedSize()
+    .help(Text("Filter", tableName: "Pastronaut"))
+    .accessibilityLabel(Text("Filter", tableName: "Pastronaut"))
+    .accessibilityIdentifier("clip-filter-menu")
+  }
+
+  private func toggle(_ token: ClipSearchToken) -> some View {
+    Toggle(isOn: Binding(
+      get: { appState.history.tokenFilter.contains(token) },
+      set: { isOn in
+        if isOn {
+          appState.history.tokenFilter.append(token)
+        } else {
+          appState.history.tokenFilter.removeAll { $0 == token }
+        }
+      }
+    )) {
+      Label { Text(verbatim: token.title) } icon: { Image(systemName: token.systemImage) }
+    }
+  }
+}
+
+extension ClipSearchToken {
+  var title: String {
+    switch self {
+    case .pinned: String(localized: "Pinned", table: "Pastronaut")
+    case .today: String(localized: "Today", table: "Pastronaut")
+    case .thisWeek: String(localized: "This Week", table: "Pastronaut")
+    case .link: String(localized: "Links", table: "Pastronaut")
+    case .email: String(localized: "Emails", table: "Pastronaut")
+    case .phone: String(localized: "Phone Numbers", table: "Pastronaut")
+    case .color: String(localized: "Colors", table: "Pastronaut")
+    case .code: String(localized: "Code", table: "Pastronaut")
+    case .text: String(localized: "Text", table: "Pastronaut")
+    }
+  }
+
+  var systemImage: String {
+    switch self {
+    case .pinned: "pin"
+    case .today: "sun.max"
+    case .thisWeek: "calendar"
+    case .link: "link"
+    case .email: "envelope"
+    case .phone: "phone"
+    case .color: "paintpalette"
+    case .code: "chevron.left.forwardslash.chevron.right"
+    case .text: "text.alignleft"
+    }
+  }
+}
+
 struct DeviceFilterPicker: View {
   @Environment(AppState.self) private var appState
   @Namespace private var glassNamespace
@@ -57,17 +150,25 @@ struct DeviceFilterPicker: View {
   var body: some View {
     if #available(macOS 26.0, *) {
       // Glass capsules; the tinted selection flows between them.
-      GlassEffectContainer(spacing: 6) {
-        HStack(spacing: 4) {
-          ForEach(DeviceFilter.allCases) { filter in
-            chip(filter)
+      HStack(spacing: 6) {
+        GlassEffectContainer(spacing: 6) {
+          HStack(spacing: 4) {
+            ForEach(DeviceFilter.allCases) { filter in
+              chip(filter)
+            }
           }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("device-filter")
+        ClipFilterMenu()
       }
-      .accessibilityElement(children: .contain)
-      .accessibilityIdentifier("device-filter")
+      // The chips keep their size; the search field gives way.
+      .fixedSize()
     } else {
-      segmented
+      HStack(spacing: 4) {
+        segmented
+        ClipFilterMenu()
+      }
     }
   }
 
@@ -78,6 +179,7 @@ struct DeviceFilterPicker: View {
       withAnimation(.bouncy(duration: 0.3)) { appState.history.deviceFilter = filter }
     } label: {
       Text(verbatim: filter.title)
+        .lineLimit(1)
         .font(.callout.weight(isSelected ? .semibold : .regular))
         .foregroundStyle(isSelected ? Color.white : Color.primary)
         .padding(.horizontal, 10)

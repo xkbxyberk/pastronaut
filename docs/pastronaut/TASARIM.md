@@ -266,8 +266,27 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
     - E2E: T26 (iPhone'da "+" → Mac), T27 (toplu silme → Mac), T28 (açılışta kaydetme → Mac), T29 (kod atlanır).
       Test aracı arka planda olduğu için panoya yazamıyor; T28/T29'da metni Debug kancası (`PT_E2E_PASTEBOARD`)
       uygulamanın kendi panosuna koyuyor. iOS'un izin sorusu elle denenecek.
-  - 4.6 Dalga 2 (1.0 yüzeyleri): Paylaş + Eylem uzantısı, kopyala düğmeli widget'lar, Denetim Merkezi / Action Button,
-    Kısayollar okuma eylemleri, filtre jetonlu arama, Face ID kilidi.
+  - ✅ 4.6 Dalga 2 (1.0 yüzeyleri):
+    - Widget uzantısı (`iOS/Widgets`, App Group'tan okur, `SharedClipFiles.currentClips`): ana ekranda "Son Öğeler"
+      (küçük/orta/büyük; kaynak seçilebilir: tümü, Mac, iPhone, sabitlenenler), her satırda kopyala düğmesi
+      (`CopyClipIntent`, kısa bir onay işareti); Kilitli Ekran'da "Son Öğe" (dikdörtgen ve satır içi, iPhone
+      kilitliyken `privacySensitive` ile gizli); iOS 18+ "Panoyu Kaydet" kontrolü (Denetim Merkezi, Kilitli Ekran,
+      Action Button). iPhone'da panoyu yalnızca öndeki uygulama okuyabildiği için kontrol Pastronaut'u açar ve
+      uygulama panoyu kaydeder (`SaveClipboardIntent`, bekleyen istek bayrağı). Uygulama geçmiş değişince widget'ları
+      yeniler.
+    - Paylaş uzantısı (`iOS/Share`): Paylaş › Pastronaut metni ya da bağlantıyı doğrudan iCloud'a yazar
+      (`KeyboardCloud.capture`; önce gelen kutusu, yükleme olmazsa uygulama sonra gönderir). Panoya dokunmadığı için
+      art arda kopyalarda kayıp yok.
+    - Kısayollar: Son Öğeyi Al, Son Öğeleri Al, Son Öğeyi Kopyala (varsayılan Mac'ten), Panoyu Kaydet; Siri
+      ifadeleri EN/TR (`AppShortcuts.xcstrings`). Okuma eylemleri kilidi açık iPhone ister.
+    - Arama: iPhone'da arama alanına çipler (sabitlenenler, bugün, bu hafta, bağlantı, e-posta, telefon, renk, kod,
+      metin); aynı gruptakiler genişletir, farklı gruplar daraltır; "ı" ile "i" aramada eşit. Mac'te cihaz çiplerinin
+      yanında aynı seçenekleri sunan filtre menüsü (`ClipFilterMenu`). Kurallar `PastronautCore/ClipSearch.swift`.
+    - Face ID kilidi: Ayarlar › Gizlilik › "Face ID ile Kilitle" (açarken bir kez doğrulanır). Uygulama açılırken
+      ister, uygulama değiştiricide geçmişi örter, widget'lar öğeleri gizler. Klavye açık kalır (iPhone klavyeleri
+      Face ID isteyemez); E2E sırasında devre dışı.
+    - Testler: çekirdek 43/43, Mac 104/104, Mac UI `testPastronautFilterMenu`, E2E 31/31 (+T13 uyarısı). Widget,
+      kontrol, Paylaş, Siri ve Face ID sistem yüzeyleri olduğu için elle denenir.
   - 4.7 Dalga 3: koleksiyonlar + HMAC kimlik geçişi (tek şema değişikliği), Mac'te yerel OCR, isteğe bağlı Spotlight,
     iPad, dışa/içe aktarma.
 - **Faz 5: Yayın.** Gizlilik politikası (GitHub Pages), App Store Gizlilik Etiketi, CloudKit Production şeması,

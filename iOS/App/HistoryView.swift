@@ -5,7 +5,7 @@ struct HistoryView: View {
   @Environment(ClipStore.self) private var store
   @State private var filter: DeviceFilter = .all
   @State private var showsSettings = false
-  @State private var toast: LocalizedStringKey?
+  @State private var toast: ToastContent?
   @State private var hideToast: Task<Void, Never>?
   @State private var detail: Clip?
   @State private var showsSetup = false
@@ -13,6 +13,7 @@ struct HistoryView: View {
   @State private var editMode: EditMode = .inactive
   @State private var selection = Set<String>()
   @State private var confirmsBulkDelete = false
+  @State private var tokens: [ClipSearchToken] = []
   @AppStorage("setupGuideShown") private var setupGuideShown = false
 
   var body: some View {
@@ -49,7 +50,7 @@ struct HistoryView: View {
             description: Text("Turn on Sync in Pastronaut on your Mac, or save your clipboard with the paste button.")
           )
         } else if sections.isEmpty {
-          if store.searchText.isEmpty {
+          if store.searchText.isEmpty && tokens.isEmpty {
             ContentUnavailableView("Nothing from this device", systemImage: filter.systemImage)
           } else {
             ContentUnavailableView.search(text: store.searchText)
@@ -58,16 +59,24 @@ struct HistoryView: View {
       }
       .overlay(alignment: .bottom) {
         if let toast {
-          Toast(text: toast)
+          Toast(text: toast.text, systemImage: toast.systemImage)
             .padding(.bottom, 24)
             .transition(.move(edge: .bottom).combined(with: .opacity))
         }
       }
       .environment(\.editMode, $editMode)
-      .onChange(of: store.autoSavedAt) {
-        showToast("Saved from clipboard")
+      .onChange(of: store.noticeID) {
+        switch store.notice {
+        case .savedFromClipboard: showToast("Saved from clipboard")
+        case .clipboardEmpty: showToast("The clipboard has no text", systemImage: "doc.questionmark")
+        case .tooLarge: showToast("Too large to sync", systemImage: "exclamationmark.triangle")
+        case nil: break
+        }
       }
-      .searchable(text: $store.searchText)
+      // Chips for kind, date and pins; the device bar stays separate.
+      .searchable(text: $store.searchText, tokens: $tokens, suggestedTokens: .constant(suggestedTokens)) { token in
+        Label(token.title, systemImage: token.systemImage)
+      }
       .refreshable { await store.refresh() }
       .navigationTitle(Text(verbatim: "Pastronaut"))
       .navigationDestination(item: $detail) { clip in
@@ -130,11 +139,11 @@ struct HistoryView: View {
   }
 
   private var sections: [ClipSection] {
-    store.filteredClips.filter(filter.includes).sectioned()
+    matchedClips.filter(filter.includes).sectioned()
   }
 
   private var filterBar: some View {
-    let clips = store.filteredClips
+    let clips = matchedClips
     let counts = Dictionary(uniqueKeysWithValues: DeviceFilter.allCases.map { filter in
       (filter, clips.filter(filter.includes).count)
     })
@@ -142,6 +151,15 @@ struct HistoryView: View {
   }
 
   private var isEditing: Bool { editMode.isEditing }
+
+  private var matchedClips: [Clip] {
+    store.clips.matching(store.searchText, tokens: tokens)
+  }
+
+  /// Offered while searching; a chip already in the field isn't offered again.
+  private var suggestedTokens: [ClipSearchToken] {
+    ClipSearchToken.allCases.filter { !tokens.contains($0) }
+  }
 
   private var selectedClips: [Clip] {
     store.clips.filter { selection.contains($0.id) }
@@ -314,8 +332,8 @@ struct HistoryView: View {
     showToast("Copied")
   }
 
-  private func showToast(_ text: LocalizedStringKey) {
-    withAnimation(.snappy) { toast = text }
+  private func showToast(_ text: LocalizedStringKey, systemImage: String = "checkmark") {
+    withAnimation(.snappy) { toast = ToastContent(text: text, systemImage: systemImage) }
     hideToast?.cancel()
     hideToast = Task {
       try? await Task.sleep(for: .seconds(1.4))
@@ -438,3 +456,38 @@ private struct FilterBarPlacement<Bar: View>: ViewModifier {
   }
 }
 
+
+private struct ToastContent {
+  let text: LocalizedStringKey
+  let systemImage: String
+}
+
+extension ClipSearchToken {
+  var title: LocalizedStringKey {
+    switch self {
+    case .pinned: "Pinned"
+    case .today: "Today"
+    case .thisWeek: "This Week"
+    case .link: "Links"
+    case .email: "Emails"
+    case .phone: "Phone Numbers"
+    case .color: "Colors"
+    case .code: "Code"
+    case .text: "Text"
+    }
+  }
+
+  var systemImage: String {
+    switch self {
+    case .pinned: "pin"
+    case .today: "sun.max"
+    case .thisWeek: "calendar"
+    case .link: "link"
+    case .email: "envelope"
+    case .phone: "phone"
+    case .color: "paintpalette"
+    case .code: "chevron.left.forwardslash.chevron.right"
+    case .text: "text.alignleft"
+    }
+  }
+}

@@ -627,6 +627,25 @@ class MaccyUITests: XCTestCase {
       .firstMatch
   }
 
+  // Pastronaut: the filter menu next to the device chips narrows the list to one kind.
+  func testPastronautFilterMenu() throws {
+    for text in ["https://example.com/filter", "plain words for the filter", "ayse@example.com"] {
+      copyToClipboard(text)
+    }
+    popUpWithMouse()
+    XCTAssertTrue(historyRow("plain words for the filter").waitForExistence(timeout: 3))
+    let menu = app.descendants(matching: .any)["clip-filter-menu"].firstMatch
+    XCTAssertTrue(menu.waitForExistence(timeout: 3))
+    menu.click()
+    let links = app.menuItems.matching(NSPredicate(format: "title == 'Links' OR title == 'Bağlantılar'")).firstMatch
+    XCTAssertTrue(links.waitForExistence(timeout: 3))
+    links.click()
+    XCTAssertTrue(waitForNonExistence(historyRow("plain words for the filter"), timeout: 3))
+    XCTAssertTrue(historyRow("https://example.com/filter").exists)
+    XCTAssertFalse(historyRow("ayse@example.com").exists)
+    attachScreenshot(app.dialogs.firstMatch, named: "filter-links")
+  }
+
   private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
     let deadline = Date.now.addingTimeInterval(timeout)
     while element.exists && Date.now < deadline {

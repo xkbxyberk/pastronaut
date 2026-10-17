@@ -6,19 +6,30 @@ import UIKit
 struct PastronautApp: App {
   @UIApplicationDelegateAdaptor private var appDelegate: AppDelegate
   @Environment(\.scenePhase) private var scenePhase
+  private let lock = AppLock.shared
 
   var body: some Scene {
     WindowGroup {
       HistoryView()
         .environment(ClipStore.shared)
+        .overlay {
+          // Also hides the history in the app switcher while the lock is on.
+          if lock.isLocked || (lock.isEnabled && scenePhase != .active) {
+            LockScreen(lock: lock)
+              .transition(.opacity)
+          }
+        }
     }
     .onChange(of: scenePhase) { _, phase in
       if phase == .active {
         Task {
+          if lock.isLocked { await lock.unlock() }
+          await ClipStore.shared.savePendingClipboard()
           await ClipStore.shared.autoSaveClipboard()
           await ClipStore.shared.refresh()
         }
       } else if phase == .background {
+        lock.lock()
         Task { await ClipStore.shared.upload() }
       }
     }

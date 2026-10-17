@@ -1,0 +1,61 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Copy my latest Mac clip with ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} ile Mac'teki son kopyamı kopyala"
+          }
+        }
+      }
+    },
+    "Copy the latest clip with ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} ile son öğeyi kopyala"
+          }
+        }
+      }
+    },
+    "Get my latest clip from ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasından son öğemi al"
+          }
+        }
+      }
+    },
+    "Save clipboard in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} ile panoyu kaydet"
+          }
+        }
+      }
+    },
+    "Save my clipboard to ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panomu ${applicationName} uygulamasına kaydet"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

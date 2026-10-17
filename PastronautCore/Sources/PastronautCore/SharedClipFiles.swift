@@ -13,6 +13,20 @@ public enum PastronautIDs {
 /// - `inbox.json`: clips captured by the keyboard (requires Full Access to write), drained by the app,
 ///   which then hands them to `ClipSync`. Separate files keep each one single-writer except the inbox,
 ///   which is guarded with `NSFileCoordinator` across processes.
+/// Settings and signals shared through the App Group's user defaults by the app and its extensions.
+public enum SharedSettings {
+  public static var defaults: UserDefaults? { UserDefaults(suiteName: PastronautIDs.appGroup) }
+  /// Bool. Face ID (or the passcode) to open the app; widgets then hide clip text.
+  public static let appLockKey = "appLockEnabled"
+  /// Bool. Set by the "Save Clipboard" control; the app saves the clipboard when it comes to the front.
+  public static let pendingClipboardSaveKey = "pendingClipboardSave"
+  /// String and Date. The clip a widget button just copied, for a brief check mark.
+  public static let widgetCopiedIDKey = "widgetCopiedID"
+  public static let widgetCopiedAtKey = "widgetCopiedAt"
+
+  public static var isAppLockEnabled: Bool { defaults?.bool(forKey: appLockKey) ?? false }
+}
+
 public struct SharedClipFiles: Sendable {
   public let directory: URL
 
@@ -45,6 +59,22 @@ public struct SharedClipFiles: Sendable {
   /// replaced atomically, so a reader sees either the old or the new file, never half of one.
   public func readSnapshot() -> [Clip] {
     (try? decode([Clip].self, from: snapshotURL)) ?? []
+  }
+
+  /// What the keyboard, widgets and Shortcuts show: the app's snapshot, or the keyboard's own fetch when that
+  /// is newer, plus captures still waiting in the inbox. `useKeyboardCache` is false for a keyboard without
+  /// Full Access, whose cache can't be trusted to be current.
+  public func currentClips(useKeyboardCache: Bool = true) -> [Clip] {
+    var base = readSnapshot()
+    if useKeyboardCache, let cache = readKeyboardCache(), let fetchedAt = cache.fetchedAt,
+       fetchedAt > snapshotDate ?? .distantPast {
+      base = cache.clips
+    }
+    var byID: [String: Clip] = [:]
+    for clip in base + readInbox() {
+      byID[clip.id] = byID[clip.id].map { $0.merged(with: clip) } ?? clip
+    }
+    return byID.values.inHistoryOrder
   }
 
   // MARK: - Keyboard cache

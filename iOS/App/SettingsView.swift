@@ -9,6 +9,7 @@ struct SettingsView: View {
   @AppStorage(AutoCapture.settingKey, store: UserDefaults(suiteName: PastronautIDs.appGroup))
   private var autoSave = false
   private let setup = KeyboardSetup.shared
+  private let lock = AppLock.shared
 
   var body: some View {
     NavigationStack {
@@ -50,6 +51,17 @@ struct SettingsView: View {
           Text("Clipboard")
         } footer: {
           Text("When you open Pastronaut or its keyboard, a new copy is saved by itself. One-time codes, card numbers and IBANs are skipped. iPhone can't read the clipboard in the background, so if you copy several things in a row only the last one is saved; use the Share menu or the Paste button for the others. To stop iOS from asking each time, set Paste from Other Apps to Allow.")
+        }
+
+        Section {
+          Toggle(isOn: Binding(get: { lock.isEnabled }, set: { value in Task { await lock.setEnabled(value) } })) {
+            Text("Lock with \(lock.methodName)")
+          }
+          .accessibilityIdentifier("appLockToggle")
+        } header: {
+          Text("Privacy")
+        } footer: {
+          Text("Pastronaut asks for \(lock.methodName) when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for \(lock.methodName).")
         }
 
         Section {

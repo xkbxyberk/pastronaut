@@ -2,6 +2,7 @@ import CloudKit
 import Observation
 import PastronautCore
 import UIKit
+import WidgetKit
 
 /// The iOS app's view of the synced history. `ClipSync` is the source of truth; every change is
 /// mirrored into the App Group snapshot that the keyboard reads.
@@ -13,8 +14,17 @@ final class ClipStore {
   private(set) var clips: [Clip] = []
   private(set) var status: SyncStatus?
   private(set) var accountStatus: String = "…"
-  /// Set when the clipboard was saved by itself on opening the app, for a short notice.
-  private(set) var autoSavedAt: Date?
+  enum Notice: Equatable {
+    case savedFromClipboard
+    case clipboardEmpty
+    case tooLarge
+  }
+
+  /// A short message for the history screen; set again for every event, so the same notice shows twice.
+  var notice: Notice? {
+    didSet { if notice != nil { noticeID += 1 } }
+  }
+  private(set) var noticeID = 0
   var searchText = ""
 
   private let sync: ClipSync
@@ -22,10 +32,6 @@ final class ClipStore {
   private let sharedDefaults = UserDefaults(suiteName: PastronautIDs.appGroup)
   private var isStarted = false
 
-  var filteredClips: [Clip] {
-    let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-    return query.isEmpty ? clips : clips.filter { $0.text.localizedCaseInsensitiveContains(query) }
-  }
 
   private init() {
     files = SharedClipFiles()
@@ -53,9 +59,15 @@ final class ClipStore {
   }
 
   func reload() async {
-    clips = await sync.clips.inHistoryOrder
+    let latest = await sync.clips.inHistoryOrder
+    let changed = latest != clips
+    clips = latest
     status = await sync.status
     try? files?.writeSnapshot(clips)
+    if changed {
+      // Reloads requested by the app in front don't use up the widgets' daily refresh budget.
+      WidgetCenter.shared.reloadAllTimelines()
+    }
   }
 
   // MARK: - User actions
@@ -133,6 +145,27 @@ final class ClipStore {
     }
   }
 
+  // MARK: - Saving the clipboard on request
+
+  /// Runs the "Save Clipboard" control or Siri request once the app is in front: unlike the automatic save,
+  /// the person asked for it, so codes are saved too and an existing clip moves to the top.
+  func savePendingClipboard() async {
+    guard SharedSettings.defaults?.bool(forKey: SharedSettings.pendingClipboardSaveKey) == true,
+          UIApplication.shared.applicationState == .active else { return }
+    SharedSettings.defaults?.set(false, forKey: SharedSettings.pendingClipboardSaveKey)
+    let pasteboard = UIPasteboard.general
+    sharedDefaults?.set(pasteboard.changeCount, forKey: AutoCapture.lastChangeCountKey)
+    guard pasteboard.hasStrings, let text = pasteboard.string else {
+      notice = .clipboardEmpty
+      return
+    }
+    switch await saveNow(text) {
+    case .saved: notice = .savedFromClipboard
+    case .empty: notice = .clipboardEmpty
+    case .tooLarge: notice = .tooLarge
+    }
+  }
+
   // MARK: - Saving the clipboard on launch
 
   var isAutoSaveEnabled: Bool {
@@ -155,7 +188,7 @@ final class ClipStore {
     let id = Clip.id(for: text)
     guard !clips.contains(where: { $0.id == id }) else { return }
     if await saveNow(text) == .saved {
-      autoSavedAt = .now
+      notice = .savedFromClipboard
     }
   }
 

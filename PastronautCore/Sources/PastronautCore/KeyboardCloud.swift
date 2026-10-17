@@ -111,6 +111,21 @@ public actor KeyboardCloud {
     try await save(clip) { remote, local in remote.copiedAgain(local) }
   }
 
+  /// Saves a capture from an extension (keyboard, Share): the inbox first, so the app sends it later if the
+  /// upload fails, then straight to iCloud. Returns whether the upload worked.
+  @discardableResult
+  public func capture(_ clip: Clip) async -> Bool {
+    try? files.appendToInbox(clip)
+    do {
+      try await save(clip)
+      try? files.removeFromInbox(id: clip.id)
+      return true
+    } catch {
+      logger.error("Capture upload failed: \(String(describing: error), privacy: .public)")
+      return false
+    }
+  }
+
   /// Pins or unpins a clip from the keyboard. The newer change wins, as everywhere else.
   public func setPinned(_ pinned: Bool, for clip: Clip) async throws {
     var changed = clip

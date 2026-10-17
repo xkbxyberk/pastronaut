@@ -138,6 +138,29 @@ final class SyncStepTests: XCTestCase {
       Thread.sleep(forTimeInterval: 2)
       attachScreenshot(named: "settings-clipboard")
       report(["ok": true])
+    case "searchShots":
+      // Design review: search suggestions, a chosen chip, and the Privacy section of Settings.
+      app.launch()
+      let search = app.searchFields.firstMatch
+      if !search.waitForExistence(timeout: 3) { app.swipeDown() }
+      search.tap()
+      Thread.sleep(forTimeInterval: 1)
+      attachScreenshot(named: "search-suggestions")
+      let chip = app.descendants(matching: .any)
+        .matching(NSPredicate(format: "label == 'Bağlantılar' OR label == 'Links'")).firstMatch
+      if chip.exists {
+        chip.tap()
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "search-token")
+      }
+      app.terminate()
+      app.launch()
+      app.buttons["settingsButton"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1.5)
+      app.swipeUp()
+      Thread.sleep(forTimeInterval: 2)
+      attachScreenshot(named: "settings-privacy")
+      report(["ok": true, "chip": chip.exists])
     case "background":
       app.activate()
       XCUIDevice.shared.press(.home)
