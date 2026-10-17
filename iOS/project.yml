@@ -18,8 +18,6 @@ settings:
     SWIFT_EMIT_LOC_STRINGS: YES
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
-    # iPhone and iPad.
-    TARGETED_DEVICE_FAMILY: "1,2"
 targets:
   Pastronaut:
     type: application
@@ -42,6 +40,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut
+        # iPhone only for the first App Store release; "1,2" brings iPad back once it is tested.
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_NAME: Pastronaut
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -80,6 +80,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.keyboard
+        # iPhone only for the first App Store release; "1,2" brings iPad back once it is tested.
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_NAME: PastronautKeyboard
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     info:
@@ -120,6 +122,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.widgets
+        # iPhone only for the first App Store release; "1,2" brings iPad back once it is tested.
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_NAME: PastronautWidgets
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         # Intents shared with the app skip the parts that only the app can run.
@@ -146,6 +150,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.share
+        # iPhone only for the first App Store release; "1,2" brings iPad back once it is tested.
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_NAME: PastronautShare
     info:
       path: Share/Info.plist
@@ -176,6 +182,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.uitests
+        # iPhone only for the first App Store release; "1,2" brings iPad back once it is tested.
+        TARGETED_DEVICE_FAMILY: "1"
         TEST_TARGET_NAME: Pastronaut
         GENERATE_INFOPLIST_FILE: YES
         # XCUIApplication is main-actor isolated; Swift 5 mode keeps the step code plain.

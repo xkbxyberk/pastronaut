@@ -3,3 +3,6 @@ Maccy.xcodeproj/project.xcworkspace/xcshareddata
 .idea
 .DS_Store
 Maccy/.DS_Store
+
+# App Store screenshots (made with PT_DEMO; uploaded by hand)
+appstore-screenshots/

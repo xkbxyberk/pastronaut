@@ -113,7 +113,8 @@ Privacy policy: in the app at Settings › About › Privacy Policy, and at http
 ```
 
 ## Screenshots
-- **iPhone 6.9"** (1320×2868, or 1290×2796 accepted): made with made-up clips (`PT_DEMO`), English: cards (light),
-  cards (dark), list, keyboard, a collection, widgets. Turkish set from the same step with `-AppleLanguages (tr)`.
-- **iPad 13"** (2064×2752 or 2048×2732): **required while the app supports iPad** (`TARGETED_DEVICE_FAMILY 1,2`).
-  Needs the iPad simulator or an iPad — or ship iPhone-only first.
+- **iPhone 6.9"** (1290×2796, accepted for the 6.9" slot): in `appstore-screenshots/iphone-6.9-en/` (not in git),
+  made with made-up clips only (`PT_DEMO`, SyncStepTests `readmeShots`): 1 cards (light), 2 keyboard, 3 cards (dark),
+  4 list (light), 5 list (dark). App Store uses them for the Turkish page too unless Turkish ones are added.
+- **iPad:** not needed — the first release is iPhone-only (`TARGETED_DEVICE_FAMILY 1` for every target in
+  `iOS/project.yml`). iPad comes back after testing it in the simulator.
