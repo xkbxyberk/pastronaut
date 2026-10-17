@@ -5,21 +5,45 @@ import UIKit
 // The history as cards (previews on): each kind draws its own content, links and addresses with their preview.
 // With previews off the history stays a list (HistoryView.row).
 
-/// Two columns that fill top to bottom; clips alternate between them.
+/// Two columns that fill top to bottom. Each clip goes to the column that is shorter so far (by an estimate of its
+/// card's height), so tall cards (maps, page images, code) don't pile up on one side.
 struct CardColumns<Card: View>: View {
   let clips: [Clip]
   @ViewBuilder let card: (Clip) -> Card
 
   var body: some View {
+    let columns = Self.split(clips, previews: PreviewStore.isEnabled)
     HStack(alignment: .top, spacing: 10) {
-      VStack(spacing: 10) {
-        ForEach(Array(clips.enumerated()).filter { $0.offset % 2 == 0 }.map(\.element), id: \.id, content: card)
+      ForEach(0..<2, id: \.self) { index in
+        VStack(spacing: 10) {
+          ForEach(columns[index], id: \.id, content: card)
+        }
+        .frame(maxWidth: .infinity, alignment: .top)
       }
-      .frame(maxWidth: .infinity, alignment: .top)
-      VStack(spacing: 10) {
-        ForEach(Array(clips.enumerated()).filter { $0.offset % 2 == 1 }.map(\.element), id: \.id, content: card)
-      }
-      .frame(maxWidth: .infinity, alignment: .top)
+    }
+  }
+
+  static func split(_ clips: [Clip], previews: Bool) -> [[Clip]] {
+    var columns: [[Clip]] = [[], []]
+    var heights: [CGFloat] = [0, 0]
+    for clip in clips {
+      let target = heights[0] <= heights[1] ? 0 : 1
+      columns[target].append(clip)
+      heights[target] += estimatedHeight(of: clip, previews: previews) + 10
+    }
+    return columns
+  }
+
+  /// Rough card heights in points; close enough to keep the columns even.
+  static func estimatedHeight(of clip: Clip, previews: Bool) -> CGFloat {
+    let lines = CGFloat(min(7, max(1, clip.preview.count / 22 + clip.preview.filter(\.isNewline).count)))
+    switch clip.content {
+    case .address: return (previews ? 112 : 0) + 70 + lines * 20 + 44
+    case .link: return (previews ? 100 : 0) + 110
+    case .code: return 70 + CGFloat(min(9, clip.text.split(whereSeparator: \.isNewline).count + clip.text.count / 26)) * 18
+    case .color: return 150
+    case .phone, .email: return 140
+    case .text: return 50 + lines * 20
     }
   }
 }

@@ -334,6 +334,11 @@ açık bölge kapsamı verilse bile hiçbir şey sormaz (günlük: `no zone IDs 
       bir kez çıkarıldı, OFL), sabit üst çubuk, ortak tür renkleri (`ClipKind`), adres türü, kartlar ve önizlemeler
       (`PreviewStore`, `LinkPreviewPolicy`, `CodeHighlighter`), ilk açılış sorusu, yeni klavye düzeni, koleksiyonlara
       kimlikten türetilen sabit renk. Ekran görüntüleriyle denetlendi (iPhone açık/koyu, klavye açık/koyu, Mac popup).
+    - Elle denemeden sonra (2026-10-17): sistemin adres tanıyıcısı Türk adreslerinin çoğunu kaçırıyordu (numaralı
+      sokak, önce mahalle, apartman/kat/daire, "ilçe / il"). `TurkishAddress` cihazda ek kural uygular: sokak düzeyi
+      bir kelime ve kapı numarası, posta kodu (01–81 ile başlayan 5 hane) ya da 81 ilden biri. Harita, bulunamazsa
+      apartman ayrıntısız adresi, sonra yalnızca ilçe/ili dener. Çip çubuğu artık kaymaz: koleksiyonlar tek bir
+      menü çipinde; yer daralınca sayılar, sonra başlıklar düşer. Kartlar tahmini yüksekliğe göre kısa sütuna yerleşir.
     - Tür renkleri her yerde aynı: metin kurşuni, bağlantı mavi, kod mor, e-posta camgöbeği, telefon yeşil, adres
       turuncu, görsel pembe, dosya toprak; renk öğesi kendi rengi, görsel küçük resmi. Mac'te "renkli simge" stili
       (soluk zemin + renkli simge); seçili satırda simge beyaz zemine geçer. Simgesiz kalan satırlar düzeltilecek.

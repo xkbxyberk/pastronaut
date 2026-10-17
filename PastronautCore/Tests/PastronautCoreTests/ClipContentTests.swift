@@ -80,3 +80,39 @@ import Testing
     #expect(ClipContent("https://example.com").kind == .link)
   }
 }
+
+@Suite struct TurkishAddressTests {
+  @Test(arguments: [
+    "Mansuroğlu Mah. 286/1 Sok. Güneş Apartmanı No: 4, Kat: 3, Daire: 12\n35535 Bayraklı / İzmir",
+    "Mansuroğlu Mah. 286/1 Sok. No: 4 35535 Bayraklı/İzmir",
+    "Moda Caddesi, Kadıköy, İstanbul",
+    "Kızılay Mahallesi Atatürk Bulvarı No:120 Çankaya Ankara",
+    "Cumhuriyet Mh. 1453. Sk. No:7 D:2 Merkezefendi Denizli",
+    "Barbaros Bulvarı Yıldız Posta Cad. No:2 Beşiktaş İstanbul 34349",
+    "BAĞDAT CADDESİ NO: 300 KADIKÖY"
+  ])
+  func turkishAddresses(_ text: String) {
+    #expect(ClipContent(text).kind == .address)
+  }
+
+  @Test(arguments: [
+    "Toplantı Perşembe 14:00'te",
+    "Kargo takip no: 1Z 999 AA1 0123 4567 84",
+    "İzmir'e yarın gidiyorum",
+    "Sipariş no: 4521",
+    "https://maps.apple.com/?q=Moda+Cad.+No:12"
+  ])
+  func notAddresses(_ text: String) {
+    #expect(ClipContent(text).kind != .address)
+  }
+
+  @Test func geocodingFallsBackToSimplerForms() {
+    let candidates = TurkishAddress.geocodingCandidates(
+      for: "Mansuroğlu Mah. 286/1 Sok. Güneş Apartmanı No: 4, Kat: 3, Daire: 12\n35535 Bayraklı / İzmir"
+    )
+    #expect(candidates.first == "Mansuroğlu Mah. 286/1 Sok. Güneş Apartmanı No: 4, Kat: 3, Daire: 12, 35535 Bayraklı / İzmir")
+    #expect(candidates.contains { !$0.contains("Apartmanı") && !$0.contains("Kat") && $0.contains("286/1 Sok.") })
+    #expect(candidates.contains("35535 Bayraklı / İzmir"))
+    #expect(candidates.contains("Bayraklı / İzmir"))
+  }
+}

@@ -60,10 +60,13 @@ public enum ClipContent: Equatable, Sendable {
     types: NSTextCheckingResult.CheckingType.address.rawValue
   )
 
-  /// Most of a short text is one address with a street ("Moda Cad. No:12 Kadıköy/İstanbul").
+  /// A short text that is one address: Turkish rules first (the system detector misses most Turkish addresses),
+  /// then the system's detector for the rest of the world ("1 Infinite Loop, Cupertino, CA 95014").
   static func isAddress(_ text: String) -> Bool {
     let length = (text as NSString).length
-    guard length >= 8, length <= 240, text.contains(where: \.isNumber), text.split(separator: "\n").count <= 4,
+    guard length >= 8 else { return false }
+    if TurkishAddress.looksLikeAddress(text) { return true }
+    guard length <= 240, text.contains(where: \.isNumber), text.split(separator: "\n").count <= 4,
           let detector = addressDetector else { return false }
     let matches = detector.matches(in: text, range: NSRange(location: 0, length: length))
     guard matches.contains(where: { $0.addressComponents?[.street] != nil }) else { return false }

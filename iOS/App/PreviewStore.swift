@@ -121,9 +121,19 @@ final class PreviewStore {
   }
 
   private func fetchMap(_ address: String) async -> Preview? {
-    guard let coordinate = await Self.geocode(address) else { return nil }
+    // Turkish addresses often hold more than the map knows (building, floor, flat): try simpler forms in turn,
+    // and show a wider area when only the district was found.
+    var found: (CLLocationCoordinate2D, Int)?
+    for (index, candidate) in TurkishAddress.geocodingCandidates(for: address).prefix(4).enumerated() {
+      if let coordinate = await Self.geocode(candidate) {
+        found = (coordinate, index)
+        break
+      }
+    }
+    guard let (coordinate, index) = found else { return nil }
+    let meters: CLLocationDistance = index >= 2 ? 4000 : 900
     let options = MKMapSnapshotter.Options()
-    options.region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 900, longitudinalMeters: 900)
+    options.region = MKCoordinateRegion(center: coordinate, latitudinalMeters: meters, longitudinalMeters: meters)
     options.size = CGSize(width: 360, height: 200)
     options.pointOfInterestFilter = .excludingAll
     guard let snapshot = try? await MKMapSnapshotter(options: options).start() else { return nil }

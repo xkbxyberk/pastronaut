@@ -146,18 +146,18 @@ final class SyncStepTests: XCTestCase {
         field.typeText(name)
         alert.buttons.matching(NSPredicate(format: "label IN %@", ["Create", "Oluştur"])).firstMatch.tap()
       }
-      let chip = app.buttons["collection.\(name)"].firstMatch
-      report(["ok": chip.waitForExistence(timeout: 10)])
+      // The new collection is listed in the collections menu.
+      Thread.sleep(forTimeInterval: 1)
+      let listed = collectionItem(name, timeout: 10)
+      dismissMenu()
+      report(["ok": listed])
     case "openCollection":
       // Taps the collection's chip and waits for the row inside it.
       app.activate()
-      let chip = app.buttons["collection.\(env["PT_ACTION"] ?? "")"].firstMatch
-      guard chip.waitForExistence(timeout: timeout) else {
-        report(["ok": false, "reason": "no chip"])
+      guard chooseCollection(env["PT_ACTION"] ?? "", timeout: timeout) else {
+        report(["ok": false, "reason": "no collection in the menu"])
         return
       }
-      revealChip(chip)
-      chip.tap()
       report(["ok": row(match).waitForExistence(timeout: timeout)])
     case "cardsShots":
       // Design review: the previews question, then the history as cards (previews on) in light and dark.
@@ -184,11 +184,7 @@ final class SyncStepTests: XCTestCase {
       // Design review: the scope bar with a collection, the row menu, the clip's details and Settings › Your Data.
       app.activate()
       let name = env["PT_ACTION"] ?? ""
-      let chip = app.buttons["collection.\(name)"].firstMatch
-      if chip.waitForExistence(timeout: 10) {
-        revealChip(chip)
-        chip.tap()
-      }
+      _ = chooseCollection(name, timeout: 10)
       Thread.sleep(forTimeInterval: 1)
       attachScreenshot(named: "collection-scope")
       try existingRow().press(forDuration: 1.2)
@@ -420,14 +416,35 @@ final class SyncStepTests: XCTestCase {
       .firstMatch
   }
 
-  /// Collection chips sit in a row that scrolls sideways; one past the edge has to be scrolled to first.
-  private func revealChip(_ chip: XCUIElement) {
-    // Asking an off-screen element whether it is hittable fails the test, so compare frames instead.
-    let bar = app.descendants(matching: .any)["deviceFilter"].firstMatch
-    let width = app.frame.width
-    for _ in 0..<6 where bar.exists && (chip.frame.maxX > width - 8 || chip.frame.minX < 8) {
-      if chip.frame.minX < 8 { bar.swipeRight() } else { bar.swipeLeft() }
-    }
+  /// Opens the collections menu next to the device chips and shows whether `name` is in it (the menu stays open).
+  private func collectionItem(_ name: String, timeout: TimeInterval) -> Bool {
+    let menu = app.descendants(matching: .any)["collectionsMenu"].firstMatch
+    guard menu.waitForExistence(timeout: timeout) else { return false }
+    let deadline = Date().addingTimeInterval(timeout)
+    repeat {
+      menu.tap()
+      if menuItem(name).waitForExistence(timeout: 2) { return true }
+      dismissMenu()
+      Thread.sleep(forTimeInterval: 1)
+    } while Date() < deadline
+    return false
+  }
+
+  /// Chooses a collection from the collections menu.
+  private func chooseCollection(_ name: String, timeout: TimeInterval) -> Bool {
+    guard collectionItem(name, timeout: timeout) else { return false }
+    menuItem(name).tap()
+    return true
+  }
+
+  /// Menu items keep their identifiers on some systems; otherwise the label starts with the name ("Adresler · 3").
+  private func menuItem(_ name: String) -> XCUIElement {
+    app.buttons.matching(NSPredicate(format: "identifier == %@ OR label BEGINSWITH %@", "collection.\(name)", name)).firstMatch
+  }
+
+  /// Closes an open menu by tapping beside it, at the top of the screen.
+  private func dismissMenu() {
+    app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).tap()
   }
 
   /// Menu items keep their identifiers on some systems and only their labels on others.
