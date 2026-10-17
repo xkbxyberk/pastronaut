@@ -243,8 +243,17 @@ final class KeyboardModel {
 
   /// The app may not have run since the last change (iOS rations background pushes), so with Full
   /// Access the keyboard fetches the latest state itself.
+  /// Screenshots with made-up clips (the app's `PT_DEMO`): the app's snapshot only, in English. Debug builds.
+  var isDemo: Bool {
+    #if DEBUG
+    SharedSettings.isDemo
+    #else
+    false
+    #endif
+  }
+
   private func refreshFromCloud() {
-    guard hasFullAccess, let cloud, Date.now.timeIntervalSince(lastCloudRefresh) > 5 else { return }
+    guard hasFullAccess, !isDemo, let cloud, Date.now.timeIntervalSince(lastCloudRefresh) > 5 else { return }
     lastCloudRefresh = .now
     cloudStatus = "cloud: fetching"
     Task {
@@ -313,7 +322,7 @@ final class KeyboardModel {
     }
     // The app's snapshot, or the keyboard's own fetch when that is newer, plus captures not yet synced.
     var base = files.readSnapshot()
-    if hasFullAccess, let cache = files.readKeyboardCache(), let fetchedAt = cache.fetchedAt,
+    if hasFullAccess, !isDemo, let cache = files.readKeyboardCache(), let fetchedAt = cache.fetchedAt,
        fetchedAt > files.snapshotDate ?? .distantPast {
       base = cache.clips
     }
@@ -324,7 +333,7 @@ final class KeyboardModel {
     // Clips in a collection stay reachable from its tab even when older than the newest 200.
     let ordered = byID.values.inHistoryOrder
     clips = Array(ordered.prefix(200)) + ordered.dropFirst(200).filter { !$0.collectionIDs.isEmpty }
-    collections = files.currentCollections(useKeyboardCache: hasFullAccess)
+    collections = files.currentCollections(useKeyboardCache: hasFullAccess && !isDemo)
     if tab == .collections && collections.isEmpty { tab = .recent }
     if let focused, !clips.contains(where: { $0.id == focused.id }) { self.focused = nil }
   }
@@ -345,16 +354,19 @@ struct KeyboardView: View {
         BrowsePanel(model: model)
       }
       #if DEBUG
-      Text(verbatim: model.cloudStatus)
-        .font(.system(size: 9))
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
-        .accessibilityIdentifier("cloudStatus")
+      if !model.isDemo {
+        Text(verbatim: model.cloudStatus)
+          .font(.system(size: 9))
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+          .accessibilityIdentifier("cloudStatus")
+      }
       #endif
     }
     .padding(.horizontal, 4)
     .padding(.top, 8)
     .padding(.bottom, 2)
+    .environment(\.locale, model.isDemo ? Locale(identifier: "en") : .current)
   }
 }
 

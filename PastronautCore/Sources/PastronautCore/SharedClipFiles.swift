@@ -25,6 +25,11 @@ public enum SharedSettings {
   public static let widgetCopiedAtKey = "widgetCopiedAt"
 
   public static var isAppLockEnabled: Bool { defaults?.bool(forKey: appLockKey) ?? false }
+
+  /// Date. Debug builds only: while the app shows made-up clips for screenshots, the keyboard shows them too
+  /// (no iCloud fetch, English) until this time.
+  public static let demoUntilKey = "demoUntil"
+  public static var isDemo: Bool { (defaults?.object(forKey: demoUntilKey) as? Date).map { $0 > .now } ?? false }
 }
 
 public struct SharedClipFiles: Sendable {

@@ -44,6 +44,17 @@ final class ClipStore {
   func start() async {
     guard !isStarted else { return }
     isStarted = true
+    #if DEBUG
+    if DemoClips.isOn {
+      SharedSettings.defaults?.set(Date.now.addingTimeInterval(15 * 60), forKey: SharedSettings.demoUntilKey)
+      clips = DemoClips.clips.inHistoryOrder
+      collections = DemoClips.collections
+      try? files?.writeSnapshot(clips)
+      try? files?.writeCollections(collections)
+      return
+    }
+    SharedSettings.defaults?.removeObject(forKey: SharedSettings.demoUntilKey)
+    #endif
     await sync.setChangeHandler { _ in
       await ClipStore.shared.reload()
     }
@@ -54,6 +65,9 @@ final class ClipStore {
   /// Pulls the keyboard's captures and the latest iCloud changes. Called on launch, foreground and push.
   func refresh() async {
     await start()
+    #if DEBUG
+    if DemoClips.isOn { return }
+    #endif
     await ingestInbox()
     try? await sync.syncNow()
     await updateAccountStatus()
@@ -61,6 +75,9 @@ final class ClipStore {
   }
 
   func reload() async {
+    #if DEBUG
+    if DemoClips.isOn { return }
+    #endif
     let latest = await sync.clips.inHistoryOrder
     let latestCollections = await sync.collections
     let changed = latest != clips
@@ -328,6 +345,9 @@ final class ClipStore {
   }
 
   private func upsert(_ clip: Clip) {
+    #if DEBUG
+    if DemoClips.isOn { return }
+    #endif
     Task {
       await sync.upsert(clip)
       await reload()

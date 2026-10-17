@@ -562,6 +562,58 @@ class MaccyUITests: XCTestCase {
     attachScreenshot(app.windows.firstMatch, named: "popup-onboarding")
   }
 
+  // Pastronaut: pictures for the README, in English with made-up clips: the list, a code preview and a queue,
+  // dark (this Mac's appearance) and light.
+  func testPastronautReadmeShots() throws {
+    for appearance in ["dark", "light"] {
+      app.terminate()
+      app.launchArguments = ["enable-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+                             "-openPreviewAutomatically", "<false/>"]
+      if appearance == "light" {
+        app.launchArguments += ["-NSRequiresAquaSystemAppearance", "YES"]
+      }
+      app.launch()
+      for text in [
+        "swift test --parallel", "41.0256, 28.9741", "git push origin main", "+1 555 0100 2030", "hello@example.com",
+        "#5B4BD0", "func greet(_ name: String) -> String {\n  // Say hello\n  return \"Hello, \\(name)!\"\n}",
+        "https://developer.apple.com/documentation/cloudkit"
+      ] {
+        copyToClipboard(text)
+      }
+      // A Universal Clipboard copy, i.e. one made on the iPhone.
+      pasteboard.clearContents()
+      pasteboard.setString("Galata Kulesi, Bereketzade Mah., Galata Kulesi Sk., 34421 Beyoğlu/İstanbul", forType: .string)
+      pasteboard.setData(Data(), forType: NSPasteboard.PasteboardType("com.apple.is-remote-clipboard"))
+      waitTillClipboardCheck()
+
+      popUpWithMouse()
+      app.typeKey(.downArrow, modifierFlags: [])
+      app.typeKey(.upArrow, modifierFlags: [])
+      usleep(500_000)
+      attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-\(appearance)")
+      // The code clip's preview.
+      let code = historyRow("func greet")
+      if code.exists {
+        code.hover()
+        app.typeKey(.space, modifierFlags: [])
+        sleep(1)
+        attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-preview-\(appearance)")
+        app.typeKey(.space, modifierFlags: [])
+        sleep(1)
+      }
+      // A queue of three.
+      historyRow("https://developer.apple.com").hover()
+      XCUIElement.perform(withKeyModifiers: .command) {
+        historyRow("hello@example.com").click()
+        historyRow("git push origin main").click()
+      }
+      usleep(500_000)
+      attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-queue-\(appearance)")
+      app.typeKey(.escape, modifierFlags: [])
+      sleep(1)
+    }
+  }
+
   // Pastronaut: row context menu, undo after deleting, "Show in History" and the timed pause.
   func testPastronautPopupExtras() throws {
     for text in ["c0ffee", "git push origin main", "Toplantı Perşembe 14:00'te"] {

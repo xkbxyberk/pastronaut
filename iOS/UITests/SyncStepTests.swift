@@ -180,6 +180,55 @@ final class SyncStepTests: XCTestCase {
       Thread.sleep(forTimeInterval: 4)
       attachScreenshot(named: "cards-dark")
       report(["ok": true])
+    case "readmeShots":
+      // README and store pictures: made-up clips (PT_DEMO, no sync), English, cards and list, light and dark,
+      // a collection, the keyboard. Ends by launching normally, which puts the real history back for the keyboard.
+      defer {
+        XCUIDevice.shared.appearance = .dark
+        app.terminate()
+        app.launchEnvironment["PT_DEMO"] = nil
+        app.launchEnvironment["PT_E2E_PREVIEWS"] = nil
+        app.launchArguments = []
+        app.launch()
+        Thread.sleep(forTimeInterval: 3)
+      }
+      app.launchEnvironment["PT_DEMO"] = "1"
+      app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+      for appearance in [XCUIDevice.Appearance.light, .dark] {
+        let name = appearance == .light ? "light" : "dark"
+        XCUIDevice.shared.appearance = appearance
+        for (layout, mode) in [("cards", "1"), ("list", "0")] {
+          app.terminate()
+          app.launchEnvironment["PT_E2E_PREVIEWS"] = mode
+          app.launch()
+          // Map and page previews come from the network the first time.
+          Thread.sleep(forTimeInterval: mode == "1" ? 8 : 2)
+          attachScreenshot(named: "readme-\(layout)-\(name)")
+        }
+      }
+      // A collection, from the list (dark).
+      let menu = app.descendants(matching: .any)["collectionsMenu"].firstMatch
+      if menu.waitForExistence(timeout: 3) {
+        menu.tap()
+        let travel = app.descendants(matching: .any)["collection.Travel"].firstMatch
+        if travel.waitForExistence(timeout: 3) {
+          travel.tap()
+          Thread.sleep(forTimeInterval: 1)
+          attachScreenshot(named: "readme-collection-dark")
+        }
+      }
+      // The keyboard, in the app's own search field.
+      app.terminate()
+      app.launch()
+      let search = app.searchFields.firstMatch
+      if search.waitForExistence(timeout: 5) {
+        search.tap()
+        if showPastronautKeyboard(in: app) {
+          Thread.sleep(forTimeInterval: 2)
+          attachScreenshot(named: "readme-keyboard-dark")
+        }
+      }
+      report(["ok": true])
     case "collectionShots":
       // Design review: the scope bar with a collection, the row menu, the clip's details and Settings › Your Data.
       app.activate()
