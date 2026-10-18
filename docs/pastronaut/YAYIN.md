@@ -54,8 +54,9 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
   sürümü 0.1.0 olarak kalır.
 
 **Sırada:**
-1. iOS 1.0 (build 1) arşivlenip App Store Connect'e yüklenir. Bunu **kullanıcı "yükle" deyince** yap.
-   Ardından TestFlight iç testi; sürüm sayfasında build seçilip incelemeye gönderilir.
+1. ✅ iOS 1.0 (build 1) App Store Connect'e yüklendi (2026-10-18; Release arşivi, yalnızca iPhone).
+   Sırada: TestFlight iç testi, sonra sürüm sayfasında build seçilip kullanıcı onayıyla incelemeye gönderilir.
+   Yeni bir yükleme için `CURRENT_PROJECT_VERSION` artırılmalı (1 → 2).
 2. Mac App Store sürümü (universal purchase: aynı kayıt, "Add Platform › macOS"; paket kimliği aynı). Gerekenler:
    - Sparkle'sız bir Mac App Store yapılandırması. Maccy'nin `upstream/appstore` dalı örnek: Sparkle'ı ve
      `SoftwareUpdater`'ı çıkarır, değerlendirme isteğini açar. Bizde ayrı bir derleme ayarı ya da dal olarak.
