@@ -64,13 +64,17 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
    Production iCloud ortamında; eşitleme ve klavye sorunsuz. Sırada: sürüm sayfasında build 2 seçilip kullanıcı
    onayıyla incelemeye gönderilir.
    Kural: App Intent metinlerine Apple ürün adı yazma. Uygulamanın kendi ekranlarındaki "Mac", "iPhone" serbest.
-2. Mac App Store sürümü (universal purchase: aynı kayıt, "Add Platform › macOS"; paket kimliği aynı). Gerekenler:
-   - Sparkle'sız bir Mac App Store yapılandırması. Maccy'nin `upstream/appstore` dalı örnek: Sparkle'ı ve
-     `SoftwareUpdater`'ı çıkarır, değerlendirme isteğini açar. Bizde ayrı bir derleme ayarı ya da dal olarak.
-   - Mac için gizlilik bildirimi (`PrivacyInfo.xcprivacy`).
-   - Mac App Store imza ve profil; Erişilebilirlik ile yapıştırma aynen kalır (Maccy Mac App Store'da bu
-     şekilde kabul edilmiş).
-   - Görseller hazır: `appstore-screenshots/store/<lang>/mac-1…5.png`. Metinler `APPSTORE.md` §7'de.
+2. Mac App Store sürümü (universal purchase: aynı kayıt, "Add Platform › macOS"; paket kimliği aynı).
+   ✅ iOS 1.0 (build 2) incelemeye gönderildi, "Manually release" seçildi (2026-10-18).
+   ✅ Derleme yolu hazır: `scripts/appstore/build-mas.sh` (yükleme için `--upload`). HEAD'den geçici bir
+   worktree açar, `mas-transform.py` ile Sparkle'ı, güncelleme ayarlarını, `SU*` anahtarlarını ve Sparkle'ın
+   sandbox istisnasını çıkarır; gizlilik bildirimini (`scripts/appstore/PrivacyInfo.xcprivacy`) ve
+   değerlendirme isteğini ekler. Ana dal Sparkle'lı kalır (GitHub sürümü değişmez).
+   ✅ 1.0 (1) dışa aktarıldı (yüklenmedi): Apple Distribution imzası, Mac App Store profili, iCloud ve push
+   Production, sandbox açık, içinde Sparkle yok. Kestirme metinlerinde "Maccy" adı kaldırıldı.
+   Sırada: kullanıcı "yükle" deyince `MAS_BUILD=1 scripts/appstore/build-mas.sh --upload`; App Store
+   Connect'te "Add Platform › macOS", macOS 1.0 sayfası (`APPSTORE.md` §7, `mac-1…5.png`), build seçimi ve
+   inceleme notu (Erişilebilirlik izninin neden gerektiği). Sonraki Mac App Store yüklemesi: `MAS_BUILD=2`.
 3. iPad: simülatörde test, sonra `TARGETED_DEVICE_FAMILY "1,2"` ve iPad ekran görüntüleri.
 4. Sonra: Homebrew cask; bir sonraki Mac sürümünde `CURRENT_PROJECT_VERSION` artırılır (Sparkle sürümleri bu
    numarayla karşılaştırır).

@@ -71,12 +71,11 @@ answer. Character counts were measured. Everything describes the app as it is at
 ### Release plan
 - **Now: iPhone.** The App Store record already exists (iOS).
 - **Mac now:** GitHub (Developer ID, notarized), as today.
-- **Mac App Store, later:** "Add Platform › macOS" on the same record. Our Mac bundle ID is the same
-  (`com.xkbxyberk.pastronaut`), so it becomes a universal purchase like Paste. First it needs a Mac App Store build:
-  - without Sparkle (guideline 2.4.5(vii));
-  - with the Accessibility-based paste and queue reviewed: App Review may question them under 2.4.5.
-
-  This file already holds the Mac texts and pictures for that day.
+- **Mac App Store, next:** "Add Platform › macOS" on the same record. Our Mac bundle ID is the same
+  (`com.xkbxyberk.pastronaut`), so it becomes a universal purchase like Paste. The build:
+  - `scripts/appstore/build-mas.sh` makes it without Sparkle (guideline 2.4.5(vii)), with a privacy manifest;
+  - the Accessibility-based paste and queue stay; the review notes (§13) explain them, since App Review may ask
+    under 2.4.5.
 
 ### Where each field goes in App Store Connect
 - **App Information (shared by all platforms):**
@@ -375,7 +374,7 @@ Not needed: the first release is iPhone-only. iPad comes back after it is tested
   - Data in the user's own CloudKit private database and Apple Maps lookups are Apple's services.
   - Crash reports shared through Apple's opt-in aren't "collected" by the developer.
 - **Tracking:** No.
-- **Privacy manifest:** in the app, keyboard, widgets and Share extension.
+- **Privacy manifest:** in the iPhone app, keyboard, widgets and Share extension, and in the Mac App Store build.
 
 ## 11. Age rating (expected 4+)
 - **Features:** No to every question:
@@ -390,7 +389,8 @@ Not needed: the first release is iPhone-only. iPad comes back after it is tested
 `ITSAppUsesNonExemptEncryption = NO`: the app uses only the encryption built into Apple's OS (CloudKit encrypted fields,
 HTTPS). Not legal advice.
 
-## 13. App Review notes (iPhone)
+## 13. App Review notes
+### iPhone
 ```
 Pastronaut is a clipboard manager and clipboard keyboard for iPhone. It works on its own; the Mac app is optional. No account or sign-in is needed.
 
@@ -405,6 +405,23 @@ Link and map previews are off until the user allows them (asked once). Sign-in, 
 Sync uses the user's private CloudKit database when signed in to iCloud. The optional Mac app: https://github.com/xkbxyberk/pastronaut
 
 Privacy policy: in the app at Settings › About › Privacy Policy, and at https://xkbxyberk.github.io/pastronaut/privacy.html
+```
+
+### Mac
+```
+Pastronaut is a clipboard history manager that lives in the menu bar (no Dock icon). No account or sign-in is needed.
+
+To try it:
+1. Copy a few texts in any app. Open the history with ⇧⌘C or by clicking the clipboard icon in the menu bar.
+2. Type to search, press Return to copy the selected item, press Space for a preview. Settings: press ⌘, while the history is open.
+
+Accessibility permission (optional): Pastronaut asks for it only the first time the user pastes an item (⌥Return) or starts a list to paste in order. It is used for one thing: after the user picks an item, Pastronaut sends a single ⌘V to the frontmost app so the item is pasted where the user was typing. The same permission lets "paste a list in order" notice the user's ⌘V and move to the next item. Pastronaut does not read other apps' content, record keystrokes or send any data. Without the permission, items are copied and the user pastes with ⌘V.
+
+Copies that password managers mark as concealed or transient are never saved.
+
+iCloud sync is off until the user turns it on in Settings › Sync. It uses only the user's private CloudKit database, shared with the iPhone app on the same App Store record.
+
+Privacy policy: Settings › Sync › Privacy Policy, and https://xkbxyberk.github.io/pastronaut/privacy.html
 ```
 
 ## 14. Sources
