@@ -8,12 +8,15 @@
 # 3. Checks the result: no Sparkle inside, sandbox on, iCloud and push entitlements for production.
 # With --upload the export goes straight to App Store Connect instead of a local .pkg.
 #
-# Versions: MAS_VERSION (default 1.0) and MAS_BUILD (default 1). Each upload needs a new MAS_BUILD.
+# Versions come from the project (MARKETING_VERSION, CURRENT_PROJECT_VERSION at HEAD), shared with the GitHub build;
+# MAS_VERSION / MAS_BUILD override them. Each upload needs a new build number (docs/pastronaut/SURUM.md).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-MAS_VERSION="${MAS_VERSION:-1.0}"
-MAS_BUILD="${MAS_BUILD:-1}"
+PBX_HEAD="$(git show HEAD:Maccy.xcodeproj/project.pbxproj)"
+MAS_VERSION="${MAS_VERSION:-$(grep -m1 -o 'MARKETING_VERSION = [0-9.]*' <<<"$PBX_HEAD" | cut -d' ' -f3)}"
+MAS_BUILD="${MAS_BUILD:-$(grep -m1 -o 'CURRENT_PROJECT_VERSION = [0-9]*' <<<"$PBX_HEAD" | cut -d' ' -f3)}"
+echo "Mac App Store build: $MAS_VERSION ($MAS_BUILD)"
 DESTINATION=export
 [[ "${1:-}" == "--upload" ]] && DESTINATION=upload
 

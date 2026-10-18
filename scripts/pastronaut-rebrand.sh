@@ -49,9 +49,10 @@ echo "Rebrand applied. Review with: git diff --stat"
 rm -rf Maccy/Assets.xcassets/AppIcon.appiconset
 perl -0pi -e 's/\t+EXCLUDED_SOURCE_FILE_NAMES = AppIcon\.icon;\n//g' Maccy.xcodeproj/project.pbxproj
 
-# 5. Version: Pastronaut numbers its own releases (shared with the iOS app in iOS/project.yml). Keeping Maccy's
-#    version also kept macOS showing Maccy's cached icon in notifications.
-perl -0pi -e 's/MARKETING_VERSION = [0-9.]+;/MARKETING_VERSION = 0.1.0;/g; s/CURRENT_PROJECT_VERSION = [0-9]+;/CURRENT_PROJECT_VERSION = 1;/g' Maccy.xcodeproj/project.pbxproj
+# 5. Version: Pastronaut numbers its own releases (docs/pastronaut/SURUM.md). The version lines are ours since the
+#    first release, so an upstream version bump shows up as a merge conflict: keep ours. Nothing to rewrite here.
+grep -m1 -E 'MARKETING_VERSION|CURRENT_PROJECT_VERSION' "$PBX" >/dev/null && \
+  echo "Mac version: $(grep -m1 -o 'MARKETING_VERSION = [^;]*' "$PBX") / $(grep -m1 -o 'CURRENT_PROJECT_VERSION = [^;]*' "$PBX")"
 
 # 6. Shortcuts action descriptions (English only, in Swift) still named Maccy.
 sed -i '' -e 's/Maccy clipboard history/Pastronaut clipboard history/' -e 's/Maccy settings/Pastronaut settings/' Maccy/Intents/*.swift

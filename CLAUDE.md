@@ -38,3 +38,29 @@ Swift modül adı bilerek `Maccy` bırakıldı (`PRODUCT_MODULE_NAME`). Ürün a
 - Kabul ölçütleri teste dönüşmeden bir özelliğe "bitti" deme.
 - Eşitleme, yok sayma kurallarından geçmemiş hiçbir içeriği gönderemez. Bunun için test zorunludur.
 - Commit ve push yalnızca kullanıcı isteyince yapılır.
+
+## Yayın: üç kanal (unutma)
+Pastronaut **üç kanalda** yayınlanır ve Mac'e dokunan her sürüm hem Mac App Store'a hem GitHub'a çıkar:
+1. **iPhone (App Store):** `iOS/` projesi.
+2. **Mac App Store:** Sparkle'sız derleme, `scripts/appstore/build-mas.sh` (ana dalı değiştirmez).
+3. **Mac GitHub sürümü:** Sparkle'lı, Developer ID + notarize; zip GitHub Releases'e, kayıt `pastronaut-appcast.xml`'e.
+
+Adımlar, sürüm ve derleme numarası kuralları: `docs/pastronaut/SURUM.md`. Durum ve sıradaki işler:
+`docs/pastronaut/YAYIN.md` ("D. Durum ve kalan işler"). Bir yayın işini bitirince ikisini de güncelle.
+Ana dal her zaman Sparkle'lı kalır; Sparkle'ı ana daldan kaldırma.
+
+## Kullanıcıyla çalışma kuralları (Pastronaut)
+- Türkçe, sade; her yanıtın sonunda: ne yapıldı, hangi dosyalar değişti, sıradaki adım.
+- Kurulum ve yapılandırma değişikliklerinde: plan → onay → uygula → doğrula.
+- App Store Connect'e yükleme **yalnızca kullanıcı "yükle" deyince**. İncelemeye gönderme ve yayınlama kullanıcının işi.
+  GitHub Release yayınlama ve appcast push'u da kullanıcı onayıyla.
+- Görsellerde gerçek pano verisi asla olmaz: `PT_DEMO` kullan. Kişisel veri içeren ekran görüntüsünü saklama.
+  Kullanıcının geçmişinde bir kez uygulamaya özel parola çıktı; gizli bilgileri maskele.
+- Kestirmeler / Siri metinlerinde (App Intents başlık, açıklama, seçenek adları ve kimlikleri, Siri cümleleri)
+  "Mac", "iPhone", "iPad" yazma: App Review ITMS-90626 gönderir.
+- Klavye Tam Erişim olmadan da çalışmalı (Guideline 4.4.1).
+- Başka uygulamaların kodunu, görselini, adını veya ayırt edici görünüşünü kopyalama (ör. Paste); yalnızca teknik fikir.
+- Kabuk: `rm -rf`'i değişkenli yolla kullanma (`"${R:?}/…"`), `log` yerine `/usr/bin/log`,
+  `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` ve `env -u SDKROOT`.
+- Mac arayüz testlerinden önce gerçek Pastronaut'u kapat
+  (`osascript -e 'tell application id "com.xkbxyberk.pastronaut" to quit'`), sonra `~/Applications/Pastronaut.app`'i yeniden aç.

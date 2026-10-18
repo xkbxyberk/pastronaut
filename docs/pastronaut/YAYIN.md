@@ -79,3 +79,8 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
 4. Sonra: Homebrew cask; bir sonraki Mac sürümünde `CURRENT_PROJECT_VERSION` artırılır (Sparkle sürümleri bu
    numarayla karşılaştırır).
 
+**Sürüm kuralı (2026-10-18'den sonra):** her sürüm üç kanalda çıkar (iPhone, Mac App Store, Mac GitHub/Sparkle);
+adımlar `SURUM.md`'de. Görünen sürüm üçünde de aynı (şu an 1.0). Sıradaki derleme numaraları: iPhone **3**,
+Mac **2** (Mac App Store ve GitHub ortak). Mac GitHub kullanıcıları hâlâ 0.1.0'da; bir sonraki Mac sürümüyle
+GitHub'a da 1.0.x çıkar.
+
