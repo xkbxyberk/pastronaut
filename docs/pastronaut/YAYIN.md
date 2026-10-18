@@ -60,6 +60,9 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
    adları, Siri cümleleri, kimlikler) Apple ürün adı ("Mac", "iPhone") olamaz. Düzeltildi: seçenekler
    "Computer/Bilgisayar" ve "Phone/Telefon" (kimlikler `computer`, `phone`), açıklamalar ve Siri cümlesi
    "computer / other devices". ✅ Build 2 yüklendi (2026-10-18). Sonraki yükleme: build 3.
+   ✅ TestFlight iç testi geçti (2026-10-18): iPhone'da TestFlight build 2 + Mac'te GitHub 0.1.0, ikisi de
+   Production iCloud ortamında; eşitleme ve klavye sorunsuz. Sırada: sürüm sayfasında build 2 seçilip kullanıcı
+   onayıyla incelemeye gönderilir.
    Kural: App Intent metinlerine Apple ürün adı yazma. Uygulamanın kendi ekranlarındaki "Mac", "iPhone" serbest.
 2. Mac App Store sürümü (universal purchase: aynı kayıt, "Add Platform › macOS"; paket kimliği aynı). Gerekenler:
    - Sparkle'sız bir Mac App Store yapılandırması. Maccy'nin `upstream/appstore` dalı örnek: Sparkle'ı ve
