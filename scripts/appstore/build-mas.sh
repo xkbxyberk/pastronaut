@@ -66,8 +66,8 @@ fail() { echo "CHECK FAILED: $*"; exit 1; }
 otool -L "$APP/Contents/MacOS/Pastronaut" | grep -qi sparkle && fail "the binary links Sparkle"
 plutil -p "$APP/Contents/Info.plist" | grep -q '"SU' && fail "Info.plist still has Sparkle keys"
 [[ -f "$APP/Contents/Resources/PrivacyInfo.xcprivacy" ]] || fail "privacy manifest missing"
-grep -R -l -E 'iPhone|Mac[^a-z]' "$APP/Contents/Resources/Metadata.appintents" 2>/dev/null \
-  && echo "Warning: Shortcuts metadata names an Apple product (ITMS-90626); check the files above."
+grep -R -l -a -E 'iPhone|Mac([^a-z]|cy)' "$APP/Contents/Resources/Metadata.appintents" 2>/dev/null \
+  && fail "Shortcuts metadata names an Apple product (ITMS-90626) or Maccy; check the files above."
 
 if [[ "$DESTINATION" == export ]]; then
   PKG="$(ls "$EXPORT"/*.pkg)"

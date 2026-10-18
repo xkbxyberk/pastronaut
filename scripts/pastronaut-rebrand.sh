@@ -54,4 +54,4 @@ perl -0pi -e 's/\t+EXCLUDED_SOURCE_FILE_NAMES = AppIcon\.icon;\n//g' Maccy.xcode
 perl -0pi -e 's/MARKETING_VERSION = [0-9.]+;/MARKETING_VERSION = 0.1.0;/g; s/CURRENT_PROJECT_VERSION = [0-9]+;/CURRENT_PROJECT_VERSION = 1;/g' Maccy.xcodeproj/project.pbxproj
 
 # 6. Shortcuts action descriptions (English only, in Swift) still named Maccy.
-sed -i '' 's/Maccy clipboard history/Pastronaut clipboard history/' Maccy/Intents/Clear.swift Maccy/Intents/Delete.swift
+sed -i '' -e 's/Maccy clipboard history/Pastronaut clipboard history/' -e 's/Maccy settings/Pastronaut settings/' Maccy/Intents/*.swift
