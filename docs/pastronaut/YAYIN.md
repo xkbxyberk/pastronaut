@@ -72,7 +72,7 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
    değerlendirme isteğini ekler. Ana dal Sparkle'lı kalır (GitHub sürümü değişmez).
    ✅ 1.0 (1) dışa aktarıldı (yüklenmedi): Apple Distribution imzası, Mac App Store profili, iCloud ve push
    Production, sandbox açık, içinde Sparkle yok. Kestirme metinlerinde "Maccy" adı kaldırıldı.
-   Sırada: kullanıcı "yükle" deyince `MAS_BUILD=1 scripts/appstore/build-mas.sh --upload`; App Store
+   ✅ 1.0 (1) App Store Connect'e yüklendi (2026-10-18, `MAS_BUILD=1 … --upload`). Sırada: App Store
    Connect'te "Add Platform › macOS", macOS 1.0 sayfası (`APPSTORE.md` §7, `mac-1…5.png`), build seçimi ve
    inceleme notu (Erişilebilirlik izninin neden gerektiği). Sonraki Mac App Store yüklemesi: `MAS_BUILD=2`.
 3. iPad: simülatörde test, sonra `TARGETED_DEVICE_FAMILY "1,2"` ve iPad ekran görüntüleri.
