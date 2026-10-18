@@ -13,8 +13,8 @@ struct SyncSettingsPane: View {
   @State private var isWorking = false
   @State private var confirmsDeletion = false
 
-  /// Until the App Store listing exists, the code opens the project page.
-  private static let iPhoneAppURL = "https://github.com/xkbxyberk/pastronaut"
+  /// The iPhone app's App Store page (same record as the Mac App Store app: universal purchase).
+  private static let iPhoneAppURL = "https://apps.apple.com/app/id6824087843"
 
   var body: some View {
     Form {
@@ -99,9 +99,6 @@ struct SyncSettingsPane: View {
             Text("Scan with your iPhone's camera. The app walks you through setting up the keyboard.", tableName: "Pastronaut")
               .foregroundStyle(.secondary)
               .fixedSize(horizontal: false, vertical: true)
-            Text("Until the App Store release, this opens the project page.", tableName: "Pastronaut")
-              .font(.caption)
-              .foregroundStyle(.tertiary)
           }
         }
         .padding(.vertical, 4)

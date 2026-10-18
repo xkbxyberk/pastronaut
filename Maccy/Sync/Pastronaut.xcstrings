@@ -1049,17 +1049,6 @@
         }
       }
     },
-    "Until the App Store release, this opens the project page.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "App Store yayınına kadar proje sayfasını açar."
-          }
-        }
-      }
-    },
     "Until Tomorrow": {
       "extractionState": "manual",
       "localizations": {
