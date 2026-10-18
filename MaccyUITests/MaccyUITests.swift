@@ -562,23 +562,32 @@ class MaccyUITests: XCTestCase {
     attachScreenshot(app.windows.firstMatch, named: "popup-onboarding")
   }
 
-  // Pastronaut: pictures for the README, in English with made-up clips: the list, a code preview and a queue,
-  // dark (this Mac's appearance) and light.
+  // Pastronaut: pictures for the README and the App Store, with made-up clips, in English and Turkish (light),
+  // plus English dark for the README: the list, a code preview, a queue, a typed filter, the iPhone filter.
   func testPastronautReadmeShots() throws {
-    for appearance in ["dark", "light"] {
+    for (lang, appearance) in [("en", "dark"), ("en", "light"), ("tr", "light")] {
       app.terminate()
-      app.launchArguments = ["enable-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+      app.launchArguments = ["enable-testing", "-AppleLanguages", "(\(lang))", "-AppleLocale", lang == "tr" ? "tr_TR" : "en_US",
                              "-openPreviewAutomatically", "<false/>"]
       if appearance == "light" {
         app.launchArguments += ["-NSRequiresAquaSystemAppearance", "YES"]
       }
       app.launch()
-      for text in [
-        "swift test --parallel", "41.0256, 28.9741", "git push origin main", "+1 555 0100 2030", "hello@example.com",
-        "#5B4BD0", "func greet(_ name: String) -> String {\n  // Say hello\n  return \"Hello, \\(name)!\"\n}",
-        "https://developer.apple.com/documentation/cloudkit"
+      let meeting = lang == "tr" ? "Toplantı perşembe 14:00'e alındı, 3B salonu." : "Meeting moved to Thursday 2 pm, room 3B."
+      // Each copy names a plausible source app (TestSourceApp), not the app that runs the test.
+      for (text, source) in [
+        ("swift test --parallel", "com.apple.Terminal"), ("41.0256, 28.9741", "com.apple.Maps"),
+        (meeting, "com.apple.Notes"), ("git push origin main", "com.apple.Terminal"),
+        ("+1 555 0100 2030", "com.apple.AddressBook"),
+        (lang == "tr" ? "merhaba@example.com" : "hello@example.com", "com.apple.mail"),
+        ("#5B4BD0", "com.apple.DigitalColorMeter"),
+        ("func greet(_ name: String) -> String {\n  // Say hello\n  return \"Hello, \\(name)!\"\n}", "com.apple.dt.Xcode"),
+        ("https://developer.apple.com/documentation/cloudkit", "com.apple.Safari")
       ] {
-        copyToClipboard(text)
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+        pasteboard.setString(source, forType: NSPasteboard.PasteboardType("com.xkbxyberk.pastronaut.test-source-app"))
+        waitTillClipboardCheck()
       }
       // A Universal Clipboard copy, i.e. one made on the iPhone.
       pasteboard.clearContents()
@@ -586,29 +595,48 @@ class MaccyUITests: XCTestCase {
       pasteboard.setData(Data(), forType: NSPasteboard.PasteboardType("com.apple.is-remote-clipboard"))
       waitTillClipboardCheck()
 
+      let tag = "\(lang)-\(appearance)"
       popUpWithMouse()
       app.typeKey(.downArrow, modifierFlags: [])
       app.typeKey(.upArrow, modifierFlags: [])
       usleep(500_000)
-      attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-\(appearance)")
+      attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-\(tag)")
       // The code clip's preview.
       let code = historyRow("func greet")
       if code.exists {
         code.hover()
         app.typeKey(.space, modifierFlags: [])
         sleep(1)
-        attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-preview-\(appearance)")
+        attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-preview-\(tag)")
         app.typeKey(.space, modifierFlags: [])
         sleep(1)
       }
       // A queue of three.
       historyRow("https://developer.apple.com").hover()
       XCUIElement.perform(withKeyModifiers: .command) {
-        historyRow("hello@example.com").click()
+        historyRow(lang == "tr" ? "merhaba@example.com" : "hello@example.com").click()
         historyRow("git push origin main").click()
       }
       usleep(500_000)
-      attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-queue-\(appearance)")
+      attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-queue-\(tag)")
+      app.typeKey(.escape, modifierFlags: [])
+      sleep(1)
+      // A typed filter: only code.
+      popUpWithMouse()
+      search(lang == "tr" ? "tür:kod" : "type:code")
+      usleep(800_000)
+      attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-filter-\(tag)")
+      app.typeKey(.escape, modifierFlags: [])
+      sleep(1)
+      // What came from the iPhone.
+      popUpWithMouse()
+      let iphone = app.descendants(matching: .any)["device-filter"].firstMatch.descendants(matching: .any)
+        .matching(NSPredicate(format: "label == 'iPhone'")).firstMatch
+      if iphone.exists {
+        iphone.click()
+        usleep(800_000)
+        attachScreenshot(app.dialogs.firstMatch, named: "readme-mac-iphone-\(tag)")
+      }
       app.typeKey(.escape, modifierFlags: [])
       sleep(1)
     }

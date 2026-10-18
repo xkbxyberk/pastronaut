@@ -818,3 +818,18 @@ enum QueuePermission {
     NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
   }
 }
+
+/// UI tests (store and README pictures) name the app a copy came from, since the app in front while a test copies
+/// is whatever runs the test. Debug builds in test mode only.
+enum TestSourceApp {
+  static let type = "com.xkbxyberk.pastronaut.test-source-app"
+
+  static func bundleIdentifier(in contents: [HistoryItemContent]) -> String? {
+    #if DEBUG
+    guard AppDelegate.isTesting, let data = contents.first(where: { $0.type == type })?.value else { return nil }
+    return String(data: data, encoding: .utf8)
+    #else
+    return nil
+    #endif
+  }
+}

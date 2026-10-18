@@ -4,189 +4,382 @@ import PastronautCore
 import SwiftUI
 import UniformTypeIdentifiers
 
-// Usage: swift run StoreArt <raw dir> <out dir>
-// <raw dir>/<lang>/<n>-<name>-<light|dark>.png are device screenshots (1290 × 2796) from SyncStepTests `storeShots`.
-// Writes <out dir>/<lang>/screenshot-<n>.png (1320 × 2868) and <out dir>/<lang>/header-universal.png (5244 × 2950),
-// opaque PNGs as App Store Connect requires.
+// App Store pictures for Pastronaut, from screenshots taken with made-up clips only.
+//
+// Usage: swift run -c release StoreArt <raw dir> <out dir>
+//   <raw dir>/<lang>/0-keyboard-light.png … 6-mac-dark.png   iPhone (SyncStepTests `storeShots`, 1290 × 2796)
+//   <raw dir>/mac/<lang>-light.png, preview-<lang>-light.png, queue-…, filter-…, iphone-…   Mac popup
+//                                                                   (MaccyUITests `testPastronautReadmeShots`)
+// Writes, per language (en, tr), opaque PNGs as App Store Connect requires:
+//   iphone-1…7.png   1320 × 2868   (iPhone 6.9"; frames 1 and 2 are one panorama)
+//   mac-1…5.png      2880 × 1800   (Mac; frames 1 and 2 are one panorama)
+//   header.png       3840 × 1646   (product page header, 21:9)
+//   search.png       3840 × 2560   (search result, 3:2)
 
-struct Frame {
-  let number: Int
-  let file: String
-  let dark: Bool
-  /// The whole screen, scaled to fit (keyboard frames); otherwise the top of the screen, bleeding off the bottom.
-  var fit = false
-  let title: [String: String]
-  let subtitle: [String: String]
+// MARK: - Words
+
+typealias Words = [String: String]
+
+struct Caption {
+  let eyebrow: Words
+  let title: Words
+  let subtitle: Words
+  let color: Color
 }
-
-// The iPhone's own job first (a clipboard keyboard); the Mac app last, as an extra.
-let frames: [Frame] = [
-  Frame(number: 1, file: "0-keyboard-light", dark: false, fit: true,
-        title: ["en": "Paste anything\nin one tap", "tr": "Her kopya\ntek dokunuşla"],
-        subtitle: ["en": "Your clipboard history as a keyboard, in every app.",
-                   "tr": "Pano geçmişin, her uygulamada klavyende."]),
-  Frame(number: 2, file: "1-cards-light", dark: false,
-        title: ["en": "Smart cards\nfor every kind", "tr": "Her türe\nakıllı kart"],
-        subtitle: ["en": "Maps for addresses, previews for links, colored code.",
-                   "tr": "Adrese harita, bağlantıya önizleme, koda renk."]),
-  Frame(number: 3, file: "4-collection-light", dark: false,
-        title: ["en": "Pin and collect\nwhat you reuse", "tr": "Sabitle,\nkoleksiyonla"],
-        subtitle: ["en": "Addresses, snippets and links, together.", "tr": "Adresler, parçacıklar, bağlantılar bir arada."]),
-  Frame(number: 4, file: "2-keyboard-dark", dark: true, fit: true,
-        title: ["en": "Find any copy\nin seconds", "tr": "Aradığını\nsaniyede bul"],
-        subtitle: ["en": "Search by text, kind or date.", "tr": "Metne, türe ya da tarihe göre ara."]),
-  Frame(number: 5, file: "5-list-light", dark: false,
-        title: ["en": "Private\nby design", "tr": "Gizlilik\nöncelikli"],
-        subtitle: ["en": "No account. No tracking. No ads.", "tr": "Hesap yok. İzleme yok. Reklam yok."]),
-  Frame(number: 6, file: "6-mac-dark", dark: true,
-        title: ["en": "Also on\nyour Mac", "tr": "Mac'inde\nde"],
-        subtitle: ["en": "Your Mac copies arrive on their own.", "tr": "Mac kopyaların kendiliğinden gelir."])
-]
-
-let tagline = ["en": "Every copy, one tap away.", "tr": "Her kopya, bir dokunuş uzağında."]
-
-// MARK: - Colors
 
 enum Brand {
-  static let deepSky = Color(red: 0.118, green: 0.435, blue: 0.659)
   static let sky = Color(red: 0.529, green: 0.808, blue: 0.922)
+  static let deepSky = Color(red: 0.118, green: 0.435, blue: 0.659)
+  static let mistTop = Color(red: 0.957, green: 0.973, blue: 0.992)
+  static let mistBottom = Color(red: 0.851, green: 0.922, blue: 0.976)
   static let navyTop = Color(red: 0.055, green: 0.086, blue: 0.133)
-  static let navyBottom = Color(red: 0.090, green: 0.133, blue: 0.200)
-  static let mistTop = Color(red: 0.925, green: 0.961, blue: 0.992)
-  static let mistBottom = Color(red: 0.800, green: 0.902, blue: 0.965)
+  static let navyBottom = Color(red: 0.102, green: 0.153, blue: 0.231)
   static let ink = Color(red: 0.086, green: 0.125, blue: 0.180)
+  static let muted = Color(red: 0.333, green: 0.380, blue: 0.451)
+  // Eyebrow colors: the kinds' own colors (ClipKind palette, light-mode values).
+  static let link = Color(red: 0.137, green: 0.392, blue: 0.824)
+  static let code = Color(red: 0.451, green: 0.286, blue: 0.816)
+  static let email = Color(red: 0.043, green: 0.498, blue: 0.533)
+  static let phone = Color(red: 0.165, green: 0.522, blue: 0.251)
+  static let address = Color(red: 0.753, green: 0.341, blue: 0.059)
+  static let text = Color(red: 0.369, green: 0.408, blue: 0.471)
 }
 
-// MARK: - Views
+let tagline: Words = ["en": "Every copy, one tap away.", "tr": "Her kopya, bir dokunuş uzağında."]
+let heroLine: Words = ["en": "Clipboard history + paste keyboard\nfor iPhone and Mac",
+                       "tr": "Pano geçmişi ve yapıştırma klavyesi\niPhone ve Mac için"]
 
-/// An orbit like the one around the helmet in the wordmark, as a quiet background motif.
-struct Orbit: View {
-  let color: Color
+// MARK: - Shared pieces
+
+struct Background: View {
+  var dark = false
   var body: some View {
-    Ellipse()
-      .stroke(color, lineWidth: 6)
-      .rotationEffect(.degrees(-16))
+    ZStack {
+      LinearGradient(colors: dark ? [Brand.navyTop, Brand.navyBottom] : [Brand.mistTop, Brand.mistBottom],
+                     startPoint: .top, endPoint: .bottom)
+      // The orbit from the wordmark, large and faint.
+      GeometryReader { geo in
+        Ellipse()
+          .stroke((dark ? Brand.sky : Brand.deepSky).opacity(0.10), lineWidth: geo.size.width / 600)
+          .frame(width: geo.size.width * 1.1, height: geo.size.height * 0.42)
+          .rotationEffect(.degrees(-14))
+          .position(x: geo.size.width * 0.55, y: geo.size.height * 0.36)
+      }
+    }
   }
 }
 
-struct ScreenshotFrame: View {
-  let frame: Frame
+struct CaptionView: View {
+  let caption: Caption
   let lang: String
-  let shot: NSImage
+  let scale: CGFloat
+  var dark = false
+  var alignment: HorizontalAlignment = .center
 
   var body: some View {
-    let dark = frame.dark
+    VStack(alignment: alignment, spacing: 0) {
+      Text(caption.eyebrow[lang] ?? "")
+        .font(.system(size: 40 * scale, weight: .heavy))
+        .tracking(4 * scale)
+        .foregroundStyle(dark ? Brand.sky : caption.color)
+        .padding(.bottom, 22 * scale)
+      Text(caption.title[lang] ?? "")
+        .font(.system(size: 104 * scale, weight: .bold))
+        .lineSpacing(2 * scale)
+        .foregroundStyle(dark ? Color.white : Brand.ink)
+        .fixedSize(horizontal: false, vertical: true)
+      Text(caption.subtitle[lang] ?? "")
+        .font(.system(size: 46 * scale, weight: .medium))
+        .foregroundStyle(dark ? Brand.sky.opacity(0.9) : Brand.muted)
+        .padding(.top, 26 * scale)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    .multilineTextAlignment(alignment == .center ? .center : .leading)
+  }
+}
+
+/// A screen or window picture with rounded corners and a soft shadow.
+struct Shot: View {
+  let image: NSImage
+  let width: CGFloat
+  var radius: CGFloat = 80
+  var dark = false
+
+  var body: some View {
+    Image(nsImage: image)
+      .resizable()
+      .interpolation(.high)
+      .frame(width: width, height: width * image.size.height / image.size.width)
+      .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+      .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous)
+        .strokeBorder((dark ? Color.white : Brand.ink).opacity(0.10), lineWidth: max(2, width / 400)))
+      .shadow(color: .black.opacity(dark ? 0.55 : 0.20), radius: width / 22, y: width / 50)
+  }
+}
+
+// MARK: - iPhone frames (1320 × 2868)
+
+struct IPhoneFrame: View {
+  let caption: Caption
+  let lang: String
+  let shot: NSImage
+  var dark = false
+  /// Whole screen (keyboard frames), or the top of the screen bleeding off the bottom edge.
+  var fit = false
+
+  var body: some View {
     ZStack(alignment: .top) {
-      LinearGradient(colors: dark ? [Brand.navyTop, Brand.navyBottom] : [Brand.mistTop, Brand.mistBottom],
-                     startPoint: .top, endPoint: .bottom)
-      Orbit(color: (dark ? Brand.sky : Brand.deepSky).opacity(0.10))
-        .frame(width: 2300, height: 900)
-        .offset(x: 520, y: 380)
-      VStack(spacing: 0) {
-        // The app's own header already shows the wordmark, so the caption starts the frame.
-        Spacer().frame(height: 210)
-        Text(frame.title[lang] ?? "")
-          .font(.system(size: 112, weight: .bold, design: .default))
-          .multilineTextAlignment(.center)
-          .lineSpacing(4)
-          .foregroundStyle(dark ? Color.white : Brand.ink)
-          .fixedSize(horizontal: false, vertical: true)
-        Text(frame.subtitle[lang] ?? "")
-          .font(.system(size: 50, weight: .medium))
-          .multilineTextAlignment(.center)
-          .foregroundStyle(dark ? Brand.sky : Brand.deepSky)
-          .padding(.top, 30)
-          .padding(.horizontal, 90)
-        Spacer(minLength: 0)
-      }
-      .frame(width: 1320)
-      // The screenshot without its status bar: whole (fit) or bleeding off the bottom edge.
-      let width: CGFloat = frame.fit ? (2868 - 760 - 60) * shot.size.width / shot.size.height : 1110
-      Image(nsImage: shot)
-        .resizable()
-        .frame(width: width, height: width * shot.size.height / shot.size.width)
-        .clipShape(RoundedRectangle(cornerRadius: 86, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 86, style: .continuous)
-          .strokeBorder((dark ? Color.white : Brand.ink).opacity(0.10), lineWidth: 4))
-        .shadow(color: .black.opacity(dark ? 0.55 : 0.22), radius: 50, y: 24)
-        .offset(y: 760)
+      Background(dark: dark)
+      CaptionView(caption: caption, lang: lang, scale: 1, dark: dark)
+        .frame(width: 1160)
+        .padding(.top, 170)
+      let width: CGFloat = fit ? 2000 * shot.size.width / shot.size.height : 1110
+      Shot(image: shot, width: width, radius: 84, dark: dark)
+        .padding(.top, fit ? 790 : 800)
     }
     .frame(width: 1320, height: 2868)
     .clipped()
   }
 }
 
+/// Frames 1 and 2 as one picture: the Mac window crosses the seam, the iPhone stands in front of it.
+struct IPhonePanorama: View {
+  let lang: String
+  let iphone: NSImage
+  let mac: NSImage
+
+  static let first = Caption(
+    eyebrow: ["en": "PASTRONAUT", "tr": "PASTRONAUT"],
+    title: ["en": "Your clipboard,\non iPhone and Mac", "tr": "Panon, iPhone'da\nve Mac'te"],
+    subtitle: ["en": "Everything you copy, kept and synced.", "tr": "Kopyaladığın her şey saklanır ve eşitlenir."],
+    color: Brand.link)
+  static let second = Caption(
+    eyebrow: ["en": "KEEP", "tr": "SAKLA"],
+    title: ["en": "Never lose\na copy again", "tr": "Hiçbir kopyayı\nkaybetme"],
+    subtitle: ["en": "Your history, private in your own iCloud.", "tr": "Geçmişin, kendi iCloud'unda gizli."],
+    color: Brand.link)
+
+  var body: some View {
+    ZStack(alignment: .topLeading) {
+      Background()
+      CaptionView(caption: Self.first, lang: lang, scale: 1)
+        .frame(width: 1160).position(x: 660, y: 470)
+      CaptionView(caption: Self.second, lang: lang, scale: 1)
+        .frame(width: 1160).position(x: 1980, y: 470)
+      // The Mac popup as a window across the seam.
+      Shot(image: mac, width: 1500, radius: 46)
+        .position(x: 1700, y: 1820)
+      // The iPhone in front, bleeding off the bottom.
+      Shot(image: iphone, width: 980, radius: 76)
+        .position(x: 700, y: 1100 + 980 * iphone.size.height / iphone.size.width / 2)
+    }
+    .frame(width: 2640, height: 2868)
+    .clipped()
+  }
+}
+
+let iphoneFrames: [(file: String, caption: Caption, dark: Bool, fit: Bool)] = [
+  ("0-keyboard-light", Caption(
+    eyebrow: ["en": "PASTE", "tr": "YAPIŞTIR"],
+    title: ["en": "Paste anything\nin one tap", "tr": "Her kopya\ntek dokunuşla"],
+    subtitle: ["en": "Your history as a keyboard, in every app.", "tr": "Geçmişin, her uygulamada klavyende."],
+    color: Brand.code), false, true),
+  ("2-keyboard-dark", Caption(
+    eyebrow: ["en": "FIND", "tr": "BUL"],
+    title: ["en": "Find any copy\nin seconds", "tr": "Aradığını\nsaniyede bul"],
+    subtitle: ["en": "Search by text, kind or date.", "tr": "Metne, türe ya da tarihe göre ara."],
+    color: Brand.email), true, true),
+  ("4-collection-light", Caption(
+    eyebrow: ["en": "ORGANIZE", "tr": "DÜZENLE"],
+    title: ["en": "Pin and collect\nwhat you reuse", "tr": "Sabitle,\nkoleksiyonla"],
+    subtitle: ["en": "Addresses, snippets and links, together.", "tr": "Adresler, parçacıklar, bağlantılar bir arada."],
+    color: Brand.address), false, false),
+  ("3-cards-dark", Caption(
+    eyebrow: ["en": "SMART CARDS", "tr": "AKILLI KARTLAR"],
+    title: ["en": "Every kind,\nits own card", "tr": "Her türe\nkendi kartı"],
+    subtitle: ["en": "Maps, link previews, colored code.", "tr": "Harita, bağlantı önizlemesi, renkli kod."],
+    color: Brand.phone), true, false),
+  ("5-list-light", Caption(
+    eyebrow: ["en": "PRIVATE", "tr": "GİZLİ"],
+    title: ["en": "No account.\nNo tracking.", "tr": "Hesap yok.\nİzleme yok."],
+    subtitle: ["en": "Only you and your iCloud.", "tr": "Yalnızca sen ve iCloud'un."],
+    color: Brand.text), false, false)
+]
+
+// MARK: - Mac frames (2880 × 1800)
+
+struct MacFrame: View {
+  let caption: Caption
+  let lang: String
+  let window: NSImage
+
+  var body: some View {
+    ZStack(alignment: .topLeading) {
+      Background()
+      CaptionView(caption: caption, lang: lang, scale: 1.25, alignment: .leading)
+        .frame(width: 940, alignment: .leading)
+        .position(x: 180 + 470, y: 900)
+      let width: CGFloat = min(1660, 1500 * window.size.width / window.size.height)
+      Shot(image: window, width: width, radius: 40)
+        .position(x: 2880 - 120 - width / 2, y: 900)
+    }
+    .frame(width: 2880, height: 1800)
+    .clipped()
+  }
+}
+
+/// Mac frames 1 and 2 as one picture: the Mac window and the iPhone side by side across the seam.
+struct MacPanorama: View {
+  let lang: String
+  let mac: NSImage
+  let iphone: NSImage
+
+  static let first = Caption(
+    eyebrow: ["en": "PASTRONAUT", "tr": "PASTRONAUT"],
+    title: ["en": "Your clipboard,\non Mac and iPhone", "tr": "Panon, Mac'te\nve iPhone'da"],
+    subtitle: ["en": "Everything you copy, one shortcut away.", "tr": "Kopyaladığın her şey bir kısayol uzağında."],
+    color: Brand.link)
+  static let second = Caption(
+    eyebrow: ["en": "SYNC", "tr": "EŞİTLE"],
+    title: ["en": "Copy on one,\npaste on the other", "tr": "Birinde kopyala,\nötekinde yapıştır"],
+    subtitle: ["en": "Through your own private iCloud.", "tr": "Kendi özel iCloud'un üzerinden."],
+    color: Brand.email)
+
+  var body: some View {
+    ZStack(alignment: .topLeading) {
+      Background()
+      CaptionView(caption: Self.first, lang: lang, scale: 1.25, alignment: .leading)
+        .frame(width: 1000, alignment: .leading)
+        .position(x: 180 + 500, y: 760)
+      Shot(image: mac, width: 1300, radius: 44)
+        .position(x: 2700, y: 960)
+      Shot(image: iphone, width: 760, radius: 70)
+        .position(x: 3620, y: 300 + 760 * iphone.size.height / iphone.size.width / 2)
+      CaptionView(caption: Self.second, lang: lang, scale: 1.25, alignment: .leading)
+        .frame(width: 1000, alignment: .leading)
+        .position(x: 4250 + 500, y: 760)
+    }
+    .frame(width: 5760, height: 1800)
+    .clipped()
+  }
+}
+
+let macFrames: [(file: String, caption: Caption)] = [
+  ("preview", Caption(
+    eyebrow: ["en": "PREVIEW", "tr": "ÖNİZLE"],
+    title: ["en": "Press Space\nto look closer", "tr": "Space'e bas,\nyakından bak"],
+    subtitle: ["en": "Colored code, color swatches, maps and links.", "tr": "Renkli kod, renk örnekleri, harita ve bağlantılar."],
+    color: Brand.code)),
+  ("queue", Caption(
+    eyebrow: ["en": "QUEUE", "tr": "SIRA"],
+    title: ["en": "Paste a list,\nin order", "tr": "Bir listeyi\nsırayla yapıştır"],
+    subtitle: ["en": "Select a few, then every ⌘V pastes the next.", "tr": "Birkaçını seç, her ⌘V sıradakini yapıştırır."],
+    color: Brand.address)),
+  ("filter", Caption(
+    eyebrow: ["en": "FIND", "tr": "BUL"],
+    title: ["en": "Type a filter,\nfind it fast", "tr": "Süzgeci yaz,\nhemen bul"],
+    subtitle: ["en": "type:code, app:Safari, date:yesterday.", "tr": "tür:kod, uygulama:Safari, tarih:dün."],
+    color: Brand.email))
+]
+
+// MARK: - Header (3840 × 1646) and search result (3840 × 2560)
+
 struct HeaderArt: View {
   let lang: String
-  let left: NSImage
-  let right: NSImage
+  let mac: NSImage
+  let iphone: NSImage
 
   var body: some View {
     ZStack {
-      LinearGradient(colors: [Brand.navyTop, Brand.navyBottom], startPoint: .top, endPoint: .bottom)
-      Orbit(color: Brand.sky.opacity(0.14))
-        .frame(width: 3900, height: 1250)
-        .offset(y: -150)
-      // Real screens at the sides, outside the safe area: decoration that may be cropped.
-      phone(left).rotationEffect(.degrees(-8)).offset(x: -1780, y: 620)
-      phone(right).rotationEffect(.degrees(8)).offset(x: 1780, y: 620)
-      // Inside the centered safe area (about 1402 × 962, a little above the middle).
-      VStack(spacing: 70) {
-        PastronautWordmark(size: 150)
-          .environment(\.colorScheme, .dark)
+      Background(dark: true)
+      // Real screens at the sides; the centered safe area (1646 × 661) holds the message.
+      Shot(image: mac, width: 900, radius: 30, dark: true)
+        .rotationEffect(.degrees(-6))
+        .position(x: 560, y: 1000)
+      Shot(image: iphone, width: 640, radius: 56, dark: true)
+        .rotationEffect(.degrees(6))
+        .position(x: 3300, y: 1150)
+      VStack(spacing: 46) {
+        PastronautWordmark(size: 120).environment(\.colorScheme, .dark)
         Text(tagline[lang] ?? "")
-          .font(.system(size: 92, weight: .semibold))
+          .font(.system(size: 76, weight: .semibold))
           .foregroundStyle(.white)
-          .multilineTextAlignment(.center)
       }
-      .offset(y: -160)
+      .position(x: 1920, y: 823)
     }
-    .frame(width: 5244, height: 2950)
+    .frame(width: 3840, height: 1646)
     .clipped()
   }
+}
 
-  private func phone(_ image: NSImage) -> some View {
-    Image(nsImage: image)
-      .resizable()
-      .frame(width: 1000, height: 1000 * image.size.height / image.size.width)
-      .clipShape(RoundedRectangle(cornerRadius: 80, style: .continuous))
-      .shadow(color: .black.opacity(0.6), radius: 60, y: 30)
+struct SearchArt: View {
+  let lang: String
+  let keyboard: NSImage
+  let cards: NSImage
+  let mac: NSImage
+
+  var body: some View {
+    ZStack {
+      Background()
+      // "State the obvious": what it is, in the centered safe area (2168 × 1030), with the real screens.
+      VStack(spacing: 30) {
+        PastronautWordmark(size: 92).environment(\.colorScheme, .light)
+        Text(heroLine[lang] ?? "")
+          .font(.system(size: 72, weight: .bold))
+          .foregroundStyle(Brand.ink)
+          .multilineTextAlignment(.center)
+      }
+      .position(x: 1920, y: 960)
+      HStack(alignment: .top, spacing: 70) {
+        Shot(image: keyboard, width: 560, radius: 52)
+        Shot(image: mac, width: 1000, radius: 32)
+        Shot(image: cards, width: 560, radius: 52)
+      }
+      .position(x: 1920, y: 1250 + 1000 * mac.size.height / mac.size.width / 2)
+    }
+    .frame(width: 3840, height: 2560)
+    .clipped()
   }
 }
 
 // MARK: - Output
 
-/// The device screenshot without its status bar (time and focus icons aren't part of the app).
-func loadShot(_ url: URL) -> NSImage? {
+func load(_ url: URL, cropTop: Int = 0) -> NSImage? {
   guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-        let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
-  let statusBar = 150
-  guard let cropped = image.cropping(to: CGRect(x: 0, y: statusBar, width: image.width, height: image.height - statusBar))
+        let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
+        let cropped = image.cropping(to: CGRect(x: 0, y: cropTop, width: image.width, height: image.height - cropTop))
   else { return nil }
   return NSImage(cgImage: cropped, size: NSSize(width: cropped.width, height: cropped.height))
 }
 
 @MainActor
-func write(_ view: some View, width: Int, height: Int, to url: URL) throws {
-  let renderer = ImageRenderer(content: view.environment(\.locale, Locale(identifier: "en")))
+func render(_ view: some View, width: Int, height: Int) throws -> CGImage {
+  let renderer = ImageRenderer(content: view)
   renderer.scale = 1
   renderer.proposedSize = ProposedViewSize(width: CGFloat(width), height: CGFloat(height))
-  guard let rendered = renderer.cgImage else { throw NSError(domain: "StoreArt", code: 1) }
-  // Opaque: no alpha channel (App Store Connect rejects transparency).
-  guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+  guard let image = renderer.cgImage else { throw NSError(domain: "StoreArt", code: 1) }
+  return image
+}
+
+/// Writes `rect` of `image` as an opaque PNG (App Store Connect rejects alpha channels).
+func writeOpaque(_ image: CGImage, rect: CGRect? = nil, to url: URL) throws {
+  let rect = rect ?? CGRect(x: 0, y: 0, width: image.width, height: image.height)
+  guard let part = image.cropping(to: rect),
+        let context = CGContext(data: nil, width: part.width, height: part.height, bitsPerComponent: 8, bytesPerRow: 0,
                                 space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                 bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else {
     throw NSError(domain: "StoreArt", code: 2)
   }
-  context.setFillColor(CGColor(gray: 0, alpha: 1))
-  context.fill(CGRect(x: 0, y: 0, width: width, height: height))
-  context.draw(rendered, in: CGRect(x: 0, y: 0, width: width, height: height))
+  context.setFillColor(CGColor(gray: 1, alpha: 1))
+  context.fill(CGRect(x: 0, y: 0, width: part.width, height: part.height))
+  context.draw(part, in: CGRect(x: 0, y: 0, width: part.width, height: part.height))
   guard let opaque = context.makeImage(),
         let destination = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else {
     throw NSError(domain: "StoreArt", code: 3)
   }
   CGImageDestinationAddImage(destination, opaque, nil)
   guard CGImageDestinationFinalize(destination) else { throw NSError(domain: "StoreArt", code: 4) }
+  print("wrote \(url.deletingLastPathComponent().lastPathComponent)/\(url.lastPathComponent) \(part.width)×\(part.height)")
 }
 
 @MainActor
@@ -198,25 +391,50 @@ func run() throws {
   }
   let raw = URL(fileURLWithPath: arguments[1])
   let out = URL(fileURLWithPath: arguments[2])
+  let statusBar = 150 // iPhone status bar (time, Focus icons) is not part of the app.
+
   for lang in ["en", "tr"] {
     let dir = out.appending(path: lang)
     try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-    var shots: [Int: NSImage] = [:]
-    for frame in frames {
-      guard let shot = loadShot(raw.appending(path: "\(lang)/\(frame.file).png")) else {
-        print("missing \(lang)/\(frame.file).png")
-        continue
+    func phone(_ name: String) throws -> NSImage {
+      guard let image = load(raw.appending(path: "\(lang)/\(name).png"), cropTop: statusBar) else {
+        throw NSError(domain: "StoreArt missing \(lang)/\(name)", code: 5)
       }
-      shots[frame.number] = shot
-      try write(ScreenshotFrame(frame: frame, lang: lang, shot: shot), width: 1320, height: 2868,
-                to: dir.appending(path: "screenshot-\(frame.number).png"))
-      print("wrote \(lang)/screenshot-\(frame.number).png")
+      return image
     }
-    if let left = shots[1], let right = shots[2] {
-      try write(HeaderArt(lang: lang, left: left, right: right), width: 5244, height: 2950,
-                to: dir.appending(path: "header-universal.png"))
-      print("wrote \(lang)/header-universal.png")
+    func mac(_ name: String) throws -> NSImage {
+      guard let image = load(raw.appending(path: "mac/\(name).png")) else {
+        throw NSError(domain: "StoreArt missing mac/\(name)", code: 5)
+      }
+      return image
     }
+    let macList = try mac("\(lang)-light")
+    let cardsLight = try phone("1-cards-light")
+
+    // iPhone: panorama (frames 1–2), then five frames.
+    let panorama = try render(IPhonePanorama(lang: lang, iphone: cardsLight, mac: macList), width: 2640, height: 2868)
+    try writeOpaque(panorama, rect: CGRect(x: 0, y: 0, width: 1320, height: 2868), to: dir.appending(path: "iphone-1.png"))
+    try writeOpaque(panorama, rect: CGRect(x: 1320, y: 0, width: 1320, height: 2868), to: dir.appending(path: "iphone-2.png"))
+    for (index, frame) in iphoneFrames.enumerated() {
+      let view = IPhoneFrame(caption: frame.caption, lang: lang, shot: try phone(frame.file), dark: frame.dark, fit: frame.fit)
+      try writeOpaque(try render(view, width: 1320, height: 2868), to: dir.appending(path: "iphone-\(index + 3).png"))
+    }
+
+    // Mac: panorama (frames 1–2), then three frames.
+    let macPanorama = try render(MacPanorama(lang: lang, mac: macList, iphone: cardsLight), width: 5760, height: 1800)
+    try writeOpaque(macPanorama, rect: CGRect(x: 0, y: 0, width: 2880, height: 1800), to: dir.appending(path: "mac-1.png"))
+    try writeOpaque(macPanorama, rect: CGRect(x: 2880, y: 0, width: 2880, height: 1800), to: dir.appending(path: "mac-2.png"))
+    for (index, frame) in macFrames.enumerated() {
+      let view = MacFrame(caption: frame.caption, lang: lang, window: try mac("\(frame.file)-\(lang)-light"))
+      try writeOpaque(try render(view, width: 2880, height: 1800), to: dir.appending(path: "mac-\(index + 3).png"))
+    }
+
+    // Header and search result.
+    try writeOpaque(try render(HeaderArt(lang: lang, mac: macList, iphone: cardsLight), width: 3840, height: 1646),
+                    to: dir.appending(path: "header.png"))
+    try writeOpaque(try render(SearchArt(lang: lang, keyboard: try phone("0-keyboard-light"), cards: cardsLight, mac: macList),
+                               width: 3840, height: 2560),
+                    to: dir.appending(path: "search.png"))
   }
 }
 

@@ -233,7 +233,7 @@ class Clipboard {
       try? History.shared.insertIntoStorage(historyItem)
     }
 
-    historyItem.application = sourceApp?.bundleIdentifier
+    historyItem.application = TestSourceApp.bundleIdentifier(in: contents) ?? sourceApp?.bundleIdentifier // Pastronaut
     historyItem.title = historyItem.generateTitle()
 
     onNewCopyHooks.forEach({ $0(historyItem) })
