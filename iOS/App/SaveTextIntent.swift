@@ -6,7 +6,7 @@ import AppIntents
 struct SaveTextIntent: AppIntent {
   static let title: LocalizedStringResource = "Save to Pastronaut"
   static let description = IntentDescription(
-    "Adds text to your Pastronaut history and syncs it to your Mac. Use it after Get Clipboard."
+    "Adds text to your Pastronaut history and syncs it to your other devices. Use it after Get Clipboard."
   )
 
   @Parameter(title: "Text", inputOptions: String.IntentInputOptions(multiline: true))

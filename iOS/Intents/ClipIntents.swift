@@ -5,22 +5,30 @@ import WidgetKit
 
 // Compiled into the app and the widget extension: widget buttons and controls run these intents.
 
-/// Which clips a widget or Shortcuts action uses.
+/// Which clips a widget or Shortcuts action uses. Shortcuts and Siri names can't contain Apple product names
+/// ("Mac", "iPhone"; App Review ITMS-90626), so the devices are "Computer" and "Phone" here.
 enum ClipSourceOption: String, AppEnum {
   case all
-  case mac
-  case iphone
+  case computer
+  case phone
   case pinned
 
   static let typeDisplayRepresentation: TypeDisplayRepresentation = "Source"
   static let caseDisplayRepresentations: [ClipSourceOption: DisplayRepresentation] = [
     .all: DisplayRepresentation(title: "All Devices", image: .init(systemName: "tray")),
-    .mac: DisplayRepresentation(title: "Mac", image: .init(systemName: "laptopcomputer")),
-    .iphone: DisplayRepresentation(title: "iPhone", image: .init(systemName: "iphone")),
+    .computer: DisplayRepresentation(title: "Computer", image: .init(systemName: "laptopcomputer")),
+    .phone: DisplayRepresentation(title: "Phone", image: .init(systemName: "smartphone")),
     .pinned: DisplayRepresentation(title: "Pinned", image: .init(systemName: "pin"))
   ]
 
-  var source: ClipSource { ClipSource(rawValue: rawValue) ?? .all }
+  var source: ClipSource {
+    switch self {
+    case .all: .all
+    case .computer: .mac
+    case .phone: .iphone
+    case .pinned: .pinned
+    }
+  }
 }
 
 /// A collection for Shortcuts parameters and the widget's settings, read from the app group's collections.json.

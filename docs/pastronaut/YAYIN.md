@@ -56,7 +56,11 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
 **Sırada:**
 1. ✅ iOS 1.0 (build 1) App Store Connect'e yüklendi (2026-10-18; Release arşivi, yalnızca iPhone).
    Sırada: TestFlight iç testi, sonra sürüm sayfasında build seçilip kullanıcı onayıyla incelemeye gönderilir.
-   Yeni bir yükleme için `CURRENT_PROJECT_VERSION` artırılmalı (1 → 2).
+   Build 1'e Apple'dan ITMS-90626 uyarısı geldi: Kestirmeler/Siri tanımlarında (eylem adı, açıklaması, seçenek
+   adları, Siri cümleleri, kimlikler) Apple ürün adı ("Mac", "iPhone") olamaz. Düzeltildi: seçenekler
+   "Computer/Bilgisayar" ve "Phone/Telefon" (kimlikler `computer`, `phone`), açıklamalar ve Siri cümlesi
+   "computer / other devices". ✅ Build 2 yüklendi (2026-10-18). Sonraki yükleme: build 3.
+   Kural: App Intent metinlerine Apple ürün adı yazma. Uygulamanın kendi ekranlarındaki "Mac", "iPhone" serbest.
 2. Mac App Store sürümü (universal purchase: aynı kayıt, "Add Platform › macOS"; paket kimliği aynı). Gerekenler:
    - Sparkle'sız bir Mac App Store yapılandırması. Maccy'nin `upstream/appstore` dalı örnek: Sparkle'ı ve
      `SoftwareUpdater`'ı çıkarır, değerlendirme isteğini açar. Bizde ayrı bir derleme ayarı ya da dal olarak.

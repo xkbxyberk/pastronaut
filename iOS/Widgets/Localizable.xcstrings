@@ -374,6 +374,17 @@
           }
         }
       }
+    },
+    "Computer": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilgisayar"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

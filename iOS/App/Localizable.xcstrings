@@ -89,17 +89,6 @@
         }
       }
     },
-    "Adds text to your Pastronaut history and syncs it to your Mac. Use it after Get Clipboard.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metni Pastronaut geçmişine ekler ve Mac'inle eşitler. Panoyu Al eyleminden sonra kullan."
-          }
-        }
-      }
-    },
     "All": {
       "extractionState": "manual",
       "localizations": {
@@ -261,17 +250,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Metni kopyalar"
-          }
-        }
-      }
-    },
-    "Copies your most recent clip, for example the last one from your Mac.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En son öğeni kopyalar; örneğin Mac'ten gelen sonuncuyu."
           }
         }
       }
@@ -2061,6 +2039,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gizlilik Politikası"
+          }
+        }
+      }
+    },
+    "Adds text to your Pastronaut history and syncs it to your other devices. Use it after Get Clipboard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metni Pastronaut geçmişine ekler ve diğer cihazlarınla eşitler. Panoyu Al eyleminden sonra kullan."
+          }
+        }
+      }
+    },
+    "Copies your most recent clip, for example the last one from your computer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En son öğeni kopyalar; örneğin bilgisayarından gelen sonuncuyu."
+          }
+        }
+      }
+    },
+    "Computer": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilgisayar"
           }
         }
       }

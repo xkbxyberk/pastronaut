@@ -1,17 +1,6 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Copy my latest Mac clip with ${applicationName}": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "${applicationName} ile Mac'teki son kopyamı kopyala"
-          }
-        }
-      }
-    },
     "Copy the latest clip with ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
@@ -52,6 +41,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Panomu ${applicationName} uygulamasına kaydet"
+          }
+        }
+      }
+    },
+    "Copy the latest clip from my computer with ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} ile bilgisayarımdaki son kopyayı kopyala"
           }
         }
       }

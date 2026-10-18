@@ -110,10 +110,10 @@ struct AddToCollectionIntent: AppIntent {
 /// Shortcuts, Siri and the Action button: put the newest clip on the clipboard without opening the app.
 struct CopyLatestClipIntent: AppIntent {
   static let title: LocalizedStringResource = "Copy Latest Clip"
-  static let description = IntentDescription("Copies your most recent clip, for example the last one from your Mac.")
+  static let description = IntentDescription("Copies your most recent clip, for example the last one from your computer.")
   static let authenticationPolicy = IntentAuthenticationPolicy.requiresAuthentication
 
-  @Parameter(title: "From", default: .mac)
+  @Parameter(title: "From", default: .computer)
   var source: ClipSourceOption
 
   static var parameterSummary: some ParameterSummary {
@@ -134,7 +134,7 @@ struct PastronautShortcuts: AppShortcutsProvider {
     AppShortcut(
       intent: CopyLatestClipIntent(),
       phrases: [
-        "Copy my latest Mac clip with \(.applicationName)",
+        "Copy the latest clip from my computer with \(.applicationName)",
         "Copy the latest clip with \(.applicationName)"
       ],
       shortTitle: "Copy Latest Clip",

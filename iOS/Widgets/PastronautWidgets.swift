@@ -259,8 +259,8 @@ extension ClipSourceOption {
   var title: LocalizedStringKey {
     switch self {
     case .all: "Recent"
-    case .mac: "From Mac"
-    case .iphone: "From iPhone"
+    case .computer: "From Mac"
+    case .phone: "From iPhone"
     case .pinned: "Pinned"
     }
   }
@@ -268,8 +268,8 @@ extension ClipSourceOption {
   var systemImage: String {
     switch self {
     case .all: "clock"
-    case .mac: "laptopcomputer"
-    case .iphone: "iphone"
+    case .computer: "laptopcomputer"
+    case .phone: "iphone"
     case .pinned: "pin"
     }
   }
@@ -293,7 +293,7 @@ struct LatestClipConfiguration: WidgetConfigurationIntent {
   static let title: LocalizedStringResource = "Latest Clip"
   static let description = IntentDescription("Your most recent clip on the Lock Screen.")
 
-  @Parameter(title: "Show", default: .mac)
+  @Parameter(title: "Show", default: .computer)
   var source: ClipSourceOption
 }
 
