@@ -16,7 +16,7 @@ settings:
     # English is the base language; translations live in each target's Localizable.xcstrings.
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_EMIT_LOC_STRINGS: YES
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "1.0"  # App Store 1.0 (the Mac app on GitHub has its own version, 0.1.0)
     CURRENT_PROJECT_VERSION: "1"
 targets:
   Pastronaut:
