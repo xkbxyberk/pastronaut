@@ -29,6 +29,8 @@ public enum SharedSettings {
   /// Date. Debug builds only: while the app shows made-up clips for screenshots, the keyboard shows them too
   /// (no iCloud fetch, English) until this time.
   public static let demoUntilKey = "demoUntil"
+  /// String. The app's language while showing made-up clips ("en", "tr"); the keyboard follows it.
+  public static let demoLanguageKey = "demoLanguage"
   public static var isDemo: Bool { (defaults?.object(forKey: demoUntilKey) as? Date).map { $0 > .now } ?? false }
 }
 

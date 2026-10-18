@@ -225,6 +225,51 @@ final class SyncStepTests: XCTestCase {
       }
       let fromMac = app.descendants(matching: .any)["fromMacChip"].firstMatch.exists
       report(["ok": count > 0 && !typed.isEmpty, "tiles": count, "fromMacChip": fromMac, "typed": String(typed.prefix(40))])
+    case "storeShots":
+      // App Store screenshots in one language (PT_SHOTS_LANG = en or tr), made-up clips (PT_DEMO, no sync):
+      // cards light, keyboard, cards dark, a collection, list light. Ends with a normal launch.
+      let lang = env["PT_SHOTS_LANG"] ?? "en"
+      defer {
+        XCUIDevice.shared.appearance = .dark
+        app.terminate()
+        app.launchEnvironment["PT_DEMO"] = nil
+        app.launchEnvironment["PT_E2E_PREVIEWS"] = nil
+        app.launchArguments = []
+        app.launch()
+        Thread.sleep(forTimeInterval: 3)
+      }
+      app.launchEnvironment["PT_DEMO"] = "1"
+      app.launchArguments = ["-AppleLanguages", "(\(lang))", "-AppleLocale", lang == "tr" ? "tr_TR" : "en_US"]
+      func launch(_ appearance: XCUIDevice.Appearance, previews: String) {
+        XCUIDevice.shared.appearance = appearance
+        app.terminate()
+        app.launchEnvironment["PT_E2E_PREVIEWS"] = previews
+        app.launch()
+        Thread.sleep(forTimeInterval: previews == "1" ? 8 : 2)
+      }
+      launch(.light, previews: "1")
+      attachScreenshot(named: "store-\(lang)-1-cards-light")
+      launch(.dark, previews: "1")
+      app.swipeUp()
+      Thread.sleep(forTimeInterval: 2)
+      attachScreenshot(named: "store-\(lang)-3-cards-dark")
+      launch(.light, previews: "1")
+      if chooseCollection(lang == "tr" ? "Seyahat" : "Travel", timeout: 10) {
+        Thread.sleep(forTimeInterval: 3)
+        attachScreenshot(named: "store-\(lang)-4-collection-light")
+      }
+      launch(.light, previews: "0")
+      attachScreenshot(named: "store-\(lang)-5-list-light")
+      launch(.dark, previews: "0")
+      let search = app.searchFields.firstMatch
+      if search.waitForExistence(timeout: 5) {
+        search.tap()
+        if showPastronautKeyboard(in: app) {
+          Thread.sleep(forTimeInterval: 2)
+          attachScreenshot(named: "store-\(lang)-2-keyboard-dark")
+        }
+      }
+      report(["ok": true])
     case "readmeShots":
       // README and store pictures: made-up clips (PT_DEMO, no sync), English, cards and list, light and dark,
       // a collection, the keyboard. Ends by launching normally, which puts the real history back for the keyboard.

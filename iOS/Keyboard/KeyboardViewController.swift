@@ -252,6 +252,11 @@ final class KeyboardModel {
     #endif
   }
 
+  /// The language the app used for its made-up clips.
+  var demoLocale: Locale {
+    Locale(identifier: SharedSettings.defaults?.string(forKey: SharedSettings.demoLanguageKey) ?? "en")
+  }
+
   private func refreshFromCloud() {
     guard hasFullAccess, !isDemo, let cloud, Date.now.timeIntervalSince(lastCloudRefresh) > 5 else { return }
     lastCloudRefresh = .now
@@ -366,7 +371,7 @@ struct KeyboardView: View {
     .padding(.horizontal, 4)
     .padding(.top, 8)
     .padding(.bottom, 2)
-    .environment(\.locale, model.isDemo ? Locale(identifier: "en") : .current)
+    .environment(\.locale, model.isDemo ? model.demoLocale : .current)
   }
 }
 

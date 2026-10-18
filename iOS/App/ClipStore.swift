@@ -47,6 +47,7 @@ final class ClipStore {
     #if DEBUG
     if DemoClips.isOn {
       SharedSettings.defaults?.set(Date.now.addingTimeInterval(15 * 60), forKey: SharedSettings.demoUntilKey)
+      SharedSettings.defaults?.set(Bundle.main.preferredLocalizations.first ?? "en", forKey: SharedSettings.demoLanguageKey)
       clips = DemoClips.clips.inHistoryOrder
       collections = DemoClips.collections
       try? files?.writeSnapshot(clips)

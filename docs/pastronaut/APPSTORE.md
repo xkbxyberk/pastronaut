@@ -126,9 +126,21 @@ Previews: link and map previews are off until the user allows them (asked once).
 Privacy policy: in the app at Settings › About › Privacy Policy, and at https://xkbxyberk.github.io/pastronaut/privacy.html
 ```
 
-## Screenshots
-- **iPhone 6.9"** (1290×2796, accepted for the 6.9" slot): in `appstore-screenshots/iphone-6.9-en/` (not in git),
-  made with made-up clips only (`PT_DEMO`, SyncStepTests `readmeShots`): 1 cards (light), 2 keyboard, 3 cards (dark),
-  4 list (light), 5 list (dark). App Store uses them for the Turkish page too unless Turkish ones are added.
+## Screenshots and header (made 2026-10-18)
+Made from device screenshots with made-up clips only (`PT_DEMO`), per language: SyncStepTests `storeShots`
+(`PT_SHOTS_LANG` = en / tr) → `appstore-screenshots/raw/<lang>/`, then `cd scripts/store && swift run -c release
+StoreArt ../../appstore-screenshots/raw ../../appstore-screenshots/store`. Output (not in git), opaque PNGs:
+- `store/<lang>/screenshot-1…5.png`, 1320 × 2868 (iPhone 6.9"; App Store Connect scales them for smaller iPhones).
+  Order tells the story; the first three also appear in search results:
+  1. Your Mac clipboard, on iPhone · Mac panon, artık iPhone'da (cards, light)
+  2. Type any copy in one tap · Her kopya tek dokunuşla (keyboard, dark)
+  3. Smart cards for every kind · Her türe akıllı kart (cards, dark)
+  4. Keep what you reuse together · Sık kullandıkların bir arada (a collection, light)
+  5. Private by design · Gizlilik öncelikli (list, light)
+- `store/<lang>/header-universal.png`, 5244 × 2950: one file for both the product page header (21:9) and the search
+  result (3:2) slots (iOS 27 and later; optional). Wordmark and tagline inside the centered safe area; app screens at
+  the sides may be cropped.
+- Rules followed: real UI in every frame, short benefit captions, no prices, "free", URLs, awards or other
+  platforms; status bar removed (time and Focus icons).
 - **iPad:** not needed — the first release is iPhone-only (`TARGETED_DEVICE_FAMILY 1` for every target in
   `iOS/project.yml`). iPad comes back after testing it in the simulator.
