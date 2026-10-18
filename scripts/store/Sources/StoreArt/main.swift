@@ -13,29 +13,37 @@ struct Frame {
   let number: Int
   let file: String
   let dark: Bool
+  /// The whole screen, scaled to fit (keyboard frames); otherwise the top of the screen, bleeding off the bottom.
+  var fit = false
   let title: [String: String]
   let subtitle: [String: String]
 }
 
+// The iPhone's own job first (a clipboard keyboard); the Mac app last, as an extra.
 let frames: [Frame] = [
-  Frame(number: 1, file: "1-cards-light", dark: false,
-        title: ["en": "Your Mac clipboard,\non iPhone", "tr": "Mac panon,\nartık iPhone'da"],
-        subtitle: ["en": "Everything you copy on your Mac, right here.", "tr": "Mac'te kopyaladığın her şey burada."]),
-  Frame(number: 2, file: "2-keyboard-dark", dark: true,
-        title: ["en": "Type any copy\nin one tap", "tr": "Her kopya\ntek dokunuşla"],
-        subtitle: ["en": "Your history as a keyboard, in every app.", "tr": "Geçmişin her uygulamada, klavyende."]),
-  Frame(number: 3, file: "3-cards-dark", dark: true,
+  Frame(number: 1, file: "0-keyboard-light", dark: false, fit: true,
+        title: ["en": "Paste anything\nin one tap", "tr": "Her kopya\ntek dokunuşla"],
+        subtitle: ["en": "Your clipboard history as a keyboard, in every app.",
+                   "tr": "Pano geçmişin, her uygulamada klavyende."]),
+  Frame(number: 2, file: "1-cards-light", dark: false,
         title: ["en": "Smart cards\nfor every kind", "tr": "Her türe\nakıllı kart"],
-        subtitle: ["en": "Link previews, maps and colored code.", "tr": "Bağlantı önizlemesi, harita, renkli kod."]),
-  Frame(number: 4, file: "4-collection-light", dark: false,
-        title: ["en": "Keep what you\nreuse together", "tr": "Sık kullandıkların\nbir arada"],
-        subtitle: ["en": "Collections, on every device.", "tr": "Koleksiyonlar, her cihazında."]),
+        subtitle: ["en": "Maps for addresses, previews for links, colored code.",
+                   "tr": "Adrese harita, bağlantıya önizleme, koda renk."]),
+  Frame(number: 3, file: "4-collection-light", dark: false,
+        title: ["en": "Pin and collect\nwhat you reuse", "tr": "Sabitle,\nkoleksiyonla"],
+        subtitle: ["en": "Addresses, snippets and links, together.", "tr": "Adresler, parçacıklar, bağlantılar bir arada."]),
+  Frame(number: 4, file: "2-keyboard-dark", dark: true, fit: true,
+        title: ["en": "Find any copy\nin seconds", "tr": "Aradığını\nsaniyede bul"],
+        subtitle: ["en": "Search by text, kind or date.", "tr": "Metne, türe ya da tarihe göre ara."]),
   Frame(number: 5, file: "5-list-light", dark: false,
         title: ["en": "Private\nby design", "tr": "Gizlilik\nöncelikli"],
-        subtitle: ["en": "No account. No tracking. Only your iCloud.", "tr": "Hesap yok. İzleme yok. Yalnızca senin iCloud'un."])
+        subtitle: ["en": "No account. No tracking. No ads.", "tr": "Hesap yok. İzleme yok. Reklam yok."]),
+  Frame(number: 6, file: "6-mac-dark", dark: true,
+        title: ["en": "Also on\nyour Mac", "tr": "Mac'inde\nde"],
+        subtitle: ["en": "Your Mac copies arrive on their own.", "tr": "Mac kopyaların kendiliğinden gelir."])
 ]
 
-let tagline = ["en": "Copy on your Mac. Paste on your iPhone.", "tr": "Mac'te kopyala, iPhone'da yapıştır."]
+let tagline = ["en": "Every copy, one tap away.", "tr": "Her kopya, bir dokunuş uzağında."]
 
 // MARK: - Colors
 
@@ -92,10 +100,11 @@ struct ScreenshotFrame: View {
         Spacer(minLength: 0)
       }
       .frame(width: 1320)
-      // The screenshot without its status bar, bleeding off the bottom edge.
+      // The screenshot without its status bar: whole (fit) or bleeding off the bottom edge.
+      let width: CGFloat = frame.fit ? (2868 - 760 - 60) * shot.size.width / shot.size.height : 1110
       Image(nsImage: shot)
         .resizable()
-        .frame(width: 1110, height: 1110 * shot.size.height / shot.size.width)
+        .frame(width: width, height: width * shot.size.height / shot.size.width)
         .clipShape(RoundedRectangle(cornerRadius: 86, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 86, style: .continuous)
           .strokeBorder((dark ? Color.white : Brand.ink).opacity(0.10), lineWidth: 4))
@@ -203,7 +212,7 @@ func run() throws {
                 to: dir.appending(path: "screenshot-\(frame.number).png"))
       print("wrote \(lang)/screenshot-\(frame.number).png")
     }
-    if let left = shots[1], let right = shots[3] {
+    if let left = shots[1], let right = shots[2] {
       try write(HeaderArt(lang: lang, left: left, right: right), width: 5244, height: 2950,
                 to: dir.appending(path: "header-universal.png"))
       print("wrote \(lang)/header-universal.png")

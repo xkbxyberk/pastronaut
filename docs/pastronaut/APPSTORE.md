@@ -1,146 +1,257 @@
-# App Store Connect: Pastronaut for iPhone (draft, 2026-10-18)
+# App Store: Pastronaut for iPhone (v2, 2026-10-18)
 
-Copy-ready metadata (English primary, Turkish localization) and the answers for App Store Connect. Character limits
-in brackets. Checked against the app as of commit `daf0da7`.
+Copy-ready App Store Connect metadata (English primary, Turkish localization), the reasoning behind it, and the
+answers for every App Store Connect form. Character counts were measured. Checked against the app as of this commit.
 
-## Where each field goes in App Store Connect
-- **App Information** (General): name, subtitle, category, content rights, age rating, license agreement (Apple's
-  standard EULA). Encryption documentation: nothing to upload (only the OS's encryption; Info.plist says so).
-  Digital Services Act: non-trader (free, non-commercial). Server notifications, shared secret: not used.
-- **iOS App › 1.0 Prepare for Submission**: screenshots, promotional text, description, keywords, support and
-  marketing URLs, copyright, App Review information (sign-in not required, contact, notes), build.
-- **Trust & Safety › App Privacy**: privacy policy URL, data collection ("No").
-- **Monetization › Pricing and Availability**: free, all countries.
+## 1. Positioning
 
-## App information
-- **Name** [30]: `Pastronaut` · TR: `Pastronaut: Pano Geçmişi` (24). App names are unique per localization, and
-  "Pastronaut" is already reserved by someone else for Turkish (seen 2026-10-18), so the Turkish name adds a
-  descriptor. The Home Screen still shows "Pastronaut" (from the app bundle).
-- **Subtitle** [30]: `Your Mac clipboard on iPhone` (28) · TR: `Mac panon artık iPhone'da` (25)
-- **Bundle ID:** `com.xkbxyberk.pastronaut` · **SKU:** `pastronaut-ios`
-- **Primary category:** Productivity · **Secondary:** Utilities
-- **Content rights:** optional link previews show the title and image of pages the user copied (like Messages'
-  link previews), so answer "Yes, it contains, shows or accesses third-party content" honestly (owner's decision).
-- **Bundle IDs:** the app record uses `com.xkbxyberk.pastronaut`; `.keyboard`, `.share` and `.widgets` are the
-  extensions' App IDs that Xcode's automatic signing created ("XC …"). They ship inside the app; keep them.
+**What the iPhone app is:** a clipboard manager and clipboard keyboard that works on its own. It doesn't need a Mac.
+- iPhone remembers only the last thing you copied. Pastronaut keeps a history of what you save.
+- Its keyboard pastes any saved item in any app with one tap. The latest copy sits on top, with tabs (recent, pinned,
+  Mac, iPhone, collections) and search.
+- You save a copy by opening the app, with "+", with the keyboard's Paste button, from the Share sheet, with the Control
+  Center button, or with Back Tap / Action button through Shortcuts.
+- Every saved item becomes a smart card by kind: a map for addresses (also coordinates), a page preview for links,
+  colored code, color swatches, call and email buttons.
+- Pins, collections, search by text, kind or date, widgets (Home and Lock Screen), Shortcuts actions, Face ID lock.
+- Your iCloud keeps it in sync between your devices.
+- **Extra, not the core:** the free Pastronaut for Mac brings everything copied on a Mac along automatically.
+
+**Who it's for:** anyone who re-types or hunts for the same things on iPhone, such as addresses, links, emails, IBANs,
+order numbers, code and replies. Mac users get more.
+
+**Honest limits, said up front:** iOS lets only the app in front read the clipboard. So copies are saved with one tap
+rather than in the background; every clipboard app on iPhone works within this limit. The description says it plainly,
+so nobody expects automatic capture.
+
+**How the category looks (App Store, 2026-10-18):**
+- Names follow a "Brand – Clipboard Manager / Paste Keyboard" pattern.
+- Most of the well-known apps charge a subscription or sell a premium tier, and some add AI or servers.
+- The Turkish storefront has almost no Turkish-language listings.
+
+**What sets Pastronaut apart:**
+- free, with no subscription or tier;
+- no account, no servers, no tracking;
+- open source;
+- smart cards by kind;
+- a two-column keyboard with categories;
+- Turkish addresses and Turkish UI;
+- the optional free Mac app.
+
+**Search (ASO) rules used:**
+- Only the name, subtitle and the 100-character keyword field are indexed on iOS; the description isn't.
+- Words are never repeated across those three fields.
+- No other apps' names and no Apple trademarks (iCloud, Universal Clipboard) appear in the keyword field. Guideline 2.3.7
+  forbids other apps' names; Apple's own marks are left out to be safe.
+- The keyword field has no spaces after commas.
+- The words people search with: clipboard, keyboard, paste, copy, manager, history, snippets.
+
+## 2. Where each field goes in App Store Connect
+- **General › App Information:**
+  - name, subtitle, category, content rights, age rating;
+  - license agreement: Apple's standard EULA;
+  - encryption documentation: nothing to upload; the app uses only the OS's encryption, and Info.plist says so;
+  - Digital Services Act: non-trader (free, non-commercial).
+- **iOS App › 1.0 Prepare for Submission:**
+  - screenshots, header and search asset;
+  - promotional text, description, keywords, support and marketing URLs, copyright;
+  - App Review information, then the build.
+- **Trust & Safety › App Privacy:** privacy policy URL, data collection ("No").
+- **Monetization › Pricing and Availability:** free, all countries.
+
+## 3. App information
+| Field | English (U.S.) | Turkish |
+|---|---|---|
+| Name [30] | `Pastronaut: Clipboard History` (29) | `Pastronaut: Pano Geçmişi` (24) |
+| Subtitle [30] | `Paste Keyboard & Snippets` (25) | `Kopyala Yapıştır Klavyesi` (25) |
+
+- The Turkish name has a descriptor because "Pastronaut" alone is reserved by another account for Turkish.
+- The Home Screen always shows "Pastronaut", which comes from the app bundle.
+- **Category:** Productivity (primary), Utilities (secondary).
+- **Content rights:** "Yes". Optional link previews show the title and image of pages the user copied, as Messages
+  does. Owner's decision.
+- **Bundle ID:** `com.xkbxyberk.pastronaut`.
+  - `.keyboard`, `.share` and `.widgets` are the extensions' App IDs, created by Xcode ("XC …"). They ship inside the
+    app; keep them.
+- **SKU:** `pastronaut-ios`.
 - **Privacy Policy URL:** https://xkbxyberk.github.io/pastronaut/privacy.html
-- **Support URL:** https://github.com/xkbxyberk/pastronaut/issues (contact e-mail is on the privacy page)
+- **Support URL:** https://github.com/xkbxyberk/pastronaut/issues. The contact e-mail is on the privacy page.
 - **Marketing URL:** https://xkbxyberk.github.io/pastronaut/
-- **Copyright:** `2026 Berk Akbay`
-- **Price:** Free · no in-app purchases
+- **Copyright:** `2026 Berk Akbay` · **Price:** Free, no in-app purchases.
 
-## Promotional text [170]
-EN: `Copy on your Mac, paste on your iPhone: your clipboard history in an app, a one-tap keyboard, widgets and Shortcuts. Free, open source, no tracking.` (148)
+## 4. Keywords [100, no spaces, no words already in the name or subtitle]
+- **EN** (100):
+  `copy,manager,clips,saver,text,notes,links,collections,widget,pin,board,save,sync,mac,multi,favorites`
+- **TR** (99):
+  `klavye,yönetici,kopya,metin,not,bağlantı,koleksiyon,widget,parçacık,kaydet,clipboard,keyboard,paste`
+  - English words are included because Turkish users often search in English.
 
-TR: `Mac'te kopyala, iPhone'da yapıştır: pano geçmişin bir uygulamada, tek dokunuşla yazan klavyede, widget'larda ve Kestirmeler'de. Ücretsiz, açık kaynak.` (150)
+## 5. Promotional text [170] (can change without a new version)
+- **EN** (153): `iPhone remembers only your last copy. Pastronaut keeps them all and pastes any of them in one tap with its keyboard. No account, no ads, no subscription.`
+- **TR** (152): `iPhone yalnızca son kopyanı hatırlar. Pastronaut hepsini saklar ve klavyesiyle istediğini tek dokunuşla yapıştırır. Hesap yok, reklam yok, abonelik yok.`
 
-## Keywords [100, comma-separated]
-No Apple trademarks (iCloud, Universal Clipboard) or other apps' names in keywords (guideline 2.3.7); they stay in the description.
-EN: `clipboard,clipboard manager,paste,copy,history,keyboard,snippets,mac,sync,text,links,copy paste` (95)
-
-TR: `pano,pano yöneticisi,kopyala,yapıştır,geçmiş,klavye,mac,eşitleme,not,parçacık,bağlantı,metin` (92)
-
-## Description [4000]
+## 6. Description [4000]
 ### English
 ```
-Pastronaut brings your Mac's clipboard history to your iPhone through your own iCloud.
+iPhone remembers only the last thing you copied. Pastronaut keeps a history of what you save — and its keyboard pastes any of it, in any app, with one tap.
 
-Everything you copy on your Mac shows up here: in the app, in a keyboard that types any item with one tap, in widgets and in Shortcuts. Copies you save on your iPhone go back to the Mac.
+PASTE ANYTHING, IN ANY APP
+• The Pastronaut keyboard shows your clips as a tidy two-column grid, newest first, so the thing you just copied is always on top.
+• Tabs for recent, pinned, Mac, iPhone and each of your collections, plus search with letters and numbers.
+• Tap a clip to type it. Long-press for more.
 
-YOUR HISTORY, EVERYWHERE YOU TYPE
-• The Pastronaut keyboard puts the latest copy from your Mac at the top, with tabs for pinned items, Mac, iPhone and your collections, and search with letters and numbers.
-• Cards by kind: links with a page preview, addresses with a map and directions, code in color, colors as swatches, phone numbers and emails with a button. Prefer a compact list? Turn previews off.
-• Collections keep snippets, addresses or a project's links together, on every device.
+SAVE IN ONE TAP
+iOS lets only the app in front read the clipboard, so Pastronaut makes saving a single tap:
+• Open the app — with "Save Clipboard on Opening" it saves what you copied.
+• Tap Paste in the Pastronaut keyboard.
+• Share text to Pastronaut from any app.
+• Use the Save Clipboard button in Control Center, Back Tap or the Action button.
+• Or type a new clip with +.
 
-FAST WAYS TO SAVE
-iOS lets only the app in front read the clipboard, so Pastronaut saves a copy with one tap: open the app, tap Paste in the keyboard, share text to Pastronaut, or use the Control Center button, Back Tap or the Action button.
+SMART CARDS FOR EVERY KIND
+• Addresses (and copied map coordinates) get a map and Get Directions.
+• Links get a page preview; sign-in and reset links are never opened.
+• Code is colored, colors show a swatch with RGB, phone numbers and emails get Call and Write Email.
+• Prefer something calmer? Switch previews off for a compact list.
+
+PIN, COLLECT, FIND
+• Pin what you reuse; group addresses, snippets or a project's links into collections.
+• Search by text, or filter by kind (links, code, addresses, colors…) and date.
 
 WIDGETS AND SHORTCUTS
-• Recent clips on the Home Screen (also from one collection), the latest clip on the Lock Screen.
+• Recent clips on the Home Screen — also from a single collection — and the latest clip on the Lock Screen.
 • Shortcuts actions: Get Clip, Get Latest Clip, Copy Latest Clip, Get Recent Clips, Save to Pastronaut, Add to Collection.
 
 PRIVATE BY DESIGN
 • No account, no servers, no analytics, no ads.
-• Clips sync through the private iCloud database of your Apple Account. Text is encrypted on your device before upload, and end-to-end encrypted with Advanced Data Protection.
+• Your clips sync between your devices through your own private iCloud database. Text is encrypted on your device before upload, and end-to-end encrypted with Advanced Data Protection.
 • Optional Face ID lock. One-time codes, card numbers and IBANs are never saved automatically.
-• Link and map previews are off until you allow them.
+
+ALSO ON YOUR MAC (OPTIONAL)
+Using a Mac? The free Pastronaut for Mac — a menu bar clipboard manager based on Maccy (not affiliated) — brings everything you copy on your Mac to your iPhone automatically. Get it from the website.
 
 FREE AND OPEN SOURCE
-Pastronaut is free, with no in-app purchases, and its source code is public. It works with Pastronaut for Mac, a free menu bar clipboard manager based on Maccy (not affiliated). Download the Mac app from the website.
+No subscription, no in-app purchases, and the source code is public.
 ```
 
 ### Türkçe
 ```
-Pastronaut, Mac'inin pano geçmişini kendi iCloud'un üzerinden iPhone'una taşır.
+iPhone yalnızca son kopyaladığın şeyi hatırlar. Pastronaut kaydettiklerinin geçmişini tutar; klavyesi de istediğini, her uygulamada, tek dokunuşla yapıştırır.
 
-Mac'te kopyaladığın her şey burada: uygulamada, herhangi bir öğeyi tek dokunuşla yazan klavyede, widget'larda ve Kestirmeler'de. iPhone'da kaydettiğin kopyalar da Mac'e geri gider.
+HER ŞEYİ, HER UYGULAMADA YAPIŞTIR
+• Pastronaut klavyesi öğelerini en yenisi başta olmak üzere iki sütunlu düzenli bir ızgarada gösterir; az önce kopyaladığın hep en üsttedir.
+• Son, sabitlenenler, Mac, iPhone ve her koleksiyonun için sekmeler; harf ve rakamlarla arama.
+• Bir öğeye dokun, yazılsın. Basılı tut, fazlası çıksın.
 
-GEÇMİŞİN, YAZDIĞIN HER YERDE
-• Pastronaut klavyesi Mac'ten gelen son kopyayı en üstte tutar; sabitlenenler, Mac, iPhone ve koleksiyonlar için sekmeler ve harf ve rakamlarla arama sunar.
-• Türe göre kartlar: sayfa önizlemeli bağlantılar, haritalı ve yol tarifli adresler, renkli kod, renk örnekleri, düğmeli telefon ve e-postalar. Sade bir liste mi istersin? Önizlemeleri kapat.
-• Koleksiyonlar parçacıkları, adresleri ya da bir projenin bağlantılarını her cihazda bir arada tutar.
+TEK DOKUNUŞLA KAYDET
+iOS panoyu yalnızca öndeki uygulamanın okumasına izin verir; Pastronaut kaydetmeyi tek dokunuşa indirir:
+• Uygulamayı aç: "Açılınca Panoyu Kaydet" açıksa kopyaladığını kaydeder.
+• Pastronaut klavyesinde Yapıştır'a dokun.
+• Herhangi bir uygulamadan metni Pastronaut'la paylaş.
+• Denetim Merkezi'ndeki Panoyu Kaydet düğmesini, Arkaya Dokun'u ya da Eylem düğmesini kullan.
+• Ya da + ile yeni bir öğe yaz.
 
-HIZLI KAYDETME YOLLARI
-iOS panoyu yalnızca öndeki uygulamanın okumasına izin verir; bu yüzden Pastronaut bir kopyayı tek dokunuşla kaydeder: uygulamayı aç, klavyede Yapıştır'a dokun, metni Pastronaut'la paylaş ya da Denetim Merkezi düğmesini, Arkaya Dokun'u veya Eylem düğmesini kullan.
+HER TÜRE AKILLI KART
+• Adresler (ve kopyalanan harita koordinatları) harita ve Yol Tarifi ile gelir; Türk adreslerini de tanır.
+• Bağlantılar sayfa önizlemesiyle gelir; giriş ve şifre sıfırlama bağlantıları hiç açılmaz.
+• Kod renklenir, renkler RGB'li örnekle gösterilir, telefon ve e-postalarda Ara ve E-posta Yaz düğmeleri olur.
+• Daha sade mi istersin? Önizlemeleri kapat, kompakt liste olsun.
+
+SABİTLE, KOLEKSİYONLA, BUL
+• Sık kullandıklarını sabitle; adresleri, parçacıkları ya da bir projenin bağlantılarını koleksiyonlarda topla.
+• Metinle ara ya da türe (bağlantı, kod, adres, renk…) ve tarihe göre süz.
 
 WIDGET'LAR VE KESTİRMELER
-• Ana Ekran'da son öğeler (bir koleksiyondan da), Kilitli Ekran'da son öğe.
+• Ana Ekran'da son öğeler (tek bir koleksiyondan da), Kilitli Ekran'da son öğe.
 • Kestirmeler eylemleri: Öğe Al, Son Öğeyi Al, Son Öğeyi Kopyala, Son Öğeleri Al, Pastronaut'a kaydet, Koleksiyona Ekle.
 
 GİZLİLİK ÖNCELİKLİ
 • Hesap yok, sunucu yok, analiz yok, reklam yok.
-• Öğeler Apple Hesabının özel iCloud veritabanı üzerinden eşitlenir. Metin yüklenmeden önce cihazında şifrelenir; Gelişmiş Veri Koruması açıksa uçtan uca şifrelidir.
+• Öğelerin, kendi özel iCloud veritabanın üzerinden cihazların arasında eşitlenir. Metin yüklenmeden önce cihazında şifrelenir; Gelişmiş Veri Koruması açıksa uçtan uca şifrelidir.
 • İsteğe bağlı Face ID kilidi. Tek kullanımlık kodlar, kart numaraları ve IBAN'lar kendiliğinden kaydedilmez.
-• Bağlantı ve harita önizlemeleri sen izin verene kadar kapalıdır.
+
+MAC'İNDE DE (İSTEĞE BAĞLI)
+Mac kullanıyor musun? Ücretsiz Pastronaut for Mac — Maccy'ye dayanan (onunla bağlantılı olmayan) bir menü çubuğu pano yöneticisi — Mac'te kopyaladığın her şeyi iPhone'una kendiliğinden getirir. Web sitesinden indir.
 
 ÜCRETSİZ VE AÇIK KAYNAK
-Pastronaut ücretsizdir, uygulama içi satın alma yoktur ve kaynak kodu herkese açıktır. Maccy'ye dayanan (onunla bağlantılı olmayan) ücretsiz menü çubuğu pano yöneticisi Pastronaut for Mac ile çalışır. Mac uygulamasını web sitesinden indir.
+Abonelik yok, uygulama içi satın alma yok; kaynak kodu herkese açık.
 ```
 
-## App Privacy (privacy "nutrition" label)
+## 7. What's New (1.0)
+- EN: `First release: your clipboard history and a keyboard that pastes it, on iPhone.`
+- TR: `İlk sürüm: pano geçmişin ve onu yapıştıran bir klavye, iPhone'da.`
+
+## 8. Screenshots and header/search asset
+All are made from device screenshots with made-up clips only (`PT_DEMO`), in each language.
+1. SyncStepTests `storeShots` (`PT_SHOTS_LANG` = en / tr) saves them to `appstore-screenshots/raw/<lang>/`.
+2. `cd scripts/store && swift run -c release StoreArt ../../appstore-screenshots/raw ../../appstore-screenshots/store`
+   turns them into opaque PNGs (not in git).
+
+**`store/<lang>/screenshot-1…6.png`, 1320 × 2868 (iPhone 6.9"):**
+- App Store Connect scales them for smaller iPhones.
+- The first three also show in search, so they carry the core: paste, smart cards, organize.
+- The Mac comes last, as an extra.
+- Captions name a benefit in a few words; every frame shows the real app.
+
+| # | English | Turkish | Screen |
+|---|---|---|---|
+| 1 | Paste anything in one tap · Your clipboard history as a keyboard, in every app. | Her kopya tek dokunuşla · Pano geçmişin, her uygulamada klavyende. | Keyboard pasting an address into a note (light) |
+| 2 | Smart cards for every kind · Maps for addresses, previews for links, colored code. | Her türe akıllı kart · Adrese harita, bağlantıya önizleme, koda renk. | Cards (light) |
+| 3 | Pin and collect what you reuse · Addresses, snippets and links, together. | Sabitle, koleksiyonla · Adresler, parçacıklar, bağlantılar bir arada. | A collection (light) |
+| 4 | Find any copy in seconds · Search by text, kind or date. | Aradığını saniyede bul · Metne, türe ya da tarihe göre ara. | Search with kind filters and the keyboard (dark) |
+| 5 | Private by design · No account. No tracking. No ads. | Gizlilik öncelikli · Hesap yok. İzleme yok. Reklam yok. | List (light) |
+| 6 | Also on your Mac · Your Mac copies arrive on their own. | Mac'inde de · Mac kopyaların kendiliğinden gelir. | Cards from the Mac (dark) |
+
+**`store/<lang>/header-universal.png`, 5244 × 2950:**
+- One file fills both the product page header (21:9) and the search result (3:2) slots. Both are optional and need iOS 27.
+- The wordmark and the line "Every copy, one tap away. / Her kopya, bir dokunuş uzağında." sit in the centered safe
+  area. The keyboard and card screens at the sides may be cropped.
+
+**Rules followed:**
+- every frame shows the real app;
+- no prices, "free", URLs, awards or other platforms;
+- the status bar is removed (time and Focus icons);
+- 4+ content only.
+
+**iPad:** not needed. The first release is iPhone-only (`TARGETED_DEVICE_FAMILY 1` for every target in
+`iOS/project.yml`); iPad comes back after it is tested in the simulator.
+
+## 9. App Privacy
 - **Do you or your third-party partners collect data from this app?** → **No, we do not collect data from this app.**
-  Result: "Data Not Collected". Basis: Apple's definition of "collect" (data sent off the device in a way the developer
-  or partners can access); data in the user's own CloudKit private database and Apple Maps lookups are Apple's
-  services, which developers don't disclose. Crash reports shared through Apple's opt-in are not counted either.
-- **Tracking:** No. **Privacy manifest:** included in the app, keyboard, widgets and Share extension.
+  - The label becomes "Data Not Collected".
+  - Apple's definition of "collect" is data sent off the device where the developer or partners can access it.
+  - Data in the user's own CloudKit private database and Apple Maps lookups are Apple's services, which developers
+    don't disclose.
+  - Crash reports shared through Apple's opt-in aren't counted.
+- **Tracking:** No.
+- **Privacy manifest:** included in the app, keyboard, widgets and Share extension.
 
-## Age rating
-All content questions: **None / No**. Unrestricted web access: **No** (links open in Safari; previews only show a
-title and image). Gambling, contests, user-generated content shared with others: **No**. Made for Kids: **No**.
-Expected rating: **4+**.
+## 10. Age rating (expected 4+)
+- **Step 1 Features:** No to all: Parental Controls, Age Assurance, Unrestricted Web Access, User-Generated Content,
+  Social Media, Messaging and Chat, Advertising.
+  - Links open in Safari.
+  - The user's clips go only to their own devices.
+- **Content steps:** None to everything (mature themes, medical/wellness, sexuality, violence, simulated gambling,
+  contests). No for Gambling and Loot Boxes.
+- **Age Categories and Override:** Not Applicable. Leave the Age Suitability URL empty.
 
-## Encryption (export compliance)
-`ITSAppUsesNonExemptEncryption = NO` in Info.plist: the app uses only encryption provided by Apple's operating system
-(CloudKit encrypted fields, HTTPS). Review before submitting; not legal advice.
+## 11. Encryption (export compliance)
+- `ITSAppUsesNonExemptEncryption = NO`: only the encryption built into Apple's OS (CloudKit encrypted fields, HTTPS).
+- Nothing to upload. Not legal advice.
 
-## App Review notes [4000]
+## 12. App Review notes [4000]
 ```
-Pastronaut is the iPhone companion of a free, open-source Mac clipboard manager (https://github.com/xkbxyberk/pastronaut). No account or sign-in is needed.
+Pastronaut is a clipboard manager and clipboard keyboard for iPhone. It works on its own; a Mac is optional. No account or sign-in is needed.
 
-How to try it without a Mac: open the app, tap + to add a text clip, or copy text in another app and come back (Settings › Save Clipboard on Opening). Clips sync through the user's private CloudKit database when signed in to iCloud.
+To try it:
+1. Copy some text in any app, then open Pastronaut — or tap + to type a clip, or share text to Pastronaut. (Settings › Save Clipboard on Opening saves copies when the app opens; iOS shows its own paste prompt.)
+2. Add the keyboard: Settings › General › Keyboard › Keyboards › Add New Keyboard › Pastronaut. In any text field, switch to it with the globe key and tap a clip to type it.
 
-Keyboard: Settings › General › Keyboard › Keyboards › Add New Keyboard › Pastronaut. The keyboard works without Full Access (it shows the history and types an item). Full Access is used only to read and update the history shared with the app (App Group), to fetch the user's own iCloud data, and to save a copy when the user taps Paste. It does not log or transmit keystrokes and has no network access other than the user's iCloud.
+The keyboard works without Full Access: it shows the saved history and types an item. Full Access is used only to read and update the history shared with the app (App Group), to fetch the user's own iCloud data, and to save a copy when the user taps Paste. It does not log or transmit keystrokes and has no network access other than the user's iCloud.
 
-Previews: link and map previews are off until the user allows them (asked once). Sign-in, reset and other one-time-looking links are never fetched.
+Link and map previews are off until the user allows them (asked once). Sign-in, reset and other one-time-looking links are never fetched.
+
+Sync uses the user's private CloudKit database when signed in to iCloud. The optional Mac app is at https://github.com/xkbxyberk/pastronaut.
 
 Privacy policy: in the app at Settings › About › Privacy Policy, and at https://xkbxyberk.github.io/pastronaut/privacy.html
 ```
-
-## Screenshots and header (made 2026-10-18)
-Made from device screenshots with made-up clips only (`PT_DEMO`), per language: SyncStepTests `storeShots`
-(`PT_SHOTS_LANG` = en / tr) → `appstore-screenshots/raw/<lang>/`, then `cd scripts/store && swift run -c release
-StoreArt ../../appstore-screenshots/raw ../../appstore-screenshots/store`. Output (not in git), opaque PNGs:
-- `store/<lang>/screenshot-1…5.png`, 1320 × 2868 (iPhone 6.9"; App Store Connect scales them for smaller iPhones).
-  Order tells the story; the first three also appear in search results:
-  1. Your Mac clipboard, on iPhone · Mac panon, artık iPhone'da (cards, light)
-  2. Type any copy in one tap · Her kopya tek dokunuşla (keyboard, dark)
-  3. Smart cards for every kind · Her türe akıllı kart (cards, dark)
-  4. Keep what you reuse together · Sık kullandıkların bir arada (a collection, light)
-  5. Private by design · Gizlilik öncelikli (list, light)
-- `store/<lang>/header-universal.png`, 5244 × 2950: one file for both the product page header (21:9) and the search
-  result (3:2) slots (iOS 27 and later; optional). Wordmark and tagline inside the centered safe area; app screens at
-  the sides may be cropped.
-- Rules followed: real UI in every frame, short benefit captions, no prices, "free", URLs, awards or other
-  platforms; status bar removed (time and Focus icons).
-- **iPad:** not needed — the first release is iPhone-only (`TARGETED_DEVICE_FAMILY 1` for every target in
-  `iOS/project.yml`). iPad comes back after testing it in the simulator.

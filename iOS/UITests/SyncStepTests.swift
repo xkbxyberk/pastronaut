@@ -247,6 +247,26 @@ final class SyncStepTests: XCTestCase {
         app.launch()
         Thread.sleep(forTimeInterval: previews == "1" ? 8 : 2)
       }
+      // The keyboard pasting a clip into a note-like editor (the app's own "+" screen; no personal data).
+      launch(.light, previews: "1")
+      let newClip = app.buttons["newClipButton"].firstMatch
+      if newClip.waitForExistence(timeout: 5) {
+        newClip.tap()
+        let editor = app.textViews["clipEditor"].firstMatch
+        if editor.waitForExistence(timeout: 5) {
+          editor.tap()
+          if showPastronautKeyboard(in: app) {
+            Thread.sleep(forTimeInterval: 2)
+            let tiles = app.descendants(matching: .any).matching(identifier: "kbClip")
+            if tiles.count > 0 {
+              tiles.element(boundBy: 0).tap()
+              Thread.sleep(forTimeInterval: 1.5)
+            }
+            attachScreenshot(named: "store-\(lang)-0-keyboard-light")
+          }
+        }
+        app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Vazgeç"])).firstMatch.tap()
+      }
       launch(.light, previews: "1")
       attachScreenshot(named: "store-\(lang)-1-cards-light")
       launch(.dark, previews: "1")
@@ -260,6 +280,14 @@ final class SyncStepTests: XCTestCase {
       }
       launch(.light, previews: "0")
       attachScreenshot(named: "store-\(lang)-5-list-light")
+      // What came from the Mac (the optional Mac app), as cards.
+      launch(.dark, previews: "1")
+      let macFilter = app.descendants(matching: .any)["filter.mac"].firstMatch
+      if macFilter.waitForExistence(timeout: 5) {
+        macFilter.tap()
+        Thread.sleep(forTimeInterval: 2)
+        attachScreenshot(named: "store-\(lang)-6-mac-dark")
+      }
       launch(.dark, previews: "0")
       let search = app.searchFields.firstMatch
       if search.waitForExistence(timeout: 5) {
