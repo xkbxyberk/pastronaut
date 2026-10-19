@@ -83,8 +83,8 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
 geçmiş, "↑ yeni" düğmesi ve "Eşitleniyor…" rozeti, Tam Erişim tespiti düzeltmesi; önizlemeler ve "Açılınca Panoyu
 Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: commit'lendi, Release arşivi yerelde
 (`build/ios`), **yüklenmedi**. Sıradaki adımlar:
-1. Gizlilik politikası (gh-pages `privacy.html`): "önizlemeler sen açana kadar kapalı" ve "Açılınca kaydet,
-   açtıysan" cümleleri 1.1 ile yanlış olur; yayından önce kullanıcı onayıyla güncellenir.
+1. ✅ Gizlilik politikası güncellendi ve yayınlandı (gh-pages `288c2ed`, 2026-10-20): 1.1'den itibaren önizlemeler
+   ve "Açılınca Panoyu Kaydet" varsayılan açık, 1.0'da kapalı; İngilizce ve Türkçe, "Son güncelleme" 20 Ekim.
 2. 1.0'ın durumu: "Pending Developer Release" ise önce yayınlanır; sonra iOS App › "+" › 1.1.
 3. Kullanıcı "yükle" deyince build 3 yüklenir; TestFlight denemesi; 1.1 sayfası: What's New (`APPSTORE.md` §8),
    App Review notu (`APPSTORE.md` §13, 1.1), build 3; incelemeye gönderme kullanıcıda.
