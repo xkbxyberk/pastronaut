@@ -2075,6 +2075,633 @@
           }
         }
       }
+    },
+    "Setup Guide": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurulum Rehberi"
+          }
+        }
+      }
+    },
+    "Keyboard, Full Access and pasting without asking": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavye, Tam Erişim ve sormadan yapıştırma"
+          }
+        }
+      }
+    },
+    "Language": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dil"
+          }
+        }
+      }
+    },
+    "Theme": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tema"
+          }
+        }
+      }
+    },
+    "System": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem"
+          }
+        }
+      }
+    },
+    "Light": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karanlık"
+          }
+        }
+      }
+    },
+    "Skip": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atla"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam"
+          }
+        }
+      }
+    },
+    "Start Using Pastronaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'u Kullanmaya Başla"
+          }
+        }
+      }
+    },
+    "Welcome to Pastronaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'a hoş geldin"
+          }
+        }
+      }
+    },
+    "Everything you copy, on your Mac and on your iPhone, in one history you can reach from any app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'te ve iPhone'da kopyaladığın her şey, her uygulamadan ulaşabileceğin tek bir geçmişte."
+          }
+        }
+      }
+    },
+    "From your iPhone: saved as you open it": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone'dan: açtığında kaydedilir"
+          }
+        }
+      }
+    },
+    "iPhone lets only the app on screen read the clipboard. Pastronaut saves your latest copy the moment you open the app or its keyboard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone panoyu yalnızca ekrandaki uygulamanın okumasına izin verir. Pastronaut, uygulamayı ya da klavyesini açtığın anda son kopyanı kaydeder."
+          }
+        }
+      }
+    },
+    "Paste with one tap": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tek dokunuşla yapıştır"
+          }
+        }
+      }
+    },
+    "The Pastronaut keyboard puts your whole history next to any text field.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut klavyesi tüm geçmişini her metin alanının yanına getirir."
+          }
+        }
+      }
+    },
+    "Private by design": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizlilik öncelikli"
+          }
+        }
+      }
+    },
+    "Clips travel through your own iCloud and are encrypted on this device before upload.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyaların kendi iCloud'un üzerinden taşınır ve yüklenmeden önce bu cihazda şifrelenir."
+          }
+        }
+      }
+    },
+    "The next two steps take about a minute and let Pastronaut work without interruptions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonraki iki adım yaklaşık bir dakika sürer ve Pastronaut'un kesintisiz çalışmasını sağlar."
+          }
+        }
+      }
+    },
+    "Add the Pastronaut keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut klavyesini ekle"
+          }
+        }
+      }
+    },
+    "Type what you copied on your Mac with a single tap, in any app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'te kopyaladığını her uygulamada tek dokunuşla yaz."
+          }
+        }
+      }
+    },
+    "Full Access": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam Erişim"
+          }
+        }
+      }
+    },
+    "Keyboards": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavyeler"
+          }
+        }
+      }
+    },
+    "Paste from Other Apps": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Uygulamalardan Yapıştır"
+          }
+        }
+      }
+    },
+    "Ask": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sor"
+          }
+        }
+      }
+    },
+    "Deny": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reddet"
+          }
+        }
+      }
+    },
+    "Allow": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin Ver"
+          }
+        }
+      }
+    },
+    "Allow Full Access": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam Erişime İzin Ver"
+          }
+        }
+      }
+    },
+    "Tap Open Settings below.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aşağıdaki Ayarlar'ı aç düğmesine dokun."
+          }
+        }
+      }
+    },
+    "Choose Keyboards.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavyeler'e dokun."
+          }
+        }
+      }
+    },
+    "Turn on Pastronaut, then Allow Full Access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'u, ardından Tam Erişime İzin Ver'i aç."
+          }
+        }
+      }
+    },
+    "Why Full Access?": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neden Tam Erişim?"
+          }
+        }
+      }
+    },
+    "With Full Access, the keyboard saves your new copies itself and fetches the latest history from iCloud, even when the app is closed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam Erişim açıkken klavye yeni kopyalarını kendisi kaydeder ve uygulama kapalıyken bile en güncel geçmişi iCloud'dan alır."
+          }
+        }
+      }
+    },
+    "Without it, the keyboard still works and types your history as of the last time you opened Pastronaut.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam Erişim olmadan da klavye çalışır; Pastronaut'u son açtığın andaki geçmişi yazar."
+          }
+        }
+      }
+    },
+    "Paste without being asked": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorulmadan yapıştır"
+          }
+        }
+      }
+    },
+    "Pastronaut saves your new copy each time you open it. Allow pasting once, and iPhone stops asking for permission every time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut, onu her açtığında yeni kopyanı kaydeder. Yapıştırmaya bir kez izin ver, iPhone her seferinde izin sormayı bıraksın."
+          }
+        }
+      }
+    },
+    "Choose Paste from Other Apps.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Uygulamalardan Yapıştır'a dokun."
+          }
+        }
+      }
+    },
+    "Select Allow.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin Ver'i seç."
+          }
+        }
+      }
+    },
+    "iPhone keeps only your latest copy. When you copy several things in a row, open Pastronaut or its keyboard in between, or share them to Pastronaut. One-time codes, card numbers and IBANs are never saved this way.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone yalnızca son kopyanı tutar. Art arda birkaç şey kopyalarken arada Pastronaut'u ya da klavyesini aç veya onları Pastronaut'a paylaş. Tek kullanımlık kodlar, kart numaraları ve IBAN'lar bu yolla asla kaydedilmez."
+          }
+        }
+      }
+    },
+    "Loading your clips…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyaların yükleniyor…"
+          }
+        }
+      }
+    },
+    "Try it": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dene"
+          }
+        }
+      }
+    },
+    "Copy some text in another app, come back and tap Try Saving. If iPhone still asks, the setting isn't Allow yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir uygulamada bir metin kopyala, geri gel ve Kaydetmeyi Dene'ye dokun. iPhone hâlâ soruyorsa ayar henüz İzin Ver değil."
+          }
+        }
+      }
+    },
+    "Try Saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydetmeyi Dene"
+          }
+        }
+      }
+    },
+    "Saved. Pastronaut can read your copies.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydedildi. Pastronaut kopyalarını okuyabiliyor."
+          }
+        }
+      }
+    },
+    "The clipboard has no text. Copy something first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panoda metin yok. Önce bir şey kopyala."
+          }
+        }
+      }
+    },
+    "iPhone blocked the paste. Set Paste from Other Apps to Allow, then try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone yapıştırmayı engelledi. Diğer Uygulamalardan Yapıştır'ı İzin Ver yap ve tekrar dene."
+          }
+        }
+      }
+    },
+    "That copy looks like a code or a card number, so it wasn't saved. Copy something else to try.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kopya bir kod ya da kart numarasına benziyor, bu yüzden kaydedilmedi. Denemek için başka bir şey kopyala."
+          }
+        }
+      }
+    },
+    "Pastronaut starts in your iPhone's language when it is Turkish or English, and in English otherwise. The keyboard and widgets follow your iPhone's language.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut, iPhone'unun dili Türkçe ya da İngilizce ise o dilde, değilse İngilizce açılır. Klavye ve widget'lar iPhone'unun dilini izler."
+          }
+        }
+      }
+    },
+    "Almost done": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neredeyse bitti"
+          }
+        }
+      }
+    },
+    "Open the keyboard once": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavyeyi bir kez aç"
+          }
+        }
+      }
+    },
+    "Try the keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavyeyi dene"
+          }
+        }
+      }
+    },
+    "Tap the field, then switch to Pastronaut with the globe key. Opening it once here also confirms Full Access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alana dokun, sonra dünya tuşuyla Pastronaut'a geç. Klavyeyi burada bir kez açmak Tam Erişim'i de doğrular."
+          }
+        }
+      }
+    },
+    "Tap here to open the keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavyeyi açmak için buraya dokun"
+          }
+        }
+      }
+    },
+    "Full Access is on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam Erişim açık."
+          }
+        }
+      }
+    },
+    "Come back and open the Pastronaut keyboard once in the field below.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri dön ve Pastronaut klavyesini aşağıdaki alanda bir kez aç."
+          }
+        }
+      }
+    },
+    "%lld new": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld yeni"
+          }
+        }
+      }
+    },
+    "Syncing…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşitleniyor…"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -12,13 +12,16 @@ struct HistoryView: View {
   @State private var toast: ToastContent?
   @State private var hideToast: Task<Void, Never>?
   @State private var detail: Clip?
-  @State private var showsSetup = false
+  @State private var showsOnboarding = false
   @State private var showsNewClip = false
   @State private var editMode: EditMode = .inactive
   @State private var selection = Set<String>()
   @State private var confirmsBulkDelete = false
   @State private var tokens: [ClipSearchToken] = []
-  @AppStorage("setupGuideShown") private var setupGuideShown = false
+  @State private var heldBackIDs: Set<String> = []
+  @State private var isAwayFromTop = false
+  @State private var showsSyncChip = false
+  @AppStorage(AppPreferences.onboardingKey) private var hasCompletedOnboarding = false
   @AppStorage(PreviewChoice.key) private var previewChoice = PreviewChoice.unasked.rawValue
 
   init(scope: Binding<HistoryScope>, showsScopeBar: Bool) {
@@ -29,11 +32,18 @@ struct HistoryView: View {
   var body: some View {
     @Bindable var store = store
     NavigationStack {
-      Group {
-        if usesCards {
-          cards
-        } else {
-          list
+      ScrollViewReader { proxy in
+        Group {
+          if usesCards {
+            cards
+          } else {
+            list
+          }
+        }
+        .modifier(AwayFromTopTracker(isAway: $isAwayFromTop))
+        .overlay(alignment: .top) {
+          topIndicator(proxy: proxy)
+            .padding(.top, 8)
         }
       }
       .modifier(FilterBarPlacement(isShown: showsScopeBar) { filterBar })
@@ -43,7 +53,13 @@ struct HistoryView: View {
         return !texts.isEmpty
       }
       .overlay {
-        if store.clips.isEmpty {
+        if store.isWaitingForFirstSync {
+          ProgressView {
+            Text("Loading your clips…")
+          }
+          .controlSize(.large)
+          .accessibilityIdentifier("firstSyncProgress")
+        } else if store.clips.isEmpty {
           ContentUnavailableView(
             "No clips yet",
             systemImage: "tray",
@@ -127,12 +143,25 @@ struct HistoryView: View {
       .sheet(isPresented: $showsSettings) {
         SettingsView()
       }
-      .sheet(isPresented: $showsSetup) {
-        NavigationStack {
-          KeyboardSetupView(isSheet: true)
-        }
+      .fullScreenCover(isPresented: $showsOnboarding) {
+        OnboardingView(presentation: .firstLaunch)
       }
-      .onAppear(perform: showSetupOnce)
+      .onAppear(perform: showOnboardingOnce)
+      .onChange(of: store.clips) { old, new in
+        holdBackArrivals(from: old, in: new)
+      }
+      .onChange(of: isAwayFromTop) { _, isAway in
+        if !isAway { releaseHeldBack() }
+      }
+      .task(id: store.isSyncing) {
+        guard store.isSyncing else {
+          withAnimation(.snappy) { showsSyncChip = false }
+          return
+        }
+        try? await Task.sleep(for: .milliseconds(800))
+        guard !Task.isCancelled, store.isSyncing else { return }
+        withAnimation(.snappy) { showsSyncChip = true }
+      }
       .task {
         // Safety net for lost pushes while the app is open; the app is suspended in the background.
         while !Task.isCancelled {
@@ -143,16 +172,13 @@ struct HistoryView: View {
     }
   }
 
-  /// The keyboard is the point of the app, so its setup guide opens once on first launch.
-  private func showSetupOnce() {
-    let setup = KeyboardSetup.shared
-    setup.update()
+  private func showOnboardingOnce() {
+    KeyboardSetup.shared.update()
     #if DEBUG
     if ProcessInfo.processInfo.environment["PT_E2E"] != nil { return }
     #endif
-    guard !setupGuideShown, !setup.isComplete else { return }
-    setupGuideShown = true
-    showsSetup = true
+    guard !hasCompletedOnboarding else { return }
+    showsOnboarding = true
   }
 
   private var sections: [ClipSection] {
@@ -181,7 +207,73 @@ struct HistoryView: View {
   private var isEditing: Bool { editMode.isEditing }
 
   private var matchedClips: [Clip] {
-    store.clips.matching(store.searchText, tokens: tokens)
+    visibleClips.matching(store.searchText, tokens: tokens)
+  }
+
+  private var visibleClips: [Clip] {
+    heldBackIDs.isEmpty ? store.clips : store.clips.filter { !heldBackIDs.contains($0.id) }
+  }
+
+  private func holdBackArrivals(from old: [Clip], in new: [Clip]) {
+    let current = Set(new.map(\.id))
+    if !heldBackIDs.isSubset(of: current) {
+      heldBackIDs.formIntersection(current)
+    }
+    guard isAwayFromTop, !isEditing, store.searchText.isEmpty, tokens.isEmpty else { return }
+    let known = Set(old.map(\.id))
+    let arrivals = new.filter { !known.contains($0.id) && $0.isFromMac }.map(\.id)
+    heldBackIDs.formUnion(arrivals)
+  }
+
+  private static func cardSectionAnchor(_ section: ClipSection) -> String {
+    "section.\(section.id)"
+  }
+
+  private func releaseHeldBack() {
+    guard !heldBackIDs.isEmpty else { return }
+    withAnimation(.snappy) { heldBackIDs.removeAll() }
+  }
+
+  @ViewBuilder
+  private func topIndicator(proxy: ScrollViewProxy) -> some View {
+    if !heldBackIDs.isEmpty {
+      Button {
+        withAnimation(.snappy) {
+          if let section = sections.first {
+            if usesCards {
+              proxy.scrollTo(Self.cardSectionAnchor(section), anchor: .top)
+            } else if let first = section.clips.first?.id {
+              proxy.scrollTo(first, anchor: .top)
+            }
+          }
+          heldBackIDs.removeAll()
+        }
+      } label: {
+        Label("\(heldBackIDs.count) new", systemImage: "arrow.up")
+          .font(.subheadline.weight(.semibold))
+          .padding(.horizontal, 16)
+          .padding(.vertical, 10)
+          .glassBackground(in: Capsule())
+      }
+      .buttonStyle(.plain)
+      .foregroundStyle(Color.accentColor)
+      .transition(.move(edge: .top).combined(with: .opacity))
+      .accessibilityIdentifier("newClipsButton")
+    } else if showsSyncChip && !store.isWaitingForFirstSync {
+      Label {
+        Text("Syncing…")
+      } icon: {
+        ProgressView()
+          .controlSize(.mini)
+      }
+      .font(.footnote.weight(.medium))
+      .foregroundStyle(.secondary)
+      .padding(.horizontal, 12)
+      .padding(.vertical, 6)
+      .glassBackground(in: Capsule())
+      .transition(.opacity)
+      .accessibilityIdentifier("syncChip")
+    }
   }
 
   /// Offered while searching; a chip already in the field isn't offered again.
@@ -445,6 +537,7 @@ struct HistoryView: View {
             .font(.title3.weight(.bold))
             .padding(.horizontal, 6)
             .padding(.top, 6)
+            .id(Self.cardSectionAnchor(section))
           CardColumns(clips: section.clips) { clip in
             ClipCard(clip: clip, isEditing: isEditing, isSelected: selection.contains(clip.id)) {
               if isEditing {
@@ -579,6 +672,22 @@ extension Array where Element == Clip {
 
 /// On iOS 26 and later the filter is a glass bar under the navigation bar that takes part in the scroll
 /// edge effect; earlier systems show it at the top of the list instead.
+private struct AwayFromTopTracker: ViewModifier {
+  @Binding var isAway: Bool
+
+  func body(content: Content) -> some View {
+    if #available(iOS 18.0, *) {
+      content.onScrollGeometryChange(for: Bool.self) { geometry in
+        geometry.contentOffset.y + geometry.contentInsets.top > 160
+      } action: { _, isAway in
+        self.isAway = isAway
+      }
+    } else {
+      content
+    }
+  }
+}
+
 private struct FilterBarPlacement<Bar: View>: ViewModifier {
   let isShown: Bool
   @ViewBuilder let bar: () -> Bar

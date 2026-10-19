@@ -37,7 +37,7 @@ final class AppLock {
     case .faceID: "Face ID"
     case .touchID: "Touch ID"
     case .opticID: "Optic ID"
-    default: String(localized: "Passcode")
+    default: AppPreferences.shared.string("Passcode")
     }
   }
 
@@ -55,7 +55,7 @@ final class AppLock {
     guard isLocked, !isAuthenticating else { return }
     isAuthenticating = true
     defer { isAuthenticating = false }
-    if await authenticate(reason: String(localized: "Unlock your clipboard history")) {
+    if await authenticate(reason: AppPreferences.shared.string("Unlock your clipboard history")) {
       withAnimation(.snappy) { isLocked = false }
     }
   }
@@ -63,7 +63,7 @@ final class AppLock {
   /// Asks once before the lock is turned on, so nobody locks themselves out by mistake.
   func setEnabled(_ enabled: Bool) async {
     if enabled {
-      guard await authenticate(reason: String(localized: "Turn on the lock for Pastronaut")) else { return }
+      guard await authenticate(reason: AppPreferences.shared.string("Turn on the lock for Pastronaut")) else { return }
     }
     isEnabled = enabled
   }

@@ -127,7 +127,7 @@ public struct PrivacyOptions: Equatable, Sendable {
 /// Saving the clipboard by itself when the iPhone app or keyboard opens. Unlike a tap on the Paste button,
 /// nobody looked at the text first, so sensitive-looking copies are always left out.
 public enum AutoCapture {
-  /// Bool in the App Group's user defaults, shared by the app and the keyboard. Off by default.
+  /// Bool in the App Group's user defaults, shared by the app and the keyboard. On by default.
   public static let settingKey = "autoSaveClipboard"
   /// The pasteboard change count that was last saved or looked at, so one copy is read once.
   public static let lastChangeCountKey = "keyboardLastCapturedChangeCount"

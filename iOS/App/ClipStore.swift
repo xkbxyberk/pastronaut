@@ -1,6 +1,7 @@
 import CloudKit
 import Observation
 import PastronautCore
+import SwiftUI
 import UIKit
 import WidgetKit
 
@@ -15,7 +16,10 @@ final class ClipStore {
   /// In list order.
   private(set) var collections: [ClipCollection] = []
   private(set) var status: SyncStatus?
-  private(set) var accountStatus: String = "…"
+  private(set) var hasFinishedFirstSync = false
+  private var runningRefreshes = 0
+  private var accountState: CKAccountStatus?
+  private var accountError: String?
   enum Notice: Equatable {
     case savedFromClipboard
     case clipboardEmpty
@@ -39,6 +43,36 @@ final class ClipStore {
     files = SharedClipFiles()
     let directory = files?.directory ?? URL.applicationSupportDirectory.appending(path: "Pastronaut")
     sync = ClipSync(containerIdentifier: PastronautIDs.iCloudContainer, storageDirectory: directory)
+    showSavedSnapshot()
+  }
+
+  private func showSavedSnapshot() {
+    #if DEBUG
+    if DemoClips.isOn || SharedSettings.defaults?.object(forKey: SharedSettings.demoUntilKey) != nil { return }
+    #endif
+    guard let files else { return }
+    clips = files.currentClips().inHistoryOrder
+    collections = files.currentCollections()
+  }
+
+  var isSyncing: Bool { runningRefreshes > 0 }
+
+  var isWaitingForFirstSync: Bool {
+    clips.isEmpty && !hasFinishedFirstSync
+  }
+
+  var accountStatus: String {
+    if let accountError { return accountError }
+    let preferences = AppPreferences.shared
+    return switch accountState {
+    case nil: "…"
+    case .available: preferences.string("Signed in")
+    case .noAccount: preferences.string("Not signed in to iCloud")
+    case .restricted: preferences.string("Restricted")
+    case .temporarilyUnavailable: preferences.string("Temporarily unavailable")
+    case .couldNotDetermine: preferences.string("Unknown")
+    @unknown default: preferences.string("Unknown")
+    }
   }
 
   func start() async {
@@ -50,6 +84,7 @@ final class ClipStore {
       SharedSettings.defaults?.set(Bundle.main.preferredLocalizations.first ?? "en", forKey: SharedSettings.demoLanguageKey)
       clips = DemoClips.clips.inHistoryOrder
       collections = DemoClips.collections
+      hasFinishedFirstSync = true
       try? files?.writeSnapshot(clips)
       try? files?.writeCollections(collections)
       return
@@ -60,6 +95,8 @@ final class ClipStore {
       await ClipStore.shared.reload()
     }
     await sync.start()
+    await ingestInbox()
+    await reload()
     await refresh()
   }
 
@@ -69,10 +106,13 @@ final class ClipStore {
     #if DEBUG
     if DemoClips.isOn { return }
     #endif
+    runningRefreshes += 1
+    defer { runningRefreshes -= 1 }
     await ingestInbox()
     try? await sync.syncNow()
-    await updateAccountStatus()
     await reload()
+    hasFinishedFirstSync = true
+    await updateAccountStatus()
   }
 
   func reload() async {
@@ -82,7 +122,9 @@ final class ClipStore {
     let latest = await sync.clips.inHistoryOrder
     let latestCollections = await sync.collections
     let changed = latest != clips
-    clips = latest
+    if changed {
+      withAnimation(.snappy) { clips = latest }
+    }
     if latestCollections != collections {
       collections = latestCollections
     }
@@ -295,13 +337,47 @@ final class ClipStore {
   // MARK: - Saving the clipboard on launch
 
   var isAutoSaveEnabled: Bool {
-    sharedDefaults?.bool(forKey: AutoCapture.settingKey) ?? false
+    sharedDefaults?.object(forKey: AutoCapture.settingKey) as? Bool ?? true
+  }
+
+  private var isOnboardingFinished: Bool {
+    #if DEBUG
+    if ProcessInfo.processInfo.environment["PT_E2E"] != nil { return true }
+    #endif
+    return UserDefaults.standard.bool(forKey: AppPreferences.onboardingKey)
+  }
+
+  enum ClipboardTrial: Equatable {
+    case saved
+    case empty
+    case denied
+    case sensitive
+    case tooLarge
+  }
+
+  func trySavingClipboard() async -> ClipboardTrial {
+    #if DEBUG
+    if DemoClips.isOn { return .saved }
+    #endif
+    let pasteboard = UIPasteboard.general
+    guard pasteboard.hasStrings else { return .empty }
+    sharedDefaults?.set(pasteboard.changeCount, forKey: AutoCapture.lastChangeCountKey)
+    guard let text = pasteboard.string else { return .denied }
+    guard AutoCapture.allows(text) else { return .sensitive }
+    switch await saveNow(text) {
+    case .saved: return .saved
+    case .empty: return .empty
+    case .tooLarge: return .tooLarge
+    }
   }
 
   /// With "Save Clipboard on Opening" on, a new copy is saved when the app comes to the foreground. Reading
   /// the text asks for permission unless Paste from Other Apps is set to Allow; checking for text doesn't.
   func autoSaveClipboard() async {
-    guard isAutoSaveEnabled else { return }
+    #if DEBUG
+    if DemoClips.isOn { return }
+    #endif
+    guard isAutoSaveEnabled, isOnboardingFinished else { return }
     let pasteboard = UIPasteboard.general
     let changeCount = pasteboard.changeCount
     guard pasteboard.hasStrings,
@@ -377,16 +453,10 @@ final class ClipStore {
 
   private func updateAccountStatus() async {
     do {
-      accountStatus = switch try await CKContainer(identifier: PastronautIDs.iCloudContainer).accountStatus() {
-      case .available: String(localized: "Signed in")
-      case .noAccount: String(localized: "Not signed in to iCloud")
-      case .restricted: String(localized: "Restricted")
-      case .temporarilyUnavailable: String(localized: "Temporarily unavailable")
-      case .couldNotDetermine: String(localized: "Unknown")
-      @unknown default: String(localized: "Unknown")
-      }
+      accountState = try await CKContainer(identifier: PastronautIDs.iCloudContainer).accountStatus()
+      accountError = nil
     } catch {
-      accountStatus = error.localizedDescription
+      accountError = error.localizedDescription
     }
   }
 }

@@ -19,6 +19,7 @@ struct PastronautApp: App {
               .transition(.opacity)
           }
         }
+        .modifier(AppPreferencesScope())
     }
     .onChange(of: scenePhase) { _, phase in
       if phase == .active {
@@ -43,6 +44,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
   ) -> Bool {
     // CKSyncEngine subscribes to changes; silent pushes wake the app so the keyboard snapshot stays fresh.
     application.registerForRemoteNotifications()
+    AppPreferences.registerFirstLaunchDefaults()
     #if DEBUG
     // The end-to-end test turns "Save Clipboard on Opening" on only for its own steps ("1"), off otherwise ("0").
     if let autoSave = ProcessInfo.processInfo.environment["PT_AUTO_SAVE"] {

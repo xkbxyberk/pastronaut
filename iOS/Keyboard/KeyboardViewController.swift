@@ -155,7 +155,7 @@ final class KeyboardModel {
     hasNewClip = hasFullAccess && pasteboard.hasStrings && pasteboard.changeCount != lastCaptured
     // "Save Clipboard on Opening" (app settings): save the new copy without waiting for the Paste button.
     // Texts already in the history (often a Mac copy brought by Universal Clipboard) are left alone.
-    if hasNewClip, defaults?.bool(forKey: AutoCapture.settingKey) == true,
+    if hasNewClip, defaults?.object(forKey: AutoCapture.settingKey) as? Bool ?? true,
        let text = pasteboard.string, AutoCapture.allows(text),
        !clips.contains(where: { $0.id == Clip.id(for: text) }) {
       capture([text])

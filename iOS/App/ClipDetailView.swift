@@ -27,7 +27,7 @@ struct ClipDetailView: View {
         ContentUnavailableView("This clip was deleted", systemImage: "trash")
       }
     }
-    .navigationTitle(clip.map { Text($0.content.kindName) } ?? Text(verbatim: ""))
+    .navigationTitle(clip.map { AppPreferences.shared.string($0.content.kindTitle) } ?? "")
     .navigationBarTitleDisplayMode(.inline)
     .overlay(alignment: .bottom) {
       if showsCopied {
@@ -253,10 +253,10 @@ struct ClipEditor: View {
   @State private var draft: String
   @FocusState private var isFocused: Bool
   private let original: String
-  private let title: LocalizedStringKey
+  private let title: String.LocalizationValue
   private let onSave: (String) -> Void
 
-  init(text: String, title: LocalizedStringKey = "Edit", onSave: @escaping (String) -> Void) {
+  init(text: String, title: String.LocalizationValue = "Edit", onSave: @escaping (String) -> Void) {
     _draft = State(initialValue: text)
     original = text
     self.title = title
@@ -271,7 +271,7 @@ struct ClipEditor: View {
         .focused($isFocused)
         .onAppear { isFocused = true }
         .accessibilityIdentifier("clipEditor")
-        .navigationTitle(title)
+        .navigationTitle(AppPreferences.shared.string(title))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
@@ -286,6 +286,20 @@ struct ClipEditor: View {
             .accessibilityIdentifier("saveClipButton")
           }
         }
+    }
+  }
+}
+
+private extension ClipContent {
+  var kindTitle: String.LocalizationValue {
+    switch self {
+    case .link: "Link"
+    case .email: "Email"
+    case .phone: "Phone"
+    case .color: "Color"
+    case .address: "Address"
+    case .code: "Code"
+    case .text: "Text"
     }
   }
 }
