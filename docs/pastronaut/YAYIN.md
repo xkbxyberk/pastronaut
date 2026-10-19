@@ -81,16 +81,16 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
 
 **iPhone 1.1 (build 3), 2026-10-20:** kurulum rehberi, uygulama içi dil (TR/EN) ve tema, açılışta anında
 geçmiş, "↑ yeni" düğmesi ve "Eşitleniyor…" rozeti, Tam Erişim tespiti düzeltmesi; önizlemeler ve "Açılınca Panoyu
-Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: commit'lendi, Release arşivi yerelde
-(`build/ios`), **yüklenmedi**. Sıradaki adımlar:
+Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: ✅ App Store Connect'e yüklendi
+(2026-10-20; 1.0 o sırada "Ready for Distribution", macOS 1.0 "Waiting for Review"). Sıradaki adımlar:
 1. ✅ Gizlilik politikası güncellendi ve yayınlandı (gh-pages `288c2ed`, 2026-10-20): 1.1'den itibaren önizlemeler
    ve "Açılınca Panoyu Kaydet" varsayılan açık, 1.0'da kapalı; İngilizce ve Türkçe, "Son güncelleme" 20 Ekim.
 2. 1.0'ın durumu: "Pending Developer Release" ise önce yayınlanır; sonra iOS App › "+" › 1.1.
-3. Kullanıcı "yükle" deyince build 3 yüklenir; TestFlight denemesi; 1.1 sayfası: What's New (`APPSTORE.md` §8),
-   App Review notu (`APPSTORE.md` §13, 1.1), build 3; incelemeye gönderme kullanıcıda.
+3. ✅ Build 3 yüklendi. Sırada (kullanıcı): TestFlight denemesi; iOS App › "+" › 1.1; What's New
+   (`APPSTORE.md` §8), App Review notu (`APPSTORE.md` §13, 1.1), build 3; incelemeye gönderme.
 
 **Sürüm kuralı (2026-10-18'den sonra):** her sürüm üç kanalda çıkar (iPhone, Mac App Store, Mac GitHub/Sparkle);
 adımlar `SURUM.md`'de. Görünen sürüm: iPhone 1.1, Mac 1.0 (Mac'in sıradaki sürümü en az 1.2). Sıradaki derleme
-numaraları: iPhone **4** (3 yüklenmeyi bekliyor), Mac **2** (Mac App Store ve GitHub ortak). Mac GitHub kullanıcıları hâlâ 0.1.0'da; bir sonraki Mac sürümüyle
+numaraları: iPhone **4**, Mac **2** (Mac App Store ve GitHub ortak). Mac GitHub kullanıcıları hâlâ 0.1.0'da; bir sonraki Mac sürümüyle
 GitHub'a da 1.0.x çıkar.
 
