@@ -311,9 +311,41 @@ GİZLİLİK ÖNCELİKLİ
 Abonelik yok, uygulama içi satın alma yok. Maccy'ye dayanır (onunla bağlantılı değildir); kaynak kodu herkese açık.
 ```
 
-## 8. What's New (1.0)
+## 8. What's New
+### 1.0
 - iPhone EN: `First release: your clipboard history, a keyboard that pastes it in any app, and sync with your Mac.`
 - iPhone TR: `İlk sürüm: pano geçmişin, onu her uygulamada yapıştıran bir klavye ve Mac'inle eşitleme.`
+
+### 1.1 (iPhone only; build 3)
+Light and a little playful. Same English text for English (U.S.) and English (U.K.).
+
+English:
+```
+Pastronaut 1.1: fewer mysteries, more clipboard.
+
+• A new setup guide walks you through the keyboard, Full Access and Paste from Other Apps, with buttons that jump straight to Settings. No treasure map needed.
+• Try the keyboard and the paste permission right inside the guide, and see them turn green.
+• Pick your language (English or Türkçe) and your theme (System, Light or Dark) in Settings.
+• Your history now shows up the moment you open the app. The "No clips yet" ghost has left the building.
+• Scrolled down? New clips from your Mac wait politely at the top (↑ 3 new) instead of pushing your list around.
+• A small "Syncing…" badge lets you know iCloud is on it.
+• Full Access is now recognized once you open the keyboard, so Settings stops saying "Not finished" when it is.
+• Link previews and Save Clipboard on Opening now start on. Prefer them off? One switch in Settings.
+```
+
+Türkçe:
+```
+Pastronaut 1.1: daha az gizem, daha çok pano.
+
+• Yeni kurulum rehberi klavyeyi, Tam Erişim'i ve Diğer Uygulamalardan Yapıştır iznini adım adım anlatıyor; düğmeler seni doğrudan Ayarlar'a götürüyor. Hazine haritasına gerek yok.
+• Klavyeyi ve yapıştırma iznini rehberin içinde dene, yeşile döndüklerini gör.
+• Dili (Türkçe ya da English) ve temayı (Sistem, Açık, Karanlık) Ayarlar'dan seç.
+• Geçmişin artık uygulamayı açtığın anda karşında. "Henüz öğe yok" hayaleti binayı terk etti.
+• Listenin aşağısındayken Mac'ten gelen yeni kopyalar araya dalmıyor; en üstte kibarca sırasını bekliyor (↑ 3 yeni).
+• Küçük bir "Eşitleniyor…" rozeti iCloud'un iş başında olduğunu haber veriyor.
+• Klavyeyi bir kez açınca Tam Erişim tanınıyor; Ayarlar artık açıkken "Tamamlanmadı" demiyor.
+• Bağlantı önizlemeleri ve Açılınca Panoyu Kaydet artık açık başlıyor. Kapalı mı seversin? Ayarlar'da tek dokunuş.
+```
 
 ## 9. Pictures
 All pictures use made-up clips only. They are made in four steps:
@@ -390,7 +422,28 @@ Not needed: the first release is iPhone-only. iPad comes back after it is tested
 HTTPS). Not legal advice.
 
 ## 13. App Review notes
-### iPhone
+### iPhone (1.1 and later)
+```
+Pastronaut is a clipboard manager and clipboard keyboard for iPhone. It works on its own; the Mac app is optional. No account or sign-in is needed.
+
+On first launch a short setup guide explains the keyboard, Full Access (optional) and the system setting Paste from Other Apps, with buttons that open the app's page in Settings. It can be skipped, and opened again from Settings › Setup Guide.
+
+To try it:
+1. Copy some text in any app, then open Pastronaut, or tap + to type a clip, or share text to Pastronaut. Save Clipboard on Opening is on by default (Settings can turn it off) and starts after the setup guide; iOS shows its own paste prompt unless Paste from Other Apps is set to Allow.
+2. Add the keyboard: Settings › Pastronaut › Keyboards, or Settings › General › Keyboard › Keyboards › Add New Keyboard › Pastronaut. In any text field, switch to it with the globe key and tap a clip to type it. The setup guide has a field to try it.
+
+The keyboard works without Full Access: it shows the saved history and types an item. Full Access is used only to read and update the history shared with the app (App Group), to fetch the user's own iCloud data, and to save a copy when the user taps Paste. It does not log or transmit keystrokes and has no network access other than the user's iCloud.
+
+Link and map previews are on by default; the setup guide and Settings show a switch for them. Sign-in, reset and other one-time-looking links are never fetched, and previews stay on the device.
+
+The app can be shown in English or Turkish (Settings › Language).
+
+Sync uses the user's private CloudKit database when signed in to iCloud. The optional Mac app: https://github.com/xkbxyberk/pastronaut
+
+Privacy policy: in the app at Settings › About › Privacy Policy, and at https://xkbxyberk.github.io/pastronaut/privacy.html
+```
+
+### iPhone (1.0)
 ```
 Pastronaut is a clipboard manager and clipboard keyboard for iPhone. It works on its own; the Mac app is optional. No account or sign-in is needed.
 

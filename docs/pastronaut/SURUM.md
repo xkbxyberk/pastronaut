@@ -16,9 +16,13 @@ Mac'e dokunan her değişiklik **hem kanal 2 hem kanal 3** demektir.
 
 ## Sürüm numaraları
 - **Görünen sürüm (`MARKETING_VERSION`) üç kanalda aynıdır:** `iOS/project.yml` ve `Maccy.xcodeproj` (iki satır).
-  Şu an: **1.0**. Sonraki: hata düzeltmesi 1.0.1, yeni özellik 1.1.
+  Kural: hata düzeltmesi son rakamı (1.1.1), yeni özellik ortadakini (1.2) artırır. Yalnızca bir kanal çıkarsa
+  öbürleri o numarayı atlar; bir sonraki sürümleri en yüksek numaradan devam eder (aynı numara iki farklı içerikle
+  çıkmaz).
+  Şu an: iPhone **1.1**, Mac **1.0**. Mac'in bir sonraki sürümü en az **1.2** olur (1.1 iPhone'a ait).
 - **Derleme numarası (`CURRENT_PROJECT_VERSION`) her yüklemede artar:**
-  - iPhone: `iOS/project.yml`. Yüklenen son: **2** → sonraki **3**.
+  - iPhone: `iOS/project.yml`. Son: **3** (1.1, henüz yüklenmedi) → sonraki **4**. Ayarlar'daki
+    "1.1 (3)" bu numarayı gösterir; TestFlight ile App Store sürümünü ve hata bildirimlerini ayırt etmeye yarar.
   - Mac: `Maccy.xcodeproj`. Mac App Store ile GitHub aynı numarayı kullanır. Yayınlanan son: **1** (Mac App
     Store 1.0 (1); GitHub 0.1.0 (1)) → sonraki **2**. Sparkle güncellemeyi bu numarayla anlar: küçülürse veya
     aynı kalırsa güncelleme görünmez.
