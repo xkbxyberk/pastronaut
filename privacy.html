@@ -24,7 +24,7 @@
   <article id="en" lang="en">
     <h1>Privacy Policy</h1>
     <p class="meta">
-      Effective October 18, 2026 · Last updated October 18, 2026 ·
+      Effective October 18, 2026 · Last updated October 20, 2026 ·
       <a href="https://github.com/xkbxyberk/pastronaut/commits/gh-pages/privacy.html">Version history</a> ·
       <a href="https://github.com/xkbxyberk/pastronaut">Source code</a>
     </p>
@@ -35,7 +35,7 @@
         <li>Pastronaut has <strong>no accounts, no servers, no analytics, no ads and no third-party SDKs</strong>. We don't sell, share or look at your data.</li>
         <li>Your clipboard history stays <strong>on your devices</strong> and, if you turn on sync, in the <strong>private iCloud database of your own Apple Account</strong>. We cannot access it.</li>
         <li>Clip text is <strong>encrypted on your device</strong> before it's uploaded; it is <strong>end-to-end encrypted</strong> when you turn on Apple's Advanced Data Protection.</li>
-        <li>The apps connect only to Apple's iCloud, to websites and Apple Maps for <strong>optional</strong> previews you turn on, and to GitHub to check for Mac updates.</li>
+        <li>The apps connect only to Apple's iCloud, to websites and Apple Maps for <strong>optional</strong> link and map previews (on by default since version 1.1; one switch turns them off), and to GitHub to check for Mac updates.</li>
         <li>The only personal data we ever receive is what you send us when you contact us, and crash reports if you choose to share them with developers in your device's settings.</li>
         <li>Pastronaut is open source, so you can check every statement here in the code.</li>
       </ul>
@@ -81,7 +81,7 @@
 
     <h2 id="en-device">3. On your devices</h2>
     <p>The Mac app watches the clipboard and keeps a history of what you copy, as any clipboard manager does. Copies that password managers and other apps mark as concealed or temporary are never saved, and you can add apps and types to ignore. The history lives in the app's own storage on your Mac; by default it keeps the latest 200 unpinned items, and you can choose a shorter time limit (for example one week). Text found in copied images is recognized on the Mac itself.</p>
-    <p>On iPhone and iPad, the app keeps the synced history in the app's storage and shares it with its own keyboard, widgets and Share extension through an App Group container on the device. If you turn on “Save Clipboard on Opening”, the app (and, with Full Access, its keyboard) saves new text from the clipboard when you open it; one-time codes, card numbers and IBANs are skipped. iOS shows its own notice when an app reads the clipboard.</p>
+    <p>On iPhone and iPad, the app keeps the synced history in the app's storage and shares it with its own keyboard, widgets and Share extension through an App Group container on the device. While “Save Clipboard on Opening” is on, the app (and, with Full Access, its keyboard) saves new text from the clipboard when you open it. Since version 1.1 it is on by default; in the app it starts once you finish or skip the setup guide; in version 1.0 it is off until you turn it on. You can turn it off in the app's Settings at any time; one-time codes, card numbers and IBANs are skipped. iOS shows its own notice when an app reads the clipboard.</p>
 
     <h2 id="en-icloud">4. iCloud sync</h2>
     <ul>
@@ -95,7 +95,7 @@
     <h2 id="en-keyboard">5. iPhone keyboard and Full Access</h2>
     <p>When you allow Full Access, iOS warns that a keyboard could transmit what you type. Here is exactly what Pastronaut's keyboard does with it:</p>
     <ul>
-      <li><strong>Why it asks:</strong> to read and update the history it shares with the Pastronaut app, to fetch your latest clips from your own iCloud database, to save a new copy when you tap Paste (or on opening, if you turned that on), and to pin or delete items.</li>
+      <li><strong>Why it asks:</strong> to read and update the history it shares with the Pastronaut app, to fetch your latest clips from your own iCloud database, to save a new copy when you tap Paste (or on opening, while “Save Clipboard on Opening” is on), and to pin or delete items.</li>
       <li><strong>What it never does:</strong> it doesn't record, store or send what you type, has no other network connection than your own iCloud, and doesn't use your typing for anything else.</li>
       <li><strong>Without Full Access</strong> the keyboard still shows the history the app last saved and types any item; it can't save new copies, change pins or fetch from iCloud.</li>
     </ul>
@@ -104,7 +104,7 @@
     <p>Widgets show your latest clips on the Home Screen and Lock Screen; with the Face ID lock on, they hide clip text. Shortcuts actions, Siri, the Control Center button and the Share extension run on your device and only read or save clips at your request. Spotlight indexing is off by default; when on, it adds only pinned items to your device's search index. Face ID is handled by iOS; the app only receives a yes or no.</p>
 
     <h2 id="en-previews">7. Optional link and map previews (iPhone and iPad)</h2>
-    <p>Previews are off until you choose to show them. When on:</p>
+    <p>Since version 1.1, previews are on by default: the first page of the setup guide shows a switch for them, and you can turn them off at any time in Settings. In version 1.0 they are off until you choose to show them. When on:</p>
     <ul>
       <li>for a copied link, your device loads the page directly from that website to show its title and image. The website sees an ordinary request from your device, including your IP address. Links that look like sign-in, password-reset, verification or other one-time links are never opened;</li>
       <li>for a copied address, the address text is sent to Apple Maps to find it on a map, under <a href="https://www.apple.com/legal/privacy/data/en/apple-maps/">Apple's Maps privacy terms</a>. Copied coordinates are used directly.</li>
@@ -179,7 +179,7 @@
   <article id="tr" lang="tr">
     <h1>Gizlilik Politikası</h1>
     <p class="meta">
-      Yürürlük: 18 Ekim 2026 · Son güncelleme: 18 Ekim 2026 ·
+      Yürürlük: 18 Ekim 2026 · Son güncelleme: 20 Ekim 2026 ·
       <a href="https://github.com/xkbxyberk/pastronaut/commits/gh-pages/privacy.html">Sürüm geçmişi</a> ·
       <a href="https://github.com/xkbxyberk/pastronaut">Kaynak kod</a>
     </p>
@@ -190,7 +190,7 @@
         <li>Pastronaut'ta <strong>hesap, sunucu, analiz, reklam ve üçüncü taraf SDK yoktur</strong>. Verilerini satmayız, paylaşmayız, onlara bakmayız.</li>
         <li>Pano geçmişin <strong>cihazlarında</strong> ve eşitlemeyi açarsan <strong>kendi Apple Hesabının özel iCloud veritabanında</strong> durur. Biz ona erişemeyiz.</li>
         <li>Öğe metinleri yüklenmeden önce <strong>cihazında şifrelenir</strong>; Apple'ın Gelişmiş Veri Koruması'nı açarsan <strong>uçtan uca şifreli</strong> olur.</li>
-        <li>Uygulamalar yalnızca Apple'ın iCloud'una, <strong>isteğe bağlı</strong> önizlemeler için web sitelerine ve Apple Haritalar'a, Mac güncellemeleri için de GitHub'a bağlanır.</li>
+        <li>Uygulamalar yalnızca Apple'ın iCloud'una, <strong>isteğe bağlı</strong> bağlantı ve harita önizlemeleri için (1.1 sürümünden itibaren varsayılan olarak açık; tek dokunuşla kapanır) web sitelerine ve Apple Haritalar'a, Mac güncellemeleri için de GitHub'a bağlanır.</li>
         <li>Elimize geçen tek kişisel veri, bize yazdığında gönderdiklerin ve cihaz ayarlarında geliştiricilerle paylaşmayı seçersen çökme raporlarıdır.</li>
         <li>Pastronaut açık kaynaktır; buradaki her ifadeyi kodda doğrulayabilirsin.</li>
       </ul>
@@ -236,7 +236,7 @@
 
     <h2 id="tr-device">3. Cihazlarında</h2>
     <p>Mac uygulaması, her pano yöneticisi gibi panoyu izler ve kopyaladıklarının geçmişini tutar. Parola yöneticilerinin ve başka uygulamaların gizli ya da geçici diye işaretlediği kopyalar hiç kaydedilmez; yok sayılacak uygulama ve türler ekleyebilirsin. Geçmiş, uygulamanın Mac'teki kendi depolama alanında durur; varsayılan olarak sabitlenmemiş son 200 öğeyi tutar, istersen daha kısa bir süre sınırı seçebilirsin (örneğin bir hafta). Kopyalanan görsellerdeki metin Mac'in kendisinde tanınır.</p>
-    <p>iPhone ve iPad'de uygulama, eşitlenen geçmişi kendi depolama alanında tutar ve cihazdaki bir App Group alanı üzerinden yalnızca kendi klavyesi, widget'ları ve Paylaş uzantısıyla paylaşır. “Açılınca Panoyu Kaydet”i açarsan uygulama (ve Tam Erişim'le klavyesi) açıldığında panodaki yeni metni kaydeder; tek kullanımlık kodlar, kart numaraları ve IBAN'lar atlanır. Bir uygulama panoyu okuduğunda iOS kendi bildirimini gösterir.</p>
+    <p>iPhone ve iPad'de uygulama, eşitlenen geçmişi kendi depolama alanında tutar ve cihazdaki bir App Group alanı üzerinden yalnızca kendi klavyesi, widget'ları ve Paylaş uzantısıyla paylaşır. “Açılınca Panoyu Kaydet” açıkken uygulama (ve Tam Erişim'le klavyesi) açıldığında panodaki yeni metni kaydeder. 1.1 sürümünden itibaren bu ayar varsayılan olarak açıktır; uygulamada, kurulum rehberini bitirdiğinde ya da atladığında devreye girer; 1.0 sürümünde sen açana kadar kapalıdır. Uygulamanın Ayarlar'ından istediğin zaman kapatabilirsin; tek kullanımlık kodlar, kart numaraları ve IBAN'lar atlanır. Bir uygulama panoyu okuduğunda iOS kendi bildirimini gösterir.</p>
 
     <h2 id="tr-icloud">4. iCloud eşitlemesi</h2>
     <ul>
@@ -250,7 +250,7 @@
     <h2 id="tr-keyboard">5. iPhone klavyesi ve Tam Erişim</h2>
     <p>Tam Erişim'e izin verdiğinde iOS, bir klavyenin yazdıklarını gönderebileceği uyarısını gösterir. Pastronaut klavyesinin bu izinle tam olarak yaptıkları:</p>
     <ul>
-      <li><strong>Neden ister:</strong> Pastronaut uygulamasıyla paylaştığı geçmişi okumak ve güncellemek, en yeni öğeleri kendi iCloud veritabanından almak, Yapıştır'a dokunduğunda (ya da bunu açtıysan açılışta) yeni kopyayı kaydetmek, öğe sabitlemek ve silmek için.</li>
+      <li><strong>Neden ister:</strong> Pastronaut uygulamasıyla paylaştığı geçmişi okumak ve güncellemek, en yeni öğeleri kendi iCloud veritabanından almak, Yapıştır'a dokunduğunda (ya da “Açılınca Panoyu Kaydet” açıkken açılışta) yeni kopyayı kaydetmek, öğe sabitlemek ve silmek için.</li>
       <li><strong>Asla yapmadıkları:</strong> yazdıklarını kaydetmez, saklamaz, göndermez; kendi iCloud'un dışında hiçbir ağ bağlantısı kurmaz; yazdıklarını başka hiçbir amaçla kullanmaz.</li>
       <li><strong>Tam Erişim olmadan</strong> klavye, uygulamanın en son kaydettiği geçmişi gösterir ve istediğin öğeyi yazar; yeni kopya kaydedemez, sabitleme değiştiremez, iCloud'dan veri alamaz.</li>
     </ul>
@@ -259,7 +259,7 @@
     <p>Widget'lar son öğelerini Ana Ekran'da ve Kilitli Ekran'da gösterir; Face ID kilidi açıksa öğe metnini gizler. Kestirmeler eylemleri, Siri, Denetim Merkezi düğmesi ve Paylaş uzantısı cihazında çalışır ve öğeleri yalnızca senin isteğinle okur ya da kaydeder. Spotlight dizinlemesi varsayılan olarak kapalıdır; açıkken yalnızca sabitlenen öğeleri cihazının aramasına ekler. Face ID'yi iOS yürütür; uygulama yalnızca evet ya da hayır yanıtı alır.</p>
 
     <h2 id="tr-previews">7. İsteğe bağlı bağlantı ve harita önizlemeleri (iPhone ve iPad)</h2>
-    <p>Önizlemeler sen göstermeyi seçene kadar kapalıdır. Açıkken:</p>
+    <p>1.1 sürümünden itibaren önizlemeler varsayılan olarak açıktır: kurulum rehberinin ilk sayfası bunlar için bir anahtar gösterir, Ayarlar'dan da istediğin zaman kapatabilirsin. 1.0 sürümünde sen göstermeyi seçene kadar kapalıdır. Açıkken:</p>
     <ul>
       <li>kopyaladığın bir bağlantı için cihazın, başlığını ve görselini göstermek üzere sayfayı doğrudan o siteden yükler. Site, cihazından gelen sıradan bir isteği ve IP adresini görür. Giriş, parola sıfırlama, doğrulama ya da başka tek kullanımlık görünen bağlantılar hiç açılmaz;</li>
       <li>kopyaladığın bir adres için adres metni, haritada bulunması için <a href="https://www.apple.com/legal/privacy/data/tr/apple-maps/">Apple Haritalar'ın gizlilik koşullarıyla</a> Apple Haritalar'a gönderilir. Kopyalanan koordinatlar doğrudan kullanılır.</li>
