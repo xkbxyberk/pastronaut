@@ -425,12 +425,30 @@ struct LicensesView: View {
 /// The export as a file for the share sheet (Save to Files, AirDrop, Mail…).
 struct ArchiveFile: Transferable {
   let archive: ClipArchive
+  var fileName = ClipArchive.suggestedFileName()
 
   static var transferRepresentation: some TransferRepresentation {
     DataRepresentation(exportedContentType: .json) { file in
       try file.archive.encoded()
     }
-    .suggestedFileName(ClipArchive.suggestedFileName())
+    .suggestedFileName { $0.fileName }
+  }
+}
+
+/// "Export Collection": one collection's clips as an export file, for Files, AirDrop or Mail. Imports with
+/// Settings › Import on another iPhone or Mac.
+struct ExportCollectionLink: View {
+  @Environment(ClipStore.self) private var store
+  let collection: ClipCollection
+
+  var body: some View {
+    let fileName = ClipArchive.suggestedFileName(for: collection)
+    ShareLink(
+      item: ArchiveFile(archive: ClipArchive(collection: collection, from: store.clips), fileName: fileName),
+      preview: SharePreview(Text(verbatim: fileName), image: Image(systemName: "doc.text"))
+    ) {
+      Label("Export Collection…", systemImage: "square.and.arrow.up")
+    }
   }
 }
 

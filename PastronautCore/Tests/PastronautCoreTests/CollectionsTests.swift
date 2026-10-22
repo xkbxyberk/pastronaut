@@ -175,6 +175,21 @@ import Testing
     #expect(read.clips.first { $0.pinned }?.collections == ["col-1"])
   }
 
+  @Test func oneCollectionOnItsOwn() throws {
+    let other = ClipCollection(id: "col-2", name: "İş", order: 2, createdAt: date)
+    let mixed = clips + [Clip(text: "only work", sourceDevice: .mac, firstCopiedAt: date, collectionIDs: ["col-1", "col-2"])]
+    let archive = ClipArchive(collection: collections[0], from: mixed, exportedAt: date)
+    #expect(archive.collections.map(\.name) == ["Adresler"])
+    #expect(Set(archive.clips.map(\.text)) == ["Kadıköy, İstanbul", "only work"])
+    // The other collection doesn't travel with its clips.
+    #expect(archive.clips.allSatisfy { $0.collections == ["col-1"] })
+    let plan = archive.importPlan(existingClips: [], existingCollections: [other], device: .iphone, now: now)
+    #expect(plan.collections.map(\.name) == ["Adresler"])
+    #expect(ClipArchive.suggestedFileName(for: other, on: date).hasPrefix("Pastronaut İş "))
+    let slashed = ClipCollection(id: "col-3", name: "a/b: c", order: 3, createdAt: date)
+    #expect(!ClipArchive.suggestedFileName(for: slashed, on: date).contains("/"))
+  }
+
   @Test func rejectsOtherFiles() {
     #expect(throws: ClipArchive.ReadError.notAnArchive) { try ClipArchive.decode(Data("[1,2]".utf8)) }
     #expect(throws: ClipArchive.ReadError.notAnArchive) { try ClipArchive.decode(Data("not json".utf8)) }

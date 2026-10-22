@@ -171,6 +171,7 @@ struct ScopeSidebar: View {
             }
             .contextMenu {
               Button("Rename…", systemImage: "pencil") { actions.rename(collection) }
+              ExportCollectionLink(collection: collection)
               Button("Delete…", systemImage: "trash", role: .destructive) { actions.deleting = collection }
             }
         }

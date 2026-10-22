@@ -91,13 +91,22 @@ Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: �
 4. ✅ **iPhone 1.1 (3) onaylandı ve App Store'da yayında** (kullanıcı, 2026-10-22).
 5. ⏳ **Mac App Store 1.0 (1): "In Review"** (2026-10-22). Onay gelince yayınlanır; ret gelirse düzeltme 1.0 (2).
 
-**Sıradaki:** iPhone 1.2 (build 4), yalnızca iPhone kanalı; plan `IOS-1.2-PLAN.md`.
-1.2 yayından önce: (a) ✅ CloudKit şemasında `Clip.title` ve `Clip.titleModifiedAt` (ve `titleModifiedAt` için
-queryable/sortable dizinleri) Production'a gönderildi (kullanıcı, 2026-10-22; Production'da doğrulandı); (b) güncellenmiş gizlilik politikası
-(`docs/site/privacy.html`, 22 Ekim; kamera, başlıklar, iPhone gizlilik seçenekleri, Eylem uzantısı) 1.2 incelemeye
-gönderilmeden önce kullanıcı onayıyla `gh-pages`'e yayınlanır; (c) App Store "What's New" ve inceleme notu: kamera
-izni yalnızca Metni Tara / Belge Tara içindir. Mac işleri ayrı:
+**iPhone 1.2 (build 4), hazırlık 2026-10-22.** Yalnızca iPhone kanalı; plan `IOS-1.2-PLAN.md`. Mac işleri ayrı:
 `MAC-1.3-PLAN.md` (Mac'in sıradaki görünen sürümü 1.3, derleme 2).
+1. ✅ CloudKit şemasında `Clip.title` ve `Clip.titleModifiedAt` (ve `titleModifiedAt` için queryable/sortable
+   dizinleri) Production'a gönderildi (kullanıcı, 2026-10-22; Production'da doğrulandı).
+2. ✅ `MARKETING_VERSION` 1.2, `CURRENT_PROJECT_VERSION` 4 (`iOS/project.yml`). Release derlemesi hatasız; uygulama
+   ve beş uzantının hepsi 1.2 (4) ve gizlilik bildirimli; Kestirme metinlerinde Apple ürün adı yok (ITMS-90626).
+3. ✅ Mağaza metinleri `APPSTORE.md`: iPhone açıklaması (§6), What's New 1.2 (§8), inceleme notu 1.2 (§13: kamera
+   yalnızca tarama için, Eylem uzantısı, ekran kaydı örtüsü), App Privacy notu (§10, hâlâ "Data Not Collected").
+4. ⏳ Gizlilik politikası (`docs/site/privacy.html`, 22 Ekim; kamera, başlıklar, iPhone gizlilik seçenekleri, Eylem
+   uzantısı) 1.2 incelemeye gönderilmeden önce kullanıcı onayıyla `gh-pages`'e yayınlanır.
+5. ⏳ Ekran görüntüleri: 1.1 görselleri eski kart tasarımını gösteriyor. Yeni tasarımla yeniden üretmek önerildi
+   (`storeShots`, `PT_DEMO`); güncelleme için zorunlu değil.
+6. ⏳ Kullanıcı "yükle" deyince arşiv ve yükleme (`SURUM.md` kanal 1). Eylem simgesi saydam (şablon); App Store
+   doğrulaması bunu kabul etmezse burada görülür.
+7. ⏳ Kullanıcı: App Store Connect › iOS App › "+" › 1.2; What's New ve inceleme notu; TestFlight'ta deneme (Production'da
+   başlık ver, Ayarlar › Eşitleme'de hata yok; Metni Tara; Pastronaut'a Kaydet); build seçimi ve incelemeye gönderme.
 
 **Sürüm kuralı (2026-10-18'den sonra):** her sürüm üç kanalda çıkar (iPhone, Mac App Store, Mac GitHub/Sparkle);
 adımlar `SURUM.md`'de. Görünen sürüm: iPhone 1.1, Mac 1.0 (Mac'in sıradaki sürümü en az 1.2). Sıradaki derleme

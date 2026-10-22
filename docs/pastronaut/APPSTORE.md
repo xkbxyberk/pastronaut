@@ -1,4 +1,4 @@
-# App Store: Pastronaut for iPhone and Mac (v3, 2026-10-18)
+# App Store: Pastronaut for iPhone and Mac (v4, 2026-10-22: iPhone 1.2)
 
 Copy-ready App Store Connect metadata for one product on two devices, the research behind it, and every form
 answer. Character counts were measured. Everything describes the app as it is at this commit.
@@ -106,7 +106,8 @@ answer. Character counts were measured. Everything describes the app as it is at
 - **Category:** Productivity (primary), Utilities (secondary). **Content rights:** Yes, because link previews show
   page titles and images.
 - **Bundle ID:** `com.xkbxyberk.pastronaut`.
-  - The extensions' App IDs (`.keyboard`, `.share`, `.widgets`) were created by Xcode and ship inside the app.
+  - The extensions' App IDs (`.keyboard`, `.share`, `.widgets`, and `.action` since 1.2) were created by Xcode and
+    ship inside the app.
 - **SKU:** `pastronaut-ios`.
 - **URLs:**
   - Privacy: https://xkbxyberk.github.io/pastronaut/privacy.html
@@ -149,36 +150,43 @@ answer. Character counts were measured. Everything describes the app as it is at
 
 English (U.K.) uses the English texts; only "organizer" becomes "organiser" if it appears.
 
-## 6. Description: iPhone
+## 6. Description: iPhone (1.2)
+About 2,900 characters each (limit 4,000). The 1.1 text is in git history.
+
 ### English
 ```
 Your iPhone remembers only the last thing you copied. Pastronaut remembers what you save — and its keyboard pastes any of it, in any app, with one tap. Use it on its own, or with Pastronaut for Mac to have your Mac's clipboard on your iPhone too.
 
 PASTE ANYTHING, IN ANY APP
-– The Pastronaut keyboard shows your clips in a tidy two-column grid, newest first
+– The Pastronaut keyboard shows your clips in a tidy two-column grid, newest first, with link and map thumbnails
 – The latest copy from your Mac waits at the top
 – Tabs for recent, pinned, Mac, iPhone and each collection; search with letters and numbers
+– Paste a list in order: select clips, start a queue, and every tap on the keyboard types the next one
 
 SAVE IN ONE TAP
 iOS lets only the app in front read the clipboard, so Pastronaut makes saving one tap:
 – Open the app ("Save Clipboard on Opening")
 – Tap Paste in the Pastronaut keyboard
-– Share text to Pastronaut from any app
+– Share text or links to Pastronaut, or tap "Save to Pastronaut" in the share sheet
 – Use the Control Center button, Back Tap or the Action button
-– Or type a new clip with +
+– Type a new clip with +, or touch and hold + to scan text or a document with the camera
 
 EVERY KIND, ITS OWN CARD
 – Addresses and map coordinates: a map and Get Directions
 – Links: a page preview (sign-in and reset links are never opened)
 – Code in color, colors as swatches, Call and Write Email buttons
+– Give any clip a title, so it is easy to spot and to find
 – Prefer it calm? Turn previews off for a compact list
 
 PIN, COLLECT, FIND
-– Pin what you reuse; keep addresses, snippets or a project's links in collections
-– Search by text, or filter by kind and date
+– Pin what you reuse; keep addresses, snippets or a project's links in collections, and export a collection as a file
+– Search by text or title, or filter by kind and date
+– Combine several clips into one and copy it
+– Deleted something by mistake? Undo
 
-WIDGETS AND SHORTCUTS
+WIDGETS, CONTROLS AND SHORTCUTS
 – Recent clips on the Home Screen (also from one collection), the latest on the Lock Screen
+– Control Center: save the clipboard, or pause saving for a while
 – Shortcuts: Get Clip, Get Latest Clip, Copy Latest Clip, Get Recent Clips, Save to Pastronaut, Add to Collection
 
 ON YOUR MAC TOO
@@ -187,7 +195,9 @@ Pastronaut for Mac keeps your whole history in the menu bar — press Space to p
 PRIVATE BY DESIGN
 – No account, no servers, no analytics, no ads
 – Your clips stay on your devices and in your private iCloud database; text is encrypted on your device before upload, and end-to-end with Advanced Data Protection
-– Optional Face ID lock; one-time codes, card numbers and IBANs are never saved automatically
+– Optional Face ID lock; your clips are covered while the screen is recorded
+– One-time codes, card numbers and IBANs are never saved automatically, and the ones you save can stay on this iPhone only
+– Scanning reads the text on your iPhone; no photo is kept
 
 FREE AND OPEN SOURCE
 No subscription and no in-app purchases. The source code is public.
@@ -198,30 +208,35 @@ No subscription and no in-app purchases. The source code is public.
 iPhone yalnızca son kopyaladığın şeyi hatırlar. Pastronaut kaydettiklerini hatırlar; klavyesi de istediğini her uygulamada tek dokunuşla yapıştırır. Tek başına kullan ya da Pastronaut for Mac ile Mac'inin panosu da iPhone'unda olsun.
 
 HER ŞEYİ, HER UYGULAMADA YAPIŞTIR
-– Pastronaut klavyesi öğelerini en yenisi başta, iki sütunlu düzenli bir ızgarada gösterir
+– Pastronaut klavyesi öğelerini en yenisi başta, bağlantı ve harita küçük resimleriyle iki sütunlu düzenli bir ızgarada gösterir
 – Mac'ten gelen son kopya en üstte seni bekler
 – Son, sabitlenenler, Mac, iPhone ve her koleksiyon için sekmeler; harf ve rakamla arama
+– Bir listeyi sırayla yapıştır: öğeleri seç, sırayı başlat; klavyede her dokunuş sıradakini yazar
 
 TEK DOKUNUŞLA KAYDET
 iOS panoyu yalnızca öndeki uygulamanın okumasına izin verir; Pastronaut kaydetmeyi tek dokunuşa indirir:
 – Uygulamayı aç ("Açılınca Panoyu Kaydet")
 – Pastronaut klavyesinde Yapıştır'a dokun
-– Herhangi bir uygulamadan metni Pastronaut'la paylaş
+– Metni ya da bağlantıyı Pastronaut'la paylaş ya da paylaşım sayfasında "Pastronaut'a Kaydet"e dokun
 – Denetim Merkezi düğmesini, Arkaya Dokun'u ya da Eylem düğmesini kullan
-– Ya da + ile yeni bir öğe yaz
+– + ile yeni bir öğe yaz ya da +'ya basılı tutup kamerayla metin veya belge tara
 
 HER TÜRE KENDİ KARTI
 – Adres ve harita koordinatı: harita ve Yol Tarifi (Türk adreslerini de tanır)
 – Bağlantı: sayfa önizlemesi (giriş ve şifre sıfırlama bağlantıları hiç açılmaz)
 – Renkli kod, renk örnekleri, Ara ve E-posta Yaz düğmeleri
+– Her öğeye bir başlık ver; kolayca göz at, kolayca bul
 – Sade mi istersin? Önizlemeleri kapat, kompakt liste olsun
 
 SABİTLE, KOLEKSİYONLA, BUL
-– Sık kullandıklarını sabitle; adresleri, parçacıkları ya da bir projenin bağlantılarını koleksiyonlarda tut
-– Metinle ara ya da türe ve tarihe göre süz
+– Sık kullandıklarını sabitle; adresleri, parçacıkları ya da bir projenin bağlantılarını koleksiyonlarda tut, bir koleksiyonu dosya olarak dışa aktar
+– Metinle ya da başlıkla ara, türe ve tarihe göre süz
+– Birkaç öğeyi birleştirip tek seferde kopyala
+– Yanlışlıkla mı sildin? Geri al
 
-WIDGET'LAR VE KESTİRMELER
+WIDGET'LAR, DENETİMLER VE KESTİRMELER
 – Ana Ekran'da son öğeler (bir koleksiyondan da), Kilitli Ekran'da son öğe
+– Denetim Merkezi: panoyu kaydet ya da kaydetmeyi bir süre duraklat
 – Kestirmeler: Öğe Al, Son Öğeyi Al, Son Öğeyi Kopyala, Son Öğeleri Al, Pastronaut'a kaydet, Koleksiyona Ekle
 
 MAC'İNDE DE
@@ -230,7 +245,9 @@ Pastronaut for Mac tüm geçmişini menü çubuğunda tutar — Space ile önizl
 GİZLİLİK ÖNCELİKLİ
 – Hesap yok, sunucu yok, analiz yok, reklam yok
 – Öğelerin cihazlarında ve özel iCloud veritabanında kalır; metin yüklenmeden önce cihazında şifrelenir, Gelişmiş Veri Koruması açıksa uçtan uca şifrelidir
-– İsteğe bağlı Face ID kilidi; tek kullanımlık kodlar, kart numaraları ve IBAN'lar kendiliğinden kaydedilmez
+– İsteğe bağlı Face ID kilidi; ekran kaydedilirken öğelerin örtülür
+– Tek kullanımlık kodlar, kart numaraları ve IBAN'lar kendiliğinden kaydedilmez; kaydettiklerin istersen yalnızca bu iPhone'da kalır
+– Tarama metni iPhone'unda okur; fotoğraf saklanmaz
 
 ÜCRETSİZ VE AÇIK KAYNAK
 Abonelik yok, uygulama içi satın alma yok. Kaynak kodu herkese açık.
@@ -347,6 +364,45 @@ Pastronaut 1.1: daha az gizem, daha çok pano.
 • Bağlantı önizlemeleri ve Açılınca Panoyu Kaydet artık açık başlıyor. Kapalı mı seversin? Ayarlar'da tek dokunuş.
 ```
 
+### 1.2 (iPhone only; build 4)
+Same light tone as 1.1. Same English text for English (U.S.) and English (U.K.).
+
+English:
+```
+Pastronaut 1.2: a fresh coat of paint and a pocket full of new tricks.
+
+• A new look: your history is a tidy grid of equal cards with page and map thumbnails, and the list got a makeover too. The keyboard matches.
+• Scan Text and Scan Document: touch and hold + and point the camera. The text is read right on your iPhone.
+• Give a clip a title, so "that address" finally has a name. Titles show up in search.
+• Paste a list in order: select clips, choose More › Start Queue, and the keyboard types them one by one, oldest first. ✕ ends it early.
+• Combine & Copy joins the clips you select into one, and saves the result as a new clip.
+• "Save to Pastronaut" now lives in the share sheet's actions. Share several links at once, and drop them into a collection right after saving.
+• Pause Saving for 15 minutes, an hour or longer, from Settings or Control Center.
+• Your clips are covered while the screen is recorded, and can hide in the app switcher too.
+• Keep one-time codes and card numbers on this iPhone only, if you prefer.
+• Deleted by mistake? Undo. Every clip's menu also has Show in History, Open Link and Edit.
+• Export a single collection as a file.
+• Clearing iCloud no longer takes your clips with it: they stay "Only on This iPhone" until you upload them again.
+```
+
+Türkçe:
+```
+Pastronaut 1.2: yeni bir kat boya ve cep dolusu yeni numara.
+
+• Yeni görünüm: geçmişin sayfa ve harita küçük resimli, eşit kartlardan oluşan düzenli bir ızgara; liste de yenilendi. Klavye de onlara uydu.
+• Metni Tara ve Belge Tara: +'ya basılı tut, kamerayı tut. Metin doğrudan iPhone'unda okunuyor.
+• Öğelere başlık ver; "o adres"in nihayet bir adı olsun. Başlıklar aramada da çıkıyor.
+• Bir listeyi sırayla yapıştır: öğeleri seç, Diğer › Sırayı Başlat de; klavye onları en eskisinden başlayarak tek tek yazsın. ✕ ile erken bitir.
+• Birleştirip Kopyala seçtiğin öğeleri tek metinde topluyor ve sonucu yeni bir öğe olarak kaydediyor.
+• "Pastronaut'a Kaydet" artık paylaşım sayfasının eylemlerinde. Birkaç bağlantıyı birden paylaş, kaydeder kaydetmez bir koleksiyona at.
+• Kaydetmeyi 15 dakika, bir saat ya da daha uzun süre duraklat: Ayarlar'dan ya da Denetim Merkezi'nden.
+• Ekran kaydedilirken öğelerin örtülüyor; istersen uygulama değiştiricide de gizleniyor.
+• İstersen tek kullanımlık kodları ve kart numaralarını yalnızca bu iPhone'da tut.
+• Yanlışlıkla mı sildin? Geri Al. Her öğenin menüsünde artık Geçmişte Göster, Bağlantıyı Aç ve Düzenle de var.
+• Tek bir koleksiyonu dosya olarak dışa aktar.
+• iCloud'u temizlemek artık öğelerini de götürmüyor: yeniden yükleyene kadar "Yalnızca Bu iPhone'da" kalıyorlar.
+```
+
 ## 9. Pictures
 All pictures use made-up clips only. They are made in four steps:
 1. iPhone shots, in each language: SyncStepTests `storeShots` (`PT_SHOTS_LANG` = en / tr).
@@ -406,7 +462,10 @@ Not needed: the first release is iPhone-only. iPad comes back after it is tested
   - Data in the user's own CloudKit private database and Apple Maps lookups are Apple's services.
   - Crash reports shared through Apple's opt-in aren't "collected" by the developer.
 - **Tracking:** No.
-- **Privacy manifest:** in the iPhone app, keyboard, widgets and Share extension, and in the Mac App Store build.
+- **Privacy manifest:** in the iPhone app, keyboard, widgets, Share and Save to Pastronaut (action, 1.2) extensions,
+  and in the Mac App Store build.
+- **Camera (1.2):** used only while the user scans text or a document; the text is read on the device and nothing
+  is stored or sent. Still "Data Not Collected".
 
 ## 11. Age rating (expected 4+)
 - **Features:** No to every question:
@@ -422,7 +481,18 @@ Not needed: the first release is iPhone-only. iPad comes back after it is tested
 HTTPS). Not legal advice.
 
 ## 13. App Review notes
-### iPhone (1.1 and later)
+### iPhone (1.2)
+The 1.1 text below, plus this block after "The app can be shown in English or Turkish":
+```
+New in 1.2:
+- Camera: used only for Scan Text and Scan Document (touch and hold the + button at the bottom of the history). Text recognition runs on the device; no photo or video is stored or sent. The camera permission is asked the first time a scan starts.
+- "Save to Pastronaut" is an Action extension in the share sheet. Like the Share extension, it saves the shared text or links to the user's history; nothing else is read.
+- Hide During Screen Recording is on by default. If you record the screen while reviewing, the history is covered with a notice; tap "Show Anyway", or turn it off in Settings › Privacy.
+- Pause Saving (Settings, or the Control Center control) stops automatic saving for the chosen time. Explicit saves still work.
+- Paste a list in order: in the history tap Select, choose some clips, then More › Start Queue. In the Pastronaut keyboard a wide key then types the next clip on each tap.
+```
+
+### iPhone (1.1)
 ```
 Pastronaut is a clipboard manager and clipboard keyboard for iPhone. It works on its own; the Mac app is optional. No account or sign-in is needed.
 

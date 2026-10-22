@@ -54,6 +54,16 @@ public struct ClipArchive: Codable, Equatable, Sendable {
     }
   }
 
+  /// One collection on its own ("Export Collection"), to keep or hand to someone: only its clips, and no other
+  /// collection. Imports like any export: into a collection of the same name.
+  public init(collection: ClipCollection, from clips: [Clip], exportedAt: Date = .now) {
+    self.init(
+      clips: clips.filter { $0.collectionIDs.contains(collection.id) },
+      collections: [collection],
+      exportedAt: exportedAt
+    )
+  }
+
   public func encoded() throws -> Data {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
@@ -83,6 +93,16 @@ public struct ClipArchive: Codable, Equatable, Sendable {
   public static func suggestedFileName(on date: Date = .now) -> String {
     let day = date.formatted(.iso8601.year().month().day())
     return "Pastronaut \(day).json"
+  }
+
+  /// A file name such as "Pastronaut Adresler 2026-10-22.json"; characters a file name can't hold become spaces.
+  public static func suggestedFileName(for collection: ClipCollection, on date: Date = .now) -> String {
+    let day = date.formatted(.iso8601.year().month().day())
+    let name = collection.name
+      .map { "/\\:".contains($0) || $0.isNewline ? " " : String($0) }
+      .joined()
+      .trimmingCharacters(in: .whitespaces)
+    return name.isEmpty ? "Pastronaut \(day).json" : "Pastronaut \(name) \(day).json"
   }
 
   /// What importing this file into a history changes.

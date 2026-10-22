@@ -16,8 +16,8 @@ settings:
     # English is the base language; translations live in each target's Localizable.xcstrings.
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_EMIT_LOC_STRINGS: YES
-    MARKETING_VERSION: "1.1"  # Same version on iPhone, Mac App Store and GitHub; see docs/pastronaut/SURUM.md
-    CURRENT_PROJECT_VERSION: "3"
+    MARKETING_VERSION: "1.2"  # Same version on iPhone, Mac App Store and GitHub; see docs/pastronaut/SURUM.md
+    CURRENT_PROJECT_VERSION: "4"
 targets:
   Pastronaut:
     type: application

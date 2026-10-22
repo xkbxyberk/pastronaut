@@ -156,6 +156,8 @@ struct ScopeBar: View {
           .accessibilityIdentifier("newCollectionChip")
         if let collection = selectedCollection {
           Button("Rename…", systemImage: "pencil") { actions.rename(collection) }
+          ExportCollectionLink(collection: collection)
+            .accessibilityIdentifier("exportCollection")
           Button("Delete…", systemImage: "trash", role: .destructive) { actions.deleting = collection }
         }
       }

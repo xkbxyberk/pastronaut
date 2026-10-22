@@ -2164,6 +2164,17 @@
         }
       }
     },
+    "Export Collection…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koleksiyonu Dışa Aktar…"
+          }
+        }
+      }
+    },
     "Export History": {
       "extractionState": "manual",
       "localizations": {

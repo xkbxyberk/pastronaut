@@ -510,7 +510,11 @@ Arayüz kodu yalnızca **Adım D**'de yazılır, ekran görüntüleri geldikten 
 > Cihazda tanıtım verisiyle denetlendi. Uçtan uca test (2026-10-22, son koşu): 35 geçti, T13 uyarı, T16 zamanlama
 > (Mac'in silmeleri 2 dk'yı aşınca geldi; hemen ardından T17 sayıları eşit, hata yok; bir önceki koşuda geçmişti).
 > T34 başlığın iCloud'a gittiğini doğruladı; başlık alanları Development şemasında oluştu. Eylem uzantısını kullanıcı
-> elle dener.
+> elle denedi (çalışıyor; tek renkli simgesi eklendi). Kullanıcı denemesinden sonra (`4e508b5`): Birleştirip Kopyala
+> sonucu yeni öğe olarak kaydediyor; sıra ve birleştirme kopyalama sırasıyla (en eski önce); klavyede ✕ ve uygulamada
+> "Sırayı Bitir". Koleksiyonu Dışa Aktar (karar 7) eklendi: koleksiyon menülerinde, yalnızca o koleksiyonun öğeleri.
+> **1.2'ye girmedi, sonraya:** iPhone'da saklama süresi ayarı, hafif klavye anlık görüntüsü, iPhone'da sürükleme
+> (`Transferable`; görsellerle 1.3'te).
 - Ad Ver ve bağlam menüsünde Düzenle; Geçmişte Göster ve vurgu.
 - Seçim çubuğunda Toplu Kopyala ve Sırayı Başlat.
 - Klavyede Sıra tuşu (K13'ü de düşünerek).
