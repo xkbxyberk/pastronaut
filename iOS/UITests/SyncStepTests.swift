@@ -83,6 +83,18 @@ final class SyncStepTests: XCTestCase {
       XCTAssertTrue(button.waitForExistence(timeout: 5), "delete action missing")
       button.tap()
       report(["ok": element.waitForNonExistence(timeout: 5)])
+    case "title":
+      // Touch and hold › Add Title…, type the title, Save (1.2).
+      let element = try existingRow()
+      element.press(forDuration: 1.0)
+      let action = app.buttons["titleAction"].firstMatch
+      XCTAssertTrue(action.waitForExistence(timeout: 5), "title action missing")
+      action.tap()
+      let field = app.textFields["titleField"].firstMatch
+      XCTAssertTrue(field.waitForExistence(timeout: 5), "title field missing")
+      field.typeText(env["PT_ACTION"] ?? "")
+      app.buttons["saveTitleButton"].firstMatch.tap()
+      report(["ok": row(env["PT_ACTION"] ?? "").waitForExistence(timeout: 10)])
     case "copy":
       try existingRow().tap()
       report(["ok": UIPasteboard.general.string == text])

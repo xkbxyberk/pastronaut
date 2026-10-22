@@ -552,6 +552,24 @@ def main():
           r.get("ok") and col_mac not in names and m1 in members, f"names={names} clipThere={m1 in members}")
     mac_state(op="deleteCollection", name=col_ios)
 
+    # 34. A title given on the iPhone reaches iCloud (1.2). Saving it also creates the title fields in the
+    #     Development schema, which must exist before they can be deployed to Production.
+    title = f"{prefix} title"
+    r = ios_step("title", n, action=title)
+    start = time.time()
+    entry = None
+    while time.time() - start < 60:
+        state = ios_file("clip-sync.json") or {}
+        entry = next((e for e in state.get("entries", {}).values() if n in e["clip"]["text"]), None)
+        if entry and entry["clip"].get("title") == title and entry.get("systemFields") and not entry.get("hasUnsentCopy"):
+            break
+        time.sleep(3)
+    status = ios_step("status")
+    check("T34", "Title given on iPhone is saved to iCloud",
+          r.get("ok") and entry is not None and entry["clip"].get("title") == title and not status.get("error"),
+          f"step={r}, title={entry and entry['clip'].get('title')}, sent={bool(entry and entry.get('systemFields'))}, "
+          f"error={status.get('error')!r}")
+
     # 15. Changes made while the Mac app is closed arrive when it starts.
     mac_quit()
     r1 = ios_step("save", g)

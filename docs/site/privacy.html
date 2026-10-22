@@ -24,7 +24,7 @@
   <article id="en" lang="en">
     <h1>Privacy Policy</h1>
     <p class="meta">
-      Effective October 18, 2026 · Last updated October 18, 2026 ·
+      Effective October 18, 2026 · Last updated October 22, 2026 ·
       <a href="https://github.com/xkbxyberk/pastronaut/commits/gh-pages/privacy.html">Version history</a> ·
       <a href="https://github.com/xkbxyberk/pastronaut">Source code</a>
     </p>
@@ -35,7 +35,8 @@
         <li>Pastronaut has <strong>no accounts, no servers, no analytics, no ads and no third-party SDKs</strong>. We don't sell, share or look at your data.</li>
         <li>Your clipboard history stays <strong>on your devices</strong> and, if you turn on sync, in the <strong>private iCloud database of your own Apple Account</strong>. We cannot access it.</li>
         <li>Clip text is <strong>encrypted on your device</strong> before it's uploaded; it is <strong>end-to-end encrypted</strong> when you turn on Apple's Advanced Data Protection.</li>
-        <li>The apps connect only to Apple's iCloud, to websites and Apple Maps for <strong>optional</strong> previews you turn on, and to GitHub to check for Mac updates.</li>
+        <li>The apps connect only to Apple's iCloud, to websites and Apple Maps for <strong>optional</strong> link and map previews (on by default since version 1.1; one switch turns them off), and to GitHub to check for Mac updates.</li>
+        <li>On iPhone, the <strong>camera</strong> is used only while you scan text or a document: the text is read on your iPhone, and no picture is kept or sent.</li>
         <li>The only personal data we ever receive is what you send us when you contact us, and crash reports if you choose to share them with developers in your device's settings.</li>
         <li>Pastronaut is open source, so you can check every statement here in the code.</li>
       </ul>
@@ -63,7 +64,7 @@
 
     <h2 id="en-who">1. Who we are and what this covers</h2>
     <p>Pastronaut is a free, open-source clipboard manager made by <strong>Berk Akbay</strong>, an individual developer in Türkiye (“we”, “us”). For the little personal data described in <a href="#en-contact-data">section 9</a>, he is the data controller. Contact: <a href="mailto:sberkakbay@gmail.com">sberkakbay@gmail.com</a>.</p>
-    <p>This policy covers Pastronaut for Mac, Pastronaut for iPhone and iPad, its keyboard, widgets, Control Center control, Share extension and Shortcuts actions, and this website. Pastronaut is based on the open-source app Maccy and is not affiliated with it.</p>
+    <p>This policy covers Pastronaut for Mac, Pastronaut for iPhone and iPad, its keyboard, widgets, Control Center controls, Share extension, “Save to Pastronaut” action and Shortcuts actions, and this website. Pastronaut is based on the open-source app Maccy and is not affiliated with it.</p>
 
     <h2 id="en-summary">2. Your data at a glance</h2>
     <div class="table-wrap">
@@ -73,6 +74,7 @@
           <tr><td>Clipboard history (text, links, images, files on the Mac), pins, collections, settings</td><td>Your devices</td><td>You</td><td>Delete items or clear the history in the app; removing the app removes them</td></tr>
           <tr><td>Synced text clips, pins and collections</td><td>Private database of your iCloud account (only if sync is on)</td><td>You; Apple stores it under its own policy; <strong>not us</strong></td><td>Delete in the app, “Delete iCloud Data” on the Mac, or iCloud settings › Manage Storage</td></tr>
           <tr><td>Link and map previews</td><td>Your iPhone (cache)</td><td>You</td><td>Turn previews off; they are removed from the device</td></tr>
+          <tr><td>Camera pictures while you scan text or a document</td><td>Only in your iPhone's memory while the text is read; never stored or sent</td><td>No one</td><td>Nothing to delete; only the text you save becomes a clip</td></tr>
           <tr><td>Messages you send us</td><td>Our email inbox or GitHub</td><td>Us</td><td>Ask us to delete them</td></tr>
           <tr><td>Crash reports you choose to share</td><td>Apple, shown to us without your identity</td><td>Apple and us</td><td>Stop sharing in your device's privacy settings</td></tr>
         </tbody>
@@ -81,35 +83,37 @@
 
     <h2 id="en-device">3. On your devices</h2>
     <p>The Mac app watches the clipboard and keeps a history of what you copy, as any clipboard manager does. Copies that password managers and other apps mark as concealed or temporary are never saved, and you can add apps and types to ignore. The history lives in the app's own storage on your Mac; by default it keeps the latest 200 unpinned items, and you can choose a shorter time limit (for example one week). Text found in copied images is recognized on the Mac itself.</p>
-    <p>On iPhone and iPad, the app keeps the synced history in the app's storage and shares it with its own keyboard, widgets and Share extension through an App Group container on the device. If you turn on “Save Clipboard on Opening”, the app (and, with Full Access, its keyboard) saves new text from the clipboard when you open it; one-time codes, card numbers and IBANs are skipped. iOS shows its own notice when an app reads the clipboard.</p>
+    <p>On iPhone and iPad, the app keeps the synced history in the app's storage and shares it with its own keyboard, widgets and Share extension through an App Group container on the device. While “Save Clipboard on Opening” is on, the app (and, with Full Access, its keyboard) saves new text from the clipboard when you open it. Since version 1.1 it is on by default; in the app it starts once you finish or skip the setup guide; in version 1.0 it is off until you turn it on. You can turn it off in the app's Settings at any time; one-time codes, card numbers and IBANs are skipped. iOS shows its own notice when an app reads the clipboard. “Pause Saving” (in Settings or Control Center) stops these automatic saves for a while.</p>
+    <p>If iCloud no longer has your history (for example its data was deleted, or the iPhone signed in to another Apple Account), the iPhone keeps its clips as “Only on This iPhone”; they are uploaded only if you choose “Upload to iCloud Again”. While the screen is recorded or shown on another display, the app covers your clips (“Hide During Screen Recording”, on by default); iOS only tells the app that this is happening, and the app records nothing.</p>
+    <p><strong>Scan Text and Scan Document</strong> (iPhone) use the camera only while the scanner is open, after iOS asks for your permission. The text is recognized on your iPhone with Apple's on-device text recognition. The camera pictures are not stored or sent; only the text you choose to save becomes a clip.</p>
 
     <h2 id="en-icloud">4. iCloud sync</h2>
     <ul>
       <li><strong>Off until you turn it on.</strong> When on, text clips, their pin state, the collections you create and their timestamps are synced through Apple's CloudKit to the <em>private</em> database of your Apple Account. Images and files are not synced.</li>
-      <li><strong>Encryption.</strong> Clip text, the source app and collection names are written to CloudKit's encrypted fields: they are encrypted on your device before upload, with keys kept in your iCloud Keychain. When you turn on <a href="https://support.apple.com/en-us/102651">Advanced Data Protection</a>, only your devices hold those keys (end-to-end encryption). Dates, the kind of clip (for example “link”), the device it came from and the pin state are stored without that extra encryption. Record names are derived with a key unique to your account, so they don't reveal the text.</li>
+      <li><strong>Encryption.</strong> Clip text, the titles you give clips, the source app and collection names are written to CloudKit's encrypted fields: they are encrypted on your device before upload, with keys kept in your iCloud Keychain. When you turn on <a href="https://support.apple.com/en-us/102651">Advanced Data Protection</a>, only your devices hold those keys (end-to-end encryption). Dates, the kind of clip (for example “link”), the device it came from and the pin state are stored without that extra encryption. Record names are derived with a key unique to your account, so they don't reveal the text.</li>
       <li><strong>Who can see it.</strong> We have no access to your private iCloud database and no copy of its contents. Apple stores it under the <a href="https://www.apple.com/legal/privacy/">Apple Privacy Policy</a> and iCloud terms.</li>
-      <li><strong>Optional filters.</strong> On the Mac you can keep one-time codes (also removed from the Mac after 5 minutes) and card numbers out of sync, or sync only pinned items.</li>
+      <li><strong>Optional filters.</strong> On the Mac you can keep one-time codes (also removed from the Mac after 5 minutes) and card numbers out of sync, or sync only pinned items. On the iPhone you can keep one-time codes, and card numbers and IBANs, on that iPhone: from then on they are saved there but never uploaded.</li>
       <li><strong>Retention.</strong> Synced items stay until you delete them; deleting or clearing on one device deletes them from iCloud and your other devices. Turning sync off doesn't delete iCloud data; use “Delete iCloud Data” in the Mac app's sync settings, or your device's iCloud settings › Manage Storage.</li>
     </ul>
 
     <h2 id="en-keyboard">5. iPhone keyboard and Full Access</h2>
     <p>When you allow Full Access, iOS warns that a keyboard could transmit what you type. Here is exactly what Pastronaut's keyboard does with it:</p>
     <ul>
-      <li><strong>Why it asks:</strong> to read and update the history it shares with the Pastronaut app, to fetch your latest clips from your own iCloud database, to save a new copy when you tap Paste (or on opening, if you turned that on), and to pin or delete items.</li>
+      <li><strong>Why it asks:</strong> to read and update the history it shares with the Pastronaut app, to fetch your latest clips from your own iCloud database, to save a new copy when you tap Paste (or on opening, while “Save Clipboard on Opening” is on), and to pin or delete items.</li>
       <li><strong>What it never does:</strong> it doesn't record, store or send what you type, has no other network connection than your own iCloud, and doesn't use your typing for anything else.</li>
       <li><strong>Without Full Access</strong> the keyboard still shows the history the app last saved and types any item; it can't save new copies, change pins or fetch from iCloud.</li>
     </ul>
 
     <h2 id="en-system">6. Widgets, Shortcuts, Share and Spotlight</h2>
-    <p>Widgets show your latest clips on the Home Screen and Lock Screen; with the Face ID lock on, they hide clip text. Shortcuts actions, Siri, the Control Center button and the Share extension run on your device and only read or save clips at your request. Spotlight indexing is off by default; when on, it adds only pinned items to your device's search index. Face ID is handled by iOS; the app only receives a yes or no.</p>
+    <p>Widgets show your latest clips on the Home Screen and Lock Screen; with the Face ID lock on, they hide clip text. Shortcuts actions, Siri, the Control Center controls (Save Clipboard, Pause Saving), the Share extension and the “Save to Pastronaut” action run on your device and only read or save clips at your request; Share can also put what you share into one of your collections. Spotlight indexing is off by default; when on, it adds only pinned items to your device's search index. Face ID is handled by iOS; the app only receives a yes or no.</p>
 
     <h2 id="en-previews">7. Optional link and map previews (iPhone and iPad)</h2>
-    <p>Previews are off until you choose to show them. When on:</p>
+    <p>Since version 1.1, previews are on by default: the first page of the setup guide shows a switch for them, and you can turn them off at any time in Settings. In version 1.0 they are off until you choose to show them. When on:</p>
     <ul>
       <li>for a copied link, your device loads the page directly from that website to show its title and image. The website sees an ordinary request from your device, including your IP address. Links that look like sign-in, password-reset, verification or other one-time links are never opened;</li>
       <li>for a copied address, the address text is sent to Apple Maps to find it on a map, under <a href="https://www.apple.com/legal/privacy/data/en/apple-maps/">Apple's Maps privacy terms</a>. Copied coordinates are used directly.</li>
     </ul>
-    <p>Previews are stored only on your device and are never synced. Nothing passes through us.</p>
+    <p>Previews are stored only on your device, where the keyboard can show small versions of them, and are never synced. Nothing passes through us.</p>
 
     <h2 id="en-mac">8. The Mac app</h2>
     <ul>
@@ -149,7 +153,8 @@
     <ul>
       <li>Delete single items, clear the history (pinned items too, if you choose) or set a time limit in the app.</li>
       <li>Turn iCloud sync off in the app; delete synced data with “Delete iCloud Data” on the Mac or in your device's iCloud settings › Manage Storage.</li>
-      <li>Turn previews, “Save Clipboard on Opening” and Spotlight off in the iPhone app's Settings.</li>
+      <li>Turn previews, “Save Clipboard on Opening” and Spotlight off, or pause saving, in the iPhone app's Settings; upload clips kept only on the iPhone with “Upload to iCloud Again”.</li>
+      <li>Remove the camera permission in iOS Settings › Pastronaut.</li>
       <li>Remove Full Access or the keyboard in iOS Settings › General › Keyboard.</li>
       <li>Turn off automatic update checks in the Mac app's settings.</li>
       <li>Removing the apps removes their data from your devices.</li>
@@ -179,7 +184,7 @@
   <article id="tr" lang="tr">
     <h1>Gizlilik Politikası</h1>
     <p class="meta">
-      Yürürlük: 18 Ekim 2026 · Son güncelleme: 18 Ekim 2026 ·
+      Yürürlük: 18 Ekim 2026 · Son güncelleme: 22 Ekim 2026 ·
       <a href="https://github.com/xkbxyberk/pastronaut/commits/gh-pages/privacy.html">Sürüm geçmişi</a> ·
       <a href="https://github.com/xkbxyberk/pastronaut">Kaynak kod</a>
     </p>
@@ -190,7 +195,8 @@
         <li>Pastronaut'ta <strong>hesap, sunucu, analiz, reklam ve üçüncü taraf SDK yoktur</strong>. Verilerini satmayız, paylaşmayız, onlara bakmayız.</li>
         <li>Pano geçmişin <strong>cihazlarında</strong> ve eşitlemeyi açarsan <strong>kendi Apple Hesabının özel iCloud veritabanında</strong> durur. Biz ona erişemeyiz.</li>
         <li>Öğe metinleri yüklenmeden önce <strong>cihazında şifrelenir</strong>; Apple'ın Gelişmiş Veri Koruması'nı açarsan <strong>uçtan uca şifreli</strong> olur.</li>
-        <li>Uygulamalar yalnızca Apple'ın iCloud'una, <strong>isteğe bağlı</strong> önizlemeler için web sitelerine ve Apple Haritalar'a, Mac güncellemeleri için de GitHub'a bağlanır.</li>
+        <li>Uygulamalar yalnızca Apple'ın iCloud'una, <strong>isteğe bağlı</strong> bağlantı ve harita önizlemeleri için (1.1 sürümünden itibaren varsayılan olarak açık; tek dokunuşla kapanır) web sitelerine ve Apple Haritalar'a, Mac güncellemeleri için de GitHub'a bağlanır.</li>
+        <li>iPhone'da <strong>kamera</strong> yalnızca metin ya da belge tararken kullanılır: metin iPhone'unda okunur, hiçbir görüntü saklanmaz ya da gönderilmez.</li>
         <li>Elimize geçen tek kişisel veri, bize yazdığında gönderdiklerin ve cihaz ayarlarında geliştiricilerle paylaşmayı seçersen çökme raporlarıdır.</li>
         <li>Pastronaut açık kaynaktır; buradaki her ifadeyi kodda doğrulayabilirsin.</li>
       </ul>
@@ -218,7 +224,7 @@
 
     <h2 id="tr-who">1. Biz kimiz, bu politika neyi kapsar</h2>
     <p>Pastronaut, Türkiye'de bireysel geliştirici <strong>Berk Akbay</strong> (“biz”) tarafından geliştirilen ücretsiz ve açık kaynak bir pano yöneticisidir. <a href="#tr-contact-data">9. bölümde</a> anlatılan sınırlı kişisel veri için veri sorumlusu odur. İletişim: <a href="mailto:sberkakbay@gmail.com">sberkakbay@gmail.com</a>.</p>
-    <p>Bu politika Mac için Pastronaut'u, iPhone ve iPad için Pastronaut'u, klavyesini, widget'larını, Denetim Merkezi düğmesini, Paylaş uzantısını, Kestirmeler eylemlerini ve bu web sitesini kapsar. Pastronaut açık kaynak Maccy uygulamasına dayanır, onunla bağlantılı değildir.</p>
+    <p>Bu politika Mac için Pastronaut'u, iPhone ve iPad için Pastronaut'u, klavyesini, widget'larını, Denetim Merkezi denetimlerini, Paylaş uzantısını, “Pastronaut'a Kaydet” eylemini, Kestirmeler eylemlerini ve bu web sitesini kapsar. Pastronaut açık kaynak Maccy uygulamasına dayanır, onunla bağlantılı değildir.</p>
 
     <h2 id="tr-summary">2. Verilerin bir bakışta</h2>
     <div class="table-wrap">
@@ -228,6 +234,7 @@
           <tr><td>Pano geçmişi (metin, bağlantı; Mac'te görsel ve dosya), sabitlenenler, koleksiyonlar, ayarlar</td><td>Cihazların</td><td>Sen</td><td>Uygulamada öğe sil ya da geçmişi temizle; uygulamayı kaldırmak da siler</td></tr>
           <tr><td>Eşitlenen metin öğeleri, sabitleme durumu, koleksiyonlar</td><td>iCloud hesabının özel veritabanı (yalnızca eşitleme açıksa)</td><td>Sen; Apple kendi politikasıyla saklar; <strong>biz değil</strong></td><td>Uygulamada sil, Mac'te “iCloud Verilerini Sil”, ya da iCloud ayarları › Saklama Alanını Yönet</td></tr>
           <tr><td>Bağlantı ve harita önizlemeleri</td><td>iPhone'un (önbellek)</td><td>Sen</td><td>Önizlemeleri kapat; cihazdan silinir</td></tr>
+          <tr><td>Metin ya da belge tararken kamera görüntüleri</td><td>Metin okunurken yalnızca iPhone'unun belleğinde; hiç saklanmaz, gönderilmez</td><td>Kimse</td><td>Silinecek bir şey yok; yalnızca kaydettiğin metin öğe olur</td></tr>
           <tr><td>Bize gönderdiğin mesajlar</td><td>E-posta kutumuz ya da GitHub</td><td>Biz</td><td>Silmemizi iste</td></tr>
           <tr><td>Paylaşmayı seçtiğin çökme raporları</td><td>Apple; bize kimliğin olmadan gösterilir</td><td>Apple ve biz</td><td>Cihazının gizlilik ayarlarından paylaşmayı kapat</td></tr>
         </tbody>
@@ -236,35 +243,37 @@
 
     <h2 id="tr-device">3. Cihazlarında</h2>
     <p>Mac uygulaması, her pano yöneticisi gibi panoyu izler ve kopyaladıklarının geçmişini tutar. Parola yöneticilerinin ve başka uygulamaların gizli ya da geçici diye işaretlediği kopyalar hiç kaydedilmez; yok sayılacak uygulama ve türler ekleyebilirsin. Geçmiş, uygulamanın Mac'teki kendi depolama alanında durur; varsayılan olarak sabitlenmemiş son 200 öğeyi tutar, istersen daha kısa bir süre sınırı seçebilirsin (örneğin bir hafta). Kopyalanan görsellerdeki metin Mac'in kendisinde tanınır.</p>
-    <p>iPhone ve iPad'de uygulama, eşitlenen geçmişi kendi depolama alanında tutar ve cihazdaki bir App Group alanı üzerinden yalnızca kendi klavyesi, widget'ları ve Paylaş uzantısıyla paylaşır. “Açılınca Panoyu Kaydet”i açarsan uygulama (ve Tam Erişim'le klavyesi) açıldığında panodaki yeni metni kaydeder; tek kullanımlık kodlar, kart numaraları ve IBAN'lar atlanır. Bir uygulama panoyu okuduğunda iOS kendi bildirimini gösterir.</p>
+    <p>iPhone ve iPad'de uygulama, eşitlenen geçmişi kendi depolama alanında tutar ve cihazdaki bir App Group alanı üzerinden yalnızca kendi klavyesi, widget'ları ve Paylaş uzantısıyla paylaşır. “Açılınca Panoyu Kaydet” açıkken uygulama (ve Tam Erişim'le klavyesi) açıldığında panodaki yeni metni kaydeder. 1.1 sürümünden itibaren bu ayar varsayılan olarak açıktır; uygulamada, kurulum rehberini bitirdiğinde ya da atladığında devreye girer; 1.0 sürümünde sen açana kadar kapalıdır. Uygulamanın Ayarlar'ından istediğin zaman kapatabilirsin; tek kullanımlık kodlar, kart numaraları ve IBAN'lar atlanır. Bir uygulama panoyu okuduğunda iOS kendi bildirimini gösterir. “Kaydetmeyi Duraklat” (Ayarlar'da ya da Denetim Merkezi'nde) bu kendiliğinden kayıtları bir süre durdurur.</p>
+    <p>iCloud'da geçmişin artık yoksa (örneğin verisi silindiyse ya da iPhone başka bir Apple Hesabı'yla oturum açtıysa) iPhone öğelerini “Yalnızca Bu iPhone'da” olarak tutar; bunlar yalnızca “iCloud'a Yeniden Yükle”yi seçersen yüklenir. Ekran kaydedilirken ya da başka bir ekranda gösterilirken uygulama öğelerini örter (“Ekran Kaydında Gizle”, varsayılan olarak açık); iOS uygulamaya yalnızca bunun olduğunu söyler, uygulama hiçbir şey kaydetmez.</p>
+    <p><strong>Metni Tara ve Belge Tara</strong> (iPhone) kamerayı yalnızca tarayıcı açıkken ve iOS izin istedikten sonra kullanır. Metin, Apple'ın cihazda çalışan metin tanımasıyla iPhone'unda okunur. Kamera görüntüleri saklanmaz ya da gönderilmez; yalnızca kaydetmeyi seçtiğin metin öğe olur.</p>
 
     <h2 id="tr-icloud">4. iCloud eşitlemesi</h2>
     <ul>
       <li><strong>Sen açana kadar kapalıdır.</strong> Açıkken metin öğeleri, sabitleme durumları, oluşturduğun koleksiyonlar ve tarihleri Apple'ın CloudKit hizmetiyle Apple Hesabının <em>özel</em> veritabanına eşitlenir. Görseller ve dosyalar eşitlenmez.</li>
-      <li><strong>Şifreleme.</strong> Öğe metni, kaynak uygulama ve koleksiyon adları CloudKit'in şifreli alanlarına yazılır: yüklenmeden önce cihazında, anahtarları iCloud Anahtar Zinciri'nde tutulan bir şifreyle şifrelenir. <a href="https://support.apple.com/tr-tr/102651">Gelişmiş Veri Koruması</a>'nı açtığında bu anahtarlar yalnızca senin cihazlarında bulunur (uçtan uca şifreleme). Tarihler, öğenin türü (örneğin “bağlantı”), geldiği cihaz ve sabitleme durumu bu ek şifreleme olmadan saklanır. Kayıt adları hesabına özel bir anahtarla üretilir; metni ele vermez.</li>
+      <li><strong>Şifreleme.</strong> Öğe metni, öğelere verdiğin başlıklar, kaynak uygulama ve koleksiyon adları CloudKit'in şifreli alanlarına yazılır: yüklenmeden önce cihazında, anahtarları iCloud Anahtar Zinciri'nde tutulan bir şifreyle şifrelenir. <a href="https://support.apple.com/tr-tr/102651">Gelişmiş Veri Koruması</a>'nı açtığında bu anahtarlar yalnızca senin cihazlarında bulunur (uçtan uca şifreleme). Tarihler, öğenin türü (örneğin “bağlantı”), geldiği cihaz ve sabitleme durumu bu ek şifreleme olmadan saklanır. Kayıt adları hesabına özel bir anahtarla üretilir; metni ele vermez.</li>
       <li><strong>Kim görebilir.</strong> Özel iCloud veritabanına erişimimiz ve içeriğinin bir kopyası yoktur. Apple onu <a href="https://www.apple.com/tr/legal/privacy/">Apple Gizlilik Politikası</a> ve iCloud koşullarıyla saklar.</li>
-      <li><strong>İsteğe bağlı süzgeçler.</strong> Mac'te tek kullanımlık kodları (5 dakika sonra Mac'ten de silinir) ve kart numaralarını eşitlemenin dışında tutabilir ya da yalnızca sabitlenenleri eşitleyebilirsin.</li>
+      <li><strong>İsteğe bağlı süzgeçler.</strong> Mac'te tek kullanımlık kodları (5 dakika sonra Mac'ten de silinir) ve kart numaralarını eşitlemenin dışında tutabilir ya da yalnızca sabitlenenleri eşitleyebilirsin. iPhone'da tek kullanımlık kodları, kart numaralarını ve IBAN'ları o iPhone'da tutabilirsin: o andan sonra orada kaydedilir ama hiç yüklenmez.</li>
       <li><strong>Saklama süresi.</strong> Eşitlenen öğeler sen silene kadar durur; bir cihazda silmek ya da temizlemek onları iCloud'dan ve diğer cihazlarından da siler. Eşitlemeyi kapatmak iCloud verisini silmez; bunun için Mac uygulamasının eşitleme ayarlarındaki “iCloud Verilerini Sil”i ya da cihazının iCloud ayarları › Saklama Alanını Yönet'i kullan.</li>
     </ul>
 
     <h2 id="tr-keyboard">5. iPhone klavyesi ve Tam Erişim</h2>
     <p>Tam Erişim'e izin verdiğinde iOS, bir klavyenin yazdıklarını gönderebileceği uyarısını gösterir. Pastronaut klavyesinin bu izinle tam olarak yaptıkları:</p>
     <ul>
-      <li><strong>Neden ister:</strong> Pastronaut uygulamasıyla paylaştığı geçmişi okumak ve güncellemek, en yeni öğeleri kendi iCloud veritabanından almak, Yapıştır'a dokunduğunda (ya da bunu açtıysan açılışta) yeni kopyayı kaydetmek, öğe sabitlemek ve silmek için.</li>
+      <li><strong>Neden ister:</strong> Pastronaut uygulamasıyla paylaştığı geçmişi okumak ve güncellemek, en yeni öğeleri kendi iCloud veritabanından almak, Yapıştır'a dokunduğunda (ya da “Açılınca Panoyu Kaydet” açıkken açılışta) yeni kopyayı kaydetmek, öğe sabitlemek ve silmek için.</li>
       <li><strong>Asla yapmadıkları:</strong> yazdıklarını kaydetmez, saklamaz, göndermez; kendi iCloud'un dışında hiçbir ağ bağlantısı kurmaz; yazdıklarını başka hiçbir amaçla kullanmaz.</li>
       <li><strong>Tam Erişim olmadan</strong> klavye, uygulamanın en son kaydettiği geçmişi gösterir ve istediğin öğeyi yazar; yeni kopya kaydedemez, sabitleme değiştiremez, iCloud'dan veri alamaz.</li>
     </ul>
 
     <h2 id="tr-system">6. Widget'lar, Kestirmeler, Paylaş ve Spotlight</h2>
-    <p>Widget'lar son öğelerini Ana Ekran'da ve Kilitli Ekran'da gösterir; Face ID kilidi açıksa öğe metnini gizler. Kestirmeler eylemleri, Siri, Denetim Merkezi düğmesi ve Paylaş uzantısı cihazında çalışır ve öğeleri yalnızca senin isteğinle okur ya da kaydeder. Spotlight dizinlemesi varsayılan olarak kapalıdır; açıkken yalnızca sabitlenen öğeleri cihazının aramasına ekler. Face ID'yi iOS yürütür; uygulama yalnızca evet ya da hayır yanıtı alır.</p>
+    <p>Widget'lar son öğelerini Ana Ekran'da ve Kilitli Ekran'da gösterir; Face ID kilidi açıksa öğe metnini gizler. Kestirmeler eylemleri, Siri, Denetim Merkezi denetimleri (Panoyu Kaydet, Kaydetmeyi Duraklat), Paylaş uzantısı ve “Pastronaut'a Kaydet” eylemi cihazında çalışır ve öğeleri yalnızca senin isteğinle okur ya da kaydeder; Paylaş, paylaştığını koleksiyonlarından birine de ekleyebilir. Spotlight dizinlemesi varsayılan olarak kapalıdır; açıkken yalnızca sabitlenen öğeleri cihazının aramasına ekler. Face ID'yi iOS yürütür; uygulama yalnızca evet ya da hayır yanıtı alır.</p>
 
     <h2 id="tr-previews">7. İsteğe bağlı bağlantı ve harita önizlemeleri (iPhone ve iPad)</h2>
-    <p>Önizlemeler sen göstermeyi seçene kadar kapalıdır. Açıkken:</p>
+    <p>1.1 sürümünden itibaren önizlemeler varsayılan olarak açıktır: kurulum rehberinin ilk sayfası bunlar için bir anahtar gösterir, Ayarlar'dan da istediğin zaman kapatabilirsin. 1.0 sürümünde sen göstermeyi seçene kadar kapalıdır. Açıkken:</p>
     <ul>
       <li>kopyaladığın bir bağlantı için cihazın, başlığını ve görselini göstermek üzere sayfayı doğrudan o siteden yükler. Site, cihazından gelen sıradan bir isteği ve IP adresini görür. Giriş, parola sıfırlama, doğrulama ya da başka tek kullanımlık görünen bağlantılar hiç açılmaz;</li>
       <li>kopyaladığın bir adres için adres metni, haritada bulunması için <a href="https://www.apple.com/legal/privacy/data/tr/apple-maps/">Apple Haritalar'ın gizlilik koşullarıyla</a> Apple Haritalar'a gönderilir. Kopyalanan koordinatlar doğrudan kullanılır.</li>
     </ul>
-    <p>Önizlemeler yalnızca cihazında saklanır, hiç eşitlenmez. Hiçbir şey bizden geçmez.</p>
+    <p>Önizlemeler yalnızca cihazında saklanır (klavye bunların küçük hallerini gösterebilir), hiç eşitlenmez. Hiçbir şey bizden geçmez.</p>
 
     <h2 id="tr-mac">8. Mac uygulaması</h2>
     <ul>
@@ -304,7 +313,8 @@
     <ul>
       <li>Uygulamada tek tek öğe sil, geçmişi temizle (istersen sabitlenenleri de) ya da bir süre sınırı belirle.</li>
       <li>iCloud eşitlemesini uygulamadan kapat; eşitlenen veriyi Mac'te “iCloud Verilerini Sil” ile ya da cihazının iCloud ayarları › Saklama Alanını Yönet'ten sil.</li>
-      <li>Önizlemeleri, “Açılınca Panoyu Kaydet”i ve Spotlight'ı iPhone uygulamasının Ayarlar'ından kapat.</li>
+      <li>Önizlemeleri, “Açılınca Panoyu Kaydet”i ve Spotlight'ı iPhone uygulamasının Ayarlar'ından kapat ya da kaydetmeyi duraklat; yalnızca iPhone'da kalan öğeleri “iCloud'a Yeniden Yükle” ile yükle.</li>
+      <li>Kamera iznini iOS Ayarlar › Pastronaut'tan kaldır.</li>
       <li>Tam Erişim'i ya da klavyeyi iOS Ayarlar › Genel › Klavye'den kaldır.</li>
       <li>Otomatik güncelleme denetimini Mac uygulamasının ayarlarından kapat.</li>
       <li>Uygulamaları kaldırmak verilerini cihazlarından da kaldırır.</li>
