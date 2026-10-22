@@ -7,11 +7,11 @@ import UniformTypeIdentifiers
 // App Store pictures for Pastronaut, from screenshots taken with made-up clips only.
 //
 // Usage: swift run -c release StoreArt <raw dir> <out dir>
-//   <raw dir>/<lang>/0-keyboard-light.png … 6-mac-dark.png   iPhone (SyncStepTests `storeShots`, 1290 × 2796)
+//   <raw dir>/<lang>/12-01-cards-light.png …                iPhone (SyncStepTests `storeShots12`, 1290 × 2796)
 //   <raw dir>/mac/<lang>-light.png, preview-<lang>-light.png, queue-…, filter-…, iphone-…   Mac popup
 //                                                                   (MaccyUITests `testPastronautReadmeShots`)
 // Writes, per language (en, tr), opaque PNGs as App Store Connect requires:
-//   iphone-1…7.png   1320 × 2868   (iPhone 6.9"; frames 1 and 2 are one panorama)
+//   iphone-1…10.png  1320 × 2868   (iPhone 6.9"; frames 1 and 2 are one panorama; Gallery.swift)
 //   mac-1…5.png      2880 × 1800   (Mac; frames 1 and 2 are one panorama)
 //   header.png       3840 × 1646   (product page header, 21:9)
 //   search.png       3840 × 2560   (search result, 3:2)
@@ -117,94 +117,7 @@ struct Shot: View {
   }
 }
 
-// MARK: - iPhone frames (1320 × 2868)
-
-struct IPhoneFrame: View {
-  let caption: Caption
-  let lang: String
-  let shot: NSImage
-  var dark = false
-  /// Whole screen (keyboard frames), or the top of the screen bleeding off the bottom edge.
-  var fit = false
-
-  var body: some View {
-    ZStack(alignment: .top) {
-      Background(dark: dark)
-      CaptionView(caption: caption, lang: lang, scale: 1, dark: dark)
-        .frame(width: 1160)
-        .padding(.top, 170)
-      let width: CGFloat = fit ? 2000 * shot.size.width / shot.size.height : 1110
-      Shot(image: shot, width: width, radius: 84, dark: dark)
-        .padding(.top, fit ? 790 : 800)
-    }
-    .frame(width: 1320, height: 2868)
-    .clipped()
-  }
-}
-
-/// Frames 1 and 2 as one picture: the Mac window crosses the seam, the iPhone stands in front of it.
-struct IPhonePanorama: View {
-  let lang: String
-  let iphone: NSImage
-  let mac: NSImage
-
-  static let first = Caption(
-    eyebrow: ["en": "PASTRONAUT", "tr": "PASTRONAUT"],
-    title: ["en": "Your clipboard,\non iPhone and Mac", "tr": "Panon, iPhone'da\nve Mac'te"],
-    subtitle: ["en": "Everything you copy, kept and synced.", "tr": "Kopyaladığın her şey saklanır ve eşitlenir."],
-    color: Brand.link)
-  static let second = Caption(
-    eyebrow: ["en": "KEEP", "tr": "SAKLA"],
-    title: ["en": "Never lose\na copy again", "tr": "Hiçbir kopyayı\nkaybetme"],
-    subtitle: ["en": "Your history, private in your own iCloud.", "tr": "Geçmişin, kendi iCloud'unda gizli."],
-    color: Brand.link)
-
-  var body: some View {
-    ZStack(alignment: .topLeading) {
-      Background()
-      CaptionView(caption: Self.first, lang: lang, scale: 1)
-        .frame(width: 1160).position(x: 660, y: 470)
-      CaptionView(caption: Self.second, lang: lang, scale: 1)
-        .frame(width: 1160).position(x: 1980, y: 470)
-      // The Mac popup as a window across the seam.
-      Shot(image: mac, width: 1500, radius: 46)
-        .position(x: 1700, y: 1820)
-      // The iPhone in front, bleeding off the bottom.
-      Shot(image: iphone, width: 980, radius: 76)
-        .position(x: 700, y: 1100 + 980 * iphone.size.height / iphone.size.width / 2)
-    }
-    .frame(width: 2640, height: 2868)
-    .clipped()
-  }
-}
-
-let iphoneFrames: [(file: String, caption: Caption, dark: Bool, fit: Bool)] = [
-  ("0-keyboard-light", Caption(
-    eyebrow: ["en": "PASTE", "tr": "YAPIŞTIR"],
-    title: ["en": "Paste anything\nin one tap", "tr": "Her kopya\ntek dokunuşla"],
-    subtitle: ["en": "Your history as a keyboard, in every app.", "tr": "Geçmişin, her uygulamada klavyende."],
-    color: Brand.code), false, true),
-  ("2-keyboard-dark", Caption(
-    eyebrow: ["en": "FIND", "tr": "BUL"],
-    title: ["en": "Find any copy\nin seconds", "tr": "Aradığını\nsaniyede bul"],
-    subtitle: ["en": "Search by text, kind or date.", "tr": "Metne, türe ya da tarihe göre ara."],
-    color: Brand.email), true, true),
-  ("4-collection-light", Caption(
-    eyebrow: ["en": "ORGANIZE", "tr": "DÜZENLE"],
-    title: ["en": "Pin and collect\nwhat you reuse", "tr": "Sabitle,\nkoleksiyonla"],
-    subtitle: ["en": "Addresses, snippets and links, together.", "tr": "Adresler, parçacıklar, bağlantılar bir arada."],
-    color: Brand.address), false, false),
-  ("3-cards-dark", Caption(
-    eyebrow: ["en": "SMART CARDS", "tr": "AKILLI KARTLAR"],
-    title: ["en": "Every kind,\nits own card", "tr": "Her türe\nkendi kartı"],
-    subtitle: ["en": "Maps, link previews, colored code.", "tr": "Harita, bağlantı önizlemesi, renkli kod."],
-    color: Brand.phone), true, false),
-  ("5-list-light", Caption(
-    eyebrow: ["en": "PRIVATE", "tr": "GİZLİ"],
-    title: ["en": "No account.\nNo tracking.", "tr": "Hesap yok.\nİzleme yok."],
-    subtitle: ["en": "Only you and your iCloud.", "tr": "Yalnızca sen ve iCloud'un."],
-    color: Brand.text), false, false)
-]
+// iPhone frames: Gallery.swift.
 
 // MARK: - Mac frames (2880 × 1800)
 
@@ -409,15 +322,23 @@ func run() throws {
       return image
     }
     let macList = try mac("\(lang)-light")
-    let cardsLight = try phone("1-cards-light")
+    let cardsLight = try phone("12-01-cards-light")
 
-    // iPhone: panorama (frames 1–2), then five frames.
-    let panorama = try render(IPhonePanorama(lang: lang, iphone: cardsLight, mac: macList), width: 2640, height: 2868)
+    // iPhone (since 1.2): panorama (frames 1–2), then eight frames; App Store Connect takes up to ten.
+    func full(_ name: String) throws -> NSImage {
+      guard let image = load(raw.appending(path: "\(lang)/\(name).png")) else {
+        throw NSError(domain: "StoreArt missing \(lang)/\(name)", code: 5)
+      }
+      return image
+    }
+    let panorama = try render(
+      GalleryPanorama(lang: lang, phone: try full("12-01-cards-light"), mac: macList, macPhone: try full("12-12-mac-dark")),
+      width: 2640, height: 2868)
     try writeOpaque(panorama, rect: CGRect(x: 0, y: 0, width: 1320, height: 2868), to: dir.appending(path: "iphone-1.png"))
     try writeOpaque(panorama, rect: CGRect(x: 1320, y: 0, width: 1320, height: 2868), to: dir.appending(path: "iphone-2.png"))
-    for (index, frame) in iphoneFrames.enumerated() {
-      let view = IPhoneFrame(caption: frame.caption, lang: lang, shot: try phone(frame.file), dark: frame.dark, fit: frame.fit)
-      try writeOpaque(try render(view, width: 1320, height: 2868), to: dir.appending(path: "iphone-\(index + 3).png"))
+    for (offset, frame) in galleryFrames.enumerated() {
+      let view = GalleryFrameView(index: offset + 2, frame: frame, lang: lang, screen: try full(frame.shot))
+      try writeOpaque(try render(view, width: 1320, height: 2868), to: dir.appending(path: "iphone-\(offset + 3).png"))
     }
 
     // Mac: panorama (frames 1–2), then three frames.
@@ -432,7 +353,7 @@ func run() throws {
     // Header and search result.
     try writeOpaque(try render(HeaderArt(lang: lang, mac: macList, iphone: cardsLight), width: 3840, height: 1646),
                     to: dir.appending(path: "header.png"))
-    try writeOpaque(try render(SearchArt(lang: lang, keyboard: try phone("0-keyboard-light"), cards: cardsLight, mac: macList),
+    try writeOpaque(try render(SearchArt(lang: lang, keyboard: try phone("12-04-keyboard-light"), cards: cardsLight, mac: macList),
                                width: 3840, height: 2560),
                     to: dir.appending(path: "search.png"))
   }

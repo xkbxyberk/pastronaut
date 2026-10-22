@@ -99,10 +99,10 @@ Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: �
    ve beş uzantının hepsi 1.2 (4) ve gizlilik bildirimli; Kestirme metinlerinde Apple ürün adı yok (ITMS-90626).
 3. ✅ Mağaza metinleri `APPSTORE.md`: iPhone açıklaması (§6), What's New 1.2 (§8), inceleme notu 1.2 (§13: kamera
    yalnızca tarama için, Eylem uzantısı, ekran kaydı örtüsü), App Privacy notu (§10, hâlâ "Data Not Collected").
-4. ⏳ Gizlilik politikası (`docs/site/privacy.html`, 22 Ekim; kamera, başlıklar, iPhone gizlilik seçenekleri, Eylem
-   uzantısı) 1.2 incelemeye gönderilmeden önce kullanıcı onayıyla `gh-pages`'e yayınlanır.
-5. ⏳ Ekran görüntüleri: 1.1 görselleri eski kart tasarımını gösteriyor. Yeni tasarımla yeniden üretmek önerildi
-   (`storeShots`, `PT_DEMO`); güncelleme için zorunlu değil.
+4. ✅ Gizlilik politikası yayında (gh-pages `ecae837`, 2026-10-22; kamera, başlıklar, iPhone gizlilik seçenekleri,
+   Eylem uzantısı).
+5. ✅ Ekran görüntüleri (2026-10-22): yeni tasarımla 10 kare, İngilizce ve Türkçe (`storeShots12` + `StoreArt`,
+   yalnızca tanıtım verisi); `APPSTORE.md` §9. Kullanıcı 1.2 sayfasında eski yedi görselin yerine yükler.
 6. ⏳ Kullanıcı "yükle" deyince arşiv ve yükleme (`SURUM.md` kanal 1). Eylem simgesi saydam (şablon); App Store
    doğrulaması bunu kabul etmezse burada görülür.
 7. ⏳ Kullanıcı: App Store Connect › iOS App › "+" › 1.2; What's New ve inceleme notu; TestFlight'ta deneme (Production'da

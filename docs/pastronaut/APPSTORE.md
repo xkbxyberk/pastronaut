@@ -404,28 +404,36 @@ Pastronaut 1.2: yeni bir kat boya ve cep dolusu yeni numara.
 ```
 
 ## 9. Pictures
-All pictures use made-up clips only. They are made in four steps:
-1. iPhone shots, in each language: SyncStepTests `storeShots` (`PT_SHOTS_LANG` = en / tr).
+All pictures use made-up clips only (`PT_DEMO`; `DemoClips.swift`). They are made in four steps:
+1. iPhone shots, in each language: SyncStepTests `storeShots12` (`PT_SHOTS_LANG` = en / tr). It passes
+   `-appearance system`, so the app's own theme setting can't turn the dark shots light.
 2. Mac shots: MaccyUITests `testPastronautReadmeShots`. In test mode only, each copy names a plausible source app
    (`TestSourceApp`).
-3. Raw shots land in `appstore-screenshots/raw/` (not in git).
+3. Raw shots go to `appstore-screenshots/raw/<lang>/12-…png` and `raw/mac/` (not in git).
 4. Compose them: `cd scripts/store && swift run -c release StoreArt ../../appstore-screenshots/raw ../../appstore-screenshots/store`.
 
 The output is opaque PNGs in `appstore-screenshots/store/<lang>/`. Upload the English set to English (U.S.) and
 English (U.K.), and the Turkish set to Turkish.
 
-### iPhone: `iphone-1…7.png`, 1320 × 2868 (upload in this order)
+### iPhone (since 1.2): `iphone-1…10.png`, 1320 × 2868 (upload in this order; ten is App Store Connect's limit)
+Each frame shows the whole phone (a body drawn from simple shapes, a clean "9:41" status bar), a large caption, and
+enlarged pieces of the same real screen ("callouts", positions in `Gallery.swift`). One orbit line with stars runs
+through all ten frames. Light and dark frames alternate.
+
 | # | Eyebrow | English | Turkish | Picture |
 |---|---|---|---|---|
-| 1 | PASTRONAUT | Your clipboard, on iPhone and Mac | Panon, iPhone'da ve Mac'te | Panorama, left: iPhone cards in front of the Mac window |
-| 2 | KEEP · SAKLA | Never lose a copy again | Hiçbir kopyayı kaybetme | Panorama, right: the Mac window continues |
-| 3 | PASTE · YAPIŞTIR | Paste anything in one tap | Her kopya tek dokunuşla | Keyboard pasting an address into a note |
-| 4 | FIND · BUL | Find any copy in seconds | Aradığını saniyede bul | Search with kind filters (dark) |
-| 5 | ORGANIZE · DÜZENLE | Pin and collect what you reuse | Sabitle, koleksiyonla | A collection |
-| 6 | SMART CARDS · AKILLI KARTLAR | Every kind, its own card | Her türe kendi kartı | Cards (dark) |
-| 7 | PRIVATE · GİZLİ | No account. No tracking. | Hesap yok. İzleme yok. | The compact list |
+| 1 | PASTRONAUT | Your clipboard, on iPhone and Mac | Panon, iPhone'da ve Mac'te | Panorama, left: the card grid in front of the Mac window |
+| 2 | SYNC · EŞİTLE | Copy on your Mac, paste on your iPhone | Mac'te kopyala, iPhone'da yapıştır | Panorama, right: the Mac window, an iPhone showing Mac clips (dark) |
+| 3 | PASTE · YAPIŞTIR | Paste anything, in any app | Her kopya, her uygulamada | Keyboard; callout: "From Mac" bar and tiles |
+| 4 | QUEUE · SIRA | Paste a list, in order | Bir listeyi sırayla yapıştır | Keyboard queue (dark); callout: the queue bar |
+| 5 | SMART CARDS · AKILLI KARTLAR | Every kind, its own card | Her türe kendi kartı | Cards (dark); callouts: map card, code card with title |
+| 6 | SCAN · TARA | Scan text with your camera | Kamerayla metin tara | Touch and hold +; callout: Scan Document / Scan Text |
+| 7 | TITLES · BAŞLIKLAR | Name it, edit it, find it again | Adını koy, düzenle, bul | A clip's menu; callout: Edit Title, Edit |
+| 8 | FIND · BUL | Find any copy in seconds | Aradığını saniyede bul | Search (dark); callout: kind and date filters |
+| 9 | ORGANIZE · DÜZENLE | Collect, combine, export | Topla, birleştir, dışa aktar | Select mode; callouts: a selected card, Combine & Copy / Start Queue |
+| 10 | PRIVATE · GİZLİ | No account. No tracking. | Hesap yok. İzleme yok. | Settings; callout: the privacy switches |
 
-Frames 1–3 also appear in search results. Together they say "one clipboard on iPhone and Mac, paste anywhere".
+The 1.0–1.1 set (seven frames, screens cropped at the bottom) is in git history.
 
 ### Mac: `mac-1…5.png`, 2880 × 1800 (for the Mac App Store)
 | # | Eyebrow | English | Turkish | Picture |
@@ -447,7 +455,7 @@ Frames 1–3 also appear in search results. Together they say "one clipboard on 
   - Below: the keyboard, the Mac window and the cards, all inside the centered safe area (2168 × 1030).
 
 ### Rules followed
-- every frame shows the real app;
+- every frame shows the real app; callouts are enlarged parts of the same screenshot;
 - no prices, "free", URLs, awards, ratings or other platforms;
 - the iPhone status bar is removed;
 - 4+ content only;
