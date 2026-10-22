@@ -185,9 +185,6 @@ targets:
       - Share/Localizable.xcstrings
       - path: Share/PrivacyInfo.xcprivacy
         buildPhase: resources
-      - path: ../Maccy/AppIcon.icon
-        type: file
-        buildPhase: resources
     dependencies:
       - package: PastronautCore
     settings:
@@ -196,6 +193,8 @@ targets:
         # iPhone only for the first App Store release; "1,2" brings iPad back once it is tested.
         TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_NAME: PastronautAction
+        # A one-color glyph (Action/Assets.xcassets): the share sheet shows an action's icon as a template, so the
+        # full-color app icon would turn into a plain square. Drawn by scripts/icons/action-glyph.swift.
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
       path: Action/Info.plist

@@ -552,10 +552,16 @@ final class ClipStore {
 
   var hasQueue: Bool { files?.readQueue() != nil }
 
-  /// Copies several clips as one text. Not saved as a clip of its own: the next copy anywhere would be.
-  func copyCombined(_ combined: [Clip], separator: ClipSeparator) {
-    UIPasteboard.general.string = combined.combinedText(separator: separator)
+  /// Copies several clips as one text and saves that text as a clip of its own, so it can be pasted again
+  /// later and reaches the Mac. Returns false when it is too large to save (it is still copied).
+  @discardableResult
+  func copyCombined(_ combined: [Clip], separator: ClipSeparator) -> Bool {
+    let text = combined.combinedText(separator: separator)
+    UIPasteboard.general.string = text
     sharedDefaults?.set(UIPasteboard.general.changeCount, forKey: AutoCapture.lastChangeCountKey)
+    guard SyncPolicy.default.isEligible(text) else { return false }
+    save(text)
+    return true
   }
 
   // MARK: - Local-only clips

@@ -207,8 +207,18 @@ final class KeyboardModel {
     saveQueue()
   }
 
+  func endQueue() {
+    click()
+    queue?.end()
+    saveQueue()
+  }
+
   private func saveQueue() {
     UserDefaults.standard.set(queue.flatMap { try? JSONEncoder().encode($0) }, forKey: Self.queueKey)
+    // With Full Access the keyboard can also clear the app's request, so the app stops offering "End Queue".
+    if hasFullAccess, queue?.isFinished == true {
+      try? files?.writeQueue(nil)
+    }
   }
 
   /// Picks up the app's queue: progress is kept while the request is the same one, a new request starts over.
@@ -629,7 +639,8 @@ private struct LatestFromMacKey: View {
   }
 }
 
-/// The queue the app started: one wide key types the next clip; next to it, turn the order around or skip one.
+/// The queue the app started: one wide key types the next clip; next to it, turn the order around, skip one or
+/// end the queue.
 private struct QueueBar: View {
   let model: KeyboardModel
   let clip: Clip
@@ -678,6 +689,9 @@ private struct QueueBar: View {
       .buttonStyle(.plain)
       .foregroundStyle(.primary)
       .accessibilityIdentifier("queueSkip")
+      FunctionKey(systemImage: "xmark", label: "End Queue") { model.endQueue() }
+        .frame(width: 40)
+        .accessibilityIdentifier("queueEnd")
     }
   }
 }

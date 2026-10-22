@@ -559,6 +559,9 @@ Faz 1 soruları 2026-10-22'de yanıtlandı (yukarıdaki "Kararlar" bölümü). A
 
 ## Production'a gönderme: başlık alanları (kullanıcı yapar, 1.2 incelemeye gitmeden önce)
 
+> ✅ **Yapıldı (2026-10-22):** kullanıcı gönderdi; Production'da `Clip.title` ve `Clip.titleModifiedAt` görünüyor.
+> Deploy penceresinde yalnızca bu iki alan ve `titleModifiedAt` dizinleri vardı (ProtoClip zaten Production'da).
+
 **Neden:** 1.2, `Clip` kaydına iki yeni alan yazar: `title` (şifreli metin) ve `titleModifiedAt` (tarih). App Store
 sürümü CloudKit'in **Production** ortamını kullanır. Production'da olmayan bir alana yazılamaz; bu alanlar yoksa
 başlık vermek iCloud'da hata verir. Alanlar önce **Development** ortamında oluşur (Debug derlemesi başlıklı bir öğe
@@ -578,7 +581,11 @@ Production'a gönderilen alan bir daha silinemez. Eski sürümler (iPhone 1.1, M
    olmalı:
    - Record type **Clip** › yeni alan **title**
    - Record type **Clip** › yeni alan **titleModifiedAt**
-   Listede başka bir şey varsa (yeni bir kayıt türü, başka alanlar, dizinler) **gönderme**, bana sor.
+   - **titleModifiedAt** için dizinler (Queryable, Sortable): CloudKit, alanı Development'ta oluştururken bunları
+     kendiliğinden ekler (diğer tarih alanlarında da var). Beklenen ve zararsız.
+   Listede **ProtoClip** kayıt türü varsa bu, Faz 0 prototipinden kalmadır (`Prototypes/Faz0`, kullanılmıyor):
+   gönderme; pencereyi kapat, Development'ta **ProtoClip**'i sil, sonra yeniden aç. Başka bir şey varsa (başka bir
+   kayıt türü, başka alanlar ya da dizinler) **gönderme**, bana sor.
 5. **Onayla:** **Deploy** ile gönder. Birkaç saniye sürer.
 6. **Doğrula:** Ortamı **Production** yap → **Schema › Record Types › Clip**. İki alan artık görünmeli.
 7. **Sonra:** TestFlight'taki 1.2 derlemesinde bir öğeye başlık ver; Ayarlar › Eşitleme'de hata çıkmamalı, başlık

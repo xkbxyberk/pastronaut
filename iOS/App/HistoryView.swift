@@ -323,8 +323,9 @@ struct HistoryView: View {
   /// Only what the list shows: the selection outlives a change of scope or search, and acting on clips the
   /// person can't see (deleting them) would be a surprise.
   /// The selection in the order the screen shows it, for the queue and for combining.
+  /// Oldest first: the order they were copied in, for a queue and for combining.
   private var selectedInOrder: [Clip] {
-    sections.flatMap(\.clips).filter { selection.contains($0.id) }
+    sections.flatMap(\.clips).filter { selection.contains($0.id) }.inCopyOrder
   }
 
   private var selectedClips: [Clip] {
@@ -448,23 +449,35 @@ struct HistoryView: View {
         } label: {
           Label("Start Queue", systemImage: "list.number")
         }
+        .disabled(selection.isEmpty)
         .accessibilityIdentifier("startQueue")
+        if store.hasQueue {
+          Button(role: .destructive) {
+            store.endQueue()
+            endEditing()
+            showToast("Queue ended")
+          } label: {
+            Label("End Queue", systemImage: "xmark.circle")
+          }
+          .accessibilityIdentifier("endQueue")
+        }
         Menu {
           ForEach(ClipSeparator.allCases, id: \.self) { separator in
             Button(separator.title) {
-              store.copyCombined(selectedInOrder, separator: separator)
+              let saved = store.copyCombined(selectedInOrder, separator: separator)
               endEditing()
               Haptics.success()
-              showToast("Copied")
+              showToast(saved ? "Copied and saved" : "Copied")
             }
           }
         } label: {
           Label("Combine & Copy", systemImage: "square.stack.3d.down.right")
         }
+        .disabled(selection.count < 2)
       } label: {
         Label("More", systemImage: "ellipsis.circle")
       }
-      .disabled(selection.isEmpty)
+      .disabled(selection.isEmpty && !store.hasQueue)
       .accessibilityIdentifier("bulkMore")
       Spacer()
       Text("\(selection.count) selected")

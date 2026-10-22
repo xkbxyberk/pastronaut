@@ -92,8 +92,8 @@ Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: �
 5. ⏳ **Mac App Store 1.0 (1): "In Review"** (2026-10-22). Onay gelince yayınlanır; ret gelirse düzeltme 1.0 (2).
 
 **Sıradaki:** iPhone 1.2 (build 4), yalnızca iPhone kanalı; plan `IOS-1.2-PLAN.md`.
-1.2 yayından önce: (a) CloudKit şemasında `Clip.title` ve `Clip.titleModifiedAt` Production'a gönderilir
-(kullanıcı, CloudKit Console; tarif `IOS-1.2-PLAN.md` "Production'a gönderme"); (b) güncellenmiş gizlilik politikası
+1.2 yayından önce: (a) ✅ CloudKit şemasında `Clip.title` ve `Clip.titleModifiedAt` (ve `titleModifiedAt` için
+queryable/sortable dizinleri) Production'a gönderildi (kullanıcı, 2026-10-22; Production'da doğrulandı); (b) güncellenmiş gizlilik politikası
 (`docs/site/privacy.html`, 22 Ekim; kamera, başlıklar, iPhone gizlilik seçenekleri, Eylem uzantısı) 1.2 incelemeye
 gönderilmeden önce kullanıcı onayıyla `gh-pages`'e yayınlanır; (c) App Store "What's New" ve inceleme notu: kamera
 izni yalnızca Metni Tara / Belge Tara içindir. Mac işleri ayrı:

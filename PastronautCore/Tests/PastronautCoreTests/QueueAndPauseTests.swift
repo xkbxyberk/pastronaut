@@ -39,6 +39,24 @@ import Testing
     #expect(queue.nextNumber == 2)
   }
 
+  @Test func endingLeavesNothingToType() {
+    var queue = ClipQueue(request)
+    queue.advance()
+    queue.end()
+    #expect(queue.isFinished)
+    #expect(queue.nextID == nil)
+    #expect(queue.typedCount == 1)
+  }
+
+  @Test func copyOrderIsOldestFirst() {
+    let base = Date(timeIntervalSince1970: 1_000)
+    let first = Clip(text: "first", sourceDevice: .mac, firstCopiedAt: base, lastCopiedAt: base, modifiedAt: base)
+    let second = Clip(text: "second", sourceDevice: .mac, firstCopiedAt: base, lastCopiedAt: base.addingTimeInterval(5), modifiedAt: base)
+    let third = Clip(text: "third", sourceDevice: .mac, firstCopiedAt: base, lastCopiedAt: base.addingTimeInterval(9), modifiedAt: base)
+    // The history lists the newest first.
+    #expect([third, first, second].inCopyOrder.map(\.text) == ["first", "second", "third"])
+  }
+
   @Test func deletedClipsLeaveTheQueue() {
     var queue = ClipQueue(request)
     queue.keepOnly(["a", "c"])

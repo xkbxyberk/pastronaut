@@ -287,6 +287,17 @@
         }
       }
     },
+    "Copied and saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalandı ve kaydedildi"
+          }
+        }
+      }
+    },
     "Copied: %@": {
       "extractionState": "manual",
       "localizations": {
@@ -558,6 +569,17 @@
         }
       }
     },
+    "End Queue": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sırayı Bitir"
+          }
+        }
+      }
+    },
     "Even with Full Access, nothing you type is sent anywhere. The keyboard only reads your history in your own iCloud and writes the copies you capture there.": {
       "extractionState": "manual",
       "localizations": {
@@ -796,6 +818,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Duraklatıldı"
+          }
+        }
+      }
+    },
+    "Queue ended": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıra bitirildi"
           }
         }
       }

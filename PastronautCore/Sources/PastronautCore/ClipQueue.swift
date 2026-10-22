@@ -62,9 +62,22 @@ public struct ClipQueue: Codable, Equatable, Sendable {
     pending.reverse()
   }
 
+  /// Stops before the end: nothing more is typed.
+  public mutating func end() {
+    pending.removeAll()
+  }
+
   /// Drops clips deleted since the queue started.
   public mutating func keepOnly(_ existing: Set<String>) {
     pending.removeAll { !existing.contains($0) }
+  }
+}
+
+extension Array where Element == Clip {
+  /// The order the clips were copied in, the oldest first: what a queue types and "Combine & Copy" joins. The
+  /// history shows the newest first, but "copied A, B, C" means "paste A, B, C".
+  public var inCopyOrder: [Clip] {
+    sorted { ($0.lastCopiedAt, $0.firstCopiedAt, $0.id) < ($1.lastCopiedAt, $1.firstCopiedAt, $1.id) }
   }
 }
 

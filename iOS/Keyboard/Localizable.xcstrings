@@ -67,6 +67,17 @@
         }
       }
     },
+    "End Queue": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sırayı Bitir"
+          }
+        }
+      }
+    },
     "From Mac": {
       "extractionState": "manual",
       "localizations": {
