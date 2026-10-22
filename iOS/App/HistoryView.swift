@@ -106,7 +106,8 @@ struct HistoryView: View {
       .overlay(alignment: .bottom) {
         if let toast {
           Toast(text: toast.text, systemImage: toast.systemImage)
-            .padding(.bottom, 24)
+            // Above the bottom bar (search and "+") on iOS 26 and later.
+            .padding(.bottom, Self.toastClearance)
             .transition(.move(edge: .bottom).combined(with: .opacity))
         }
       }
@@ -414,7 +415,7 @@ struct HistoryView: View {
         Button {
           store.startQueue(selectedInOrder)
           endEditing()
-          showToast("Queue ready: tap its key on the keyboard")
+          showToast("Queue ready: tap its key on the keyboard", for: .seconds(2.6))
         } label: {
           Label("Start Queue", systemImage: "list.number")
         }
@@ -682,17 +683,22 @@ struct HistoryView: View {
     .background(Color(uiColor: .systemGroupedBackground))
   }
 
+  private static var toastClearance: CGFloat {
+    if #available(iOS 26.0, *) { 72 } else { 24 }
+  }
+
   private func copy(_ clip: Clip) {
     store.copy(clip)
     Haptics.success()
     showToast("Copied")
   }
 
-  private func showToast(_ text: LocalizedStringKey, systemImage: String = "checkmark") {
+  /// Short notices go quickly; a sentence to read (`duration`) stays longer.
+  private func showToast(_ text: LocalizedStringKey, systemImage: String = "checkmark", for duration: Duration = .seconds(1.4)) {
     withAnimation(.snappy) { toast = ToastContent(text: text, systemImage: systemImage) }
     hideToast?.cancel()
     hideToast = Task {
-      try? await Task.sleep(for: .seconds(1.4))
+      try? await Task.sleep(for: duration)
       guard !Task.isCancelled else { return }
       withAnimation(.snappy) { toast = nil }
     }
@@ -705,9 +711,22 @@ struct ClipRow: View {
   let clip: Clip
 
   private var lines: (String, String?) {
+    if case .link(let url) = clip.content {
+      let host = url.host() ?? url.absoluteString
+      let path = url.path().count > 1 ? url.path() : nil
+      return (clip.title ?? PreviewStore.shared.preview(for: clip)?.title ?? host, clip.title == nil ? path : host)
+    }
     if let title = clip.title { return (title, clip.preview) }
     let parts = clip.preview.split(whereSeparator: \.isNewline).map(String.init)
     return (parts.first ?? clip.preview, parts.count > 1 ? parts.dropFirst().joined(separator: " ") : nil)
+  }
+
+  /// Code and colors read better in a fixed-width font; a link shows its page's name instead of the address.
+  private var usesMonospacedTitle: Bool {
+    switch clip.content {
+    case .code, .color: clip.title == nil
+    default: false
+    }
   }
 
   var body: some View {
@@ -715,7 +734,7 @@ struct ClipRow: View {
     HStack(spacing: 12) {
       VStack(alignment: .leading, spacing: 3) {
         Text(verbatim: lines.0)
-          .font(content.usesMonospacedFont ? .body.monospaced().weight(.semibold) : .body.weight(.semibold))
+          .font(usesMonospacedTitle ? .body.monospaced().weight(.semibold) : .body.weight(.semibold))
           .lineLimit(1)
         if let second = lines.1 {
           Text(verbatim: second)
@@ -728,7 +747,7 @@ struct ClipRow: View {
             .fontWeight(.semibold)
             .foregroundStyle(content.kind.tint)
           Text(verbatim: "·")
-          Text(clip.lastCopiedAt, format: .relative(presentation: .named, unitsStyle: .abbreviated))
+          AgeText(date: clip.lastCopiedAt)
           if clip.pinned {
             Image(systemName: "pin.fill")
               .foregroundStyle(Color.pin)

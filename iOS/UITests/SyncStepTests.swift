@@ -375,6 +375,92 @@ final class SyncStepTests: XCTestCase {
       Thread.sleep(forTimeInterval: 1.5)
       attachScreenshot(named: "settings-data")
       report(["ok": true])
+    case "designShots":
+      // Design review of 1.2, made-up clips only (PT_DEMO): cards light and dark, the list, a clip's menu, select
+      // mode's More menu and a queue, then the keyboard with that queue. Ends with the app closed, not a normal
+      // launch, so this Debug build never syncs the person's real history.
+      defer {
+        XCUIDevice.shared.appearance = .dark
+        app.terminate()
+      }
+      app.launchEnvironment["PT_DEMO"] = "1"
+      func launch(_ appearance: XCUIDevice.Appearance, previews: String) {
+        XCUIDevice.shared.appearance = appearance
+        app.terminate()
+        app.launchEnvironment["PT_E2E_PREVIEWS"] = previews
+        app.launch()
+        Thread.sleep(forTimeInterval: previews == "1" ? 8 : 2)
+      }
+      let cards = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'card.'"))
+      launch(.light, previews: "1")
+      attachScreenshot(named: "d-cards-light")
+      app.swipeUp()
+      Thread.sleep(forTimeInterval: 2)
+      attachScreenshot(named: "d-cards-scrolled-light")
+      launch(.dark, previews: "1")
+      attachScreenshot(named: "d-cards-dark")
+      launch(.light, previews: "0")
+      attachScreenshot(named: "d-list-light")
+      launch(.dark, previews: "0")
+      attachScreenshot(named: "d-list-dark")
+      launch(.light, previews: "1")
+      if cards.element(boundBy: 2).waitForExistence(timeout: 5) {
+        cards.element(boundBy: 2).press(forDuration: 1.0)
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "d-menu")
+      }
+      launch(.light, previews: "1")
+      if cards.element(boundBy: 1).waitForExistence(timeout: 5) {
+        cards.element(boundBy: 1).tap()
+        Thread.sleep(forTimeInterval: 0.5)
+        attachScreenshot(named: "d-copied-toast")
+      }
+      app.buttons["selectButton"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 0.5)
+      for index in 0..<3 where cards.element(boundBy: index).exists {
+        cards.element(boundBy: index).tap()
+      }
+      let more = app.buttons["bulkMore"].firstMatch
+      if more.waitForExistence(timeout: 3) {
+        more.tap()
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "d-select-more")
+        let start = app.buttons["startQueue"].firstMatch
+        if start.waitForExistence(timeout: 3) {
+          start.tap()
+          Thread.sleep(forTimeInterval: 1.0)
+          attachScreenshot(named: "d-queue-started")
+        }
+      }
+      let newClip = app.buttons["newClipButton"].firstMatch
+      if newClip.waitForExistence(timeout: 5) {
+        newClip.tap()
+        let editor = app.textViews["clipEditor"].firstMatch
+        if editor.waitForExistence(timeout: 5) {
+          editor.tap()
+          if showPastronautKeyboard(in: app) {
+            Thread.sleep(forTimeInterval: 2)
+            attachScreenshot(named: "d-kb-queue-light")
+            let next = app.descendants(matching: .any)["queueNext"].firstMatch
+            if next.exists {
+              next.tap()
+              Thread.sleep(forTimeInterval: 1)
+              attachScreenshot(named: "d-kb-queue-typed-light")
+            }
+          }
+        }
+        app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Vazgeç"])).firstMatch.tap()
+      }
+      launch(.dark, previews: "1")
+      let search = app.searchFields.firstMatch
+      if search.waitForExistence(timeout: 5) {
+        search.tap()
+        if showPastronautKeyboard(in: app) {
+          Thread.sleep(forTimeInterval: 2)
+          attachScreenshot(named: "d-kb-dark")
+        }
+      }
+      report(["ok": true])
     case "selectShots":
       // Design review: select mode, the new clip sheet and the clipboard settings.
       bringUp()

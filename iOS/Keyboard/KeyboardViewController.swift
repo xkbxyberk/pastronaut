@@ -681,6 +681,24 @@ private struct QueueBar: View {
   }
 }
 
+private extension ClipTile {
+  /// A link shows its page's name (from the app's previews) or its site, not the whole address.
+  func label(for content: ClipContent) -> String {
+    if let title = clip.title { return title }
+    if case .link(let url) = content {
+      return PreviewThumbnails.shared.title(for: clip.id) ?? url.host() ?? clip.text.keyboardPreview
+    }
+    return clip.text.keyboardPreview
+  }
+
+  func monospaced(_ content: ClipContent) -> Bool {
+    switch content {
+    case .code, .color: clip.title == nil
+    default: false
+    }
+  }
+}
+
 /// One clip as a key in the grid, in the app's card language: the text (with a small picture for links and places
 /// when the app has one), then its kind in color and when it was copied. All the same height. Tap types it, long
 /// press opens its actions. Code is dark and colors are drawn in their own color, as in the app.
@@ -709,8 +727,8 @@ private struct ClipTile: View {
             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
             .accessibilityHidden(true)
         }
-        Text(clip.title ?? clip.text.keyboardPreview)
-          .font(content.usesMonospacedFont ? .system(size: 13, design: .monospaced) : .system(size: 13))
+        Text(label(for: content))
+          .font(monospaced(content) ? .system(size: 13, design: .monospaced) : .system(size: 13))
           .foregroundStyle(onDark ? Color.white : Color.primary)
           .lineLimit(2)
           .multilineTextAlignment(.leading)
@@ -725,7 +743,7 @@ private struct ClipTile: View {
           .fontWeight(.bold)
           .foregroundStyle(onDark ? AnyShapeStyle(Color.white.opacity(0.9)) : AnyShapeStyle(content.kind.tint))
         Text(verbatim: "·")
-        Text(clip.lastCopiedAt, format: .relative(presentation: .named, unitsStyle: .abbreviated))
+        AgeText(date: clip.lastCopiedAt)
         Spacer(minLength: 2)
         if clip.pinned {
           Image(systemName: "pin.fill")

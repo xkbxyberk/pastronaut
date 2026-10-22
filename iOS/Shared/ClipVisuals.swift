@@ -124,3 +124,23 @@ final class ClipContentCache: @unchecked Sendable {
     return content
   }
 }
+
+/// How long ago, as short as a tile's bottom line needs: "now", then one unit ("35 min", "2 hr", "3 days").
+/// VoiceOver reads the full relative date. Follows the app's language through the environment's locale.
+struct AgeText: View {
+  let date: Date
+
+  var body: some View {
+    let age = Date.now.timeIntervalSince(date)
+    Group {
+      if age < 60 {
+        Text(date, format: .relative(presentation: .named))
+      } else {
+        let field: Date.ComponentsFormatStyle.Field =
+          age < 3_600 ? .minute : age < 86_400 ? .hour : age < 604_800 ? .day : .week
+        Text(date..<Date.now, format: .components(style: .abbreviated, fields: [field]))
+      }
+    }
+    .accessibilityLabel(Text(date, format: .relative(presentation: .named)))
+  }
+}

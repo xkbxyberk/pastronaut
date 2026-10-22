@@ -39,6 +39,8 @@ struct ClipCard: View {
         VStack(alignment: .leading, spacing: 0) {
           media
           main
+            // Room for the selection circle in the corner.
+            .padding(.trailing, isEditing ? 26 : 0)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -224,7 +226,7 @@ struct ClipCard: View {
         .fontWeight(.semibold)
         .foregroundStyle(onDarkCard ? AnyShapeStyle(.white.opacity(0.85)) : AnyShapeStyle(content.kind.tint))
       Text(verbatim: "·")
-      Text(clip.lastCopiedAt, format: .relative(presentation: .named, unitsStyle: .abbreviated))
+      AgeText(date: clip.lastCopiedAt)
       Spacer(minLength: 0)
       if clip.pinned {
         Image(systemName: "pin.fill")

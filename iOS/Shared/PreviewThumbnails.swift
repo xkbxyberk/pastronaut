@@ -30,6 +30,19 @@ final class PreviewThumbnails: @unchecked Sendable {
     cache.countLimit = 120
   }
 
+  private let titles = NSCache<NSString, NSString>()
+
+  /// The page's name the app found for a link, if any.
+  func title(for clipID: String) -> String? {
+    let key = clipID as NSString
+    if let hit = titles.object(forKey: key) { return hit.length == 0 ? nil : hit as String }
+    struct Stored: Decodable { var title: String? }
+    let url = PreviewCache.directory.appending(path: "\(clipID).json")
+    let title = (try? Data(contentsOf: url)).flatMap { try? JSONDecoder().decode(Stored.self, from: $0) }?.title
+    titles.setObject((title ?? "") as NSString, forKey: key)
+    return title
+  }
+
   func image(for clipID: String, pixels: Int = 96) -> UIImage? {
     let key = clipID as NSString
     if let hit = cache.object(forKey: key) { return hit }
