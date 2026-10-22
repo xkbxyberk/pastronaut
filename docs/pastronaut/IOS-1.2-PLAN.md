@@ -402,7 +402,12 @@ Arayüz kodu yalnızca **Adım D**'de yazılır, ekran görüntüleri geldikten 
 ### Adım A: Sağlamlaştırma (veri katmanı, arayüzsüz) → 1.2'nin ilk parçası (karar 4)
 
 > **Durum (2026-10-22):** A1–A4 yapıldı ve test edildi: çekirdekte 113 test (17'si yeni), Mac'te 109 test, iOS
-> derlemesi. İki cihazlı uçtan uca test henüz koşmadı. A6 şema değişikliği olduğu için Adım B'ye taşındı.
+> derlemesi. A6 şema değişikliği olduğu için Adım B'ye taşındı.
+> - **İki cihazlı uçtan uca test (2026-10-22): 35 kontrol geçti**, T13 (arka plan push'u) her zamanki gibi uyarı verdi.
+>   Test bir hata buldu: başlatma kendini bekliyordu ve iPhone'daki her kayıt asılı kalıyordu (`68b0122` ile
+>   düzeltildi). Test düzeneği de 1.1'e uyarlandı: kart görünümü ve "N yeni" düğmesi adımları bozuyordu.
+>   Not: Debug derlemeleri gerçek uygulamanın verisini açıyor (aynı paket kimliği, Development ortamı); kullanıcı
+>   bunu kabul ederek "olduğu gibi" koşturdu.
 > - **A5, kısmen yapıldı:**
 >   - İçerik algılama artık öğe kimliğine göre önbellekte (`ClipContentCache`); uygulama, klavye ve widget'ta geçerli.
 >   - Klavyenin uzun basma paneli en fazla 4.000 karakter gösteriyor; "Yaz" yine metnin tamamını yazıyor.
