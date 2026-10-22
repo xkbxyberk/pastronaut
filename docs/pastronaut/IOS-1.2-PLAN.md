@@ -503,6 +503,14 @@ Arayüz kodu yalnızca **Adım D**'de yazılır, ekran görüntüleri geldikten 
 7. **`Clip` için `Transferable`** (metin ve URL; görsel temsili 1.3'te).
 
 ### Adım D: Arayüz (ekran görüntüleri ve onay sonrası)
+
+> **Durum (2026-10-22):** Geçmiş ekranı (eşit kutular), liste, menü, klavye ve Sıra (`a50b154`, `cf36ac8`);
+> örtü penceresi, Kaydetmeyi Duraklat, geri alma, yalnızca yerel öğeler, iPhone gizlilik seçenekleri, ayrıntı
+> ekranı (`178dd96`); Metni Tara, Belge Tara, "Pastronaut'a Kaydet" eylemi, Paylaş'ta koleksiyon seçimi (`7dc19a7`).
+> Cihazda tanıtım verisiyle denetlendi. Uçtan uca test (2026-10-22, son koşu): 35 geçti, T13 uyarı, T16 zamanlama
+> (Mac'in silmeleri 2 dk'yı aşınca geldi; hemen ardından T17 sayıları eşit, hata yok; bir önceki koşuda geçmişti).
+> T34 başlığın iCloud'a gittiğini doğruladı; başlık alanları Development şemasında oluştu. Eylem uzantısını kullanıcı
+> elle dener.
 - Ad Ver ve bağlam menüsünde Düzenle; Geçmişte Göster ve vurgu.
 - Seçim çubuğunda Toplu Kopyala ve Sırayı Başlat.
 - Klavyede Sıra tuşu (K13'ü de düşünerek).
@@ -546,3 +554,38 @@ Faz 1 soruları 2026-10-22'de yanıtlandı (yukarıdaki "Kararlar" bölümü). A
   https://developer-mdn.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/PropertyMetrics.html
 - Bölgenin tamamını paylaşma (CKShare) ve CKSyncEngine: https://developer.apple.com/documentation/cloudkit/ckshare ,
   https://github.com/markbattistella/SwiftDataSync , https://developer.apple.com/forums/thread/822937
+
+---
+
+## Production'a gönderme: başlık alanları (kullanıcı yapar, 1.2 incelemeye gitmeden önce)
+
+**Neden:** 1.2, `Clip` kaydına iki yeni alan yazar: `title` (şifreli metin) ve `titleModifiedAt` (tarih). App Store
+sürümü CloudKit'in **Production** ortamını kullanır. Production'da olmayan bir alana yazılamaz; bu alanlar yoksa
+başlık vermek iCloud'da hata verir. Alanlar önce **Development** ortamında oluşur (Debug derlemesi başlıklı bir öğe
+kaydettiğinde; uçtan uca testin T34 adımı bunu yapar), sonra elle Production'a gönderilir. **Geri alınamaz:**
+Production'a gönderilen alan bir daha silinemez. Eski sürümler (iPhone 1.1, Mac 1.0) bu alanlardan etkilenmez.
+
+1. **Giriş:** https://icloud.developer.apple.com adresine geliştirici Apple hesabınla gir → **CloudKit Database**.
+   Ekip **V88QY49A4T**, kapsayıcı **iCloud.com.xkbxyberk.pastronaut** seçili olsun.
+2. **Development'ı denetle:** Üstteki ortam seçicide **Development** seç → sol menüde **Schema › Record Types** →
+   **Clip**. Alan listesinde şunlar olmalı:
+   - `title` (türü şifreli metin; Konsol "Encrypted String" ya da benzeri gösterir)
+   - `titleModifiedAt` (Date/Time)
+   Yoksa dur: önce Debug derlemesiyle bir öğeye başlık verilmeli (ya da uçtan uca test T34 koşmalı).
+3. **Production'ı denetle (isteğe bağlı):** Ortamı **Production** yap → **Clip**. Bu iki alan henüz olmamalı.
+4. **Gönder:** Ortam **Development**'tayken **Deploy Schema Changes…** düğmesine bas (Konsol sürümüne göre sol
+   menünün altında ya da sağ üstte durur). Açılan pencere gönderilecek değişiklikleri listeler. **Yalnızca** şunlar
+   olmalı:
+   - Record type **Clip** › yeni alan **title**
+   - Record type **Clip** › yeni alan **titleModifiedAt**
+   Listede başka bir şey varsa (yeni bir kayıt türü, başka alanlar, dizinler) **gönderme**, bana sor.
+5. **Onayla:** **Deploy** ile gönder. Birkaç saniye sürer.
+6. **Doğrula:** Ortamı **Production** yap → **Schema › Record Types › Clip**. İki alan artık görünmeli.
+7. **Sonra:** TestFlight'taki 1.2 derlemesinde bir öğeye başlık ver; Ayarlar › Eşitleme'de hata çıkmamalı, başlık
+   Mac'e (1.0, alanı yok sayar) dokunmadan iCloud'a gider.
+
+**Development'ı temizlemek istersen (isteğe bağlı):** Uçtan uca testler gerçek geçmişini Development ortamına da
+yükledi. Temizlemek için Development'ta **Reset Development Environment** kullanılabilir; bu, Development verisini
+siler ve şemayı Production'daki haline döndürür. **Sırası önemli:** sıfırlama başlık alanlarını da Development'tan
+siler. Bu yüzden ya önce Production'a gönder, sonra sıfırla; ya da sıfırladıktan sonra alanları yeniden oluştur
+(Debug derlemesinde bir öğeye başlık ver ya da uçtan uca testi yeniden koştur) ve sonra gönder.

@@ -90,10 +90,14 @@ final class SyncStepTests: XCTestCase {
       let action = app.buttons["titleAction"].firstMatch
       XCTAssertTrue(action.waitForExistence(timeout: 5), "title action missing")
       action.tap()
-      let field = app.textFields["titleField"].firstMatch
-      XCTAssertTrue(field.waitForExistence(timeout: 5), "title field missing")
+      // Identifiers don't reach the controls of a system alert; find them in the alert instead.
+      let alert = app.alerts.firstMatch
+      XCTAssertTrue(alert.waitForExistence(timeout: 5), "title alert missing")
+      let field = alert.textFields.firstMatch
+      XCTAssertTrue(field.waitForExistence(timeout: 3), "title field missing")
+      field.tap()
       field.typeText(env["PT_ACTION"] ?? "")
-      app.buttons["saveTitleButton"].firstMatch.tap()
+      alert.buttons.matching(NSPredicate(format: "label IN %@", ["Save", "Kaydet"])).firstMatch.tap()
       report(["ok": row(env["PT_ACTION"] ?? "").waitForExistence(timeout: 10)])
     case "copy":
       try existingRow().tap()
