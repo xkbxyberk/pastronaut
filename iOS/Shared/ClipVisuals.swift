@@ -35,7 +35,9 @@ extension ClipContent {
 }
 
 extension Clip {
-  var content: ClipContent { ClipContent(text) }
+  /// Detected once per text: detection runs the system's data detector, and rows, cards, keyboard tiles and
+  /// widgets ask for it on every render.
+  var content: ClipContent { ClipContentCache.shared.content(for: self) }
 
   var isFromMac: Bool { sourceDevice == .mac }
 
@@ -95,5 +97,30 @@ extension Color {
       blue: Double((shifted >> 8) & 0xFF) / 255,
       opacity: Double(shifted & 0xFF) / 255
     )
+  }
+}
+
+/// `ClipContent` by clip ID. The ID is a hash of the text, so a cached value never goes stale. NSCache is
+/// thread-safe and gives memory back under pressure, which matters in the keyboard extension.
+final class ClipContentCache: @unchecked Sendable {
+  static let shared = ClipContentCache()
+
+  private final class Box {
+    let content: ClipContent
+    init(_ content: ClipContent) { self.content = content }
+  }
+
+  private let cache = NSCache<NSString, Box>()
+
+  private init() {
+    cache.countLimit = 600
+  }
+
+  func content(for clip: Clip) -> ClipContent {
+    let key = clip.id as NSString
+    if let hit = cache.object(forKey: key) { return hit.content }
+    let content = ClipContent(clip.text)
+    cache.setObject(Box(content), forKey: key)
+    return content
   }
 }

@@ -402,7 +402,15 @@ Arayüz kodu yalnızca **Adım D**'de yazılır, ekran görüntüleri geldikten 
 ### Adım A: Sağlamlaştırma (veri katmanı, arayüzsüz) → 1.2'nin ilk parçası (karar 4)
 
 > **Durum (2026-10-22):** A1–A4 yapıldı ve test edildi: çekirdekte 113 test (17'si yeni), Mac'te 109 test, iOS
-> derlemesi. İki cihazlı uçtan uca test henüz koşmadı. Sırada A5. A6 şema değişikliği olduğu için Adım B'ye taşındı.
+> derlemesi. İki cihazlı uçtan uca test henüz koşmadı. A6 şema değişikliği olduğu için Adım B'ye taşındı.
+> - **A5, kısmen yapıldı:**
+>   - İçerik algılama artık öğe kimliğine göre önbellekte (`ClipContentCache`); uygulama, klavye ve widget'ta geçerli.
+>   - Klavyenin uzun basma paneli en fazla 4.000 karakter gösteriyor; "Yaz" yine metnin tamamını yazıyor.
+>   - **Ertelendi:** Hafif anlık görüntü (`clips-lite.json`), cihazda Instruments ile bellek ölçülünce karar
+>     verilecek. Bulut Mac'in geçmiş sınırını izlediği için Mac kullanan birinin iPhone geçmişi zaten sınırlı.
+>     Hafif dosya, klavye aramasını kısaltılmış metinle sınırlardı.
+>   - **Ertelendi:** iPhone'da saklama süresi bir Ayarlar seçeneği gerektiriyor, Adım D'ye kaldı. Kural hazır
+>     (`HistoryAge`).
 > - **Uygulanan kural:** Aynı metnin yeniden yakalanması (Yapıştır, açılınca kaydetme, Paylaş, klavye) yeni veri
 >   sayılır ve eşitlenir. Dokunup kopyalama, sabitleme, koleksiyon ve düzenleme yalnızca yerel öğeyi yerelde tutar.
 > - **Klavye:** Yalnızca yerel öğelerde Sabitle ve Sil göstermez, çünkü bu işlemler doğrudan iCloud'a yazıyor.

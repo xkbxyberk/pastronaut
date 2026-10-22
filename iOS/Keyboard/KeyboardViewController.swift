@@ -641,6 +641,8 @@ private struct ClipTile: View {
 
 /// Long press on a clip: the whole text and what can be done with it.
 private struct ActionPanel: View {
+  static let shownCharacters = 4_000
+
   let model: KeyboardModel
   let clip: Clip
   @State private var confirmsDelete = false
@@ -648,7 +650,10 @@ private struct ActionPanel: View {
   var body: some View {
     VStack(spacing: KeyboardMetrics.spacing) {
       ScrollView {
-        Text(clip.text)
+        // One Text with up to 100 KB would cost the keyboard more memory than iOS allows it; "Type" still
+        // inserts the whole clip.
+        Text(clip.text.count > ActionPanel.shownCharacters
+             ? clip.text.prefix(ActionPanel.shownCharacters) + "…" : clip.text)
           .font(.system(size: 15))
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(10)
