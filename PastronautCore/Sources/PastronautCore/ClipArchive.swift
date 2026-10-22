@@ -16,6 +16,8 @@ public struct ClipArchive: Codable, Equatable, Sendable {
     public var sourceDevice: Clip.Device?
     public var sourceApp: String?
     public var sourceAppName: String?
+    /// Since 1.2; older files have none.
+    public var title: String?
   }
 
   public enum ReadError: Error, Equatable {
@@ -46,7 +48,8 @@ public struct ClipArchive: Codable, Equatable, Sendable {
         lastCopiedAt: clip.lastCopiedAt,
         sourceDevice: clip.sourceDevice,
         sourceApp: clip.sourceApp,
-        sourceAppName: clip.sourceAppName
+        sourceAppName: clip.sourceAppName,
+        title: clip.title
       )
     }
   }
@@ -118,7 +121,7 @@ public struct ClipArchive: Codable, Equatable, Sendable {
     var changed: [String: Clip] = [:]
     var newClipCount = 0
     for item in clips where !item.text.isEmpty {
-      let imported = Clip(
+      var imported = Clip(
         text: item.text,
         sourceApp: item.sourceApp,
         sourceAppName: item.sourceAppName,
@@ -129,10 +132,17 @@ public struct ClipArchive: Codable, Equatable, Sendable {
         pinned: item.pinned,
         collectionIDs: item.collections.compactMap { collectionIDs[$0] }
       )
+      if let title = Clip.cleanTitle(item.title) {
+        imported.setTitle(title, at: now)
+      }
       if let base = changed[imported.id] ?? existing[imported.id] {
         var result = base
         result.pinned = base.pinned || imported.pinned
         result.collectionIDs = base.collectionIDs + imported.collectionIDs
+        // Only adds, like pins: a title is taken when the clip here has none.
+        if result.title == nil, imported.title != nil {
+          result.takeTitle(from: imported)
+        }
         result.firstCopiedAt = min(base.firstCopiedAt, imported.firstCopiedAt)
         result.lastCopiedAt = max(base.lastCopiedAt, imported.lastCopiedAt)
         guard result != base else { continue }

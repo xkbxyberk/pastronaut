@@ -63,4 +63,6 @@ Ana dal her zaman Sparkle'lı kalır; Sparkle'ı ana daldan kaldırma.
 - Kabuk: `rm -rf`'i değişkenli yolla kullanma (`"${R:?}/…"`), `log` yerine `/usr/bin/log`,
   `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` ve `env -u SDKROOT`.
 - Mac arayüz testlerinden önce gerçek Pastronaut'u kapat
-  (`osascript -e 'tell application id "com.xkbxyberk.pastronaut" to quit'`), sonra `~/Applications/Pastronaut.app`'i yeniden aç.
+  (`osascript -e 'tell application id "com.xkbxyberk.pastronaut" to quit'`), sonra `/Applications/Pastronaut.app`'i yeniden aç.
+  Uçtan uca test için Debug derlemesi geçici olarak `~/Applications/Pastronaut.app`'e kopyalanır; test bitince kaldırılır.
+  Debug derlemeleri gerçek uygulamanın verisini açar (aynı paket kimliği, Development ortamı): testten önce kullanıcıya sor.

@@ -80,7 +80,8 @@ public extension Collection<Clip> {
   ) -> [Clip] {
     let query = Self.searchKey(query.trimmingCharacters(in: .whitespacesAndNewlines))
     return filter { clip in
-      (query.isEmpty || Self.searchKey(clip.text).contains(query))
+      (query.isEmpty || Self.searchKey(clip.text).contains(query)
+        || clip.title.map { Self.searchKey($0).contains(query) } == true)
         && ClipSearchToken.allMatch(tokens, text: clip.text, pinned: clip.pinned, lastCopiedAt: clip.lastCopiedAt,
                                     now: now, calendar: calendar)
     }

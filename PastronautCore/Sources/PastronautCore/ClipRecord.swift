@@ -20,6 +20,8 @@ public enum ClipRecord {
     static let sourceApp = "sourceApp"
     static let sourceAppName = "sourceAppName"
     static let collections = "collections"
+    /// Since 1.2. Written only once a title was set or cleared, so older clients' records stay as they were.
+    static let title = "title"
     // Plain metadata.
     static let kind = "kind"
     static let sourceDevice = "sourceDevice"
@@ -27,6 +29,7 @@ public enum ClipRecord {
     static let lastCopiedAt = "lastCopiedAt"
     static let modifiedAt = "modifiedAt"
     static let pinned = "pinned"
+    static let titleModifiedAt = "titleModifiedAt"
     static let schemaVersion = "schemaVersion"
   }
 
@@ -55,6 +58,11 @@ public enum ClipRecord {
     record[Field.lastCopiedAt] = clip.lastCopiedAt
     record[Field.modifiedAt] = clip.modifiedAt
     record[Field.pinned] = clip.pinned ? 1 : 0
+    // Clients before 1.2 never write these, so a title set elsewhere survives their saves.
+    if let titleModifiedAt = clip.titleModifiedAt {
+      record.encryptedValues[Field.title] = clip.title
+      record[Field.titleModifiedAt] = titleModifiedAt
+    }
     record[Field.schemaVersion] = schemaVersion
     return record
   }
@@ -80,6 +88,9 @@ public enum ClipRecord {
     )
     if let kind = (record[Field.kind] as? String).flatMap(Clip.Kind.init(rawValue:)) {
       clip.kind = kind
+    }
+    if let titleModifiedAt = record[Field.titleModifiedAt] as? Date {
+      clip.setTitle(record.encryptedValues[Field.title] as? String, at: titleModifiedAt)
     }
     return clip
   }

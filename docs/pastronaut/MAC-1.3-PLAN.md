@@ -48,7 +48,12 @@ Mac sürümüyle ulaşır.
 - **Gizlilik ayarlarının eşitlenmesi (K7):** Mac, iPhone'un yazdığı ortak gizlilik ayarını okur. Kod ve kart
   süzgeçleri iki yönde aynı çalışır.
 - **Öğe başlığı:** iPhone'daki `title` alanı Maccy'nin yerel başlığına (`HistoryItem.title`) eşlenir. Mac'teki
-  başlık da buluta yazılır.
+  başlık da buluta yazılır (`Clip.setTitle`). Mac'te metin düzenlenince (`SyncBridge.didEdit`) yeni öğe başlığı
+  `takeTitle(from:)` ile almalı; bugün yeni bir `Clip` kuruluyor ve başlık düşerdi. Maccy'nin görsellerde OCR
+  metnini başlık olarak kullandığına dikkat: o başlık eşitlenmemeli.
+- **Gizlilik ayarlarının eşitlenmesi (iPhone planındaki A6, buraya taşındı):** Kod, kart ve "yalnızca
+  sabitlenenler" anahtarları `Settings` kaydında şifreli alanlar olarak durur. Mac yazar, iPhone okuyup kendi
+  yakaladıklarına uygular. Bu bir şema eklemesidir.
 
 ### 2.3 Mac'te bulunan hatalar (iPhone denetiminde yan bulgu)
 - **Sabitleme kaybı:** Mac'te boş pin harfi kalmayınca uzaktan sabitlenen öğe sabitsiz ekleniyor

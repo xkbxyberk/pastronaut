@@ -82,6 +82,8 @@ bir dokunuşla yazdığı alana ekler.
 | firstCopiedAt, lastCopiedAt | Date | hayır | Çakışmada lastCopiedAt büyük olan kazanır |
 | pinned | Bool | hayır | Harf eşitlenmez |
 | collections | [String] | evet | Koleksiyon kimlikleri (`col-<UUID>`); pin gibi en yeni değişiklik kazanır (Dalga 3) |
+| title | String? | evet | 1.2. Kullanıcının verdiği ad. Yalnızca bir kez verildiğinde ya da temizlendiğinde yazılır |
+| titleModifiedAt | Date? | hayır | 1.2. Başlık bu saate göre birleşir; başlığı bilmeyen bir sürüm onu silemez |
 | deleted | — | — | Silme, kaydın silinmesiyle yayılır |
 
 Koleksiyon kaydı (`Collection`, ad = `col-<UUID>`): `name` (şifreli), `order`, `createdAt`, `modifiedAt`. Koleksiyonu

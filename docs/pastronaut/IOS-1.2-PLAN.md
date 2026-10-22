@@ -438,7 +438,23 @@ Arayüz kodu yalnızca **Adım D**'de yazılır, ekran görüntüleri geldikten 
 6. **K7:** Gizlilik seçenekleri `Settings` kaydında eşitlenir. Bu bir şema eklemesidir. Mac bunu okuyana kadar her
    cihaz kendi ayarını uygular.
 
-### Adım B: Şema eklemeleri (tek seferde, Production'a bir kez)
+### Adım B: Şema eklemeleri
+
+> **Durum (2026-10-22):** Kapsam daraltıldı. Yalnızca öğe başlığı eklendi; çekirdekte 125 test (12'si yeni), Mac'te
+> 109 test, iOS derlemesi.
+> - **`Clip.title`** (şifreli) ve **`Clip.titleModifiedAt`** (tarih): Başlık kendi saatine göre birleşir. Başlığı
+>   bilmeyen bir kaynak (Mac 1.0, iPhone 1.1, Mac'te yeniden kopyalama) onu silemez; başlık açıkça
+>   temizlenebilir. Kayıt alanları yalnızca başlık bir kez verildiğinde ya da temizlendiğinde yazılır. Başlık
+>   aramada da bulunur; arşivde taşınır, içe aktarma yalnızca ekler. Arayüzü Adım D'de.
+> - **Ertelendi, gizlilik ayarlarının eşitlenmesi (A6):** iPhone 1.2'de bu ayarları ne yazan ne okuyan var. Mac 1.3
+>   planına taşındı. K7'nin iPhone tarafı şemasız çözülecek: iPhone'da süzülen öğeler "yalnızca bu iPhone'da" kalır
+>   (Adım D, gizlilik ekranı).
+> - **Ertelendi, `Media` ve `Blobs`:** Production şemasına alan ve tür eklemek sonradan da serbest. Görsel şeması
+>   uygulamasıyla birlikte 1.3'te kesinleşir.
+> - **Yayından önce:** Development'ta başlıklı en az bir kayıt kaydedilmeli (alanlar o zaman oluşur), sonra CloudKit
+>   Console'da *Deploy Schema Changes to Production*. Bunu kullanıcı yapar; yapılmazsa 1.2 başlık yazamaz.
+
+Özgün plan (tarihçe için):
 - `Clip.title` (şifreli).
 - Gizlilik ayarları (madde A6).
 - `Media` kayıt türü ve `Blobs` bölgesi tanımı. Görseller 1.3'te açılsa da şema bir kez kesinleşsin.

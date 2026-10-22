@@ -33,6 +33,12 @@ public struct Clip: Codable, Equatable, Hashable, Sendable {
   public var collectionIDs: [String] {
     didSet { collectionIDs = Self.normalized(collectionIDs) }
   }
+  /// A name the person gave the clip ("Work IBAN"), shown instead of the text's first line. Set it with
+  /// `setTitle(_:at:)`; it merges by `titleModifiedAt`, apart from the rest of the record.
+  public private(set) var title: String?
+  /// When the title was last set or cleared; nil if it never was. A device that doesn't know titles sends clips
+  /// without one, so a missing title only replaces a real one when it was cleared later.
+  public private(set) var titleModifiedAt: Date?
 
   public init(
     text: String,
@@ -56,6 +62,27 @@ public struct Clip: Codable, Equatable, Hashable, Sendable {
     self.modifiedAt = modifiedAt ?? lastCopiedAt ?? firstCopiedAt
     self.pinned = pinned
     self.collectionIDs = Self.normalized(collectionIDs)
+  }
+
+  /// The longest title kept, in characters.
+  public static let maxTitleLength = 100
+
+  /// Gives the clip a title, or clears it with nil or blank text. Whitespace around it is dropped and it is cut at
+  /// `maxTitleLength`. The text and the ID don't change.
+  public mutating func setTitle(_ newTitle: String?, at date: Date = .now) {
+    title = Self.cleanTitle(newTitle)
+    titleModifiedAt = date
+  }
+
+  static func cleanTitle(_ title: String?) -> String? {
+    let trimmed = (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? nil : String(trimmed.prefix(maxTitleLength))
+  }
+
+  /// The title as another version of the clip had it (merging, edits that make a new clip from this one).
+  public mutating func takeTitle(from other: Clip) {
+    title = other.title
+    titleModifiedAt = other.titleModifiedAt
   }
 
   /// Pinned, or in a collection: clean-ups must not remove it.
@@ -110,11 +137,17 @@ public struct Clip: Codable, Equatable, Hashable, Sendable {
   /// Copy dates widen to cover both; source and pin state follow the most recent modification.
   public func merged(with other: Clip) -> Clip {
     precondition(id == other.id, "Only versions of the same clip can be merged")
-    let newer = other.modifiedAt > modifiedAt ? other : self
+    let otherIsNewer = other.modifiedAt > modifiedAt
+    let newer = otherIsNewer ? other : self
+    let older = otherIsNewer ? self : other
     var result = newer
     result.firstCopiedAt = min(firstCopiedAt, other.firstCopiedAt)
     result.lastCopiedAt = max(lastCopiedAt, other.lastCopiedAt)
     result.modifiedAt = max(modifiedAt, other.modifiedAt)
+    // The title follows its own last change, so a version that never had one doesn't erase it.
+    if (older.titleModifiedAt ?? .distantPast) > (newer.titleModifiedAt ?? .distantPast) {
+      result.takeTitle(from: older)
+    }
     return result
   }
 }
@@ -122,10 +155,10 @@ public struct Clip: Codable, Equatable, Hashable, Sendable {
 extension Clip {
   enum CodingKeys: String, CodingKey {
     case id, text, kind, sourceApp, sourceAppName, sourceDevice, firstCopiedAt, lastCopiedAt, modifiedAt, pinned
-    case collectionIDs
+    case collectionIDs, title, titleModifiedAt
   }
 
-  /// Files written before collections existed have no `collectionIDs`.
+  /// Files written before collections existed have no `collectionIDs`; before 1.2, no title.
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     id = try container.decode(String.self, forKey: .id)
@@ -139,6 +172,8 @@ extension Clip {
     modifiedAt = try container.decode(Date.self, forKey: .modifiedAt)
     pinned = try container.decode(Bool.self, forKey: .pinned)
     collectionIDs = Self.normalized(try container.decodeIfPresent([String].self, forKey: .collectionIDs) ?? [])
+    title = try container.decodeIfPresent(String.self, forKey: .title)
+    titleModifiedAt = try container.decodeIfPresent(Date.self, forKey: .titleModifiedAt)
   }
 
   public func encode(to encoder: Encoder) throws {
@@ -156,5 +191,7 @@ extension Clip {
     if !collectionIDs.isEmpty {
       try container.encode(collectionIDs, forKey: .collectionIDs)
     }
+    try container.encodeIfPresent(title, forKey: .title)
+    try container.encodeIfPresent(titleModifiedAt, forKey: .titleModifiedAt)
   }
 }

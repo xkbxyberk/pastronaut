@@ -184,7 +184,7 @@ final class ClipStore {
   @discardableResult
   func edit(_ clip: Clip, to text: String) -> String? {
     guard !text.isEmpty, text != clip.text, SyncPolicy.default.isEligible(text) else { return nil }
-    let edited = Clip(
+    var edited = Clip(
       text: text,
       sourceApp: clip.sourceApp,
       sourceAppName: clip.sourceAppName,
@@ -195,6 +195,7 @@ final class ClipStore {
       pinned: clip.pinned,
       collectionIDs: clip.collectionIDs
     )
+    edited.takeTitle(from: clip)
     clips.removeAll { $0.id == clip.id }
     clips.append(edited)
     Task {
@@ -204,6 +205,15 @@ final class ClipStore {
       await upload()
     }
     return edited.id
+  }
+
+  /// Gives a clip a title, or clears it with nil or blank text. Only the title changes: the pin and the rest come
+  /// from the sync mirror, so a stale copy of the clip can't undo changes from another device.
+  func setTitle(_ title: String?, for clip: Clip) {
+    var titled = clip
+    titled.setTitle(title)
+    guard titled.title != clip.title else { return }
+    upsert(titled)
   }
 
   func delete(_ clip: Clip) {
