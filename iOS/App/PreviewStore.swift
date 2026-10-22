@@ -46,7 +46,8 @@ final class PreviewStore {
 
   private(set) var previews: [String: Preview] = [:]
   @ObservationIgnored private var attempted: Set<String> = []
-  @ObservationIgnored private let directory = URL.cachesDirectory.appending(path: "Previews")
+  /// In the App Group since 1.2, so the keyboard shows small versions (`PreviewThumbnails`).
+  @ObservationIgnored private let directory = PreviewCache.directory
 
   private init() {}
 
@@ -93,8 +94,13 @@ final class PreviewStore {
   func prune(keeping clipIDs: Set<String>) {
     previews = previews.filter { clipIDs.contains($0.key) }
     let directory = directory
+    // Before 1.2 previews were in the app's own Caches; they are fetched again into the App Group.
+    let oldDirectory = URL.cachesDirectory.appending(path: "Previews")
     let maxBytes = Self.maxCacheBytes
     Task.detached(priority: .utility) {
+      if oldDirectory != directory {
+        try? FileManager.default.removeItem(at: oldDirectory)
+      }
       CachePruner.prune(directory, keeping: clipIDs, maxBytes: maxBytes)
     }
   }

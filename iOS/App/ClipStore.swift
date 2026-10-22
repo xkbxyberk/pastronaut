@@ -501,6 +501,26 @@ final class ClipStore {
     try? files.removeFromInbox(handled: captured)
   }
 
+  // MARK: - Queue and combining
+
+  /// Starts a queue for the keyboard: each tap on its queue key types the next of these, in this order.
+  func startQueue(_ queued: [Clip]) {
+    guard !queued.isEmpty else { return }
+    try? files?.writeQueue(QueueRequest(clipIDs: queued.map(\.id)))
+  }
+
+  func endQueue() {
+    try? files?.writeQueue(nil)
+  }
+
+  var hasQueue: Bool { files?.readQueue() != nil }
+
+  /// Copies several clips as one text. Not saved as a clip of its own: the next copy anywhere would be.
+  func copyCombined(_ combined: [Clip], separator: ClipSeparator) {
+    UIPasteboard.general.string = combined.combinedText(separator: separator)
+    sharedDefaults?.set(UIPasteboard.general.changeCount, forKey: AutoCapture.lastChangeCountKey)
+  }
+
   // MARK: - Local-only clips
 
   /// "Upload to iCloud Again": sends what was kept on this iPhone only. Returns how many clips go up.

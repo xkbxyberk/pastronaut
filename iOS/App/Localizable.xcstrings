@@ -56,6 +56,28 @@
         }
       }
     },
+    "Add Title": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlık Ekle"
+          }
+        }
+      }
+    },
+    "Add Title…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlık Ekle…"
+          }
+        }
+      }
+    },
     "Add the keyboard": {
       "extractionState": "manual",
       "localizations": {
@@ -129,6 +151,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alexey Rodionov'un Maccy uygulamasına (MIT) dayanır. Maccy ile bağlantılı değildir."
+          }
+        }
+      }
+    },
+    "Blank Line Between": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aralarında Boş Satır"
           }
         }
       }
@@ -217,6 +250,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Renkler"
+          }
+        }
+      }
+    },
+    "Combine & Copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birleştirip Kopyala"
+          }
+        }
+      }
+    },
+    "Commas": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Virgülle"
           }
         }
       }
@@ -415,6 +470,39 @@
         }
       }
     },
+    "Edit Title": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlığı Düzenle"
+          }
+        }
+      }
+    },
+    "Edit Title…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlığı Düzenle…"
+          }
+        }
+      }
+    },
+    "Edit…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzenle…"
+          }
+        }
+      }
+    },
     "Email": {
       "extractionState": "manual",
       "localizations": {
@@ -532,6 +620,105 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kestirmeler'de “Panoyu Al” ve “Pastronaut'a kaydet” eylemleriyle bir kestirme oluştur. Tek hareketle kaydetmek için Arkaya Dokun'a ya da Eylem düğmesine ata."
+          }
+        }
+      }
+    },
+    "More": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer"
+          }
+        }
+      }
+    },
+    "One per Line": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her Biri Ayrı Satırda"
+          }
+        }
+      }
+    },
+    "Queue ready: tap its key on the keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıra hazır: klavyedeki sıra tuşuna dokun"
+          }
+        }
+      }
+    },
+    "Remove Title": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlığı Kaldır"
+          }
+        }
+      }
+    },
+    "Show in History": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmişte Göster"
+          }
+        }
+      }
+    },
+    "Shown instead of the text, and found when you search. The text itself doesn't change.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metnin yerine gösterilir ve aramada bulunur. Metnin kendisi değişmez."
+          }
+        }
+      }
+    },
+    "Spaces": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boşlukla"
+          }
+        }
+      }
+    },
+    "Start Queue": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sırayı Başlat"
+          }
+        }
+      }
+    },
+    "Title": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlık"
           }
         }
       }

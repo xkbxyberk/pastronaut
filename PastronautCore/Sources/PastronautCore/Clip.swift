@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 
 /// A synced clipboard entry. Platform-neutral: no AppKit, UIKit or SwiftData.
-public struct Clip: Codable, Equatable, Hashable, Sendable {
+public struct Clip: Codable, Equatable, Hashable, Identifiable, Sendable {
   public enum Kind: String, Codable, Sendable {
     case text
     case url

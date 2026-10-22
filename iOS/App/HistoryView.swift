@@ -21,6 +21,15 @@ struct HistoryView: View {
   @State private var heldBackIDs: Set<String> = []
   @State private var isAwayFromTop = false
   @State private var showsSyncChip = false
+  /// "Add Title…": the clip being named and the text typed so far.
+  @State private var titling: Clip?
+  @State private var titleDraft = ""
+  /// "Edit…" from the menu.
+  @State private var editing: Clip?
+  /// "Show in History": the clip to scroll to, and the one outlined for a moment.
+  @State private var revealID: String?
+  @State private var highlightID: String?
+  @State private var isSearchPresented = false
   @AppStorage(AppPreferences.onboardingKey) private var hasCompletedOnboarding = false
   @AppStorage(PreviewChoice.key) private var previewChoice = PreviewChoice.unasked.rawValue
 
@@ -44,6 +53,18 @@ struct HistoryView: View {
         .overlay(alignment: .top) {
           topIndicator(proxy: proxy)
             .padding(.top, 8)
+        }
+        .onChange(of: revealID) { _, id in
+          guard let id else { return }
+          Task { @MainActor in
+            // Let the list drop the search first, so the clip has a place to scroll to.
+            try? await Task.sleep(for: .milliseconds(350))
+            withAnimation(.snappy) { proxy.scrollTo(id, anchor: .center) }
+            withAnimation(.snappy) { highlightID = id }
+            revealID = nil
+            try? await Task.sleep(for: .seconds(1.6))
+            withAnimation(.easeOut) { if highlightID == id { highlightID = nil } }
+          }
         }
       }
       .modifier(FilterBarPlacement(isShown: showsScopeBar) { filterBar })
@@ -99,7 +120,12 @@ struct HistoryView: View {
         }
       }
       // Chips for kind, date and pins; the device bar stays separate.
-      .searchable(text: $store.searchText, tokens: $tokens, suggestedTokens: .constant(suggestedTokens)) { token in
+      .searchable(
+        text: $store.searchText,
+        tokens: $tokens,
+        suggestedTokens: .constant(suggestedTokens),
+        isPresented: $isSearchPresented
+      ) { token in
         Label(token.title, systemImage: token.systemImage)
       }
       .refreshable { await store.refresh() }
@@ -140,6 +166,7 @@ struct HistoryView: View {
           store.save(text)
         }
       }
+      .modifier(ClipDialogs(editing: $editing, titling: $titling, titleDraft: $titleDraft))
       .sheet(isPresented: $showsSettings) {
         SettingsView()
       }
@@ -283,6 +310,11 @@ struct HistoryView: View {
 
   /// Only what the list shows: the selection outlives a change of scope or search, and acting on clips the
   /// person can't see (deleting them) would be a surprise.
+  /// The selection in the order the screen shows it, for the queue and for combining.
+  private var selectedInOrder: [Clip] {
+    sections.flatMap(\.clips).filter { selection.contains($0.id) }
+  }
+
   private var selectedClips: [Clip] {
     matchedClips.filter { scope.includes($0) && selection.contains($0.id) }
   }
@@ -307,12 +339,17 @@ struct HistoryView: View {
       }
       .labelStyle(.iconOnly)
       .buttonBorderShape(.circle)
-      Button {
-        showsNewClip = true
-      } label: {
-        Label("New Clip", systemImage: "square.and.pencil")
+      if #unavailable(iOS 26.0) {
+        newClipButton
       }
-      .accessibilityIdentifier("newClipButton")
+    }
+    if #available(iOS 26.0, *) {
+      // Search and "+" where the thumb is.
+      DefaultToolbarItem(kind: .search, placement: .bottomBar)
+      ToolbarSpacer(.fixed, placement: .bottomBar)
+      ToolbarItem(placement: .bottomBar) {
+        newClipButton
+      }
     }
     if #available(iOS 26.0, *) {
       ToolbarSpacer(.fixed, placement: .topBarTrailing)
@@ -332,6 +369,15 @@ struct HistoryView: View {
       }
       .accessibilityIdentifier("settingsButton")
     }
+  }
+
+  private var newClipButton: some View {
+    Button {
+      showsNewClip = true
+    } label: {
+      Label("New Clip", systemImage: "plus")
+    }
+    .accessibilityIdentifier("newClipButton")
   }
 
   @ToolbarContentBuilder
@@ -364,6 +410,32 @@ struct HistoryView: View {
       }
       .disabled(selection.isEmpty)
       .accessibilityIdentifier("bulkCollect")
+      Menu {
+        Button {
+          store.startQueue(selectedInOrder)
+          endEditing()
+          showToast("Queue ready: tap its key on the keyboard")
+        } label: {
+          Label("Start Queue", systemImage: "list.number")
+        }
+        .accessibilityIdentifier("startQueue")
+        Menu {
+          ForEach(ClipSeparator.allCases, id: \.self) { separator in
+            Button(separator.title) {
+              store.copyCombined(selectedInOrder, separator: separator)
+              endEditing()
+              Haptics.success()
+              showToast("Copied")
+            }
+          }
+        } label: {
+          Label("Combine & Copy", systemImage: "square.stack.3d.down.right")
+        }
+      } label: {
+        Label("More", systemImage: "ellipsis.circle")
+      }
+      .disabled(selection.isEmpty)
+      .accessibilityIdentifier("bulkMore")
       Spacer()
       Text("\(selection.count) selected")
         .font(.subheadline)
@@ -408,12 +480,8 @@ struct HistoryView: View {
     .foregroundStyle(.primary)
     // iPad: drag a clip into another app, or onto a collection in the sidebar.
     .modifier(DraggableOnPad(text: clip.text))
-    .listRowInsets(EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 16))
-    .listRowBackground(
-      // White cards on the grey grouped background in light mode, raised grey in dark mode.
-      RoundedRectangle(cornerRadius: 24, style: .continuous)
-        .fill(Color(uiColor: .secondarySystemGroupedBackground))
-    )
+    // White cards on the grey grouped background in light mode, raised grey in dark mode (`list`).
+    .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 12))
     .listRowSeparator(.hidden)
     // The identifier carries the pin state for the end-to-end test (iOS/UITests); VoiceOver reads the label.
     .accessibilityIdentifier(clip.pinned ? "clip.pinned" : "clip.unpinned")
@@ -450,12 +518,38 @@ struct HistoryView: View {
     } label: {
       Label("Copy", systemImage: "doc.on.doc")
     }
+    if case .link(let url) = clip.content {
+      Link(destination: url) {
+        Label("Open Link", systemImage: "safari")
+      }
+    }
     Button {
       detail = clip
     } label: {
       Label("Show Details", systemImage: "info.circle")
     }
     .accessibilityIdentifier("showDetails")
+    if isNarrowed {
+      Button {
+        showInHistory(clip)
+      } label: {
+        Label("Show in History", systemImage: "clock.arrow.circlepath")
+      }
+      .accessibilityIdentifier("showInHistory")
+    }
+    Divider()
+    Button {
+      titleDraft = clip.title ?? ""
+      titling = clip
+    } label: {
+      Label(clip.title == nil ? "Add Title…" : "Edit Title…", systemImage: "character.cursor.ibeam")
+    }
+    .accessibilityIdentifier("titleAction")
+    Button {
+      editing = clip
+    } label: {
+      Label("Edit…", systemImage: "pencil")
+    }
     Button {
       store.togglePin(clip)
     } label: {
@@ -473,6 +567,21 @@ struct HistoryView: View {
     } label: {
       Label("Delete", systemImage: "trash")
     }
+  }
+
+  /// Search, chips or another scope hide part of the history; "Show in History" brings the clip back among its
+  /// neighbours.
+  private var isNarrowed: Bool {
+    !store.searchText.isEmpty || !tokens.isEmpty || scope != .all
+  }
+
+  private func showInHistory(_ clip: Clip) {
+    store.searchText = ""
+    tokens = []
+    isSearchPresented = false
+    scope = .all
+    releaseHeldBack()
+    revealID = clip.id
   }
 
   // MARK: - List (previews off)
@@ -498,6 +607,16 @@ struct HistoryView: View {
         Section {
           ForEach(section.clips, id: \.id) { clip in
             row(clip)
+              .listRowBackground(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                  .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                  .overlay {
+                    if highlightID == clip.id {
+                      RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .strokeBorder(Color.accentColor, lineWidth: 3)
+                    }
+                  }
+              )
           }
         } header: {
           Text(section.title)
@@ -540,8 +659,10 @@ struct HistoryView: View {
             .padding(.horizontal, 6)
             .padding(.top, 6)
             .id(Self.cardSectionAnchor(section))
-          CardColumns(clips: section.clips) { clip in
-            ClipCard(clip: clip, isEditing: isEditing, isSelected: selection.contains(clip.id)) {
+          CardGrid(clips: section.clips) { clip in
+            ClipCard(
+              clip: clip, isEditing: isEditing, isSelected: selection.contains(clip.id), isHighlighted: highlightID == clip.id
+            ) {
               if isEditing {
                 if selection.contains(clip.id) { selection.remove(clip.id) } else { selection.insert(clip.id) }
               } else {
@@ -550,6 +671,7 @@ struct HistoryView: View {
             }
             .contextMenu { if !isEditing { clipMenu(clip) } }
             .accessibilityIdentifier(clip.pinned ? "card.pinned" : "card.unpinned")
+            .id(clip.id)
           }
         }
       }
@@ -577,29 +699,88 @@ struct HistoryView: View {
   }
 }
 
+/// A list row: what the clip says (its title, or its first line, in bold), a second line of it, then its kind, time
+/// and source; a small picture on the right.
 struct ClipRow: View {
   let clip: Clip
 
+  private var lines: (String, String?) {
+    if let title = clip.title { return (title, clip.preview) }
+    let parts = clip.preview.split(whereSeparator: \.isNewline).map(String.init)
+    return (parts.first ?? clip.preview, parts.count > 1 ? parts.dropFirst().joined(separator: " ") : nil)
+  }
+
   var body: some View {
+    let content = clip.content
     HStack(spacing: 12) {
-      ClipIcon(content: clip.content, size: 38, glass: true)
       VStack(alignment: .leading, spacing: 3) {
-        Text(clip.preview)
-          .font(clip.content.usesMonospacedFont ? .body.monospaced() : .body)
-          .lineLimit(2)
-          .multilineTextAlignment(.leading)
-        ClipSourceLine(clip: clip)
+        Text(verbatim: lines.0)
+          .font(content.usesMonospacedFont ? .body.monospaced().weight(.semibold) : .body.weight(.semibold))
+          .lineLimit(1)
+        if let second = lines.1 {
+          Text(verbatim: second)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+        HStack(spacing: 5) {
+          Text(content.kindName)
+            .fontWeight(.semibold)
+            .foregroundStyle(content.kind.tint)
+          Text(verbatim: "·")
+          Text(clip.lastCopiedAt, format: .relative(presentation: .named, unitsStyle: .abbreviated))
+          if clip.pinned {
+            Image(systemName: "pin.fill")
+              .foregroundStyle(Color.pin)
+              .accessibilityLabel(Text("Pinned clip"))
+          }
+          Spacer(minLength: 0)
+          SourceBadge(clip: clip)
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
       }
-      Spacer(minLength: 0)
-      if clip.pinned {
-        Image(systemName: "pin.fill")
-          .font(.footnote)
-          .foregroundStyle(Color.pin)
-          .accessibilityLabel(Text("Pinned clip"))
-      }
+      .multilineTextAlignment(.leading)
+      ClipThumbnail(clip: clip)
     }
     .padding(.vertical, 2)
     .accessibilityElement(children: .combine)
+  }
+}
+
+/// "Edit…" and "Add Title…" from a clip's menu.
+private struct ClipDialogs: ViewModifier {
+  @Environment(ClipStore.self) private var store
+  @Binding var editing: Clip?
+  @Binding var titling: Clip?
+  @Binding var titleDraft: String
+
+  func body(content: Content) -> some View {
+    content
+      .sheet(item: $editing) { clip in
+        ClipEditor(text: clip.text) { text in
+          if store.edit(clip, to: text) == nil, !SyncPolicy.default.isEligible(text) {
+            store.notice = .tooLarge
+          }
+        }
+      }
+      .alert(
+        Text(titling?.title == nil ? "Add Title" : "Edit Title"),
+        isPresented: Binding(get: { titling != nil }, set: { if !$0 { titling = nil } }),
+        presenting: titling
+      ) { clip in
+        TextField("Title", text: $titleDraft)
+          .accessibilityIdentifier("titleField")
+        Button("Save") { store.setTitle(titleDraft, for: clip) }
+          .accessibilityIdentifier("saveTitleButton")
+        if clip.title != nil {
+          Button("Remove Title", role: .destructive) { store.setTitle(nil, for: clip) }
+        }
+        Button("Cancel", role: .cancel) {}
+      } message: { _ in
+        Text("Shown instead of the text, and found when you search. The text itself doesn't change.")
+      }
   }
 }
 
@@ -781,6 +962,17 @@ private struct BrandTitle: ViewModifier {
       content
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+    }
+  }
+}
+
+extension ClipSeparator {
+  var title: LocalizedStringKey {
+    switch self {
+    case .newLine: "One per Line"
+    case .blankLine: "Blank Line Between"
+    case .comma: "Commas"
+    case .space: "Spaces"
     }
   }
 }

@@ -2,48 +2,18 @@ import PastronautCore
 import SwiftUI
 import UIKit
 
-// The history as cards (previews on): each kind draws its own content, links and addresses with their preview.
-// With previews off the history stays a list (HistoryView.row).
+// The history as cards (previews on): two columns of tiles that are all the same size, so rows line up. Each kind
+// fills the tile's top with its own content (page image, map, code, color, text); what it is, when it was copied
+// and where it came from sit along the bottom. With previews off the history is a list (HistoryView.row).
 
-/// Two columns that fill top to bottom. Each clip goes to the column that is shorter so far (by an estimate of its
-/// card's height), so tall cards (maps, page images, code) don't pile up on one side.
-struct CardColumns<Card: View>: View {
+/// Two equal columns of equal tiles.
+struct CardGrid<Card: View>: View {
   let clips: [Clip]
   @ViewBuilder let card: (Clip) -> Card
 
   var body: some View {
-    let columns = Self.split(clips, previews: PreviewStore.isEnabled)
-    HStack(alignment: .top, spacing: 10) {
-      ForEach(0..<2, id: \.self) { index in
-        VStack(spacing: 10) {
-          ForEach(columns[index], id: \.id, content: card)
-        }
-        .frame(maxWidth: .infinity, alignment: .top)
-      }
-    }
-  }
-
-  static func split(_ clips: [Clip], previews: Bool) -> [[Clip]] {
-    var columns: [[Clip]] = [[], []]
-    var heights: [CGFloat] = [0, 0]
-    for clip in clips {
-      let target = heights[0] <= heights[1] ? 0 : 1
-      columns[target].append(clip)
-      heights[target] += estimatedHeight(of: clip, previews: previews) + 10
-    }
-    return columns
-  }
-
-  /// Rough card heights in points; close enough to keep the columns even.
-  static func estimatedHeight(of clip: Clip, previews: Bool) -> CGFloat {
-    let lines = CGFloat(min(7, max(1, clip.preview.count / 22 + clip.preview.filter(\.isNewline).count)))
-    switch clip.content {
-    case .address: return (previews ? 112 : 0) + 70 + lines * 20 + 44
-    case .link: return (previews ? 100 : 0) + 110
-    case .code: return 70 + CGFloat(min(9, clip.text.split(whereSeparator: \.isNewline).count + clip.text.count / 26)) * 18
-    case .color: return 150
-    case .phone, .email: return 140
-    case .text: return 50 + lines * 20
+    LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+      ForEach(clips, id: \.id, content: card)
     }
   }
 }
@@ -52,12 +22,16 @@ struct ClipCard: View {
   let clip: Clip
   var isEditing = false
   var isSelected = false
+  /// Briefly outlined after "Show in History".
+  var isHighlighted = false
   let onTap: () -> Void
   @Environment(\.openURL) private var openURL
-  @Environment(\.colorScheme) private var colorScheme
+  /// Every tile has this height; it grows with Dynamic Type so text still fits.
+  @ScaledMetric(relativeTo: .body) private var height: CGFloat = 176
 
   private var content: ClipContent { clip.content }
   private var preview: PreviewStore.Preview? { PreviewStore.shared.preview(for: clip) }
+  private var action: CardAction? { isEditing ? nil : CardAction(content) }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
@@ -65,41 +39,40 @@ struct ClipCard: View {
         VStack(alignment: .leading, spacing: 0) {
           media
           main
-            .padding(.horizontal, 14)
-            .padding(.top, 12)
-            .padding(.bottom, 4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
-      if let action = CardAction(content), !isEditing {
+      if let action {
         Button {
           openURL(action.url)
         } label: {
           Label(action.title, systemImage: action.systemImage)
-            .font(.subheadline.weight(.semibold))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
+            .font(.footnote.weight(.semibold))
+            .lineLimit(1)
+            .padding(.horizontal, 11)
+            .padding(.vertical, 6)
             .foregroundStyle(.white)
             .background(content.kind.deepTint, in: Capsule())
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 14)
-        .padding(.top, 4)
+        .padding(.horizontal, 12)
+        .padding(.bottom, 2)
       }
       footer
-        .padding(.horizontal, 14)
-        .padding(.top, 6)
-        .padding(.bottom, 12)
+        .padding(.horizontal, 12)
+        .frame(height: 30)
     }
+    .frame(height: height)
     .foregroundStyle(foreground)
-    .background(background, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+    .background(background, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     .overlay {
-      if isEditing {
-        RoundedRectangle(cornerRadius: 22, style: .continuous)
-          .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 3)
+      if isEditing || isHighlighted {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+          .strokeBorder(isSelected || isHighlighted ? Color.accentColor : Color.clear, lineWidth: 3)
       }
     }
     .overlay(alignment: .topTrailing) {
@@ -114,102 +87,132 @@ struct ClipCard: View {
     .task(id: clip.id) { await PreviewStore.shared.load(clip) }
     .accessibilityElement(children: .combine)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
+    // The card is one element for VoiceOver, so its Call / Write Email / Get Directions button is an action on it.
+    .accessibilityActions {
+      if let action {
+        Button(action.title) { openURL(action.url) }
+      }
+    }
   }
 
   // MARK: - Parts
 
+  /// The picture along the top: a page image or a map, edge to edge.
   @ViewBuilder
   private var media: some View {
     switch content {
     case .address:
       if let image = preview?.image {
-        Image(uiImage: image)
-          .resizable()
-          .scaledToFill()
-          .frame(height: 112)
-          .frame(maxWidth: .infinity)
-          .clipped()
+        picture(image, height: 64)
       } else if PreviewStore.isEnabled {
         ZStack {
           Color(red: 0.93, green: 0.91, blue: 0.87)
           Image(systemName: "mappin.circle.fill")
-            .font(.title)
+            .font(.title2)
             .foregroundStyle(ClipKind.address.deepTint)
         }
-        .frame(height: 112)
+        .frame(height: 64)
       }
     case .link:
       if let image = preview?.image {
-        Image(uiImage: image)
-          .resizable()
-          .scaledToFill()
-          .frame(height: 100)
-          .frame(maxWidth: .infinity)
-          .clipped()
+        picture(image, height: 92)
       }
     default:
       EmptyView()
     }
   }
 
+  private func picture(_ image: UIImage, height: CGFloat) -> some View {
+    Image(uiImage: image)
+      .resizable()
+      .scaledToFill()
+      .frame(height: height)
+      .frame(maxWidth: .infinity)
+      .clipped()
+      .accessibilityHidden(true)
+  }
+
   @ViewBuilder
   private var main: some View {
     switch content {
     case .link(let url):
-      VStack(alignment: .leading, spacing: 6) {
-        if let title = preview?.title {
-          Text(verbatim: title)
-            .font(.subheadline.weight(.bold))
-            .lineLimit(3)
-        }
-        Label {
-          Text(verbatim: url.host() ?? url.absoluteString)
-            .lineLimit(1)
-        } icon: {
-          Image(systemName: "link")
-        }
-        .font(.footnote.weight(.semibold))
-        .foregroundStyle(ClipKind.link.tint)
-        if preview?.title == nil, !url.path().isEmpty, url.path() != "/" {
-          Text(verbatim: url.path())
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .lineLimit(2)
-        }
+      VStack(alignment: .leading, spacing: 2) {
+        Text(verbatim: clip.title ?? preview?.title ?? url.host() ?? url.absoluteString)
+          .font(.subheadline.weight(.semibold))
+          .lineLimit(preview?.image == nil ? 4 : 2)
+        Text(verbatim: url.host() ?? url.absoluteString)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
       }
+      .padding(.horizontal, 12)
+      .padding(.top, 10)
     case .code:
       VStack(alignment: .leading, spacing: 6) {
-        Text(verbatim: CodeHighlighter.language(of: clip.text).title.uppercased())
+        Text(verbatim: clip.title ?? CodeHighlighter.language(of: clip.text).title.uppercased())
           .font(.caption2.weight(.bold))
           .foregroundStyle(CodeTheme.label)
+          .lineLimit(1)
         Text(CodeTheme.attributed(clip.text))
-          .font(.system(size: 12, design: .monospaced))
-          .lineLimit(9)
+          .font(.system(.caption, design: .monospaced))
       }
+      .padding(12)
+      .fadingBottom()
     case .color(let hex):
-      VStack(alignment: .leading, spacing: 4) {
-        Spacer().frame(height: 56)
+      VStack(alignment: .leading, spacing: 2) {
+        Spacer(minLength: 0)
+        if let title = clip.title {
+          Text(verbatim: title)
+            .font(.caption.weight(.semibold))
+            .lineLimit(1)
+        }
         Text(verbatim: hex.uppercased())
           .font(.system(.title3, design: .monospaced).weight(.semibold))
-        if let rgb = Self.rgb(hex) {
+        if let rgb = HexColor.rgb(hex) {
           Text(verbatim: "RGB \(rgb.0) \(rgb.1) \(rgb.2)")
             .font(.caption)
             .opacity(0.85)
         }
       }
+      .padding(14)
     case .phone, .email:
-      Text(verbatim: clip.preview)
-        .font(.title3.weight(.medium))
-        .lineLimit(2)
-        .minimumScaleFactor(0.8)
+      VStack(alignment: .leading, spacing: 4) {
+        if let title = clip.title {
+          Text(verbatim: title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+        Text(verbatim: clip.preview)
+          .font(.title3.weight(.medium))
+          .lineLimit(3)
+          .minimumScaleFactor(0.75)
+      }
+      .padding(12)
     case .address:
-      Text(verbatim: clip.preview)
-        .font(.subheadline.weight(.semibold))
-        .lineLimit(4)
+      VStack(alignment: .leading, spacing: 1) {
+        Text(verbatim: clip.title ?? Self.firstLine(of: clip.preview))
+          .font(.subheadline.weight(.semibold))
+          .lineLimit(preview?.image == nil && !PreviewStore.isEnabled ? 3 : 1)
+        Text(verbatim: clip.title == nil ? Self.rest(of: clip.preview) : clip.preview)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .lineLimit(2)
+      }
+      .padding(.horizontal, 12)
+      .padding(.top, 8)
     case .text:
-      Text(verbatim: clip.preview)
-        .font(.subheadline)
-        .lineLimit(7)
+      VStack(alignment: .leading, spacing: 4) {
+        if let title = clip.title {
+          Text(verbatim: title)
+            .font(.subheadline.weight(.bold))
+            .lineLimit(2)
+        }
+        Text(verbatim: clip.preview)
+          .font(.subheadline)
+      }
+      .padding(12)
+      .fadingBottom()
     }
   }
 
@@ -218,20 +221,29 @@ struct ClipCard: View {
       Image(systemName: content.symbolName)
         .foregroundStyle(onDarkCard ? AnyShapeStyle(.white.opacity(0.85)) : AnyShapeStyle(content.kind.tint))
       Text(content.kindName)
+        .fontWeight(.semibold)
+        .foregroundStyle(onDarkCard ? AnyShapeStyle(.white.opacity(0.85)) : AnyShapeStyle(content.kind.tint))
       Text(verbatim: "·")
       Text(clip.lastCopiedAt, format: .relative(presentation: .named, unitsStyle: .abbreviated))
-        .lineLimit(1)
       Spacer(minLength: 0)
       if clip.pinned {
         Image(systemName: "pin.fill")
           .foregroundStyle(onDarkCard ? Color.white : Color.pin)
           .accessibilityLabel(Text("Pinned clip"))
       }
-      Image(systemName: clip.isFromMac ? "laptopcomputer" : "iphone")
-        .accessibilityLabel(Text(verbatim: clip.isFromMac ? "Mac" : "iPhone"))
+      SourceBadge(clip: clip, onDarkCard: onDarkCard)
     }
     .font(.caption)
+    .lineLimit(1)
     .foregroundStyle(onDarkCard ? AnyShapeStyle(.white.opacity(0.8)) : AnyShapeStyle(.secondary))
+  }
+
+  static func firstLine(of text: String) -> String {
+    String(text.split(whereSeparator: \.isNewline).first ?? Substring(text))
+  }
+
+  static func rest(of text: String) -> String {
+    text.split(whereSeparator: \.isNewline).dropFirst().joined(separator: ", ")
   }
 
   // MARK: - Colors
@@ -239,7 +251,7 @@ struct ClipCard: View {
   private var onDarkCard: Bool {
     switch content {
     case .code: true
-    case .color(let hex): !Self.isLight(hex)
+    case .color(let hex): !HexColor.isLight(hex)
     default: false
     }
   }
@@ -253,12 +265,88 @@ struct ClipCard: View {
   }
 
   private var foreground: Color {
-    if case .color(let hex) = content, Self.isLight(hex) { return .black }
+    if case .color(let hex) = content, HexColor.isLight(hex) { return .black }
     return onDarkCard ? .white : .primary
   }
+}
 
-  static func rgb(_ hex: String) -> (Int, Int, Int)? { HexColor.rgb(hex) }
-  static func isLight(_ hex: String) -> Bool { HexColor.isLight(hex) }
+/// Where a clip came from, at the end of its card or row: the app's initial on a small square for Mac copies that
+/// name their app (the Mac will send the app's own icon in 1.3), otherwise the device. An iPhone can't tell which
+/// app a copy came from.
+struct SourceBadge: View {
+  let clip: Clip
+  var onDarkCard = false
+
+  var body: some View {
+    if clip.isFromMac, let app = clip.sourceAppName, let initial = app.first {
+      Text(verbatim: String(initial).uppercased())
+        .font(.caption2.weight(.heavy))
+        .frame(width: 18, height: 18)
+        .foregroundStyle(onDarkCard ? Color.white : Color.accentColor)
+        .background(
+          onDarkCard ? AnyShapeStyle(.white.opacity(0.18)) : AnyShapeStyle(Color.accentColor.opacity(0.14)),
+          in: RoundedRectangle(cornerRadius: 5, style: .continuous)
+        )
+        .accessibilityLabel(Text(verbatim: "Mac, \(app)"))
+    } else {
+      Image(systemName: clip.isFromMac ? "laptopcomputer" : "iphone")
+        .accessibilityLabel(Text(verbatim: clip.isFromMac ? "Mac" : "iPhone"))
+    }
+  }
+}
+
+/// The small square at the end of a list row: the page image or map when previews are on, otherwise the color, a
+/// code sample or the kind's symbol.
+struct ClipThumbnail: View {
+  let clip: Clip
+  @ScaledMetric(relativeTo: .body) private var size: CGFloat = 52
+
+  var body: some View {
+    let content = clip.content
+    Group {
+      if let image = PreviewStore.shared.preview(for: clip)?.image {
+        Image(uiImage: image)
+          .resizable()
+          .scaledToFill()
+      } else {
+        switch content {
+        case .color(let hex):
+          Color(hex: hex) ?? .gray
+        case .code:
+          ZStack {
+            CodeTheme.background
+            Image(systemName: content.symbolName)
+              .font(.headline)
+              .foregroundStyle(CodeTheme.label)
+          }
+        default:
+          ZStack {
+            content.kind.tint.opacity(0.14)
+            Image(systemName: content.symbolName)
+              .font(.title3)
+              .foregroundStyle(content.kind.tint)
+          }
+        }
+      }
+    }
+    .frame(width: size, height: size)
+    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    .task(id: clip.id) { await PreviewStore.shared.load(clip) }
+    .accessibilityHidden(true)
+  }
+}
+
+private extension View {
+  /// Text that runs past the tile fades out at the bottom instead of stopping at a hard edge.
+  func fadingBottom() -> some View {
+    mask {
+      LinearGradient(
+        stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.78), .init(color: .clear, location: 1)],
+        startPoint: .top,
+        endPoint: .bottom
+      )
+    }
+  }
 }
 
 /// Call, write, or get directions, inside the card.
@@ -284,7 +372,6 @@ private struct CardAction {
   }
 }
 
-/// Code colored on the device (CodeHighlighter), for the dark code cards.
 /// Asked once, at the top of the history: previews need the network, so the person decides.
 struct PreviewPromptCard: View {
   @AppStorage(PreviewChoice.key) private var choice = PreviewChoice.unasked.rawValue

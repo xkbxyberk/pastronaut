@@ -74,6 +74,10 @@ final class KeyboardModel {
   private(set) var hasNewClip = false
   /// Last iCloud fetch or upload outcome; shown in Debug builds for the end-to-end test.
   private(set) var cloudStatus = "cloud: idle"
+  /// Queue started in the app (`QueueRequest`); nil when there is none or it is done.
+  private(set) var queue: ClipQueue?
+  /// The queued clips by ID, kept apart from `clips` so a queue can reach past the newest 200.
+  @ObservationIgnored private var queueClips: [String: Clip] = [:]
 
   var tab: Tab = .recent
   var isSearching = false
@@ -170,6 +174,58 @@ final class KeyboardModel {
     insert(clip.text)
     if isSearching { endSearch() }
     focused = nil
+  }
+
+  // MARK: Queue
+
+  /// Progress through the app's queue lives in the keyboard's own container: without Full Access it can't write
+  /// the App Group.
+  private static let queueKey = "queueProgress"
+
+  var nextInQueue: Clip? {
+    queue?.nextID.flatMap { queueClips[$0] }
+  }
+
+  /// Types the next clip of the queue and moves on.
+  func typeNextInQueue() {
+    guard let clip = nextInQueue else { return }
+    click()
+    insert(clip.text)
+    queue?.advance()
+    saveQueue()
+  }
+
+  func skipInQueue() {
+    click()
+    queue?.skip()
+    saveQueue()
+  }
+
+  func reverseQueue() {
+    click()
+    queue?.reverse()
+    saveQueue()
+  }
+
+  private func saveQueue() {
+    UserDefaults.standard.set(queue.flatMap { try? JSONEncoder().encode($0) }, forKey: Self.queueKey)
+  }
+
+  /// Picks up the app's queue: progress is kept while the request is the same one, a new request starts over.
+  private func loadQueue(from files: SharedClipFiles, clips all: [Clip]) {
+    guard let request = files.readQueue() else {
+      queue = nil
+      queueClips = [:]
+      UserDefaults.standard.removeObject(forKey: Self.queueKey)
+      return
+    }
+    let saved = UserDefaults.standard.data(forKey: Self.queueKey).flatMap { try? JSONDecoder().decode(ClipQueue.self, from: $0) }
+    var current = saved?.requestID == request.id ? saved! : ClipQueue(request)
+    let wanted = Set(request.clipIDs)
+    queueClips = Dictionary(all.filter { wanted.contains($0.id) }.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    current.keepOnly(Set(queueClips.keys))
+    queue = current
+    saveQueue()
   }
 
   func typeKey(_ text: String) {
@@ -336,6 +392,7 @@ final class KeyboardModel {
     // not yet synced.
     let ordered = files.currentClips(useKeyboardCache: hasFullAccess && !isDemo)
     localOnly = files.readLocalOnly().clips
+    loadQueue(from: files, clips: ordered)
     // Clips in a collection stay reachable from its tab even when older than the newest 200.
     clips = Array(ordered.prefix(200)) + ordered.dropFirst(200).filter { !$0.collectionIDs.isEmpty }
     collections = files.currentCollections(useKeyboardCache: hasFullAccess && !isDemo)
@@ -382,35 +439,6 @@ private struct BrowsePanel: View {
 
   var body: some View {
     VStack(spacing: KeyboardMetrics.spacing) {
-      HStack(spacing: 6) {
-        Group {
-          if model.tab == .collections, let collection = model.selectedCollection {
-            Text(verbatim: collection.name)
-          } else {
-            Text(model.tab.title)
-          }
-        }
-        .font(.system(size: 11, weight: .bold))
-        .textCase(.uppercase)
-        .tracking(0.6)
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
-        Spacer(minLength: 4)
-        if model.hasNewClip {
-          PasteButton(payloadType: String.self) { strings in
-            Task { @MainActor in model.capture(strings) }
-          }
-          .labelStyle(.iconOnly)
-          .buttonBorderShape(.capsule)
-          .controlSize(.mini)
-        }
-        Text(model.visibleClips.count, format: .number)
-          .font(.system(size: 11).monospacedDigit())
-          .foregroundStyle(.secondary)
-      }
-      .frame(minHeight: 18)
-      .padding(.horizontal, KeyboardMetrics.topRowInset + 2)
-
       if !model.hasFullAccess {
         Text("Turn on Allow Full Access in Settings to save new copies from this keyboard.")
           .accessibilityIdentifier("fullAccessHint")
@@ -499,6 +527,15 @@ private struct CategoryBar: View {
         .scrollIndicators(.hidden)
       }
       Spacer(minLength: 0)
+      // Saves a new copy without a paste prompt (the system's button); only there while one is waiting.
+      if model.hasNewClip {
+        PasteButton(payloadType: String.self) { strings in
+          Task { @MainActor in model.capture(strings) }
+        }
+        .labelStyle(.iconOnly)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+      }
     }
     .padding(.horizontal, KeyboardMetrics.topRowInset)
     .frame(height: 34)
@@ -531,9 +568,12 @@ private struct ClipGrid: View {
           .frame(maxWidth: .infinity, maxHeight: .infinity)
       } else {
         ScrollView {
-          let latest = (model.tab == .recent || model.tab == .mac) ? model.latestFromMac : nil
+          let queued = model.nextInQueue
+          let latest = queued == nil && (model.tab == .recent || model.tab == .mac) ? model.latestFromMac : nil
           VStack(spacing: 6) {
-            if let latest {
+            if let queued, let queue = model.queue {
+              QueueBar(model: model, clip: queued, queue: queue)
+            } else if let latest {
               LatestFromMacKey(clip: latest) { model.type(latest) }
             }
             // The latest Mac copy has its own key above; don't show it twice.
@@ -588,8 +628,62 @@ private struct LatestFromMacKey: View {
   }
 }
 
-/// One clip as a key in the grid: its kind in color on top, two lines of text. Tap types it, long press opens its
-/// actions. Colors are drawn in their own color.
+/// The queue the app started: one wide key types the next clip; next to it, turn the order around or skip one.
+private struct QueueBar: View {
+  let model: KeyboardModel
+  let clip: Clip
+  let queue: ClipQueue
+
+  var body: some View {
+    HStack(spacing: 6) {
+      Button {
+        model.typeNextInQueue()
+      } label: {
+        HStack(spacing: 10) {
+          Text("Queue \(queue.nextNumber)/\(queue.total)")
+            .font(.system(size: 12, weight: .bold).monospacedDigit())
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Color.onAccent.opacity(0.2), in: Capsule())
+          VStack(alignment: .leading, spacing: 1) {
+            Text("Next · tap to type")
+              .font(.system(size: 11))
+              .opacity(0.85)
+            Text(verbatim: clip.title ?? clip.text.keyboardPreview)
+              .font(.system(size: 14, weight: .semibold))
+              .lineLimit(1)
+          }
+          Spacer(minLength: 0)
+        }
+        .foregroundStyle(Color.onAccent)
+        .padding(.horizontal, 12)
+        .frame(maxWidth: .infinity, minHeight: 48)
+        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+      }
+      .buttonStyle(.plain)
+      .accessibilityIdentifier("queueNext")
+      FunctionKey(systemImage: "arrow.left.arrow.right", label: "Reverse Order") { model.reverseQueue() }
+        .frame(width: 44)
+        .accessibilityIdentifier("queueReverse")
+      Button {
+        model.skipInQueue()
+      } label: {
+        Text("Skip")
+          .font(.system(size: 14, weight: .semibold))
+          .frame(width: 52, height: 48)
+          .background(KeyStyle.key, in: RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous))
+          .shadow(color: KeyStyle.shadow, radius: 0, x: 0, y: 1)
+      }
+      .buttonStyle(.plain)
+      .foregroundStyle(.primary)
+      .accessibilityIdentifier("queueSkip")
+    }
+  }
+}
+
+/// One clip as a key in the grid, in the app's card language: the text (with a small picture for links and places
+/// when the app has one), then its kind in color and when it was copied. All the same height. Tap types it, long
+/// press opens its actions. Code is dark and colors are drawn in their own color, as in the app.
 private struct ClipTile: View {
   let clip: Clip
   let onTap: () -> Void
@@ -598,33 +692,60 @@ private struct ClipTile: View {
   var body: some View {
     let content = clip.content
     let swatch: Color? = if case .color(let hex) = content { Color(hex: hex) } else { nil }
-    VStack(alignment: .leading, spacing: 3) {
+    let isCode = if case .code = content { true } else { false }
+    let isLightSwatch = if case .color(let hex) = content { HexColor.isLight(hex) } else { false }
+    let onDark = (swatch != nil && !isLightSwatch) || isCode
+    let thumbnail: UIImage? = switch content {
+    case .link, .address: PreviewThumbnails.shared.image(for: clip.id)
+    default: nil
+    }
+    VStack(alignment: .leading, spacing: 0) {
+      HStack(alignment: .top, spacing: 8) {
+        if let thumbnail {
+          Image(uiImage: thumbnail)
+            .resizable()
+            .scaledToFill()
+            .frame(width: 34, height: 34)
+            .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .accessibilityHidden(true)
+        }
+        Text(clip.title ?? clip.text.keyboardPreview)
+          .font(content.usesMonospacedFont ? .system(size: 13, design: .monospaced) : .system(size: 13))
+          .foregroundStyle(onDark ? Color.white : Color.primary)
+          .lineLimit(2)
+          .multilineTextAlignment(.leading)
+          .frame(maxWidth: .infinity, alignment: .leading)
+      }
+      Spacer(minLength: 2)
       HStack(spacing: 4) {
-        Image(systemName: content.symbolName)
+        Circle()
+          .fill(onDark ? Color.white.opacity(0.9) : content.kind.tint)
+          .frame(width: 6, height: 6)
         Text(content.kindName)
-          .lineLimit(1)
+          .fontWeight(.bold)
+          .foregroundStyle(onDark ? AnyShapeStyle(Color.white.opacity(0.9)) : AnyShapeStyle(content.kind.tint))
+        Text(verbatim: "·")
+        Text(clip.lastCopiedAt, format: .relative(presentation: .named, unitsStyle: .abbreviated))
         Spacer(minLength: 2)
         if clip.pinned {
           Image(systemName: "pin.fill")
-            .foregroundStyle(swatch == nil ? Color.pin : Color.white)
+            .foregroundStyle(onDark ? Color.white : Color.pin)
             .accessibilityIdentifier("pinIcon")
         }
       }
-      .font(.system(size: 11, weight: .semibold))
-      .foregroundStyle(swatch == nil ? AnyShapeStyle(content.kind.tint) : AnyShapeStyle(Color.white.opacity(0.9)))
-      Text(clip.text.keyboardPreview)
-        .font(content.usesMonospacedFont ? .system(size: 13, design: .monospaced) : .system(size: 13))
-        .foregroundStyle(swatch == nil ? Color.primary : Color.white)
-        .lineLimit(2)
-        .multilineTextAlignment(.leading)
-        .frame(maxWidth: .infinity, alignment: .leading)
+      .font(.system(size: 10.5))
+      .foregroundStyle(onDark ? AnyShapeStyle(Color.white.opacity(0.75)) : AnyShapeStyle(.secondary))
+      .lineLimit(1)
     }
     .padding(.horizontal, 9)
-    .padding(.vertical, 7)
-    .frame(maxWidth: .infinity, minHeight: 56, alignment: .topLeading)
+    .padding(.top, 7)
+    .padding(.bottom, 6)
+    .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70, alignment: .topLeading)
     .background {
       if let swatch {
         RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous).fill(swatch)
+      } else if isCode {
+        RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous).fill(CodeTheme.background)
       } else {
         RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous)
           .fill(KeyStyle.key)

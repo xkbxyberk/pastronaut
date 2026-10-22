@@ -100,6 +100,17 @@
         }
       }
     },
+    "Next · tap to type": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıradaki · yazmak için dokun"
+          }
+        }
+      }
+    },
     "No clips yet. Open Pastronaut once to sync your history.": {
       "extractionState": "manual",
       "localizations": {
@@ -166,6 +177,17 @@
         }
       }
     },
+    "Queue %lld/%lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıra %lld/%lld"
+          }
+        }
+      }
+    },
     "Recent": {
       "extractionState": "manual",
       "localizations": {
@@ -188,6 +210,17 @@
         }
       }
     },
+    "Reverse Order": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sırayı Çevir"
+          }
+        }
+      }
+    },
     "Search": {
       "extractionState": "manual",
       "localizations": {
@@ -206,6 +239,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geçmişte ara"
+          }
+        }
+      }
+    },
+    "Skip": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atla"
           }
         }
       }
