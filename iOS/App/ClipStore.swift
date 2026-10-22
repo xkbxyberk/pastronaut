@@ -38,8 +38,9 @@ final class ClipStore {
   private let sync: ClipSync
   private let files: SharedClipFiles?
   private let sharedDefaults = UserDefaults(suiteName: PastronautIDs.appGroup)
-  /// The one start; everything that needs sync running waits for it, so the inbox is never drained before
-  /// the engine exists (its clips would be dropped).
+  /// The one start: sets up the sync engine. Everything that needs it waits for this, so the inbox is never
+  /// read before the engine exists (its clips would be dropped). The first iCloud sync is not part of it, so a
+  /// save doesn't wait for the network.
   private var startTask: Task<Void, Never>?
 
   private init() {
@@ -86,6 +87,7 @@ final class ClipStore {
     let task = Task { await performStart() }
     startTask = task
     await task.value
+    await refreshStarted()
   }
 
   private func performStart() async {
@@ -108,12 +110,15 @@ final class ClipStore {
     await sync.start()
     await ingestInbox()
     await reload()
-    await refresh()
   }
 
   /// Pulls the keyboard's captures and the latest iCloud changes. Called on launch, foreground and push.
   func refresh() async {
     await start()
+    await refreshStarted()
+  }
+
+  private func refreshStarted() async {
     #if DEBUG
     if DemoClips.isOn { return }
     #endif

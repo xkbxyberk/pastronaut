@@ -30,7 +30,7 @@ final class SyncStepTests: XCTestCase {
       app.launch()
       report(["ok": app.wait(for: .runningForeground, timeout: 10), "rows": rows.count])
     case "count":
-      app.activate()
+      bringUp()
       report(["ok": true, "rows": rows.count, "texts": rows.allElementsBoundByIndex.prefix(200).map(\.label)])
     case "waitVisible":
       wait(until: { $0.exists })
@@ -53,7 +53,7 @@ final class SyncStepTests: XCTestCase {
       Thread.sleep(forTimeInterval: 6)
       report(["ok": true])
     case "waitCount":
-      app.activate()
+      bringUp()
       let start = Date()
       let expected = Int(text) ?? 0
       while rows.count < expected, Date().timeIntervalSince(start) < timeout {
@@ -88,7 +88,7 @@ final class SyncStepTests: XCTestCase {
       report(["ok": UIPasteboard.general.string == text])
     case "newClip":
       // "+" in the toolbar: type a clip without copying anything.
-      app.activate()
+      launchAtTop()
       let new = app.buttons["newClipButton"].firstMatch
       XCTAssertTrue(new.waitForExistence(timeout: 10), "new clip button missing")
       new.tap()
@@ -99,7 +99,7 @@ final class SyncStepTests: XCTestCase {
       report(["ok": row(match).waitForExistence(timeout: 10)])
     case "bulkDelete":
       // Select mode: every clip containing one of the "|"-separated parts, then Delete and confirm.
-      app.activate()
+      launchAtTop()
       let parts = text.split(separator: "|").map(String.init)
       guard parts.allSatisfy({ row($0).waitForExistence(timeout: timeout) }) else {
         report(["ok": false, "reason": "rows missing"])
@@ -153,7 +153,7 @@ final class SyncStepTests: XCTestCase {
       report(["ok": listed])
     case "openCollection":
       // Taps the collection's chip and waits for the row inside it.
-      app.activate()
+      bringUp()
       guard chooseCollection(env["PT_ACTION"] ?? "", timeout: timeout) else {
         report(["ok": false, "reason": "no collection in the menu"])
         return
@@ -349,7 +349,7 @@ final class SyncStepTests: XCTestCase {
       report(["ok": true])
     case "collectionShots":
       // Design review: the scope bar with a collection, the row menu, the clip's details and Settings › Your Data.
-      app.activate()
+      bringUp()
       let name = env["PT_ACTION"] ?? ""
       _ = chooseCollection(name, timeout: 10)
       Thread.sleep(forTimeInterval: 1)
@@ -377,7 +377,7 @@ final class SyncStepTests: XCTestCase {
       report(["ok": true])
     case "selectShots":
       // Design review: select mode, the new clip sheet and the clipboard settings.
-      app.activate()
+      bringUp()
       app.buttons["selectButton"].firstMatch.tap()
       Thread.sleep(forTimeInterval: 0.5)
       app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'clip.'")).firstMatch.tap()
@@ -419,11 +419,11 @@ final class SyncStepTests: XCTestCase {
       attachScreenshot(named: "settings-privacy")
       report(["ok": true, "chip": chip.exists])
     case "background":
-      app.activate()
+      bringUp()
       XCUIDevice.shared.press(.home)
       report(["ok": app.wait(for: .runningBackgroundSuspended, timeout: 15) || app.state == .runningBackground])
     case "status":
-      app.activate()
+      bringUp()
       app.buttons["settingsButton"].firstMatch.tap()
       let error = app.staticTexts["syncError"]
       let synced = app.descendants(matching: .any)["syncedClips"].firstMatch
@@ -650,7 +650,7 @@ final class SyncStepTests: XCTestCase {
   }
 
   private func existingRow() throws -> XCUIElement {
-    app.activate()
+    launchAtTop()
     let row = row(match)
     if row.waitForExistence(timeout: min(timeout, 10)) || scrollToFind(row) { return row }
     report(["ok": false, "reason": "row missing"])
@@ -667,9 +667,28 @@ final class SyncStepTests: XCTestCase {
     return false
   }
 
+  /// Brings the app to the front. `activate()` starts a stopped app without this test's launch environment, so
+  /// without `PT_E2E` it opens in the card layout (previews on by default since 1.1) and no list row matches.
+  private func bringUp() {
+    if app.state == .runningForeground || app.state == .runningBackground || app.state == .runningBackgroundSuspended {
+      app.activate()
+    } else {
+      app.launch()
+    }
+  }
+
+  /// Starts the app afresh at the top of the list. Activating it would keep the scroll position an earlier step
+  /// left (`scrollToFind`), and while the list is away from the top new Mac clips wait behind the "N new" button
+  /// instead of showing (1.1). The launch's own sync may still be running at PTEST-READY; the script waits 2 s
+  /// before it changes anything, so a change normally arrives by push or the open app's polling.
+  private func launchAtTop() {
+    app.launch()
+    _ = app.wait(for: .runningForeground, timeout: 10)
+  }
+
   /// Waits for a row condition with the app in the foreground and reports how long it took.
   private func wait(until condition: @escaping (XCUIElement) -> Bool) {
-    app.activate()
+    launchAtTop()
     let start = Date()
     print("PTEST-READY")
     let target = row(match)
