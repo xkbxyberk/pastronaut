@@ -1,0 +1,24 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleDisplayName": {
+      "comment": "The action's name in the share sheet.",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Save to Pastronaut"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'a Kaydet"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

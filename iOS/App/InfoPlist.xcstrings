@@ -1,0 +1,42 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSCameraUsageDescription": {
+      "comment": "Camera permission, for Scan Text and Scan Document.",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Pastronaut uses the camera only while you scan text or a document. Nothing is recorded, and the text is read on this iPhone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut kamerayı yalnızca metin ya da belge tararken kullanır. Hiçbir şey kaydedilmez; metin bu iPhone'da okunur."
+          }
+        }
+      }
+    },
+    "NSFaceIDUsageDescription": {
+      "comment": "Face ID permission, for the app lock.",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Pastronaut can ask for Face ID before showing your clipboard history."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut, pano geçmişini göstermeden önce Face ID isteyebilir."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

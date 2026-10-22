@@ -734,6 +734,17 @@
         }
       }
     },
+    "No text found on these pages": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu sayfalarda metin bulunamadı"
+          }
+        }
+      }
+    },
     "One per Line": {
       "extractionState": "manual",
       "localizations": {
@@ -800,6 +811,17 @@
         }
       }
     },
+    "Reading the text…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin okunuyor…"
+          }
+        }
+      }
+    },
     "Remove Title": {
       "extractionState": "manual",
       "localizations": {
@@ -822,6 +844,17 @@
         }
       }
     },
+    "Saved %lld clips": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld öğe kaydedildi"
+          }
+        }
+      }
+    },
     "Saving Paused": {
       "extractionState": "manual",
       "localizations": {
@@ -829,6 +862,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kaydetme Duraklatıldı"
+          }
+        }
+      }
+    },
+    "Scan Document": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belge Tara"
+          }
+        }
+      }
+    },
+    "Scan Text": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metni Tara"
+          }
+        }
+      }
+    },
+    "Scanned Text": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taranan Metin"
           }
         }
       }
@@ -884,6 +950,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sırayı Başlat"
+          }
+        }
+      }
+    },
+    "Tap highlighted text to save it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydetmek için vurgulanan metne dokun."
           }
         }
       }

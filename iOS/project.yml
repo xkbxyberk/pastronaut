@@ -37,6 +37,7 @@ targets:
       - target: PastronautKeyboard
       - target: PastronautWidgets
       - target: PastronautShare
+      - target: PastronautAction
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut
@@ -64,6 +65,7 @@ targets:
         UIBackgroundModes: [remote-notification]
         ITSAppUsesNonExemptEncryption: false
         NSFaceIDUsageDescription: Pastronaut can ask for Face ID before showing your clipboard history.
+        NSCameraUsageDescription: Pastronaut uses the camera only while you scan text or a document. Nothing is recorded, and the text is read on this iPhone.
     entitlements:
       path: App/Pastronaut.entitlements
       properties:
@@ -168,6 +170,49 @@ targets:
               NSExtensionActivationSupportsWebURLWithMaxCount: 20
     entitlements:
       path: Share/PastronautShare.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.xkbxyberk.pastronaut]
+        com.apple.developer.icloud-services: [CloudKit]
+  # Share sheet › actions › "Save to Pastronaut": the Share extension's code, in the list of actions instead of
+  # the row of apps.
+  PastronautAction:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Action
+      - Share/ShareViewController.swift
+      - Share/Localizable.xcstrings
+      - path: Share/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: ../Maccy/AppIcon.icon
+        type: file
+        buildPhase: resources
+    dependencies:
+      - package: PastronautCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.action
+        # iPhone only for the first App Store release; "1,2" brings iPad back once it is tested.
+        TARGETED_DEVICE_FAMILY: "1"
+        PRODUCT_NAME: PastronautAction
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: Action/Info.plist
+      properties:
+        CFBundleDisplayName: Save to Pastronaut
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.ui-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActionWantsFullScreenPresentation: false
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 20
+    entitlements:
+      path: Action/PastronautAction.entitlements
       properties:
         com.apple.security.application-groups: [group.com.xkbxyberk.pastronaut]
         com.apple.developer.icloud-container-identifiers: [iCloud.com.xkbxyberk.pastronaut]

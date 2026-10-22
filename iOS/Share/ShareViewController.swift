@@ -4,8 +4,9 @@ import UIKit
 import UniformTypeIdentifiers
 import WidgetKit
 
-/// Share › Pastronaut: saves shared text or a link straight to iCloud (the Mac gets it without the app being
-/// opened). Nothing is read from the clipboard, so several things in a row can be saved this way.
+/// Share › Pastronaut, and the "Save to Pastronaut" action (the same code in the action extension): saves shared
+/// text or links straight to iCloud (the Mac gets them without the app being opened). Nothing is read from the
+/// clipboard, so several things in a row can be saved this way.
 final class ShareViewController: UIViewController {
   private let model = ShareModel()
 
@@ -27,7 +28,15 @@ final class ShareViewController: UIViewController {
 
     Task {
       await model.save(from: extensionContext?.inputItems as? [NSExtensionItem] ?? [])
-      try? await Task.sleep(for: .seconds(model.state == .saved ? 0.9 : 2.2))
+      if model.offersCollections {
+        // Saved already; a few seconds to put it in a collection, or it closes by itself.
+        for _ in 0..<40 where !model.isFinished {
+          try? await Task.sleep(for: .milliseconds(100))
+        }
+        try? await Task.sleep(for: .seconds(model.isFinished ? 0.9 : 0))
+      } else {
+        try? await Task.sleep(for: .seconds(model.state == .saved ? 0.9 : 2.2))
+      }
       extensionContext?.completeRequest(returningItems: nil)
     }
   }
@@ -45,6 +54,29 @@ final class ShareModel {
 
   private(set) var state = State.saving
   private(set) var preview = ""
+  /// Collections to offer once saved (from the app's list in the App Group).
+  private(set) var collections: [ClipCollection] = []
+  /// Where the clips went, once one was chosen.
+  private(set) var chosenCollection: String?
+  private(set) var isFinished = false
+  @ObservationIgnored private var saved: [Clip] = []
+  @ObservationIgnored private var cloud: KeyboardCloud?
+
+  var offersCollections: Bool {
+    (state == .saved || state == .savedOffline) && !collections.isEmpty
+  }
+
+  func add(to collection: ClipCollection) {
+    guard !isFinished, let cloud else { return }
+    withAnimation(.snappy) { chosenCollection = collection.name }
+    let clips = saved
+    Task {
+      for clip in clips {
+        try? await cloud.addToCollection(clip, collectionID: collection.id)
+      }
+      isFinished = true
+    }
+  }
 
   func save(from items: [NSExtensionItem]) async {
     let texts = await Self.texts(in: items).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -63,7 +95,10 @@ final class ShareModel {
       return
     }
     let cloud = KeyboardCloud(containerIdentifier: PastronautIDs.iCloudContainer, files: files)
+    self.cloud = cloud
     let clips = eligible.map { Clip(text: $0, sourceDevice: .iphone) }
+    saved = clips
+    collections = Array(files.currentCollections().prefix(6))
     let wait = Self.uploadWait
     let uploaded = await withTaskGroup(of: Bool?.self) { group in
       group.addTask {
@@ -137,6 +172,44 @@ struct ShareView: View {
           .font(.caption)
           .foregroundStyle(.secondary)
           .multilineTextAlignment(.center)
+      }
+      if model.offersCollections {
+        if let name = model.chosenCollection {
+          Label {
+            Text("Added to \(name)")
+          } icon: {
+            Image(systemName: "folder.fill")
+          }
+          .font(.subheadline.weight(.semibold))
+          .foregroundStyle(.secondary)
+        } else {
+          VStack(spacing: 8) {
+            Text("Add to a collection")
+              .font(.caption.weight(.semibold))
+              .foregroundStyle(.secondary)
+            ScrollView(.horizontal) {
+              HStack(spacing: 6) {
+                ForEach(model.collections) { collection in
+                  Button {
+                    model.add(to: collection)
+                  } label: {
+                    Text(verbatim: collection.name)
+                      .font(.subheadline.weight(.semibold))
+                      .lineLimit(1)
+                      .padding(.horizontal, 12)
+                      .padding(.vertical, 7)
+                      .foregroundStyle(collection.deepTint)
+                      .background(collection.tint.opacity(0.18), in: Capsule())
+                  }
+                  .buttonStyle(.plain)
+                  .accessibilityIdentifier("shareCollection.\(collection.name)")
+                }
+              }
+            }
+            .scrollIndicators(.hidden)
+          }
+          .transition(.opacity)
+        }
       }
     }
     .padding(24)

@@ -201,6 +201,22 @@ public actor KeyboardCloud {
     }
   }
 
+  /// Puts a just-shared clip in a collection: in the inbox (so the app applies it if this upload fails) and in
+  /// iCloud. On a conflict only the membership is added to what the server has, so its pin and title stay.
+  public func addToCollection(_ clip: Clip, collectionID: String) async throws {
+    var member = clip
+    member.collectionIDs.append(collectionID)
+    member.modifiedAt = .now
+    try? files.appendToInbox(member)
+    guard PrivacyOptions.onPhone(in: SharedSettings.defaults).allows(clip.text, pinned: false) else { return }
+    try await save(member, updatingCache: false) { remote, local in
+      var merged = remote
+      merged.collectionIDs.append(collectionID)
+      merged.modifiedAt = max(remote.modifiedAt, local.modifiedAt)
+      return merged
+    }
+  }
+
   /// Pins or unpins a clip from the keyboard. The newer change wins, as everywhere else.
   public func setPinned(_ pinned: Bool, for clip: Clip) async throws {
     var changed = clip

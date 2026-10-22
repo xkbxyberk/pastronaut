@@ -317,12 +317,20 @@ struct ClipEditor: View {
   @FocusState private var isFocused: Bool
   private let original: String
   private let title: String.LocalizationValue
+  /// A scan's text can be saved as it was read; an edit needs a change.
+  private let allowsUnchanged: Bool
   private let onSave: (String) -> Void
 
-  init(text: String, title: String.LocalizationValue = "Edit", onSave: @escaping (String) -> Void) {
+  init(
+    text: String,
+    title: String.LocalizationValue = "Edit",
+    allowsUnchanged: Bool = false,
+    onSave: @escaping (String) -> Void
+  ) {
     _draft = State(initialValue: text)
     original = text
     self.title = title
+    self.allowsUnchanged = allowsUnchanged
     self.onSave = onSave
   }
 
@@ -345,7 +353,7 @@ struct ClipEditor: View {
               onSave(draft)
               dismiss()
             }
-            .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || draft == original)
+            .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || (draft == original && !allowsUnchanged))
             .accessibilityIdentifier("saveClipButton")
           }
         }

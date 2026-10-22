@@ -26,6 +26,7 @@ final class ClipStore {
     case savedFromClipboard
     case clipboardEmpty
     case tooLarge
+    case noTextFound
   }
 
   /// A short message for the history screen; set again for every event, so the same notice shows twice.
@@ -523,6 +524,12 @@ final class ClipStore {
     let captured = files.readInbox()
     guard !captured.isEmpty else { return }
     await sync.recordCopies(captured)
+    // A capture keeps the collections the history already has; ones chosen in the Share sheet are added here.
+    for clip in captured {
+      for collectionID in clip.collectionIDs {
+        await sync.setMembership(true, of: [clip.id], in: collectionID)
+      }
+    }
     try? files.removeFromInbox(handled: captured)
   }
 

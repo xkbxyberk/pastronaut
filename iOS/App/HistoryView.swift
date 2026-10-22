@@ -30,6 +30,10 @@ struct HistoryView: View {
   @State private var revealID: String?
   @State private var highlightID: String?
   @State private var isSearchPresented = false
+  @State private var showsTextScanner = false
+  @State private var showsDocumentScanner = false
+  @State private var isReadingScan = false
+  @State private var scannedText: ScannedText?
   @AppStorage(AppPreferences.onboardingKey) private var hasCompletedOnboarding = false
   @AppStorage(PreviewChoice.key) private var previewChoice = PreviewChoice.unasked.rawValue
 
@@ -117,6 +121,7 @@ struct HistoryView: View {
         case .savedFromClipboard: showToast("Saved from clipboard")
         case .clipboardEmpty: showToast("The clipboard has no text", systemImage: "doc.questionmark")
         case .tooLarge: showToast("Too large to sync", systemImage: "exclamationmark.triangle")
+        case .noTextFound: showToast("No text found on these pages", systemImage: "doc.questionmark")
         case nil: break
         }
       }
@@ -168,6 +173,12 @@ struct HistoryView: View {
         }
       }
       .modifier(ClipDialogs(editing: $editing, titling: $titling, titleDraft: $titleDraft))
+      .modifier(ScanSheets(
+        showsTextScanner: $showsTextScanner,
+        showsDocumentScanner: $showsDocumentScanner,
+        isReadingScan: $isReadingScan,
+        scannedText: $scannedText
+      ))
       .sheet(isPresented: $showsSettings) {
         SettingsView()
       }
@@ -372,11 +383,29 @@ struct HistoryView: View {
     }
   }
 
+  /// Tap: type a new clip. Touch and hold: scan text or a document with the camera.
   private var newClipButton: some View {
-    Button {
-      showsNewClip = true
+    Menu {
+      if TextScannerSheet.isAvailable {
+        Button {
+          showsTextScanner = true
+        } label: {
+          Label("Scan Text", systemImage: "text.viewfinder")
+        }
+        .accessibilityIdentifier("scanTextButton")
+      }
+      if DocumentScanner.isAvailable {
+        Button {
+          showsDocumentScanner = true
+        } label: {
+          Label("Scan Document", systemImage: "doc.viewfinder")
+        }
+        .accessibilityIdentifier("scanDocumentButton")
+      }
     } label: {
       Label("New Clip", systemImage: "plus")
+    } primaryAction: {
+      showsNewClip = true
     }
     .accessibilityIdentifier("newClipButton")
   }
@@ -793,6 +822,56 @@ struct ClipRow: View {
     }
     .padding(.vertical, 2)
     .accessibilityElement(children: .combine)
+  }
+}
+
+/// "Scan Text" and "Scan Document" from the "+" menu.
+private struct ScanSheets: ViewModifier {
+  @Environment(ClipStore.self) private var store
+  @Binding var showsTextScanner: Bool
+  @Binding var showsDocumentScanner: Bool
+  @Binding var isReadingScan: Bool
+  @Binding var scannedText: ScannedText?
+
+  func body(content: Content) -> some View {
+    content
+      .fullScreenCover(isPresented: $showsTextScanner) {
+        TextScannerSheet { text in store.save(text) }
+      }
+      .fullScreenCover(isPresented: $showsDocumentScanner) {
+        DocumentScanner { pages in
+          showsDocumentScanner = false
+          isReadingScan = true
+          Task {
+            let text = await TextRecognition.text(inPages: pages)
+            isReadingScan = false
+            if let text {
+              scannedText = ScannedText(text: text)
+            } else {
+              store.notice = .noTextFound
+            }
+          }
+        } onCancel: {
+          showsDocumentScanner = false
+        }
+        .ignoresSafeArea()
+      }
+      .sheet(item: $scannedText) { scan in
+        // Read on the device; shown first so it can be corrected before it is saved.
+        ClipEditor(text: scan.text, title: "Scanned Text", allowsUnchanged: true) { text in
+          store.save(text)
+        }
+      }
+      .overlay {
+        if isReadingScan {
+          ProgressView {
+            Text("Reading the text…")
+          }
+          .controlSize(.large)
+          .padding(24)
+          .glassBackground(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        }
+      }
   }
 }
 

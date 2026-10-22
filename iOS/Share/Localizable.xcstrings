@@ -1,6 +1,28 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Add to a collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir koleksiyona ekle"
+          }
+        }
+      }
+    },
+    "Added to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ koleksiyonuna eklendi"
+          }
+        }
+      }
+    },
     "Clips up to 100 KB are synced.": {
       "extractionState": "manual",
       "localizations": {
