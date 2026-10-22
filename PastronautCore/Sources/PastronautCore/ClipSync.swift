@@ -22,6 +22,8 @@ public struct SyncStatus: Equatable, Sendable {
   public var isMovingOldClips: Bool
   /// The original zone was found empty or deleted.
   public var oldZoneCleared: Bool
+  /// Clips kept on this device after iCloud forgot them (see `ClipSync.localOnly`).
+  public var localOnlyClips: Int
 }
 
 /// Two-way sync of clips and collections with the user's private iCloud database, built on CKSyncEngine.
@@ -41,11 +43,16 @@ public actor ClipSync {
     var clip: Clip
     /// Archived system fields of the last known server record; nil until first saved or fetched.
     var systemFields: Data?
+    /// Kept on this device after iCloud forgot it (data deleted, signed out); sent only when asked to.
+    var isLocalOnly = false
+    /// Copied here since the server last had this clip; decides whether a clip deleted elsewhere comes back.
+    var hasUnsentCopy = false
   }
 
   struct CollectionEntry: Codable {
     var collection: ClipCollection
     var systemFields: Data?
+    var isLocalOnly = false
   }
 
   struct PersistedState: Codable {
@@ -84,6 +91,9 @@ public actor ClipSync {
   private let fileURL: URL
   private let keyFile: SyncKeyFile
   private let policy: SyncPolicy
+  /// The mirror is this device's history (iPhone), so what iCloud forgets stays here as local-only clips.
+  /// On the Mac the history lives in Maccy's own store and the mirror is only the sync copy.
+  private let keepsLocalHistory: Bool
   private var state: PersistedState
   /// Record name → clip ID for the current key. Not stored; rebuilt from the mirror.
   private var clipIDsByRecordName: [String: String] = [:]
@@ -95,11 +105,17 @@ public actor ClipSync {
   private var lastError: String?
   private let logger = Logger(subsystem: "com.xkbxyberk.pastronaut", category: "ClipSync")
 
-  public init(containerIdentifier: String, storageDirectory: URL, policy: SyncPolicy = .default) {
+  public init(
+    containerIdentifier: String,
+    storageDirectory: URL,
+    policy: SyncPolicy = .default,
+    keepsLocalHistory: Bool = false
+  ) {
     self.container = CKContainer(identifier: containerIdentifier)
     self.fileURL = storageDirectory.appending(path: "clip-sync.json")
     self.keyFile = SyncKeyFile(directory: storageDirectory)
     self.policy = policy
+    self.keepsLocalHistory = keepsLocalHistory
     let state = Self.load(from: fileURL)
     self.state = state
     if let key = state.key {
@@ -119,12 +135,35 @@ public actor ClipSync {
       lastError: lastError,
       hasKey: state.key != nil,
       isMovingOldClips: state.needsLegacyCleanup && movedLegacyClips,
-      oldZoneCleared: !state.needsLegacyCleanup
+      oldZoneCleared: !state.needsLegacyCleanup,
+      localOnlyClips: state.localOnly.clips.count
     )
   }
 
   public var clips: [Clip] {
     state.entries.values.map(\.clip)
+  }
+
+  /// Clips and collections kept on this device only (see `keepsLocalHistory`).
+  public var localOnly: LocalOnlyIDs {
+    state.localOnly
+  }
+
+  /// Sends the local-only clips and collections to iCloud again ("Upload to iCloud Again"). Returns how many
+  /// clips were waiting. Without the key they are queued once `syncNow` reads it.
+  @discardableResult
+  public func uploadLocalOnly() -> Int {
+    let released = state.releaseLocalOnly()
+    guard released.clips.count + released.collections.count > 0 else { return 0 }
+    if let engine, let key = state.key {
+      engine.state.add(pendingRecordZoneChanges:
+        released.clips.map { .saveRecord(ClipRecord.recordID(forClipID: $0, key: key)) }
+          + released.collections.map { .saveRecord(CollectionRecord.recordID(for: $0)) }
+      )
+      clipIDsByRecordName.merge(Self.recordNames(for: released.clips, key: key)) { current, _ in current }
+    }
+    persist()
+    return released.clips.count
   }
 
   public func clip(withID id: String) -> Clip? {
@@ -232,7 +271,7 @@ public actor ClipSync {
         token = changes.changeToken
         moreComing = changes.moreComing
       }
-    } catch let error as CKError where error.code == .changeTokenExpired {
+    } catch let error as CKError where error.code == .changeTokenExpired && !isFullFetch {
       state.catchUpToken = nil
       persist()
       return try await catchUp(syncEngine: syncEngine)
@@ -299,12 +338,8 @@ public actor ClipSync {
     state.key = key
     keyFile.write(key)
     clipIDsByRecordName = Self.recordNames(for: state.entries.keys, key: key)
-    let unsent = state.entries.filter { $0.value.systemFields == nil }.keys.map {
-      ClipRecord.recordID(forClipID: $0, key: key)
-    }
-    let unsentCollections = state.collections.filter { $0.value.systemFields == nil }.keys.map {
-      CollectionRecord.recordID(for: $0)
-    }
+    let unsent = state.unsentClipIDs.map { ClipRecord.recordID(forClipID: $0, key: key) }
+    let unsentCollections = state.unsentCollectionIDs.map { CollectionRecord.recordID(for: $0) }
     engine.state.add(pendingRecordZoneChanges: (unsent + unsentCollections).map { .saveRecord($0) })
     persist()
   }
@@ -457,25 +492,24 @@ public actor ClipSync {
   /// Reports a new copy of some text captured on this device. Keeps the pin and collections if the clip
   /// already exists.
   public func recordCopy(_ copy: Clip) {
-    upsert(state.entries[copy.id].map { $0.clip.copiedAgain(copy) } ?? copy)
+    recordCopies([copy])
   }
 
   /// `recordCopy` for many copies, written to disk once.
   public func recordCopies(_ copies: [Clip]) {
-    upsert(contentsOf: copies.map { copy in state.entries[copy.id].map { $0.clip.copiedAgain(copy) } ?? copy })
+    var changed = false
+    for copy in copies {
+      changed = store(state.entries[copy.id].map { $0.clip.copiedAgain(copy) } ?? copy, isCapture: true) || changed
+    }
+    if changed { persist() }
   }
 
   /// Merges a local change into the mirror and queues it; false when nothing changed.
-  private func store(_ clip: Clip) -> Bool {
-    guard let engine, policy.isEligible(clip.text) else { return false }
-    let existing = state.entries[clip.id]
-    let merged = existing.map { $0.clip.merged(with: clip) } ?? clip
-    guard merged != existing?.clip else { return false }
-
-    state.entries[clip.id] = MirrorEntry(clip: merged, systemFields: existing?.systemFields)
-    state.legacyTombstones.remove(clip.id)
-    // Without the key nothing is queued yet; `adopt` queues every unsent clip.
-    if let recordID = recordID(forClipID: clip.id) {
+  private func store(_ clip: Clip, isCapture: Bool = false) -> Bool {
+    guard let engine, state.stage(clip, policy: policy, isCapture: isCapture) else { return false }
+    // Local-only clips change here but stay here. Without the key nothing is queued yet; `adopt` queues every
+    // unsent clip.
+    if state.entries[clip.id]?.isLocalOnly == false, let recordID = recordID(forClipID: clip.id) {
       engine.state.add(pendingRecordZoneChanges: [.saveRecord(recordID)])
     }
     return true
@@ -512,12 +546,14 @@ public actor ClipSync {
   /// Reports clips deleted on this device. Unknown IDs are ignored.
   public func delete(ids: some Sequence<String>) {
     guard let engine else { return }
-    let removed = ids.filter { state.entries.removeValue(forKey: $0) != nil }
+    let removed = ids.compactMap { id in state.entries.removeValue(forKey: id).map { (id, $0.isLocalOnly) } }
     guard !removed.isEmpty else { return }
     if state.needsLegacyCleanup {
-      state.legacyTombstones.formUnion(removed)
+      state.legacyTombstones.formUnion(removed.map(\.0))
     }
-    engine.state.add(pendingRecordZoneChanges: removed.compactMap(recordID(forClipID:)).map { .deleteRecord($0) })
+    // A local-only clip is not in iCloud, so there is nothing to delete there.
+    let inCloud = removed.filter { !$0.1 }.map(\.0)
+    engine.state.add(pendingRecordZoneChanges: inCloud.compactMap(recordID(forClipID:)).map { .deleteRecord($0) })
     persist()
   }
 
@@ -529,8 +565,11 @@ public actor ClipSync {
     let existing = state.collections[collection.id]
     let merged = existing.map { $0.collection.merged(with: collection) } ?? collection
     guard merged != existing?.collection else { return }
-    state.collections[collection.id] = CollectionEntry(collection: merged, systemFields: existing?.systemFields)
-    if state.key != nil {
+    let isLocalOnly = existing?.isLocalOnly ?? false
+    state.collections[collection.id] = CollectionEntry(
+      collection: merged, systemFields: existing?.systemFields, isLocalOnly: isLocalOnly
+    )
+    if state.key != nil, !isLocalOnly {
       engine.state.add(pendingRecordZoneChanges: [.saveRecord(CollectionRecord.recordID(for: collection.id))])
     }
     persist()
@@ -538,8 +577,8 @@ public actor ClipSync {
 
   /// Deletes a collection for every device. Its clips stay, outside it.
   public func deleteCollection(id: String) {
-    guard let engine, state.collections.removeValue(forKey: id) != nil else { return }
-    if state.key != nil {
+    guard let engine, let removed = state.collections.removeValue(forKey: id) else { return }
+    if state.key != nil, !removed.isLocalOnly {
       engine.state.add(pendingRecordZoneChanges: [.deleteRecord(CollectionRecord.recordID(for: id))])
     }
     setMembership(false, of: Array(state.entries.keys), in: id)
@@ -586,13 +625,10 @@ public actor ClipSync {
 
   /// Forgets what this device knew about iCloud after the zone disappeared (iCloud data deleted from another
   /// device or from iCloud settings). Local history is kept; clips in `keeping` are sent again once a new key
-  /// exists, because they are changes made here that never arrived.
+  /// exists, because they are changes made here that never arrived. With `keepsLocalHistory` the rest of the
+  /// mirror stays too, as local-only clips.
   private func forgetCloudState(engine: CKSyncEngine, keeping: Set<String> = []) -> [ClipChange] {
-    let forgottenCollections = state.collections.keys.map { ClipChange.collectionDeleted(id: $0) }
-    state.entries = state.entries.filter { keeping.contains($0.key) }.mapValues {
-      MirrorEntry(clip: $0.clip, systemFields: nil)
-    }
-    state.collections.removeAll()
+    let forgottenCollections = state.forgetCloud(keeping: keeping, keepsLocalHistory: keepsLocalHistory)
     state.catchUpToken = nil
     state.key = nil
     keyFile.write(nil)
@@ -620,7 +656,10 @@ extension ClipSync: CKSyncEngineDelegate {
       // Forget the mirror but do not report deletions: local history must survive a cloud wipe.
       // The original zone disappearing is the end of the move, nothing to forget.
       guard changes.deletions.contains(where: { $0.zoneID == ClipRecord.zoneID }) else { return }
-      logger.notice("Clips zone was deleted in iCloud; forgetting \(self.state.entries.count) mirrored clips")
+      logger.notice("""
+        Clips zone was deleted in iCloud; \(self.keepsLocalHistory ? "keeping" : "forgetting", privacy: .public) \
+        \(self.state.entries.count) mirrored clips
+        """)
       let forgotten = forgetCloudState(engine: syncEngine)
       lastError = String(localized: "iCloud data was deleted; local history was kept.", bundle: .module)
       await notify(forgotten)
@@ -629,7 +668,7 @@ extension ClipSync: CKSyncEngineDelegate {
       await handleFetched(changes, syncEngine: syncEngine)
 
     case .sentRecordZoneChanges(let sent):
-      handleSent(sent, syncEngine: syncEngine)
+      await handleSent(sent, syncEngine: syncEngine)
 
     case .sentDatabaseChanges, .willFetchChanges, .willFetchRecordZoneChanges, .didFetchRecordZoneChanges,
          .didFetchChanges, .willSendChanges, .didSendChanges:
@@ -683,14 +722,15 @@ extension ClipSync: CKSyncEngineDelegate {
       // this waits for `syncNow`, which reads it and queues them.
       syncEngine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: ClipRecord.zoneID))])
       if let key = state.key {
-        syncEngine.state.add(pendingRecordZoneChanges: state.entries.keys.map {
+        syncEngine.state.add(pendingRecordZoneChanges: state.uploadableClipIDs.map {
           .saveRecord(ClipRecord.recordID(forClipID: $0, key: key))
         })
       }
     case .signOut, .switchAccounts:
-      // Another account's clips must not leak into this one. Local history is the caller's to keep.
+      // Another account's clips must not leak into this one: on the iPhone they stay as local-only clips that
+      // only "Upload to iCloud Again" sends. On the Mac local history is the caller's to keep.
       let forgotten = forgetCloudState(engine: syncEngine)
-      state.entries.removeAll()
+      state.forgetAccount(keepsLocalHistory: keepsLocalHistory)
       state.needsLegacyCleanup = true
       state.legacyTombstones = []
       persist()
@@ -782,7 +822,12 @@ extension ClipSync: CKSyncEngineDelegate {
       if let recordID = recordID(forClipID: remote.id) { changes.append(.saveRecord(recordID)) }
       syncEngine.state.add(pendingRecordZoneChanges: changes)
     } else {
-      state.entries[remote.id] = MirrorEntry(clip: merged, systemFields: ClipRecord.systemFields(of: record))
+      // In iCloud again (another device uploaded the same text): no longer local-only.
+      state.entries[remote.id] = MirrorEntry(
+        clip: merged,
+        systemFields: ClipRecord.systemFields(of: record),
+        hasUnsentCopy: (local?.hasUnsentCopy ?? false) && merged.lastCopiedAt > remote.lastCopiedAt
+      )
       clipIDsByRecordName[record.recordID.recordName] = remote.id
       if merged != remote {
         // This device knows something newer (e.g. a later copy); push it back.
@@ -800,6 +845,7 @@ extension ClipSync: CKSyncEngineDelegate {
     }
     let local = state.collections[remote.id]?.collection
     let merged = local.map { $0.merged(with: remote) } ?? remote
+    // Also clears local-only: the collection is in iCloud.
     state.collections[remote.id] = CollectionEntry(collection: merged, systemFields: ClipRecord.systemFields(of: record))
     if merged != remote {
       syncEngine.state.add(pendingRecordZoneChanges: [.saveRecord(record.recordID)])
@@ -807,19 +853,21 @@ extension ClipSync: CKSyncEngineDelegate {
     return merged != local ? .collectionUpserted(merged) : nil
   }
 
-  private func handleSent(_ sent: CKSyncEngine.Event.SentRecordZoneChanges, syncEngine: CKSyncEngine) {
+  private func handleSent(_ sent: CKSyncEngine.Event.SentRecordZoneChanges, syncEngine: CKSyncEngine) async {
     for record in sent.savedRecords {
       let name = record.recordID.recordName
       if record.recordType == CollectionRecord.recordType {
         state.collections[name]?.systemFields = ClipRecord.systemFields(of: record)
       } else if let id = clipIDsByRecordName[name], state.entries[id] != nil {
         state.entries[id]?.systemFields = ClipRecord.systemFields(of: record)
+        state.entries[id]?.hasUnsentCopy = false
       }
     }
 
     var resend: [CKRecord.ID] = []
     var zoneIsGone = false
     var unsentClips: Set<String> = []
+    var deletedElsewhere: [ClipChange] = []
     for failure in sent.failedRecordSaves {
       let recordID = failure.record.recordID
       let name = recordID.recordName
@@ -849,13 +897,19 @@ extension ClipSync: CKSyncEngineDelegate {
         zoneIsGone = true
         if let clipID { unsentClips.insert(clipID) }
       case .unknownItem:
-        // Deleted on the server; recreate from our copy.
+        // Deleted on another device. A pin or collection change made here doesn't bring the clip back; a new
+        // copy of it does, as copying the text again would anywhere else.
         if isCollection {
           state.collections[name]?.systemFields = nil
+          resend.append(recordID)
         } else if let clipID {
-          state.entries[clipID]?.systemFields = nil
+          switch state.resolveDeletedElsewhere(clipID: clipID) {
+          case .recreate:
+            resend.append(recordID)
+          case .deleted:
+            deletedElsewhere.append(.deleted(id: clipID))
+          }
         }
-        resend.append(recordID)
       case .batchRequestFailed:
         // Rejected only because another record in the same batch failed.
         resend.append(recordID)
@@ -873,22 +927,40 @@ extension ClipSync: CKSyncEngineDelegate {
       }
     }
 
+    for (recordID, error) in sent.failedRecordDeletes {
+      switch error.code {
+      case .unknownItem, .zoneNotFound, .networkFailure, .networkUnavailable, .zoneBusy, .serviceUnavailable,
+           .notAuthenticated, .operationCancelled, .requestRateLimited, .batchRequestFailed:
+        // Already gone, or retried by CKSyncEngine.
+        break
+      default:
+        lastError = error.localizedDescription
+        logger.error("""
+          Cannot delete \(recordID.recordName, privacy: .public): CKError \(error.code.rawValue, privacy: .public) \
+          \(error.localizedDescription, privacy: .public)
+          """)
+      }
+    }
+
+    var forgotten: [ClipChange] = []
     if zoneIsGone {
       logger.notice("Clips zone is gone; \(unsentClips.count) local changes wait for a new key")
-      _ = forgetCloudState(engine: syncEngine, keeping: unsentClips)
+      forgotten = forgetCloudState(engine: syncEngine, keeping: unsentClips)
       syncEngine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: ClipRecord.zoneID))])
     } else if !resend.isEmpty {
       syncEngine.state.add(pendingRecordZoneChanges: resend.map { .saveRecord($0) })
     }
     logger.notice("""
       Sent \(sent.savedRecords.count) saves, \(sent.deletedRecordIDs.count) deletes, \
-      \(sent.failedRecordSaves.count) failed saves, \(sent.failedRecordDeletes.count) failed deletes
+      \(sent.failedRecordSaves.count) failed saves, \(sent.failedRecordDeletes.count) failed deletes, \
+      \(deletedElsewhere.count) deleted elsewhere
       """)
     if sent.failedRecordSaves.isEmpty {
       lastError = nil
     }
     lastSyncAt = .now
     persist()
+    await notify(deletedElsewhere + forgotten)
   }
 }
 
@@ -908,5 +980,25 @@ extension CKSyncEngine.PendingDatabaseChange {
     case .deleteZone(let id): id
     @unknown default: nil
     }
+  }
+}
+
+// Files written before 1.2 have no local-only or copy marks.
+extension ClipSync.MirrorEntry {
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    clip = try container.decode(Clip.self, forKey: .clip)
+    systemFields = try container.decodeIfPresent(Data.self, forKey: .systemFields)
+    isLocalOnly = try container.decodeIfPresent(Bool.self, forKey: .isLocalOnly) ?? false
+    hasUnsentCopy = try container.decodeIfPresent(Bool.self, forKey: .hasUnsentCopy) ?? false
+  }
+}
+
+extension ClipSync.CollectionEntry {
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    collection = try container.decode(ClipCollection.self, forKey: .collection)
+    systemFields = try container.decodeIfPresent(Data.self, forKey: .systemFields)
+    isLocalOnly = try container.decodeIfPresent(Bool.self, forKey: .isLocalOnly) ?? false
   }
 }

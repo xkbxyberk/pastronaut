@@ -15,6 +15,8 @@ final class ClipStore {
   private(set) var clips: [Clip] = []
   /// In list order.
   private(set) var collections: [ClipCollection] = []
+  /// Kept on this iPhone after iCloud data was deleted or the account changed; sent only on request.
+  private(set) var localOnly = LocalOnlyIDs()
   private(set) var status: SyncStatus?
   private(set) var hasFinishedFirstSync = false
   private var runningRefreshes = 0
@@ -36,13 +38,17 @@ final class ClipStore {
   private let sync: ClipSync
   private let files: SharedClipFiles?
   private let sharedDefaults = UserDefaults(suiteName: PastronautIDs.appGroup)
-  private var isStarted = false
-
+  /// The one start; everything that needs sync running waits for it, so the inbox is never drained before
+  /// the engine exists (its clips would be dropped).
+  private var startTask: Task<Void, Never>?
 
   private init() {
     files = SharedClipFiles()
     let directory = files?.directory ?? URL.applicationSupportDirectory.appending(path: "Pastronaut")
-    sync = ClipSync(containerIdentifier: PastronautIDs.iCloudContainer, storageDirectory: directory)
+    // The mirror is the iPhone's history: what iCloud forgets stays here as local-only clips.
+    sync = ClipSync(
+      containerIdentifier: PastronautIDs.iCloudContainer, storageDirectory: directory, keepsLocalHistory: true
+    )
     showSavedSnapshot()
   }
 
@@ -76,8 +82,13 @@ final class ClipStore {
   }
 
   func start() async {
-    guard !isStarted else { return }
-    isStarted = true
+    if let startTask { return await startTask.value }
+    let task = Task { await performStart() }
+    startTask = task
+    await task.value
+  }
+
+  private func performStart() async {
     #if DEBUG
     if DemoClips.isOn {
       SharedSettings.defaults?.set(Date.now.addingTimeInterval(15 * 60), forKey: SharedSettings.demoUntilKey)
@@ -129,8 +140,13 @@ final class ClipStore {
       collections = latestCollections
     }
     status = await sync.status
+    let latestLocalOnly = await sync.localOnly
+    if latestLocalOnly != localOnly {
+      localOnly = latestLocalOnly
+    }
     try? files?.writeSnapshot(clips)
     try? files?.writeCollections(collections)
+    try? files?.writeLocalOnly(localOnly)
     SpotlightIndex.update(with: clips)
     if changed {
       // Reloads requested by the app in front don't use up the widgets' daily refresh budget.
@@ -444,11 +460,27 @@ final class ClipStore {
     task.end(application)
   }
 
+  /// Stores the keyboard's and Share's captures, then takes them out of the inbox: a crash in between
+  /// stores them twice (harmless) instead of losing them.
   private func ingestInbox() async {
-    guard let files, let captured = try? files.drainInbox() else { return }
-    for clip in captured {
-      await sync.recordCopy(clip)
-    }
+    guard let files else { return }
+    let captured = files.readInbox()
+    guard !captured.isEmpty else { return }
+    await sync.recordCopies(captured)
+    try? files.removeFromInbox(handled: captured)
+  }
+
+  // MARK: - Local-only clips
+
+  /// "Upload to iCloud Again": sends what was kept on this iPhone only. Returns how many clips go up.
+  @discardableResult
+  func uploadLocalOnly() async -> Int {
+    await start()
+    let count = await sync.uploadLocalOnly()
+    try? await sync.syncNow()
+    await reload()
+    await upload()
+    return count
   }
 
   private func updateAccountStatus() async {

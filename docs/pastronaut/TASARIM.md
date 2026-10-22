@@ -99,6 +99,10 @@ Kopya sayısı eşitlenmez; her cihaz kendi sayısını tutar. Toplama işlemi e
 - Ayar: "Sync history with iCloud" (varsayılan kapalı). Kapatmak bulut verisini silmez; ayrıca "Delete iCloud Data"
   düğmesi var. Bulut verisi silinince diğer cihazlar yalnızca eşitleme kopyalarını unutur; **yerel geçmişleri korunur**.
 - Hesaptan çıkış ya da hesap değişikliğinde eşitleme kopyası unutulur; yerel geçmiş korunur.
+- **iPhone (1.2):** iPhone'un geçmişi eşitleme aynasının kendisi. Bu yüzden bulut silinince ya da hesap değişince
+  öğeler ve koleksiyonlar silinmez, "yalnızca bu iPhone'da" işaretiyle kalır (`ClipSync(keepsLocalHistory: true)`,
+  `SyncMirror.swift`). Bu öğeler kendiliğinden gönderilmez; yalnızca "iCloud'a Yeniden Yükle" ya da aynı metnin
+  yeniden yakalanması gönderir. Klavye ve widget bu öğeleri `local-only.json` üzerinden görmeye devam eder.
 
 ### 4.5 Push'a güvenmeme (Faz 2 uçtan uca testinden)
 CKSyncEngine bir bölgeyi yalnızca o bölgenin değiştiğini push'tan öğrenince çeker. Push kaybolursa `fetchChanges()`,

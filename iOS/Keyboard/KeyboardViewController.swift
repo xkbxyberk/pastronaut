@@ -206,8 +206,13 @@ final class KeyboardModel {
   /// Pins and deletions go straight to iCloud, like captures; the app and the Mac fetch them.
   var canEdit: Bool { hasFullAccess && cloud != nil }
 
+  /// Clips the app keeps on this iPhone only. Pinning one here would upload it, so only the app changes them.
+  private var localOnly: Set<String> = []
+
+  func canEdit(_ clip: Clip) -> Bool { canEdit && !localOnly.contains(clip.id) }
+
   func togglePin(_ clip: Clip) {
-    guard canEdit, let cloud else { return }
+    guard canEdit(clip), let cloud else { return }
     focused = nil
     Task {
       do {
@@ -222,7 +227,7 @@ final class KeyboardModel {
   }
 
   func delete(_ clip: Clip) {
-    guard canEdit, let cloud else { return }
+    guard canEdit(clip), let cloud else { return }
     focused = nil
     clips.removeAll { $0.id == clip.id }
     Task {
@@ -325,18 +330,11 @@ final class KeyboardModel {
       clips = []
       return
     }
-    // The app's snapshot, or the keyboard's own fetch when that is newer, plus captures not yet synced.
-    var base = files.readSnapshot()
-    if hasFullAccess, !isDemo, let cache = files.readKeyboardCache(), let fetchedAt = cache.fetchedAt,
-       fetchedAt > files.snapshotDate ?? .distantPast {
-      base = cache.clips
-    }
-    var byID: [String: Clip] = [:]
-    for clip in base + files.readInbox() {
-      byID[clip.id] = byID[clip.id].map { $0.merged(with: clip) } ?? clip
-    }
+    // The app's snapshot, or the keyboard's own fetch when that is newer, plus local-only clips and captures
+    // not yet synced.
+    let ordered = files.currentClips(useKeyboardCache: hasFullAccess && !isDemo)
+    localOnly = files.readLocalOnly().clips
     // Clips in a collection stay reachable from its tab even when older than the newest 200.
-    let ordered = byID.values.inHistoryOrder
     clips = Array(ordered.prefix(200)) + ordered.dropFirst(200).filter { !$0.collectionIDs.isEmpty }
     collections = files.currentCollections(useKeyboardCache: hasFullAccess && !isDemo)
     if tab == .collections && collections.isEmpty { tab = .recent }
@@ -664,7 +662,7 @@ private struct ActionPanel: View {
         FunctionKey(systemImage: "xmark", label: "Close") { model.focused = nil }
           .frame(width: 52)
           .accessibilityIdentifier("clipAction.close")
-        if model.canEdit {
+        if model.canEdit(clip) {
           FunctionKey(systemImage: clip.pinned ? "pin.slash" : "pin",
                       label: clip.pinned ? "Unpin" : "Pin") { model.togglePin(clip) }
             .frame(width: 52)

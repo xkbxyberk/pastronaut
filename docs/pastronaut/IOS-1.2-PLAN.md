@@ -400,6 +400,14 @@ Her adımın sonunda yapılacaklar:
 Arayüz kodu yalnızca **Adım D**'de yazılır, ekran görüntüleri geldikten sonra.
 
 ### Adım A: Sağlamlaştırma (veri katmanı, arayüzsüz) → 1.2'nin ilk parçası (karar 4)
+
+> **Durum (2026-10-22):** A1–A4 yapıldı ve test edildi: çekirdekte 113 test (17'si yeni), Mac'te 109 test, iOS
+> derlemesi. İki cihazlı uçtan uca test henüz koşmadı. Sırada A5. A6 şema değişikliği olduğu için Adım B'ye taşındı.
+> - **Uygulanan kural:** Aynı metnin yeniden yakalanması (Yapıştır, açılınca kaydetme, Paylaş, klavye) yeni veri
+>   sayılır ve eşitlenir. Dokunup kopyalama, sabitleme, koleksiyon ve düzenleme yalnızca yerel öğeyi yerelde tutar.
+> - **Klavye:** Yalnızca yerel öğelerde Sabitle ve Sil göstermez, çünkü bu işlemler doğrudan iCloud'a yazıyor.
+> - **Başka cihazda silinen öğe:** Burada yalnızca sabitlendiyse ya da koleksiyona eklendiyse silme kazanır.
+>   Burada yeniden kopyalandıysa öğe geri gelir.
 1. **K1:** iPhone'da yerel geçmiş aynadan ayrılır. Bulut silindiğinde ya da hesaptan çıkıldığında öğeler
    "Yalnızca bu iPhone'da" olarak kalır (karar 3).
    - Kendiliğinden yüklenmezler; yalnızca Ayarlar'daki "iCloud'a Yeniden Yükle" ile gönderilirler.

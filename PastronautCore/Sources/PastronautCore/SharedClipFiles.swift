@@ -53,6 +53,7 @@ public struct SharedClipFiles: Sendable {
   var snapshotURL: URL { directory.appending(path: "clips.json") }
   var collectionsURL: URL { directory.appending(path: "collections.json") }
   var inboxURL: URL { directory.appending(path: "inbox.json") }
+  var localOnlyURL: URL { directory.appending(path: "local-only.json") }
 
   // MARK: - Snapshot
 
@@ -76,7 +77,9 @@ public struct SharedClipFiles: Sendable {
     var base = readSnapshot()
     if useKeyboardCache, let cache = readKeyboardCache(), let fetchedAt = cache.fetchedAt,
        fetchedAt > snapshotDate ?? .distantPast {
-      base = cache.clips
+      // The cache only knows iCloud; clips the app keeps on this device alone come from the snapshot.
+      let localOnly = readLocalOnly().clips
+      base = cache.clips + base.filter { localOnly.contains($0.id) }
     }
     var byID: [String: Clip] = [:]
     for clip in base + readInbox() {
@@ -98,9 +101,23 @@ public struct SharedClipFiles: Sendable {
     let snapshot = (try? decode([ClipCollection].self, from: collectionsURL)) ?? []
     if useKeyboardCache, let cache = readKeyboardCache(), let fetchedAt = cache.fetchedAt,
        fetchedAt > snapshotDate ?? .distantPast {
-      return cache.collections
+      let localOnly = readLocalOnly().collections
+      let cached = Set(cache.collections.map(\.id))
+      return (cache.collections + snapshot.filter { localOnly.contains($0.id) && !cached.contains($0.id) }).ordered
     }
     return snapshot.ordered
+  }
+
+  // MARK: - Local-only clips
+
+  /// Written by the app with the snapshot: what it keeps although iCloud doesn't have it (`LocalOnlyIDs`).
+  public func writeLocalOnly(_ ids: LocalOnlyIDs) throws {
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    try encode(ids, to: localOnlyURL)
+  }
+
+  public func readLocalOnly() -> LocalOnlyIDs {
+    (try? decode(LocalOnlyIDs.self, from: localOnlyURL)) ?? LocalOnlyIDs()
   }
 
   // MARK: - Keyboard cache
@@ -146,6 +163,17 @@ public struct SharedClipFiles: Sendable {
     try coordinatedWrite(to: inboxURL) { url in
       guard var inbox = try? decode([Clip].self, from: url) else { return }
       inbox.removeAll { $0.id == id }
+      try encode(inbox, to: url)
+    }
+  }
+
+  /// Removes captures the app has stored. A capture changed since it was read (copied again) stays for the
+  /// next time, so nothing is lost between reading the inbox and storing it.
+  public func removeFromInbox(handled: [Clip]) throws {
+    guard !handled.isEmpty else { return }
+    try coordinatedWrite(to: inboxURL) { url in
+      guard var inbox = try? decode([Clip].self, from: url) else { return }
+      inbox.removeAll { handled.contains($0) }
       try encode(inbox, to: url)
     }
   }
