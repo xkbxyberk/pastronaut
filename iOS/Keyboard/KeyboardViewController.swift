@@ -349,7 +349,8 @@ final class KeyboardModel {
     let clip = Clip(text: text, sourceDevice: .iphone)
     try? files.appendToInbox(clip)
     reload()
-    guard hasFullAccess, let cloud else { return }
+    // Codes and cards the person keeps on this iPhone (Settings › Privacy) wait in the inbox for the app.
+    guard hasFullAccess, let cloud, PrivacyOptions.onPhone(in: defaults).allows(text, pinned: false) else { return }
     Task {
       do {
         try await cloud.save(clip)

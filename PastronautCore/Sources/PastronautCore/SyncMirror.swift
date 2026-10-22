@@ -41,17 +41,27 @@ extension ClipSync.PersistedState {
   /// Merges a local change into the mirror; false when the clip is not eligible or nothing changed.
   /// A later copy time marks the clip as copied here since the server last had it. A capture (the text was
   /// copied again) is new data and syncs even for a local-only clip; tapping, pinning or editing one doesn't.
-  mutating func stage(_ clip: Clip, policy: SyncPolicy, isCapture: Bool = false) -> Bool {
+  ///
+  /// `privacy` keeps matching clips (codes, cards) on this device: a new one is local-only from the start, and a
+  /// capture never sends one.
+  mutating func stage(
+    _ clip: Clip,
+    policy: SyncPolicy,
+    isCapture: Bool = false,
+    privacy: PrivacyOptions = PrivacyOptions()
+  ) -> Bool {
     guard policy.isEligible(clip.text) else { return false }
     let existing = entries[clip.id]
     let merged = existing.map { $0.clip.merged(with: clip) } ?? clip
-    let releases = isCapture && existing?.isLocalOnly == true
+    let allowed = privacy.allows(merged.text, pinned: merged.pinned)
+    let isLocalOnly = existing.map { $0.isLocalOnly && !(isCapture && allowed) } ?? !allowed
+    let releases = existing?.isLocalOnly == true && !isLocalOnly
     guard merged != existing?.clip || releases else { return false }
     let copiedAgain = merged.lastCopiedAt > existing?.clip.lastCopiedAt ?? .distantPast
     entries[clip.id] = ClipSync.MirrorEntry(
       clip: merged,
       systemFields: existing?.systemFields,
-      isLocalOnly: (existing?.isLocalOnly ?? false) && !isCapture,
+      isLocalOnly: isLocalOnly,
       hasUnsentCopy: (existing?.hasUnsentCopy ?? false) || copiedAgain
     )
     legacyTombstones.remove(clip.id)
@@ -96,8 +106,12 @@ extension ClipSync.PersistedState {
   }
 
   /// Clears the local-only marks so the clips and collections are sent again. Returns what was released.
-  mutating func releaseLocalOnly() -> LocalOnlyIDs {
-    let released = localOnly
+  /// Clips that `privacy` keeps on this device stay.
+  mutating func releaseLocalOnly(privacy: PrivacyOptions = PrivacyOptions()) -> LocalOnlyIDs {
+    var released = localOnly
+    released.clips = released.clips.filter { id in
+      entries[id].map { privacy.allows($0.clip.text, pinned: $0.clip.pinned) } ?? false
+    }
     for id in released.clips {
       entries[id]?.isLocalOnly = false
     }

@@ -10,6 +10,7 @@ struct PastronautWidgets: WidgetBundle {
     LatestClipAccessoryWidget()
     if #available(iOS 18.0, *) {
       SaveClipboardControl()
+      PauseSavingControl()
     }
   }
 }

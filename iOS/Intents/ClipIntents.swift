@@ -126,3 +126,24 @@ struct SaveClipboardIntent: AppIntent {
     return .result()
   }
 }
+
+/// "Pause Saving" (Control Center, Lock Screen, Action button): while on, Pastronaut and its keyboard don't save
+/// the clipboard by themselves. On is for an hour, so a forgotten pause ends by itself.
+struct PauseSavingIntent: SetValueIntent {
+  static let title: LocalizedStringResource = "Pause Saving"
+  static let description = IntentDescription("Pastronaut and its keyboard stop saving the clipboard by themselves for an hour.")
+
+  @Parameter(title: "Paused")
+  var value: Bool
+
+  static let controlKind = "com.xkbxyberk.pastronaut.pause-saving"
+
+  func perform() async throws -> some IntentResult {
+    if value {
+      SavingPause.pause(.oneHour, in: SharedSettings.defaults)
+    } else {
+      SavingPause.resume(in: SharedSettings.defaults)
+    }
+    return .result()
+  }
+}

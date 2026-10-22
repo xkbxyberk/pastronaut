@@ -415,6 +415,28 @@
         }
       }
     },
+    "Deleted": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silindi"
+          }
+        }
+      }
+    },
+    "Deleted %lld clips": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld öğe silindi"
+          }
+        }
+      }
+    },
     "Deselect All": {
       "extractionState": "manual",
       "localizations": {
@@ -558,6 +580,28 @@
         }
       }
     },
+    "For 1 Hour": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Saat"
+          }
+        }
+      }
+    },
+    "For 15 Minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 Dakika"
+          }
+        }
+      }
+    },
     "From": {
       "extractionState": "manual",
       "localizations": {
@@ -613,6 +657,39 @@
         }
       }
     },
+    "Hidden while the screen is recorded": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekran kaydedilirken gizlendi"
+          }
+        }
+      }
+    },
+    "Hide During Screen Recording": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekran Kaydında Gizle"
+          }
+        }
+      }
+    },
+    "Hide in App Switcher": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama Değiştiricide Gizle"
+          }
+        }
+      }
+    },
     "In Shortcuts, make a shortcut with “Get Clipboard” and “Save to Pastronaut”. Add it to Back Tap or the Action button to save with one gesture.": {
       "extractionState": "manual",
       "localizations": {
@@ -620,6 +697,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kestirmeler'de “Panoyu Al” ve “Pastronaut'a kaydet” eylemleriyle bir kestirme oluştur. Tek hareketle kaydetmek için Arkaya Dokun'a ya da Eylem düğmesine ata."
+          }
+        }
+      }
+    },
+    "Keep Card Numbers and IBANs on This iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kart Numaralarını ve IBAN'ları Bu iPhone'da Tut"
+          }
+        }
+      }
+    },
+    "Keep One-Time Codes on This iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tek Kullanımlık Kodları Bu iPhone'da Tut"
           }
         }
       }
@@ -646,6 +745,50 @@
         }
       }
     },
+    "Only on This iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca Bu iPhone'da"
+          }
+        }
+      }
+    },
+    "Pastronaut and its keyboard stop saving the clipboard by themselves for an hour.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut ve klavyesi bir saat boyunca panoyu kendiliğinden kaydetmez."
+          }
+        }
+      }
+    },
+    "Pause Saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydetmeyi Duraklat"
+          }
+        }
+      }
+    },
+    "Paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duraklatıldı"
+          }
+        }
+      }
+    },
     "Queue ready: tap its key on the keyboard": {
       "extractionState": "manual",
       "localizations": {
@@ -664,6 +807,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Başlığı Kaldır"
+          }
+        }
+      }
+    },
+    "Resume Saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydetmeyi Sürdür"
+          }
+        }
+      }
+    },
+    "Saving Paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydetme Duraklatıldı"
+          }
+        }
+      }
+    },
+    "Show Anyway": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yine de Göster"
           }
         }
       }
@@ -712,6 +888,17 @@
         }
       }
     },
+    "These clips stayed on this iPhone when iCloud no longer had them (its data was deleted, or the iPhone used another account), or because Privacy keeps them here. They are sent only when you choose Upload to iCloud Again; codes and cards Privacy keeps here stay.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu öğeler iCloud'da artık olmadıklarında bu iPhone'da kaldı (iCloud verisi silindi ya da iPhone başka bir hesap kullandı) ya da Gizlilik ayarı onları burada tutuyor. Yalnızca iCloud'a Yeniden Yükle'yi seçtiğinde gönderilirler; Gizlilik'in burada tuttuğu kodlar ve kartlar kalır."
+          }
+        }
+      }
+    },
     "Title": {
       "extractionState": "manual",
       "localizations": {
@@ -719,6 +906,94 @@
           "stringUnit": {
             "state": "translated",
             "value": "Başlık"
+          }
+        }
+      }
+    },
+    "Undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri Al"
+          }
+        }
+      }
+    },
+    "Until I Resume": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ben Sürdürene Kadar"
+          }
+        }
+      }
+    },
+    "Until Tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yarına Kadar"
+          }
+        }
+      }
+    },
+    "Until you resume": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sen sürdürene kadar"
+          }
+        }
+      }
+    },
+    "Upload to iCloud Again": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud'a Yeniden Yükle"
+          }
+        }
+      }
+    },
+    "While saving is paused, Pastronaut and its keyboard don't save the clipboard by themselves; the Paste button, Share and Shortcuts still do. When you open Pastronaut or its keyboard, a new copy is saved by itself. One-time codes, card numbers and IBANs are skipped. iPhone can't read the clipboard in the background, so if you copy several things in a row only the last one is saved; use the Share menu or the Paste button for the others. To stop iOS from asking each time, set Paste from Other Apps to Allow.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydetme duraklatıldığında Pastronaut ve klavyesi panoyu kendiliğinden kaydetmez; Yapıştır düğmesi, Paylaş ve Kestirmeler yine kaydeder. Pastronaut'u ya da klavyesini açtığında yeni kopya kendiliğinden kaydedilir. Tek kullanımlık kodlar, kart numaraları ve IBAN'lar atlanır. iPhone panoyu arka planda okuyamaz; art arda birkaç şey kopyalarsan yalnızca sonuncusu kaydedilir, diğerleri için Paylaş menüsünü ya da Yapıştır düğmesini kullan. iOS'un her seferinde sormaması için Diğer Uygulamalardan Yapıştır ayarını İzin Ver yap."
+          }
+        }
+      }
+    },
+    "While the screen is recorded or shown on another display, your clips are covered. Kept codes and cards are saved here but never sent to iCloud, from now on. Pastronaut asks for %@ when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for %@. Pinned clips can show up when you search your iPhone; choosing one copies it. Search stays off while the lock is on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekran kaydedilirken ya da başka bir ekranda gösterilirken öğelerin örtülür. Burada tutulan kodlar ve kartlar bundan sonra kaydedilir ama iCloud'a hiç gönderilmez. Pastronaut açılırken %1$@ ister ve widget'lar öğelerini gizler. Klavye kullanılabilir kalır, çünkü iPhone klavyeleri %2$@ isteyemez. Sabitlenen öğeler iPhone'da aramada çıkabilir; birini seçmek onu kopyalar. Kilit kullanılırken arama kapalı kalır."
+          }
+        }
+      }
+    },
+    "Your clips are covered while this screen is recorded or shown on another display.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ekran kaydedilirken ya da başka bir ekranda gösterilirken öğelerin örtülür."
           }
         }
       }
@@ -1570,17 +1845,6 @@
         }
       }
     },
-    "When you open Pastronaut or its keyboard, a new copy is saved by itself. One-time codes, card numbers and IBANs are skipped. iPhone can't read the clipboard in the background, so if you copy several things in a row only the last one is saved; use the Share menu or the Paste button for the others. To stop iOS from asking each time, set Paste from Other Apps to Allow.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pastronaut'u ya da klavyesini açtığında yeni kopya kendiliğinden kaydedilir. Tek kullanımlık kodlar, kart numaraları ve IBAN'lar atlanır. iPhone panoyu arka planda okuyamaz; art arda birkaç şey kopyalarsan yalnızca sonuncusu kaydedilir, diğerleri için Paylaş menüsünü ya da Yapıştır düğmesini kullan. iOS'un her seferinde sormaması için Diğer Uygulamalardan Yapıştır ayarını İzin Ver yap."
-          }
-        }
-      }
-    },
     "Write Email": {
       "extractionState": "manual",
       "localizations": {
@@ -1786,17 +2050,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sabitlenenleri Aramada Göster"
-          }
-        }
-      }
-    },
-    "Pastronaut asks for %@ when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for %@. Pinned clips can show up when you search your iPhone; choosing one copies it. Search stays off while the lock is on.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pastronaut açılırken %1$@ ister ve widget'lar öğelerini gizler. Klavye kullanılabilir kalır, çünkü iPhone klavyeleri %2$@ isteyemez. Sabitlenen öğeler iPhone'da aramada çıkabilir; birini seçmek onu kopyalar. Kilit kullanılırken arama kapalı kalır."
           }
         }
       }

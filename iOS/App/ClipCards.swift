@@ -24,6 +24,7 @@ struct ClipCard: View {
   var isSelected = false
   /// Briefly outlined after "Show in History".
   var isHighlighted = false
+  var isLocalOnly = false
   let onTap: () -> Void
   @Environment(\.openURL) private var openURL
   /// Every tile has this height; it grows with Dynamic Type so text still fits.
@@ -233,7 +234,7 @@ struct ClipCard: View {
           .foregroundStyle(onDarkCard ? Color.white : Color.pin)
           .accessibilityLabel(Text("Pinned clip"))
       }
-      SourceBadge(clip: clip, onDarkCard: onDarkCard)
+      SourceBadge(clip: clip, onDarkCard: onDarkCard, isLocalOnly: isLocalOnly)
     }
     .font(.caption)
     .lineLimit(1)
@@ -278,8 +279,14 @@ struct ClipCard: View {
 struct SourceBadge: View {
   let clip: Clip
   var onDarkCard = false
+  /// Kept on this iPhone only (iCloud data deleted, another account, or Settings › Privacy).
+  var isLocalOnly = false
 
   var body: some View {
+    if isLocalOnly {
+      Image(systemName: "icloud.slash")
+        .accessibilityLabel(Text("Only on This iPhone"))
+    }
     if clip.isFromMac, let app = clip.sourceAppName, let initial = app.first {
       Text(verbatim: String(initial).uppercased())
         .font(.caption2.weight(.heavy))

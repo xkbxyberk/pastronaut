@@ -94,6 +94,8 @@ public actor ClipSync {
   /// The mirror is this device's history (iPhone), so what iCloud forgets stays here as local-only clips.
   /// On the Mac the history lives in Maccy's own store and the mirror is only the sync copy.
   private let keepsLocalHistory: Bool
+  /// What stays on this device instead of syncing (iPhone Settings › Privacy); see `setPrivacy`.
+  private var privacy = PrivacyOptions()
   private var state: PersistedState
   /// Record name → clip ID for the current key. Not stored; rebuilt from the mirror.
   private var clipIDsByRecordName: [String: String] = [:]
@@ -127,6 +129,12 @@ public actor ClipSync {
     changeHandler = handler
   }
 
+  /// From now on, new clips that `privacy` doesn't allow are kept on this device only. Clips already in iCloud
+  /// stay there.
+  public func setPrivacy(_ privacy: PrivacyOptions) {
+    self.privacy = privacy
+  }
+
   public var status: SyncStatus {
     SyncStatus(
       isRunning: engine != nil,
@@ -153,7 +161,7 @@ public actor ClipSync {
   /// clips were waiting. Without the key they are queued once `syncNow` reads it.
   @discardableResult
   public func uploadLocalOnly() -> Int {
-    let released = state.releaseLocalOnly()
+    let released = state.releaseLocalOnly(privacy: privacy)
     guard released.clips.count + released.collections.count > 0 else { return 0 }
     if let engine, let key = state.key {
       engine.state.add(pendingRecordZoneChanges:
@@ -506,7 +514,7 @@ public actor ClipSync {
 
   /// Merges a local change into the mirror and queues it; false when nothing changed.
   private func store(_ clip: Clip, isCapture: Bool = false) -> Bool {
-    guard let engine, state.stage(clip, policy: policy, isCapture: isCapture) else { return false }
+    guard let engine, state.stage(clip, policy: policy, isCapture: isCapture, privacy: privacy) else { return false }
     // Local-only clips change here but stay here. Without the key nothing is queued yet; `adopt` queues every
     // unsent clip.
     if state.entries[clip.id]?.isLocalOnly == false, let recordID = recordID(forClipID: clip.id) {
@@ -541,6 +549,26 @@ public actor ClipSync {
       changed.append(clip)
     }
     upsert(contentsOf: changed)
+  }
+
+  /// Undoes a deletion made here: a delete not sent yet is dropped, one already sent is answered with the clip
+  /// again. The clips come back as they were, as the newest version.
+  public func restore(_ clips: [Clip]) {
+    guard let engine, !clips.isEmpty else { return }
+    if let key = state.key {
+      let names = Set(clips.map { key.recordName(forClipID: $0.id) })
+      let waiting = engine.state.pendingRecordZoneChanges.filter {
+        if case .deleteRecord(let id) = $0 { return names.contains(id.recordName) }
+        return false
+      }
+      engine.state.remove(pendingRecordZoneChanges: waiting)
+    }
+    state.legacyTombstones.subtract(clips.map(\.id))
+    upsert(contentsOf: clips.map { clip in
+      var restored = clip
+      restored.modifiedAt = max(.now, clip.modifiedAt.addingTimeInterval(0.001))
+      return restored
+    })
   }
 
   /// Reports clips deleted on this device. Unknown IDs are ignored.

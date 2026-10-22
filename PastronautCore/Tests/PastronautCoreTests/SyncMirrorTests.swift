@@ -231,3 +231,55 @@ import Testing
     #expect(left.first?.lastCopiedAt == Date(timeIntervalSince1970: 3_000))
   }
 }
+
+/// iPhone Settings › Privacy: codes and cards are saved but kept on the iPhone.
+@Suite struct PhonePrivacyTests {
+  let keepCodes = PrivacyOptions(skipOneTimeCodes: true)
+
+  @Test func aNewCodeIsLocalOnlyFromTheStart() {
+    var state = ClipSync.PersistedState()
+    let code = Clip(text: "482913", sourceDevice: .iphone)
+    let staged = state.stage(code, policy: .default, isCapture: true, privacy: keepCodes)
+    #expect(staged)
+    #expect(state.entries[code.id] != nil)
+    #expect(state.localOnly.clips == [code.id])
+    #expect(state.unsentClipIDs.isEmpty)
+  }
+
+  @Test func otherTextStillSyncs() {
+    var state = ClipSync.PersistedState()
+    let note = Clip(text: "Buy milk", sourceDevice: .iphone)
+    let staged = state.stage(note, policy: .default, isCapture: true, privacy: keepCodes)
+    #expect(staged)
+    #expect(state.localOnly.isEmpty)
+    #expect(state.unsentClipIDs == [note.id])
+  }
+
+  @Test func copyingAKeptCodeAgainDoesNotSendIt() {
+    var state = ClipSync.PersistedState()
+    let code = Clip(text: "482913", sourceDevice: .iphone, firstCopiedAt: Date(timeIntervalSince1970: 1_000))
+    _ = state.stage(code, policy: .default, isCapture: true, privacy: keepCodes)
+    let again = state.entries[code.id]!.clip.copiedAgain(Clip(text: "482913", sourceDevice: .iphone))
+    _ = state.stage(again, policy: .default, isCapture: true, privacy: keepCodes)
+    #expect(state.localOnly.clips == [code.id])
+  }
+
+  @Test func uploadAgainLeavesKeptCodesHere() {
+    var state = ClipSync.PersistedState()
+    let code = Clip(text: "482913", sourceDevice: .iphone)
+    let note = Clip(text: "Buy milk", sourceDevice: .iphone)
+    for clip in [code, note] {
+      state.entries[clip.id] = ClipSync.MirrorEntry(clip: clip, systemFields: nil, isLocalOnly: true)
+    }
+    let released = state.releaseLocalOnly(privacy: keepCodes)
+    #expect(released.clips == [note.id])
+    #expect(state.localOnly.clips == [code.id])
+  }
+
+  @Test func phoneOptionsComeFromTheAppGroupSettings() {
+    let defaults = UserDefaults(suiteName: "pastronaut-tests-\(UUID().uuidString)")!
+    #expect(PrivacyOptions.onPhone(in: defaults) == PrivacyOptions())
+    defaults.set(true, forKey: PrivacyOptions.phoneCardsKey)
+    #expect(PrivacyOptions.onPhone(in: defaults) == PrivacyOptions(skipCardNumbers: true))
+  }
+}

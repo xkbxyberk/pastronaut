@@ -105,7 +105,7 @@ struct HistoryView: View {
       }
       .overlay(alignment: .bottom) {
         if let toast {
-          Toast(text: toast.text, systemImage: toast.systemImage)
+          Toast(text: toast.text, systemImage: toast.systemImage, undo: toast.undo)
             // Above the bottom bar (search and "+") on iOS 26 and later.
             .padding(.bottom, Self.toastClearance)
             .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -155,7 +155,7 @@ struct HistoryView: View {
         titleVisibility: .visible
       ) {
         Button("Delete", role: .destructive) {
-          store.delete(selectedClips)
+          deleteWithUndo(selectedClips)
           endEditing()
         }
         .accessibilityIdentifier("confirmBulkDelete")
@@ -502,7 +502,7 @@ struct HistoryView: View {
     }
     .swipeActions(edge: .trailing) {
       Button(role: .destructive) {
-        store.delete(clip)
+        deleteWithUndo([clip])
       } label: {
         Label("Delete", systemImage: "trash")
       }
@@ -564,7 +564,7 @@ struct HistoryView: View {
     ShareLink(item: clip.text)
     Divider()
     Button(role: .destructive) {
-      store.delete(clip)
+      deleteWithUndo([clip])
     } label: {
       Label("Delete", systemImage: "trash")
     }
@@ -662,7 +662,11 @@ struct HistoryView: View {
             .id(Self.cardSectionAnchor(section))
           CardGrid(clips: section.clips) { clip in
             ClipCard(
-              clip: clip, isEditing: isEditing, isSelected: selection.contains(clip.id), isHighlighted: highlightID == clip.id
+              clip: clip,
+              isEditing: isEditing,
+              isSelected: selection.contains(clip.id),
+              isHighlighted: highlightID == clip.id,
+              isLocalOnly: store.localOnly.clips.contains(clip.id)
             ) {
               if isEditing {
                 if selection.contains(clip.id) { selection.remove(clip.id) } else { selection.insert(clip.id) }
@@ -671,6 +675,8 @@ struct HistoryView: View {
               }
             }
             .contextMenu { if !isEditing { clipMenu(clip) } }
+            // Drag a card's text into another app (iPhone and iPad).
+            .draggable(clip.text)
             .accessibilityIdentifier(clip.pinned ? "card.pinned" : "card.unpinned")
             .id(clip.id)
           }
@@ -693,9 +699,30 @@ struct HistoryView: View {
     showToast("Copied")
   }
 
+  /// Deleting asks no question (a swipe or the menu), so it can be taken back for a few seconds.
+  private func deleteWithUndo(_ clips: [Clip]) {
+    store.delete(clips)
+    Haptics.success()
+    showToast(
+      clips.count == 1 ? "Deleted" : "Deleted \(clips.count) clips",
+      systemImage: "trash",
+      for: .seconds(5),
+      undo: { store.undoDelete() }
+    )
+  }
+
   /// Short notices go quickly; a sentence to read (`duration`) stays longer.
-  private func showToast(_ text: LocalizedStringKey, systemImage: String = "checkmark", for duration: Duration = .seconds(1.4)) {
-    withAnimation(.snappy) { toast = ToastContent(text: text, systemImage: systemImage) }
+  private func showToast(
+    _ text: LocalizedStringKey,
+    systemImage: String = "checkmark",
+    for duration: Duration = .seconds(1.4),
+    undo: (() -> Void)? = nil
+  ) {
+    withAnimation(.snappy) {
+      toast = ToastContent(text: text, systemImage: systemImage, undo: undo.map { action in
+        { action(); withAnimation(.snappy) { toast = nil } }
+      })
+    }
     hideToast?.cancel()
     hideToast = Task {
       try? await Task.sleep(for: duration)
@@ -709,6 +736,7 @@ struct HistoryView: View {
 /// and source; a small picture on the right.
 struct ClipRow: View {
   let clip: Clip
+  @Environment(ClipStore.self) private var store
 
   private var lines: (String, String?) {
     if case .link(let url) = clip.content {
@@ -754,7 +782,7 @@ struct ClipRow: View {
               .accessibilityLabel(Text("Pinned clip"))
           }
           Spacer(minLength: 0)
-          SourceBadge(clip: clip)
+          SourceBadge(clip: clip, isLocalOnly: store.localOnly.clips.contains(clip.id))
         }
         .font(.caption)
         .foregroundStyle(.secondary)
@@ -911,6 +939,8 @@ private struct FilterBarPlacement<Bar: View>: ViewModifier {
 private struct ToastContent {
   let text: LocalizedStringKey
   let systemImage: String
+  /// "Undo" after a deletion.
+  var undo: (() -> Void)?
 }
 
 extension ClipSearchToken {

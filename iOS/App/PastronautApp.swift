@@ -12,15 +12,15 @@ struct PastronautApp: App {
     WindowGroup {
       RootView()
         .environment(ClipStore.shared)
-        .overlay {
-          // Also hides the history in the app switcher while the lock is on.
-          if lock.isLocked || (lock.isEnabled && scenePhase != .active) {
-            LockScreen(lock: lock)
-              .transition(.opacity)
+        .modifier(AppPreferencesScope())
+        .onAppear {
+          // The lock, the screen-recording cover and the app-switcher cover live in a window above sheets too.
+          if let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first {
+            PrivacyCover.shared.attach(to: scene)
           }
         }
-        .modifier(AppPreferencesScope())
         .onChange(of: lock.isLocked) { _, isLocked in
+          PrivacyCover.shared.update()
           // Opened with Face ID: now the clipboard may be read.
           if !isLocked, scenePhase == .active {
             Task { await saveClipboard() }
@@ -28,6 +28,7 @@ struct PastronautApp: App {
         }
     }
     .onChange(of: scenePhase) { _, phase in
+      PrivacyCover.shared.sceneBecame(active: phase == .active)
       if phase == .active {
         Task {
           if lock.isLocked {
@@ -41,6 +42,7 @@ struct PastronautApp: App {
         }
       } else if phase == .background {
         lock.lock()
+        PrivacyCover.shared.update()
         Task { await ClipStore.shared.upload() }
       }
     }

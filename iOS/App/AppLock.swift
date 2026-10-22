@@ -41,6 +41,18 @@ final class AppLock {
     }
   }
 
+  /// The symbol that goes with `methodName`.
+  var methodSymbol: String {
+    let context = LAContext()
+    _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+    return switch context.biometryType {
+    case .faceID: "faceid"
+    case .touchID: "touchid"
+    case .opticID: "opticid"
+    default: "lock.fill"
+    }
+  }
+
   private init() {
     isLocked = isEnabled && !Self.isTesting
   }
@@ -103,7 +115,7 @@ struct LockScreen: View {
         Button {
           Task { await lock.unlock() }
         } label: {
-          Label("Unlock with \(lock.methodName)", systemImage: "faceid")
+          Label("Unlock with \(lock.methodName)", systemImage: lock.methodSymbol)
             .padding(.horizontal, 8)
         }
         .controlSize(.large)

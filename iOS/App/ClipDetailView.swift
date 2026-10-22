@@ -10,6 +10,8 @@ struct ClipDetailView: View {
   @State private var showsCopied = false
   @State private var isEditing = false
   @State private var confirmsDelete = false
+  @State private var isTitling = false
+  @State private var titleDraft = ""
 
   init(clipID: String) {
     _clipID = State(initialValue: clipID)
@@ -41,6 +43,23 @@ struct ClipDetailView: View {
   private func content(_ clip: Clip) -> some View {
     ScrollView {
       VStack(spacing: 16) {
+        if let image = PreviewStore.shared.preview(for: clip)?.image {
+          Image(uiImage: image)
+            .resizable()
+            .scaledToFill()
+            .frame(maxWidth: .infinity)
+            .frame(height: 190)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .accessibilityHidden(true)
+        }
+        Button {
+          titleDraft = clip.title ?? ""
+          isTitling = true
+        } label: {
+          TitleRow(title: clip.title)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("detailTitle")
         // Content layer: a plain card. Glass is for the controls around it.
         Text(clip.text)
           .font(clip.content.usesMonospacedFont ? .body.monospaced() : .body)
@@ -102,7 +121,7 @@ struct ClipDetailView: View {
         }
         .buttonStyle(.plain)
 
-        InfoList(clip: clip)
+        InfoList(clip: clip, isLocalOnly: store.localOnly.clips.contains(clip.id))
       }
       .padding()
     }
@@ -114,6 +133,16 @@ struct ClipDetailView: View {
           clipID = newID
         }
       }
+    }
+    .alert(Text(clip.title == nil ? "Add Title" : "Edit Title"), isPresented: $isTitling) {
+      TextField("Title", text: $titleDraft)
+      Button("Save") { store.setTitle(titleDraft, for: clip) }
+      if clip.title != nil {
+        Button("Remove Title", role: .destructive) { store.setTitle(nil, for: clip) }
+      }
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text("Shown instead of the text, and found when you search. The text itself doesn't change.")
     }
     .confirmationDialog("Delete this clip?", isPresented: $confirmsDelete, titleVisibility: .visible) {
       Button("Delete", role: .destructive) {
@@ -179,6 +208,35 @@ private struct ActionTile: View {
   }
 }
 
+/// The clip's title, or a prompt to give it one; opens the title alert.
+private struct TitleRow: View {
+  let title: String?
+
+  var body: some View {
+    HStack(spacing: 10) {
+      Image(systemName: "character.cursor.ibeam")
+        .foregroundStyle(Color.accentColor)
+      if let title {
+        Text(verbatim: title)
+          .font(.headline)
+          .lineLimit(2)
+      } else {
+        Text("Add Title")
+      }
+      Spacer()
+      Image(systemName: "pencil")
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+    }
+    .font(.subheadline)
+    .padding(.horizontal, 16)
+    .padding(.vertical, 14)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+    .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+  }
+}
+
 /// The clip's collections; opens "Add to Collection".
 private struct CollectionsRow: View {
   let names: [String]
@@ -209,6 +267,7 @@ private struct CollectionsRow: View {
 
 private struct InfoList: View {
   let clip: Clip
+  let isLocalOnly: Bool
 
   var body: some View {
     VStack(spacing: 0) {
@@ -229,7 +288,11 @@ private struct InfoList: View {
       }
       Divider()
       row("iCloud") {
-        Label("Encrypted", systemImage: "lock")
+        if isLocalOnly {
+          Label("Only on This iPhone", systemImage: "icloud.slash")
+        } else {
+          Label("Encrypted", systemImage: "lock")
+        }
       }
     }
     .font(.subheadline)

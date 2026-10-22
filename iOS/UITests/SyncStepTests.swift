@@ -461,6 +461,62 @@ final class SyncStepTests: XCTestCase {
         }
       }
       report(["ok": true])
+    case "designShots2":
+      // Design review of 1.2, part 2, made-up clips only (PT_DEMO): a clip's details, the undo notice after a
+      // delete, and the new Settings (sync, clipboard pause, privacy). Ends with the app closed.
+      defer {
+        XCUIDevice.shared.appearance = .dark
+        app.terminate()
+      }
+      XCUIDevice.shared.appearance = .light
+      app.launchEnvironment["PT_DEMO"] = "1"
+      app.launchEnvironment["PT_E2E_PREVIEWS"] = "1"
+      let cards = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'card.'"))
+      app.launch()
+      Thread.sleep(forTimeInterval: 8)
+      if cards.element(boundBy: 2).waitForExistence(timeout: 5) {
+        cards.element(boundBy: 2).press(forDuration: 1.0)
+        let details = app.buttons["showDetails"].firstMatch
+        if details.waitForExistence(timeout: 3) {
+          details.tap()
+          Thread.sleep(forTimeInterval: 1.5)
+          attachScreenshot(named: "e-detail")
+          app.swipeUp()
+          Thread.sleep(forTimeInterval: 1)
+          attachScreenshot(named: "e-detail-scrolled")
+        }
+      }
+      app.terminate()
+      app.launch()
+      Thread.sleep(forTimeInterval: 3)
+      if cards.element(boundBy: 3).waitForExistence(timeout: 5) {
+        cards.element(boundBy: 3).press(forDuration: 1.0)
+        let delete = app.buttons.matching(NSPredicate(format: "label IN %@", ["Delete", "Sil"])).firstMatch
+        if delete.waitForExistence(timeout: 3) {
+          delete.tap()
+          Thread.sleep(forTimeInterval: 0.8)
+          attachScreenshot(named: "e-undo")
+        }
+      }
+      app.terminate()
+      app.launch()
+      app.buttons["settingsButton"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1.5)
+      for index in 1...4 {
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "e-settings-\(index)")
+      }
+      let pause = app.buttons["pauseSaving"].firstMatch
+      for _ in 0..<4 where !pause.isHittable {
+        app.swipeDown()
+      }
+      if pause.isHittable {
+        pause.tap()
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "e-pause-menu")
+      }
+      report(["ok": true])
     case "selectShots":
       // Design review: select mode, the new clip sheet and the clipboard settings.
       bringUp()

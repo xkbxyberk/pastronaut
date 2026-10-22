@@ -122,6 +122,61 @@
         }
       }
     },
+    "Pastronaut and its keyboard stop saving the clipboard by themselves for an hour.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut ve klavyesi bir saat boyunca panoyu kendiliğinden kaydetmez."
+          }
+        }
+      }
+    },
+    "Pastronaut stops saving the clipboard by itself for an hour.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut bir saat boyunca panoyu kendiliğinden kaydetmez."
+          }
+        }
+      }
+    },
+    "Pause Saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydetmeyi Duraklat"
+          }
+        }
+      }
+    },
+    "Paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duraklatıldı"
+          }
+        }
+      }
+    },
+    "Saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydediyor"
+          }
+        }
+      }
+    },
     "iPhone": {
       "extractionState": "manual",
       "localizations": {

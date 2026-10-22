@@ -60,14 +60,25 @@ extension View {
 struct Toast: View {
   let text: LocalizedStringKey
   var systemImage = "checkmark"
+  /// Shows an "Undo" button when set.
+  var undo: (() -> Void)?
 
   var body: some View {
-    Label(text, systemImage: systemImage)
-      .font(.subheadline.weight(.semibold))
-      .padding(.horizontal, 18)
-      .padding(.vertical, 12)
-      .glassBackground(in: Capsule())
-      .accessibilityAddTraits(.isStaticText)
+    HStack(spacing: 14) {
+      Label(text, systemImage: systemImage)
+        .lineLimit(1)
+        .fixedSize()
+        .accessibilityAddTraits(.isStaticText)
+      if let undo {
+        Button("Undo", action: undo)
+          .fontWeight(.bold)
+          .accessibilityIdentifier("undoButton")
+      }
+    }
+    .font(.subheadline.weight(.semibold))
+    .padding(.horizontal, 18)
+    .padding(.vertical, 12)
+    .glassBackground(in: Capsule())
   }
 }
 

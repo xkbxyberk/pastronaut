@@ -11,6 +11,14 @@ struct SettingsView: View {
   @AppStorage(SpotlightIndex.settingKey) private var spotlight = false
   @AppStorage(PreviewChoice.key) private var previewChoice = PreviewChoice.on.rawValue
   @AppStorage(AppPreferences.appearanceKey) private var appearance = AppAppearance.system
+  @AppStorage(PrivacyCover.recordingKey) private var hidesWhileRecording = true
+  @AppStorage(PrivacyCover.switcherKey) private var hidesInSwitcher = false
+  @AppStorage(PrivacyOptions.phoneCodesKey, store: UserDefaults(suiteName: PastronautIDs.appGroup))
+  private var keepsCodes = false
+  @AppStorage(PrivacyOptions.phoneCardsKey, store: UserDefaults(suiteName: PastronautIDs.appGroup))
+  private var keepsCards = false
+  @State private var pausedUntil: Date?
+  @State private var isUploadingLocalOnly = false
   @State private var isImporting = false
   @State private var importMessage: String?
   private let setup = KeyboardSetup.shared
@@ -37,7 +45,10 @@ struct SettingsView: View {
             .accessibilityIdentifier("doneButton")
         }
       }
-      .onAppear { setup.update() }
+      .onAppear {
+        setup.update()
+        pausedUntil = store.savingPausedUntil
+      }
       .fileImporter(isPresented: $isImporting, allowedContentTypes: [.json]) { result in
         guard case .success(let url) = result else { return }
         importFile(at: url)
@@ -111,12 +122,34 @@ struct SettingsView: View {
       if let error = store.status?.lastError {
         Text(error).font(.footnote).foregroundStyle(.red).accessibilityIdentifier("syncError")
       }
+      if !store.localOnly.clips.isEmpty {
+        LabeledContent("Only on This iPhone", value: "\(store.localOnly.clips.count)")
+          .accessibilityIdentifier("localOnlyCount")
+        Button {
+          isUploadingLocalOnly = true
+          Task {
+            await store.uploadLocalOnly()
+            isUploadingLocalOnly = false
+          }
+        } label: {
+          if isUploadingLocalOnly {
+            ProgressView()
+          } else {
+            Text("Upload to iCloud Again")
+          }
+        }
+        .disabled(isUploadingLocalOnly)
+        .accessibilityIdentifier("uploadLocalOnly")
+      }
       Button("Sync Now") {
         Task { await store.refresh() }
       }
     } header: {
       Text("Sync")
     } footer: {
+      if !store.localOnly.clips.isEmpty {
+        Text("These clips stayed on this iPhone when iCloud no longer had them (its data was deleted, or the iPhone used another account), or because Privacy keeps them here. They are sent only when you choose Upload to iCloud Again; codes and cards Privacy keeps here stay.")
+      }
       Text("Text clips sync through your private iCloud database. Clip text and collection names are encrypted on this device before upload (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved.")
     }
   }
@@ -199,10 +232,46 @@ struct SettingsView: View {
         }
         .accessibilityIdentifier("pasteGuide")
       }
+      if let until = pausedUntil {
+        LabeledContent {
+          if until == .distantFuture {
+            Text("Until you resume")
+          } else {
+            Text(until, format: .dateTime.hour().minute())
+          }
+        } label: {
+          Label {
+            Text("Saving Paused")
+          } icon: {
+            SettingsIcon(systemImage: "pause.fill", color: .gray)
+          }
+        }
+        Button("Resume Saving") {
+          store.resumeSaving()
+          pausedUntil = store.savingPausedUntil
+        }
+        .accessibilityIdentifier("resumeSaving")
+      } else {
+        Menu {
+          ForEach(PauseLength.allCases, id: \.self) { length in
+            Button(length.title) {
+              store.pauseSaving(length)
+              pausedUntil = store.savingPausedUntil
+            }
+          }
+        } label: {
+          Label {
+            Text("Pause Saving")
+          } icon: {
+            SettingsIcon(systemImage: "pause.fill", color: .gray)
+          }
+        }
+        .accessibilityIdentifier("pauseSaving")
+      }
     } header: {
       Text("Clipboard")
     } footer: {
-      Text("When you open Pastronaut or its keyboard, a new copy is saved by itself. One-time codes, card numbers and IBANs are skipped. iPhone can't read the clipboard in the background, so if you copy several things in a row only the last one is saved; use the Share menu or the Paste button for the others. To stop iOS from asking each time, set Paste from Other Apps to Allow.")
+      Text("While saving is paused, Pastronaut and its keyboard don't save the clipboard by themselves; the Paste button, Share and Shortcuts still do. When you open Pastronaut or its keyboard, a new copy is saved by itself. One-time codes, card numbers and IBANs are skipped. iPhone can't read the clipboard in the background, so if you copy several things in a row only the last one is saved; use the Share menu or the Paste button for the others. To stop iOS from asking each time, set Paste from Other Apps to Allow.")
     }
   }
 
@@ -226,10 +295,46 @@ struct SettingsView: View {
       .disabled(lock.isEnabled)
       .onChange(of: spotlight) { SpotlightIndex.update(with: store.clips) }
       .accessibilityIdentifier("spotlightToggle")
+      Toggle(isOn: $hidesWhileRecording) {
+        Label {
+          Text("Hide During Screen Recording")
+        } icon: {
+          SettingsIcon(systemImage: "record.circle", color: .red)
+        }
+      }
+      .onChange(of: hidesWhileRecording) { PrivacyCover.shared.update() }
+      .accessibilityIdentifier("hideWhileRecording")
+      Toggle(isOn: $hidesInSwitcher) {
+        Label {
+          Text("Hide in App Switcher")
+        } icon: {
+          SettingsIcon(systemImage: "rectangle.stack", color: .gray)
+        }
+      }
+      .disabled(lock.isEnabled)
+      .accessibilityIdentifier("hideInSwitcher")
+      Toggle(isOn: $keepsCodes) {
+        Label {
+          Text("Keep One-Time Codes on This iPhone")
+        } icon: {
+          SettingsIcon(systemImage: "number", color: .orange)
+        }
+      }
+      .onChange(of: keepsCodes) { Task { await store.updatePrivacy() } }
+      .accessibilityIdentifier("keepCodes")
+      Toggle(isOn: $keepsCards) {
+        Label {
+          Text("Keep Card Numbers and IBANs on This iPhone")
+        } icon: {
+          SettingsIcon(systemImage: "creditcard", color: .green)
+        }
+      }
+      .onChange(of: keepsCards) { Task { await store.updatePrivacy() } }
+      .accessibilityIdentifier("keepCards")
     } header: {
       Text("Privacy")
     } footer: {
-      Text("Pastronaut asks for \(lock.methodName) when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for \(lock.methodName). Pinned clips can show up when you search your iPhone; choosing one copies it. Search stays off while the lock is on.")
+      Text("While the screen is recorded or shown on another display, your clips are covered. Kept codes and cards are saved here but never sent to iCloud, from now on. Pastronaut asks for \(lock.methodName) when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for \(lock.methodName). Pinned clips can show up when you search your iPhone; choosing one copies it. Search stays off while the lock is on.")
     }
   }
 
@@ -326,5 +431,16 @@ struct ArchiveFile: Transferable {
       try file.archive.encoded()
     }
     .suggestedFileName(ClipArchive.suggestedFileName())
+  }
+}
+
+extension PauseLength {
+  var title: LocalizedStringKey {
+    switch self {
+    case .fifteenMinutes: "For 15 Minutes"
+    case .oneHour: "For 1 Hour"
+    case .untilTomorrow: "Until Tomorrow"
+    case .indefinitely: "Until I Resume"
+    }
   }
 }

@@ -124,6 +124,20 @@ public struct PrivacyOptions: Equatable, Sendable {
   }
 }
 
+public extension PrivacyOptions {
+  /// Bools in the App Group's user defaults (iPhone Settings › Privacy). On the iPhone a matching clip is still
+  /// saved, but stays on this iPhone as a local-only clip instead of syncing.
+  static let phoneCodesKey = "keepOneTimeCodesOnDevice"
+  static let phoneCardsKey = "keepCardNumbersOnDevice"
+
+  static func onPhone(in defaults: UserDefaults?) -> PrivacyOptions {
+    PrivacyOptions(
+      skipOneTimeCodes: defaults?.bool(forKey: phoneCodesKey) ?? false,
+      skipCardNumbers: defaults?.bool(forKey: phoneCardsKey) ?? false
+    )
+  }
+}
+
 /// Saving the clipboard by itself when the iPhone app or keyboard opens. Unlike a tap on the Paste button,
 /// nobody looked at the text first, so sensitive-looking copies are always left out.
 public enum AutoCapture {

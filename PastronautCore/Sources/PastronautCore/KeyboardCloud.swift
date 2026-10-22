@@ -187,6 +187,8 @@ public actor KeyboardCloud {
   @discardableResult
   public func capture(_ clip: Clip, keepsInInbox: Bool = false) async -> Bool {
     try? files.appendToInbox(clip)
+    // Kept on this iPhone (Settings › Privacy): the app takes it from the inbox as a local-only clip.
+    guard PrivacyOptions.onPhone(in: SharedSettings.defaults).allows(clip.text, pinned: false) else { return true }
     do {
       try await save(clip, updatingCache: !keepsInInbox) { remote, local in remote.copiedAgain(local) }
       if !keepsInInbox {

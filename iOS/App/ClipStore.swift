@@ -107,6 +107,7 @@ final class ClipStore {
     await sync.setChangeHandler { _ in
       await ClipStore.shared.reload()
     }
+    await updatePrivacy()
     await sync.start()
     await ingestInbox()
     await reload()
@@ -221,12 +222,28 @@ final class ClipStore {
     delete([clip])
   }
 
+  /// The last deletion, for "Undo".
+  private(set) var lastDeleted: [Clip] = []
+
   func delete(_ removed: [Clip]) {
     let ids = Set(removed.map(\.id))
     guard !ids.isEmpty else { return }
+    lastDeleted = clips.filter { ids.contains($0.id) }
     clips.removeAll { ids.contains($0.id) }
     Task {
       await sync.delete(ids: Array(ids))
+      await reload()
+      await upload()
+    }
+  }
+
+  /// Brings back what the last deletion removed, on every device.
+  func undoDelete() {
+    let restored = lastDeleted
+    lastDeleted = []
+    guard !restored.isEmpty else { return }
+    Task {
+      await sync.restore(restored)
       await reload()
       await upload()
     }
@@ -375,10 +392,18 @@ final class ClipStore {
   /// "Pause Saving": automatic saves stop until the chosen time; what the person asks for still saves.
   func pauseSaving(_ length: PauseLength) {
     SavingPause.pause(length, in: sharedDefaults)
+    reloadPauseControl()
   }
 
   func resumeSaving() {
     SavingPause.resume(in: sharedDefaults)
+    reloadPauseControl()
+  }
+
+  private func reloadPauseControl() {
+    if #available(iOS 18.0, *) {
+      ControlCenter.shared.reloadControls(ofKind: PauseSavingIntent.controlKind)
+    }
   }
 
   var savingPausedUntil: Date? {
@@ -499,6 +524,11 @@ final class ClipStore {
     guard !captured.isEmpty else { return }
     await sync.recordCopies(captured)
     try? files.removeFromInbox(handled: captured)
+  }
+
+  /// Settings › Privacy changed: codes and cards copied from now on stay on this iPhone, or sync again.
+  func updatePrivacy() async {
+    await sync.setPrivacy(PrivacyOptions.onPhone(in: sharedDefaults))
   }
 
   // MARK: - Queue and combining
