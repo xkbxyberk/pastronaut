@@ -87,7 +87,12 @@ Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: �
    ve "Açılınca Panoyu Kaydet" varsayılan açık, 1.0'da kapalı; İngilizce ve Türkçe, "Son güncelleme" 20 Ekim.
 2. 1.0'ın durumu: "Pending Developer Release" ise önce yayınlanır; sonra iOS App › "+" › 1.1.
 3. ✅ Build 3 yüklendi; TestFlight'ta denendi, 1.1 sayfası dolduruldu ve incelemeye gönderildi (2026-10-20,
-   "Manually release"). Sırada: onay gelince kullanıcı "Release This Version"a basar; ret gelirse düzeltme build 4.
+   "Manually release").
+4. ✅ **iPhone 1.1 (3) onaylandı ve App Store'da yayında** (kullanıcı, 2026-10-22).
+5. ⏳ **Mac App Store 1.0 (1): "In Review"** (2026-10-22). Onay gelince yayınlanır; ret gelirse düzeltme 1.0 (2).
+
+**Sıradaki:** iPhone 1.2 (build 4), yalnızca iPhone kanalı; plan `IOS-1.2-PLAN.md`. Mac işleri ayrı:
+`MAC-1.3-PLAN.md` (Mac'in sıradaki görünen sürümü 1.3, derleme 2).
 
 **Sürüm kuralı (2026-10-18'den sonra):** her sürüm üç kanalda çıkar (iPhone, Mac App Store, Mac GitHub/Sparkle);
 adımlar `SURUM.md`'de. Görünen sürüm: iPhone 1.1, Mac 1.0 (Mac'in sıradaki sürümü en az 1.2). Sıradaki derleme
