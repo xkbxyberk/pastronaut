@@ -165,7 +165,7 @@ targets:
           NSExtensionAttributes:
             NSExtensionActivationRule:
               NSExtensionActivationSupportsText: true
-              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsWebURLWithMaxCount: 20
     entitlements:
       path: Share/PastronautShare.entitlements
       properties:

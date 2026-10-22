@@ -110,6 +110,7 @@ final class ClipStore {
     await sync.start()
     await ingestInbox()
     await reload()
+    PreviewStore.shared.prune(keeping: Set(clips.map(\.id)))
   }
 
   /// Pulls the keyboard's captures and the latest iCloud changes. Called on launch, foreground and push.
@@ -165,10 +166,10 @@ final class ClipStore {
     UIPasteboard.general.string = clip.text
     // Our own copy is already in the history; don't save it again on the next launch.
     sharedDefaults?.set(UIPasteboard.general.changeCount, forKey: AutoCapture.lastChangeCountKey)
+    // Copying moves the clip up but keeps where it came from: a Mac clip stays under the Mac filter.
     var used = clip
     used.lastCopiedAt = .now
     used.modifiedAt = .now
-    used.sourceDevice = .iphone
     upsert(used)
   }
 
@@ -371,6 +372,19 @@ final class ClipStore {
     sharedDefaults?.object(forKey: AutoCapture.settingKey) as? Bool ?? true
   }
 
+  /// "Pause Saving": automatic saves stop until the chosen time; what the person asks for still saves.
+  func pauseSaving(_ length: PauseLength) {
+    SavingPause.pause(length, in: sharedDefaults)
+  }
+
+  func resumeSaving() {
+    SavingPause.resume(in: sharedDefaults)
+  }
+
+  var savingPausedUntil: Date? {
+    SavingPause.pausedUntil(in: sharedDefaults)
+  }
+
   private var isOnboardingFinished: Bool {
     #if DEBUG
     if ProcessInfo.processInfo.environment["PT_E2E"] != nil { return true }
@@ -408,7 +422,7 @@ final class ClipStore {
     #if DEBUG
     if DemoClips.isOn { return }
     #endif
-    guard isAutoSaveEnabled, isOnboardingFinished else { return }
+    guard AutoCapture.isActive(in: sharedDefaults), isOnboardingFinished else { return }
     let pasteboard = UIPasteboard.general
     let changeCount = pasteboard.changeCount
     guard pasteboard.hasStrings,
@@ -425,10 +439,12 @@ final class ClipStore {
     }
   }
 
-  /// Saves text from the system Paste button (no paste permission prompt).
+  /// Saves text from the system Paste button (no paste permission prompt) or the new clip editor.
   func save(_ text: String?) {
     guard let text else { return }
-    Task { _ = await saveNow(text) }
+    Task {
+      if await saveNow(text) == .tooLarge { notice = .tooLarge }
+    }
   }
 
   enum SaveResult {

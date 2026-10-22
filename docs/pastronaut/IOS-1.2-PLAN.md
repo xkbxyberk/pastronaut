@@ -463,6 +463,35 @@ Arayüz kodu yalnızca **Adım D**'de yazılır, ekran görüntüleri geldikten 
 - CloudKit'e yapılan kaydetmelerin yalnızca değişen alanları gönderip gönderdiği burada doğrulanır.
 
 ### Adım C: Servisler ve uzantılar (arayüzsüz ya da var olan arayüzle)
+
+> **Durum (2026-10-22):** Çekirdekte 141 test (16'sı yeni), Mac'te 109 test, iOS derlemesi. Uçtan uca test bu
+> adımdan sonra koşmadı.
+> - **Yapıldı:**
+>   - **Sıra:** `QueueRequest`'i uygulama yazar, `ClipQueue` klavyenin kendi ilerlemesidir. Tam Erişim
+>     olmadan da çalışır. Birleştirip Kopyala'nın mantığı da hazır (`combinedText`, dört ayraç).
+>   - **Kaydetmeyi Duraklat:** `SavingPause`, Mac'in süreleriyle. Uygulamanın ve klavyenin otomatik kaydını
+>     durdurur; açık istekler (Yapıştır, Paylaş, Kısayollar, kontrol) yine kaydeder.
+>   - **Paylaş:** Birden çok bağlantı ya da metin (en fazla 20) kaydedilir. iCloud için en fazla 8 sn
+>     beklenir, sonra çevrimdışı kaydedilir. Dosya adresleri metin sayılmaz. Paylaşılan öğe, uygulama alana kadar
+>     gelen kutusunda kalır ve klavyede ile widget'ta hemen görünür. Klavye önbelleğinin yeniden tek yazanı var.
+>     "Kaydedilemedi" durumu eklendi.
+>   - **Metin tanıma:** `TextRecognition` (Vision, cihazda). Kişinin dilleri, sonra Türkçe ve İngilizce
+>     denenir; macOS 27'de `tr-TR` var.
+>   - **Önizleme önbelleği:** Silinen öğelerin dosyaları her açılışta temizlenir, klasör 50 MB ile sınırlı
+>     (`CachePruner`).
+>   - **Hata düzeltmeleri:**
+>     - K9: Kopyalamak Mac öğesini "iPhone" yapmıyor.
+>     - K10: Yeni öğe ve Yapıştır 100 KB üstünde bildirim gösteriyor.
+>     - K4: Face ID açılmadan pano okunmuyor; kilit açılınca bekleyen kayıt çalışıyor.
+>     - K5: Toplu işlemler yalnızca görünen seçili öğelere uygulanıyor.
+>     - Klavye 100 KB üstü yakalamayı gelen kutusuna yazmıyor.
+> - **Adım D'ye kaldı (görünüm gerektiriyor):**
+>   - Eylem uzantısı (ikonu ve adı paylaşım sayfasında görünüyor)
+>   - Duraklatma için Denetim Merkezi kontrolü ve Kısayol
+>   - Ekran kaydı algılayıcı (örtüyle birlikte)
+>   - Metni Tara / Belge Tara kamera ekranları
+>   - Paylaş'ta "kaydettikten sonra seçenekler"
+>   - `Transferable` ve iPhone'da sürükleme
 1. **Sıra durumu:** App Group'ta bir model, klavyenin okuyacağı biçimde. Toplu kopyalama mantığı ve testleri.
 2. **Ekran Kaydında Gizle:** yakalama durumu izleyicisi. **Kaydetmeyi Duraklat:** bitiş zamanı, otomatik kayıt
    kapıları, Denetim Merkezi kontrolünün intent'i.

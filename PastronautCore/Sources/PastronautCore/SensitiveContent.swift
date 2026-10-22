@@ -137,4 +137,36 @@ public enum AutoCapture {
           SyncPolicy.default.isEligible(text) else { return false }
     return SensitiveContent(text) == nil
   }
+
+  /// The setting is on and saving isn't paused (`SavingPause`).
+  public static func isActive(in defaults: UserDefaults?, at date: Date = .now) -> Bool {
+    (defaults?.object(forKey: settingKey) as? Bool ?? true) && !SavingPause.isPaused(in: defaults, at: date)
+  }
+}
+
+/// "Pause Saving" on the iPhone: for a while the app and the keyboard don't save the clipboard by themselves.
+/// What the person asks for (Paste button, Share, Shortcuts, the Save Clipboard control) still saves. The
+/// lengths are the Mac's (`PauseLength`).
+public enum SavingPause {
+  /// Date in the App Group's user defaults; `Date.distantFuture` means until resumed.
+  public static let untilKey = "savingPausedUntil"
+
+  public static func pause(_ length: PauseLength, in defaults: UserDefaults?, from date: Date = .now,
+                           calendar: Calendar = .current) {
+    defaults?.set(length.end(from: date, calendar: calendar) ?? .distantFuture, forKey: untilKey)
+  }
+
+  public static func resume(in defaults: UserDefaults?) {
+    defaults?.removeObject(forKey: untilKey)
+  }
+
+  /// When saving resumes by itself; `Date.distantFuture` waits for the person, nil when not paused.
+  public static func pausedUntil(in defaults: UserDefaults?, at date: Date = .now) -> Date? {
+    guard let until = defaults?.object(forKey: untilKey) as? Date, until > date else { return nil }
+    return until
+  }
+
+  public static func isPaused(in defaults: UserDefaults?, at date: Date = .now) -> Bool {
+    pausedUntil(in: defaults, at: date) != nil
+  }
 }

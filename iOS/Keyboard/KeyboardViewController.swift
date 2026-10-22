@@ -155,7 +155,7 @@ final class KeyboardModel {
     hasNewClip = hasFullAccess && pasteboard.hasStrings && pasteboard.changeCount != lastCaptured
     // "Save Clipboard on Opening" (app settings): save the new copy without waiting for the Paste button.
     // Texts already in the history (often a Mac copy brought by Universal Clipboard) are left alone.
-    if hasNewClip, defaults?.object(forKey: AutoCapture.settingKey) as? Bool ?? true,
+    if hasNewClip, AutoCapture.isActive(in: defaults),
        let text = pasteboard.string, AutoCapture.allows(text),
        !clips.contains(where: { $0.id == Clip.id(for: text) }) {
       capture([text])
@@ -286,10 +286,12 @@ final class KeyboardModel {
   /// app being opened. The inbox is written first and kept if the upload fails; the app sends it later.
   func capture(_ strings: [String]) {
     guard let files, let text = strings.first, !text.isEmpty else { return }
-    let clip = Clip(text: text, sourceDevice: .iphone)
-    try? files.appendToInbox(clip)
     defaults?.set(UIPasteboard.general.changeCount, forKey: lastCapturedChangeCountKey)
     hasNewClip = false
+    // Over 100 KB (or only spaces) can't sync: it would show here until the app quietly dropped it.
+    guard SyncPolicy.default.isEligible(text) else { return }
+    let clip = Clip(text: text, sourceDevice: .iphone)
+    try? files.appendToInbox(clip)
     reload()
     guard hasFullAccess, let cloud else { return }
     Task {

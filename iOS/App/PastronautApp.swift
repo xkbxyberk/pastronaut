@@ -20,13 +20,23 @@ struct PastronautApp: App {
           }
         }
         .modifier(AppPreferencesScope())
+        .onChange(of: lock.isLocked) { _, isLocked in
+          // Opened with Face ID: now the clipboard may be read.
+          if !isLocked, scenePhase == .active {
+            Task { await saveClipboard() }
+          }
+        }
     }
     .onChange(of: scenePhase) { _, phase in
       if phase == .active {
         Task {
-          if lock.isLocked { await lock.unlock() }
-          await ClipStore.shared.savePendingClipboard()
-          await ClipStore.shared.autoSaveClipboard()
+          if lock.isLocked {
+            // The clipboard waits for the lock: saved by the onChange above once it opens, not when Face ID
+            // fails or is cancelled.
+            await lock.unlock()
+          } else {
+            await saveClipboard()
+          }
           await ClipStore.shared.refresh()
         }
       } else if phase == .background {
@@ -34,6 +44,11 @@ struct PastronautApp: App {
         Task { await ClipStore.shared.upload() }
       }
     }
+  }
+
+  private func saveClipboard() async {
+    await ClipStore.shared.savePendingClipboard()
+    await ClipStore.shared.autoSaveClipboard()
   }
 }
 

@@ -85,6 +85,20 @@ final class PreviewStore {
     writeCache(fetched, id: clip.id)
   }
 
+  /// The most the preview cache may take on disk.
+  static let maxCacheBytes = 50 * 1024 * 1024
+
+  /// Forgets previews of clips no longer in the history and keeps the folder under `maxCacheBytes`, off the main
+  /// actor. Called once per launch.
+  func prune(keeping clipIDs: Set<String>) {
+    previews = previews.filter { clipIDs.contains($0.key) }
+    let directory = directory
+    let maxBytes = Self.maxCacheBytes
+    Task.detached(priority: .utility) {
+      CachePruner.prune(directory, keeping: clipIDs, maxBytes: maxBytes)
+    }
+  }
+
   /// Drops every cached preview (previews turned off).
   func clear() {
     previews.removeAll()

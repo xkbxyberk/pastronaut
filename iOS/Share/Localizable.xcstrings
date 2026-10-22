@@ -12,6 +12,17 @@
         }
       }
     },
+    "Couldn't save": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydedilemedi"
+          }
+        }
+      }
+    },
     "It reaches your Mac the next time Pastronaut opens.": {
       "extractionState": "manual",
       "localizations": {
@@ -30,6 +41,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kaydedilecek bir şey yok"
+          }
+        }
+      }
+    },
+    "Open Pastronaut once, then share again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'u bir kez açın, sonra yeniden paylaşın."
           }
         }
       }

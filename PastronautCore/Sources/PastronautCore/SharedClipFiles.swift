@@ -54,6 +54,7 @@ public struct SharedClipFiles: Sendable {
   var collectionsURL: URL { directory.appending(path: "collections.json") }
   var inboxURL: URL { directory.appending(path: "inbox.json") }
   var localOnlyURL: URL { directory.appending(path: "local-only.json") }
+  var queueURL: URL { directory.appending(path: "queue.json") }
 
   // MARK: - Snapshot
 
@@ -118,6 +119,24 @@ public struct SharedClipFiles: Sendable {
 
   public func readLocalOnly() -> LocalOnlyIDs {
     (try? decode(LocalOnlyIDs.self, from: localOnlyURL)) ?? LocalOnlyIDs()
+  }
+
+  // MARK: - Queue
+
+  /// Written by the app when a queue starts (nil ends it); the keyboard only reads it (`ClipQueue`).
+  public func writeQueue(_ request: QueueRequest?) throws {
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    if let request {
+      try encode(request, to: queueURL)
+    } else if FileManager.default.fileExists(atPath: queueURL.path) {
+      try FileManager.default.removeItem(at: queueURL)
+    }
+  }
+
+  /// The running queue; nil when there is none or it expired.
+  public func readQueue(now: Date = .now) -> QueueRequest? {
+    guard let request = try? decode(QueueRequest.self, from: queueURL), !request.isExpired(at: now) else { return nil }
+    return request
   }
 
   // MARK: - Keyboard cache

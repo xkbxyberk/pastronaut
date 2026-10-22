@@ -175,17 +175,23 @@ public actor KeyboardCloud {
   /// Saves a captured clip straight to iCloud, merging with the server copy if the clip already exists.
   public func save(_ clip: Clip) async throws {
     // A capture knows nothing about pins: keep the server's.
-    try await save(clip) { remote, local in remote.copiedAgain(local) }
+    try await save(clip, updatingCache: true) { remote, local in remote.copiedAgain(local) }
   }
 
   /// Saves a capture from an extension (keyboard, Share): the inbox first, so the app sends it later if the
   /// upload fails, then straight to iCloud. Returns whether the upload worked.
+  ///
+  /// The keyboard (`keepsInInbox` false) then drops the inbox entry and adds the clip to its cache. The Share
+  /// extension keeps it in the inbox instead: the keyboard and widgets show it from there until the app takes it,
+  /// and the cache keeps a single writer, the keyboard.
   @discardableResult
-  public func capture(_ clip: Clip) async -> Bool {
+  public func capture(_ clip: Clip, keepsInInbox: Bool = false) async -> Bool {
     try? files.appendToInbox(clip)
     do {
-      try await save(clip)
-      try? files.removeFromInbox(id: clip.id)
+      try await save(clip, updatingCache: !keepsInInbox) { remote, local in remote.copiedAgain(local) }
+      if !keepsInInbox {
+        try? files.removeFromInbox(id: clip.id)
+      }
       return true
     } catch {
       logger.error("Capture upload failed: \(String(describing: error), privacy: .public)")
@@ -198,7 +204,7 @@ public actor KeyboardCloud {
     var changed = clip
     changed.pinned = pinned
     changed.modifiedAt = .now
-    try await save(changed) { remote, local in remote.merged(with: local) }
+    try await save(changed, updatingCache: true) { remote, local in remote.merged(with: local) }
   }
 
   /// Deletes a clip for every device. A clip already gone from iCloud counts as deleted.
@@ -213,7 +219,11 @@ public actor KeyboardCloud {
     try? files.writeKeyboardCache(cache)
   }
 
-  private func save(_ clip: Clip, onConflict merge: (_ remote: Clip, _ local: Clip) -> Clip) async throws {
+  private func save(
+    _ clip: Clip,
+    updatingCache: Bool,
+    onConflict merge: (_ remote: Clip, _ local: Clip) -> Clip
+  ) async throws {
     guard policy.isEligible(clip.text) else { throw SaveError.notEligible }
     var clip = clip
     var base: CKRecord?
@@ -230,10 +240,12 @@ public actor KeyboardCloud {
       }
       switch result {
       case .success:
-        var cache = files.readKeyboardCache() ?? KeyboardCache()
-        cache.insert(clip)
-        try? files.writeKeyboardCache(cache)
-        logger.notice("Keyboard saved a clip directly")
+        if updatingCache {
+          var cache = files.readKeyboardCache() ?? KeyboardCache()
+          cache.insert(clip)
+          try? files.writeKeyboardCache(cache)
+        }
+        logger.notice("Saved a clip directly")
         return
       case .failure(let error as CKError) where error.code == .serverRecordChanged:
         guard let server = error.serverRecord, let remote = ClipRecord.clip(from: server) else { throw error }

@@ -36,45 +36,81 @@ final class ShareViewController: UIViewController {
 @MainActor
 @Observable
 final class ShareModel {
-  enum State { case saving, saved, savedOffline, nothing, tooLarge }
+  enum State { case saving, saved, savedOffline, nothing, tooLarge, unavailable }
+
+  /// How long the sheet waits for iCloud. The inbox already has the clips, so after this the app sends them.
+  static let uploadWait: Duration = .seconds(8)
+  /// More than this in one share is not what Pastronaut is for.
+  static let maxItems = 20
 
   private(set) var state = State.saving
   private(set) var preview = ""
 
   func save(from items: [NSExtensionItem]) async {
-    guard let text = await Self.text(in: items), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+    let texts = await Self.texts(in: items).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    guard !texts.isEmpty else {
       state = .nothing
       return
     }
-    preview = text.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard SyncPolicy.default.isEligible(text) else {
+    preview = texts.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.joined(separator: "\n")
+    let eligible = texts.filter { SyncPolicy.default.isEligible($0) }
+    guard !eligible.isEmpty else {
       state = .tooLarge
       return
     }
     guard let files = SharedClipFiles() else {
-      state = .nothing
+      state = .unavailable
       return
     }
     let cloud = KeyboardCloud(containerIdentifier: PastronautIDs.iCloudContainer, files: files)
-    let uploaded = await cloud.capture(Clip(text: text, sourceDevice: .iphone))
+    let clips = eligible.map { Clip(text: $0, sourceDevice: .iphone) }
+    let wait = Self.uploadWait
+    let uploaded = await withTaskGroup(of: Bool?.self) { group in
+      group.addTask {
+        var allUploaded = true
+        for clip in clips {
+          let uploaded = await cloud.capture(clip, keepsInInbox: true)
+          allUploaded = allUploaded && uploaded
+        }
+        return allUploaded
+      }
+      group.addTask {
+        try? await Task.sleep(for: wait)
+        return nil
+      }
+      // nil: still uploading when the wait ran out.
+      let first = await group.next() ?? nil
+      group.cancelAll()
+      return first ?? false
+    }
     WidgetCenter.shared.reloadAllTimelines()
     withAnimation(.snappy) { state = uploaded ? .saved : .savedOffline }
   }
 
-  /// A link wins over the page's text (Safari shares both); otherwise the first plain text.
-  private static func text(in items: [NSExtensionItem]) async -> String? {
+  /// Every shared link (Safari shares the page's text too, so links win), otherwise every plain text, otherwise the
+  /// item's own text. File links are not text to save.
+  private static func texts(in items: [NSExtensionItem]) async -> [String] {
     let providers = items.flatMap { $0.attachments ?? [] }
-    if let provider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.url.identifier) }),
-       let url = try? await provider.loadItem(forTypeIdentifier: UTType.url.identifier) as? URL {
-      return url.absoluteString
+    var links: [String] = []
+    for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
+      if let url = try? await provider.loadItem(forTypeIdentifier: UTType.url.identifier) as? URL, !url.isFileURL {
+        links.append(url.absoluteString)
+      }
     }
-    if let provider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) }) {
+    if !links.isEmpty { return Array(links.prefix(maxItems)) }
+    var texts: [String] = []
+    for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
       let item = try? await provider.loadItem(forTypeIdentifier: UTType.plainText.identifier)
-      if let text = item as? String { return text }
-      if let data = item as? Data { return String(data: data, encoding: .utf8) }
-      if let url = item as? URL, let text = try? String(contentsOf: url, encoding: .utf8) { return text }
+      if let text = item as? String {
+        texts.append(text)
+      } else if let data = item as? Data, let text = String(data: data, encoding: .utf8) {
+        texts.append(text)
+      } else if let url = item as? URL, let text = try? String(contentsOf: url, encoding: .utf8) {
+        texts.append(text)
+      }
     }
-    return items.compactMap { $0.attributedContentText?.string }.first
+    if !texts.isEmpty { return Array(texts.prefix(maxItems)) }
+    return items.compactMap { $0.attributedContentText?.string }.prefix(1).map { $0 }
   }
 }
 
@@ -113,7 +149,7 @@ struct ShareView: View {
     case .saving: "arrow.up.circle"
     case .saved, .savedOffline: "checkmark.circle.fill"
     case .nothing: "questionmark.circle"
-    case .tooLarge: "exclamationmark.triangle.fill"
+    case .tooLarge, .unavailable: "exclamationmark.triangle.fill"
     }
   }
 
@@ -121,7 +157,7 @@ struct ShareView: View {
     switch model.state {
     case .saving: .secondary
     case .saved, .savedOffline: .green
-    case .nothing, .tooLarge: .orange
+    case .nothing, .tooLarge, .unavailable: .orange
     }
   }
 
@@ -131,6 +167,7 @@ struct ShareView: View {
     case .saved, .savedOffline: "Saved to Pastronaut"
     case .nothing: "Nothing to save"
     case .tooLarge: "Too large to sync"
+    case .unavailable: "Couldn't save"
     }
   }
 
@@ -139,6 +176,7 @@ struct ShareView: View {
     case .savedOffline: "It reaches your Mac the next time Pastronaut opens."
     case .nothing: "Pastronaut saves text and links."
     case .tooLarge: "Clips up to 100 KB are synced."
+    case .unavailable: "Open Pastronaut once, then share again."
     case .saving, .saved: nil
     }
   }

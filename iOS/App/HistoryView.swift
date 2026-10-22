@@ -281,8 +281,10 @@ struct HistoryView: View {
     ClipSearchToken.allCases.filter { !tokens.contains($0) }
   }
 
+  /// Only what the list shows: the selection outlives a change of scope or search, and acting on clips the
+  /// person can't see (deleting them) would be a surprise.
   private var selectedClips: [Clip] {
-    store.clips.filter { selection.contains($0.id) }
+    matchedClips.filter { scope.includes($0) && selection.contains($0.id) }
   }
 
   @ToolbarContentBuilder
