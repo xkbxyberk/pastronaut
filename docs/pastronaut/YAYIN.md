@@ -103,13 +103,16 @@ Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: �
    Eylem uzantısı).
 5. ✅ Ekran görüntüleri (2026-10-22): yeni tasarımla 10 kare, İngilizce ve Türkçe (`storeShots12` + `StoreArt`,
    yalnızca tanıtım verisi); `APPSTORE.md` §9. Kullanıcı 1.2 sayfasında eski yedi görselin yerine yükler.
-6. ⏳ Kullanıcı "yükle" deyince arşiv ve yükleme (`SURUM.md` kanal 1). Eylem simgesi saydam (şablon); App Store
-   doğrulaması bunu kabul etmezse burada görülür.
-7. ⏳ Kullanıcı: App Store Connect › iOS App › "+" › 1.2; What's New ve inceleme notu; TestFlight'ta deneme (Production'da
-   başlık ver, Ayarlar › Eşitleme'de hata yok; Metni Tara; Pastronaut'a Kaydet); build seçimi ve incelemeye gönderme.
+6. ✅ 1.2 (4) App Store Connect'e yüklendi (2026-10-22, "Upload succeeded"; Release arşivi, beş paket 1.2 (4)). Eylem
+   simgesi saydam (şablon); işleme sırasında Apple'dan uyarı e-postası gelirse burada not edilir. Sonraki yükleme:
+   build 5.
+7. ✅ TestFlight'ta 1.2 (4) denendi, sorunsuz (kullanıcı, 2026-10-22). 1.2 sayfası dolduruldu (What's New'da "✕"
+   reddedildi, "X key" yazıldı; `APPSTORE.md` §8) ve **incelemeye gönderildi** (2026-10-22 21:54, "Waiting for
+   Review", gönderim kimliği `a0ab1edf-…1273`).
+8. ⏳ Onay gelince kullanıcı yayınlar; ret gelirse düzeltme build 5 ile.
 
 **Sürüm kuralı (2026-10-18'den sonra):** her sürüm üç kanalda çıkar (iPhone, Mac App Store, Mac GitHub/Sparkle);
 adımlar `SURUM.md`'de. Görünen sürüm: iPhone 1.1, Mac 1.0 (Mac'in sıradaki sürümü en az 1.2). Sıradaki derleme
-numaraları: iPhone **4**, Mac **2** (Mac App Store ve GitHub ortak). Mac GitHub kullanıcıları hâlâ 0.1.0'da; bir sonraki Mac sürümüyle
+numaraları: iPhone **5**, Mac **2** (Mac App Store ve GitHub ortak). Mac GitHub kullanıcıları hâlâ 0.1.0'da; bir sonraki Mac sürümüyle
 GitHub'a da 1.0.x çıkar.
 

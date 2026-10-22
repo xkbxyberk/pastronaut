@@ -365,7 +365,9 @@ Pastronaut 1.1: daha az gizem, daha çok pano.
 ```
 
 ### 1.2 (iPhone only; build 4)
-Same light tone as 1.1. Same English text for English (U.S.) and English (U.K.).
+Same light tone as 1.1. App Store Connect refuses some symbols here ("This field contains one or more invalid
+characters"): "✕" (U+2715) was one, so the text says "X key", and "›" is avoided to be safe. Bullets (•) and
+"↑" were accepted in 1.1. Same English text for English (U.S.) and English (U.K.).
 
 English:
 ```
@@ -374,7 +376,7 @@ Pastronaut 1.2: a fresh coat of paint and a pocket full of new tricks.
 • A new look: your history is a tidy grid of equal cards with page and map thumbnails, and the list got a makeover too. The keyboard matches.
 • Scan Text and Scan Document: touch and hold + and point the camera. The text is read right on your iPhone.
 • Give a clip a title, so "that address" finally has a name. Titles show up in search.
-• Paste a list in order: select clips, choose More › Start Queue, and the keyboard types them one by one, oldest first. ✕ ends it early.
+• Paste a list in order: select clips, choose More, then Start Queue, and the keyboard types them one by one, oldest first. The X key ends it early.
 • Combine & Copy joins the clips you select into one, and saves the result as a new clip.
 • "Save to Pastronaut" now lives in the share sheet's actions. Share several links at once, and drop them into a collection right after saving.
 • Pause Saving for 15 minutes, an hour or longer, from Settings or Control Center.
@@ -392,7 +394,7 @@ Pastronaut 1.2: yeni bir kat boya ve cep dolusu yeni numara.
 • Yeni görünüm: geçmişin sayfa ve harita küçük resimli, eşit kartlardan oluşan düzenli bir ızgara; liste de yenilendi. Klavye de onlara uydu.
 • Metni Tara ve Belge Tara: +'ya basılı tut, kamerayı tut. Metin doğrudan iPhone'unda okunuyor.
 • Öğelere başlık ver; "o adres"in nihayet bir adı olsun. Başlıklar aramada da çıkıyor.
-• Bir listeyi sırayla yapıştır: öğeleri seç, Diğer › Sırayı Başlat de; klavye onları en eskisinden başlayarak tek tek yazsın. ✕ ile erken bitir.
+• Bir listeyi sırayla yapıştır: öğeleri seç, Diğer'den Sırayı Başlat'ı seç; klavye onları en eskisinden başlayarak tek tek yazsın. X tuşuyla erken bitir.
 • Birleştirip Kopyala seçtiğin öğeleri tek metinde topluyor ve sonucu yeni bir öğe olarak kaydediyor.
 • "Pastronaut'a Kaydet" artık paylaşım sayfasının eylemlerinde. Birkaç bağlantıyı birden paylaş, kaydeder kaydetmez bir koleksiyona at.
 • Kaydetmeyi 15 dakika, bir saat ya da daha uzun süre duraklat: Ayarlar'dan ya da Denetim Merkezi'nden.
@@ -445,14 +447,18 @@ The 1.0–1.1 set (seven frames, screens cropped at the bottom) is in git histor
 | 5 | FIND · BUL | Type a filter, find it fast | Süzgeci yaz, hemen bul | `type:code` / `tür:kod` results |
 
 ### Header and search result (optional, iOS 27 and later; can change without a new version)
-- **`header.png`, 3840 × 1646 (21:9):**
-  - The wordmark and "Every copy, one tap away." / "Her kopya, bir dokunuş uzağında." sit in the centered safe area
-    (1646 × 661).
-  - The Mac window and the iPhone at the sides are decoration and may be cropped.
-- **`search.png`, 3840 × 2560 (3:2):** it "states the obvious".
-  - Wordmark and "Clipboard history + paste keyboard for iPhone and Mac" / "Pano geçmişi ve yapıştırma klavyesi
-    iPhone ve Mac için".
-  - Below: the keyboard, the Mac window and the cards, all inside the centered safe area (2168 × 1030).
+Redone for 1.2 in the gallery's style (`Gallery.swift`: `HeaderArt2`, `SearchArt2`): drawn phone bodies, one orbit
+line with stars, four feature pills (Paste keyboard, Smart cards, Scan text, Mac sync).
+- **`header.png`, 3840 × 1646 (21:9), dark:**
+  - In the centered safe area (1646 × 661): the wordmark, "Every copy, one tap away." / "Her kopya, bir dokunuş
+    uzağında." and the pills.
+  - Decoration at the sides, may be cropped: the Mac window (left), the queue and the dark cards on two phones (right).
+- **`search.png`, 3840 × 2560 (3:2), light:** it "states the obvious". Everything that matters is inside the
+  centered safe area (2168 × 1030):
+  - left: the wordmark, "Clipboard history + paste keyboard" / "Pano geçmişi ve yapıştırma klavyesi", "for iPhone
+    and Mac, synced in your iCloud" and the pills in two rows;
+  - right: two phones (cards, keyboard).
+  - The Mac window behind them is decoration and may be cropped.
 
 ### Rules followed
 - every frame shows the real app; callouts are enlarged parts of the same screenshot;

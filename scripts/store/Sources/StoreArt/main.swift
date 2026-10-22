@@ -195,65 +195,7 @@ let macFrames: [(file: String, caption: Caption)] = [
     color: Brand.email))
 ]
 
-// MARK: - Header (3840 × 1646) and search result (3840 × 2560)
-
-struct HeaderArt: View {
-  let lang: String
-  let mac: NSImage
-  let iphone: NSImage
-
-  var body: some View {
-    ZStack {
-      Background(dark: true)
-      // Real screens at the sides; the centered safe area (1646 × 661) holds the message.
-      Shot(image: mac, width: 900, radius: 30, dark: true)
-        .rotationEffect(.degrees(-6))
-        .position(x: 560, y: 1000)
-      Shot(image: iphone, width: 640, radius: 56, dark: true)
-        .rotationEffect(.degrees(6))
-        .position(x: 3300, y: 1150)
-      VStack(spacing: 46) {
-        PastronautWordmark(size: 120).environment(\.colorScheme, .dark)
-        Text(tagline[lang] ?? "")
-          .font(.system(size: 76, weight: .semibold))
-          .foregroundStyle(.white)
-      }
-      .position(x: 1920, y: 823)
-    }
-    .frame(width: 3840, height: 1646)
-    .clipped()
-  }
-}
-
-struct SearchArt: View {
-  let lang: String
-  let keyboard: NSImage
-  let cards: NSImage
-  let mac: NSImage
-
-  var body: some View {
-    ZStack {
-      Background()
-      // "State the obvious": what it is, in the centered safe area (2168 × 1030), with the real screens.
-      VStack(spacing: 30) {
-        PastronautWordmark(size: 92).environment(\.colorScheme, .light)
-        Text(heroLine[lang] ?? "")
-          .font(.system(size: 72, weight: .bold))
-          .foregroundStyle(Brand.ink)
-          .multilineTextAlignment(.center)
-      }
-      .position(x: 1920, y: 960)
-      HStack(alignment: .top, spacing: 70) {
-        Shot(image: keyboard, width: 560, radius: 52)
-        Shot(image: mac, width: 1000, radius: 32)
-        Shot(image: cards, width: 560, radius: 52)
-      }
-      .position(x: 1920, y: 1250 + 1000 * mac.size.height / mac.size.width / 2)
-    }
-    .frame(width: 3840, height: 2560)
-    .clipped()
-  }
-}
+// Header and search result: Gallery.swift.
 
 // MARK: - Output
 
@@ -351,9 +293,11 @@ func run() throws {
     }
 
     // Header and search result.
-    try writeOpaque(try render(HeaderArt(lang: lang, mac: macList, iphone: cardsLight), width: 3840, height: 1646),
+    try writeOpaque(try render(HeaderArt2(lang: lang, mac: macList, cards: try full("12-02-cards-dark"),
+                                          queue: try full("12-09-queue-dark")), width: 3840, height: 1646),
                     to: dir.appending(path: "header.png"))
-    try writeOpaque(try render(SearchArt(lang: lang, keyboard: try phone("12-04-keyboard-light"), cards: cardsLight, mac: macList),
+    try writeOpaque(try render(SearchArt2(lang: lang, cards: try full("12-01-cards-light"),
+                                          keyboard: try full("12-04-keyboard-light"), mac: macList),
                                width: 3840, height: 2560),
                     to: dir.appending(path: "search.png"))
   }
