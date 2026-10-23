@@ -1,6 +1,6 @@
 # 1.3 planı: iPhone 1.3 ve Mac 1.3 birlikte (taslak)
 
-> Tarih: 2026-10-23. Durum: **taslak; kararlar alındı, uygulama onayı bekliyor.**
+> Tarih: 2026-10-23. Durum: **kararlar alındı, Adım 0 (prototip) bitti; Adım 1 onay bekliyor.**
 > Bu belge eski `MAC-1.3-PLAN.md`'nin yerini alır. iPhone 1.2'nin kararları ve bulguları (K1–K17)
 > `IOS-1.2-PLAN.md`'de kalır. Yayın adımları `SURUM.md`'de.
 
@@ -17,6 +17,22 @@ Bu bölüm, belgenin geri kalanıyla çelişirse geçerli olandır.
    - Cihaza özel olan: görsel kalitesi.
    - Mobil veri ayarı kaldırıldı.
    - Önceden kararlaştırılanlar da geçerli: varsayılan olarak açık, sınır aşılınca öğe silinmez.
+
+## Adım 0 sonuçları (prototip, 2026-10-23)
+Prototip: `Prototypes/Media13` (ayrı paket kimlikleri, iCloud Development ortamı, kendi test bölgesi; gerçek veriye
+dokunmadı, test bölgesi ve dosyalar silindi). Hepsi Mac'te, geliştirme imzasıyla ölçüldü.
+
+| Soru | Sonuç |
+|---|---|
+| Motor büyük şifreli dosyaları gönderip alıyor mu? | **Evet.** 10, 25 ve 50 MB (AES-GCM) tek grupta gönderildi, hatasız. 85 MB'ın yüklenmesi 15–60 sn (ağa göre). Ayrı bir uygulamadaki yeni bir motor, veritabanının tamamını çekerken (otomatik eşitlemenin yaptığı gibi) dosyaları **kendiliğinden indirdi**: 6,8 sn. Üçü de açıldı, baytlar aynı. **C kararı tutuyor.** |
+| İndirilen dosya ne kadar yaşıyor? | Motor dosyayı uygulamanın `Caches/CloudKit/…/Assets` klasörüne koyuyor. Olaydan sonra ve 10 sn sonra hâlâ duruyordu. Ama bir önbellek klasörü, sistem silebilir: plandaki gibi **olay sırasında hemen kendi depomuza kopyalanır.** |
+| Dosya inmeden kayıt gelebilir mi? | **Evet.** Bir denemede kayıt geldi, iki dosyanın indirmesi ayrı ayrı başarısız oldu (CKError 1013 "Fetching asset failed", kısmi hata). Bir sonraki denemede hepsi indi. Tasarıma eklenir: dosyası inmemiş kayıt "dosya bekleniyor" olarak tutulur ve dosya sonra yeniden istenir. |
+| Mac, Finder'da kopyalanan dosyanın içeriğini okuyabiliyor mu? | **Evet**, Maccy'nin bugünkü yetkileriyle; yeni bir yetki gerekmiyor. Pano, dosyaya erişimi de veriyor. Ama Masaüstü ve İndirilenler için macOS **klasör başına bir kez izin soruyor** ("… İndirilenler klasörünüzdeki dosyalara erişmek istiyor"). Belgeler için de aynısı beklenir. Sonuç: dosya **kopyalandığı anda** okunur (izin o anki süreç için geçerli). İzin verilmezse dosya "yalnızca bu Mac'te" kalır; Ayarlar ve kurulum rehberi bu pencereyi önceden anlatır. Not: kopya, Finder'ın yazdığı biçimde bir yardımcıyla yapıldı; ilk gerçek ⌘C denemesi Adım 2'de. |
+| Mac'e gelen dosya başka bir uygulamaya yapıştırılabiliyor mu? | **Evet.** Dosya uygulamanın kendi klasörüne yazılıp panoya konunca korumalı alandaki başka bir uygulama okudu; Finder'a ⌘V ile PDF olarak yapıştı (kullanıcı denedi). İndirilenler yetkisine gerek yok. |
+| Ölçülmeyenler | iPhone'da indirme (motor iOS'ta aynı; hücresel veri ve bellek Adım 4'teki iki cihazlı testte), Mac App Store imzası (korumalı alan kuralları yetkilerle aynı, imza türüyle değişmez). |
+
+Yan bulgu: Yeni bir paket kimliğinin iCloud kapsayıcısında tanınması 10–15 dakika sürdü. Yalnızca yeni hedefler
+(prototip, yeni uzantı) için önemli.
 
 ## 0. Kısaca
 - **Sürümler:** 1.3 = iPhone 1.3 (derleme 5) + Mac 1.3 (derleme 2).
@@ -101,14 +117,14 @@ Bu bölüm, belgenin geri kalanıyla çelişirse geçerli olandır.
 - **Bugün:** `SyncBridge.syncableText` görsel ya da dosya içeren her kopyayı atlıyor.
 - **Görsel:** Panodaki görsel verisi gönderilir. Kalite "Optimized" ise önce HEIC'e çevrilir.
 - **PDF:** Panodaki PDF verisi gönderilir (ör. Önizleme'den kopyalanan).
-- **Finder'da kopyalanan dosya:** Panoda dosyanın içeriği değil, yalnızca yolu var. İçeriği okumak gerekir.
-  - Uygulama korumalı alanda (sandbox) çalıştığı için bu okuma izni **doğrulanmadı**; Adım 0 ölçer.
-  - İzin yoksa iki yol var: Mac'te yalnızca görsel ve PDF verisi eşitlenir; ya da kullanıcı bir kez klasör izni verir.
-    Kararı ölçümden sonra sana getiririm.
+- **Finder'da kopyalanan dosya:** Panoda dosyanın içeriği değil, yalnızca yolu var.
+  - İçerik **kopyalandığı anda** okunur. Bugünkü yetkiler yetiyor (Adım 0).
+  - Masaüstü, İndirilenler ve Belgeler için macOS klasör başına bir kez izin sorar. İzin yoksa dosya "yalnızca bu
+    Mac'te" kalır.
 - **Gelen öğe:**
   - Görsel ve PDF, Maccy geçmişine panodaki gibi eklenir.
-  - Dosya, uygulamanın kendi klasörüne yazılır ve öğe o dosyayı gösterir. Yapıştırılınca dosya olarak gider; bu da Adım
-    0'da doğrulanır.
+  - Dosya, uygulamanın kendi klasörüne yazılır ve öğe o dosyayı gösterir. Yapıştırılınca dosya olarak gider (Adım 0'da
+    doğrulandı: Finder ve korumalı alandaki başka bir uygulama).
   - "iPhone'dan" işareti korunur.
 - **Yok sayma kuralları:** Maccy'nin yok sayılan uygulama, tür ve düzenli ifade kuralları görseller ve dosyalar için de
   geçerli. Bunun testi zorunlu.

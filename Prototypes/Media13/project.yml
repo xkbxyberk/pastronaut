@@ -1,0 +1,55 @@
+# XcodeGen spec for the 1.3 media prototype (Adım 0 in docs/pastronaut/PLAN-1.3.md). Throwaway: nothing here
+# moves into the app. Own bundle identifiers, so it never shares a container with the real Pastronaut.
+# Generate with: xcodegen generate
+name: MediaProto
+options:
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: V88QY49A4T
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    GENERATE_INFOPLIST_FILE: YES
+    ENABLE_HARDENED_RUNTIME: YES
+    INFOPLIST_KEY_LSUIElement: YES
+targets:
+  # Stands in for Pastronaut: Maccy's sandbox, plus Downloads access for one variant of the paste test.
+  MediaProto:
+    type: application
+    platform: macOS
+    sources: [Sources]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.mediaproto
+        PRODUCT_NAME: MediaProto
+    entitlements:
+      path: MediaProto.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-only: true
+        com.apple.security.files.downloads.read-write: true
+        com.apple.security.network.client: true
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.xkbxyberk.pastronaut]
+        com.apple.developer.icloud-services: [CloudKit]
+  # Maccy's sandbox (Maccy/Maccy.entitlements, without Sparkle's exception and push). Reads what other apps
+  # put on the pasteboard: a Finder copy (as Pastronaut would) and a file pasted from MediaProto (as another app would).
+  MediaProtoReader:
+    type: application
+    platform: macOS
+    sources: [Sources]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xkbxyberk.pastronaut.mediaproto.reader
+        PRODUCT_NAME: MediaProtoReader
+    entitlements:
+      path: MediaProtoReader.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-only: true
+        com.apple.security.network.client: true
+        # Added after the paste tests, to fetch in a container of its own (no shared CloudKit asset cache).
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.xkbxyberk.pastronaut]
+        com.apple.developer.icloud-services: [CloudKit]
