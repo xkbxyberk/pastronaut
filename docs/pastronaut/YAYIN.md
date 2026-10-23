@@ -42,7 +42,7 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
 - Mac App Store yapılandırması (Sparkle'sız, ayrı yetkiler) ve Mac için gizlilik bildirimi.
 - Homebrew tap.
 
-## D. Durum ve kalan işler (2026-10-18)
+## D. Durum ve kalan işler (2026-10-23)
 **Bitti:**
 - Mac 0.1.0 GitHub'da (Developer ID, notarize, Sparkle appcast).
 - Site ve gizlilik politikası yayında (İngilizce önce). README.
@@ -89,10 +89,10 @@ Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: �
 3. ✅ Build 3 yüklendi; TestFlight'ta denendi, 1.1 sayfası dolduruldu ve incelemeye gönderildi (2026-10-20,
    "Manually release").
 4. ✅ **iPhone 1.1 (3) onaylandı ve App Store'da yayında** (kullanıcı, 2026-10-22).
-5. ⏳ **Mac App Store 1.0 (1): "In Review"** (2026-10-22). Onay gelince yayınlanır; ret gelirse düzeltme 1.0 (2).
+5. ✅ **Mac App Store 1.0 (1) onaylandı ve App Store'da yayında** (kullanıcı, 2026-10-23).
 
 **iPhone 1.2 (build 4), hazırlık 2026-10-22.** Yalnızca iPhone kanalı; plan `IOS-1.2-PLAN.md`. Mac işleri ayrı:
-`MAC-1.3-PLAN.md` (Mac'in sıradaki görünen sürümü 1.3, derleme 2).
+`PLAN-1.3.md` (Mac'in sıradaki görünen sürümü 1.3, derleme 2).
 1. ✅ CloudKit şemasında `Clip.title` ve `Clip.titleModifiedAt` (ve `titleModifiedAt` için queryable/sortable
    dizinleri) Production'a gönderildi (kullanıcı, 2026-10-22; Production'da doğrulandı).
 2. ✅ `MARKETING_VERSION` 1.2, `CURRENT_PROJECT_VERSION` 4 (`iOS/project.yml`). Release derlemesi hatasız; uygulama
@@ -109,10 +109,12 @@ Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: �
 7. ✅ TestFlight'ta 1.2 (4) denendi, sorunsuz (kullanıcı, 2026-10-22). 1.2 sayfası dolduruldu (What's New'da "✕"
    reddedildi, "X key" yazıldı; `APPSTORE.md` §8) ve **incelemeye gönderildi** (2026-10-22 21:54, "Waiting for
    Review", gönderim kimliği `a0ab1edf-…1273`).
-8. ⏳ Onay gelince kullanıcı yayınlar; ret gelirse düzeltme build 5 ile.
+8. ✅ **iPhone 1.2 (4) onaylandı ve App Store'da yayında** (kullanıcı, 2026-10-23).
+
+**1.3 (ortak sürüm), karar 2026-10-23.** Kullanıcı tek bir ortak 1.3 seçti: iPhone 1.3 (5) ve Mac 1.3 (2) üç kanalda
+birlikte çıkar; Mac'e özel ara sürüm yok. Plan `PLAN-1.3.md` (taslak, onay bekliyor).
 
 **Sürüm kuralı (2026-10-18'den sonra):** her sürüm üç kanalda çıkar (iPhone, Mac App Store, Mac GitHub/Sparkle);
-adımlar `SURUM.md`'de. Görünen sürüm: iPhone 1.1, Mac 1.0 (Mac'in sıradaki sürümü en az 1.2). Sıradaki derleme
-numaraları: iPhone **5**, Mac **2** (Mac App Store ve GitHub ortak). Mac GitHub kullanıcıları hâlâ 0.1.0'da; bir sonraki Mac sürümüyle
-GitHub'a da 1.0.x çıkar.
+adımlar `SURUM.md`'de. Görünen sürüm: iPhone 1.2, Mac 1.0 (Mac App Store), GitHub 0.1.0. Sıradaki: ortak **1.3**; derleme
+numaraları iPhone **5**, Mac **2** (Mac App Store ve GitHub ortak). Mac GitHub kullanıcıları 0.1.0'dan doğrudan 1.3'e geçer.
 

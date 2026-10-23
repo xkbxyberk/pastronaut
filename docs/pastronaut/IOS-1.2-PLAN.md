@@ -13,7 +13,7 @@
 Bu bölüm, belgenin geri kalanında çelişen her şeyin önüne geçer.
 
 1. **iPhone 1.1 App Store'da yayında.** 1.2 bunun üzerine kurulur. Sıradaki iPhone derlemesi 4.
-2. **Mac işleri ayrı bir planda:** `MAC-1.3-PLAN.md`. 1.2 yalnızca iPhone'dur.
+2. **Mac işleri ayrı bir planda:** `PLAN-1.3.md`. 1.2 yalnızca iPhone'dur.
    - Sürüm kuralı (`SURUM.md`): iPhone 1.2'yi tek başına çıkarırsa Mac bu numarayı atlar. Mac'in sıradaki sürümü
      **1.3** olur.
    - Görseller **iPhone 1.3 ve Mac 1.3**'te birlikte gelir (üç kanal).
@@ -527,7 +527,7 @@ Arayüz kodu yalnızca **Adım D**'de yazılır, ekran görüntüleri geldikten 
 ### 1.3: Görseller (iPhone 1.3 ve Mac 1.3, üç kanal)
 - **Çekirdek:** Medya deposu, kendi anahtarımızla AES-GCM, küçük resim, OCR metni, `Blobs` bölgesinin isteğe bağlı
   indirilmesi, kota, iCloud alan sınırı, LRU önbellek ve Ayarlar › Görseller (§1, madde 1).
-- **Mac:** `MAC-1.3-PLAN.md`. Ayrı onayla yapılır.
+- **Mac:** `PLAN-1.3.md`. Ayrı onayla yapılır.
 - **iOS:** Görsel kartı, Canlı Metin, QuickLook işaretleme, görselin dosya olarak sürüklenmesi, Paylaş'ta görsel/PDF,
   klavyede küçük resim (dokununca panoya kopyalar; Tam Erişim gerekir).
 
@@ -544,14 +544,14 @@ Arayüz kodu yalnızca **Adım D**'de yazılır, ekran görüntüleri geldikten 
 - Ortak çekirdekteki değişiklikler (A ve B) Mac'te derlenip test edilir, ama Mac sürümü çıkarmayı gerektirmez.
   - A6 (gizlilik ayarları) ve B (şema), Mac güncellenene kadar Mac'te etkisiz kalır.
 - Görseller (1.3) bir Mac sürümü gerektirir. Bu, CLAUDE.md'deki üç kanal kuralına bağlıdır, ayrı bir planda
-  (`MAC-1.3-PLAN.md`) durur ve ayrı bir onayla yapılır.
+  (`PLAN-1.3.md`) durur ve ayrı bir onayla yapılır.
 
 ---
 
 ## 7. Sorular
 
 Faz 1 soruları 2026-10-22'de yanıtlandı (yukarıdaki "Kararlar" bölümü). Açık kalan tek soru:
-- Mac App Store 1.0 (1) incelemeden geçti mi? Bu, Mac planındaki başlangıç noktasını belirler (`MAC-1.3-PLAN.md`).
+- ✅ Mac App Store 1.0 (1) ve iPhone 1.2 (4) yayında (2026-10-23). Sıradaki iş ortak 1.3: `PLAN-1.3.md`.
 
 ## Kaynaklar (web, 2026-10-22)
 - CloudKit kayıt ve varlık sınırları: https://developer.apple.com/forums/thread/827897 ,
