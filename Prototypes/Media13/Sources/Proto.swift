@@ -37,6 +37,8 @@ enum Main {
         try await Transfer.fetch()
       case "cleanup":
         try await Transfer.cleanup()
+      case "keys":
+        try await Transfer.desiredKeys()
       case "purge":
         // macOS keeps the shell out of app containers, so each app empties its own.
         let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
@@ -235,6 +237,36 @@ enum Transfer {
       say("VERIFY \(name): \(ok ? "OK" : "MISMATCH") (\(opened.count) bytes)")
     }
     try? FileManager.default.removeItem(at: incoming)
+  }
+
+  /// Does a zone fetch with `desiredKeys` return encrypted fields by name, and skip the asset it doesn't name?
+  static func desiredKeys() async throws {
+    let database = container.privateCloudDatabase
+    _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: zoneID)], deleting: [])
+    let file = FileManager.default.temporaryDirectory.appending(path: "keys-asset")
+    try Data(repeating: 1, count: 200_000).write(to: file)
+    let record = CKRecord(recordType: "ProtoMedia", recordID: CKRecord.ID(recordName: "keys-test", zoneID: zoneID))
+    record.encryptedValues["secret"] = "hidden text"
+    record["plain"] = 7
+    record["payload"] = CKAsset(fileURL: file)
+    _ = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .allKeys)
+    let changes = try await database.recordZoneChanges(inZoneWith: zoneID, since: nil, desiredKeys: ["secret", "plain"])
+    for (_, result) in changes.modificationResultsByID {
+      let fetched = try result.get().record
+      say("""
+        KEYS \(fetched.recordID.recordName): secret=\(fetched.encryptedValues["secret"] as? String ?? "nil") \
+        plain=\(fetched["plain"] as? Int ?? -1) payload=\((fetched["payload"] as? CKAsset)?.fileURL?.path ?? "nil") \
+        allKeys=\(fetched.allKeys())
+        """)
+    }
+    let full = try await database.record(for: record.recordID)
+    say("FULL payload=\((full["payload"] as? CKAsset)?.fileURL != nil)")
+    let onlyAsset = try await database.records(for: [record.recordID], desiredKeys: ["payload"])
+    if let fetched = try onlyAsset[record.recordID]?.get() {
+      say("ASSET-ONLY payload=\((fetched["payload"] as? CKAsset)?.fileURL != nil) secret=\(fetched.encryptedValues["secret"] as? String ?? "nil")")
+    }
+    _ = try await database.modifyRecordZones(saving: [], deleting: [zoneID])
+    say("deleted zone \(zoneID.zoneName)")
   }
 
   static func cleanup() async throws {

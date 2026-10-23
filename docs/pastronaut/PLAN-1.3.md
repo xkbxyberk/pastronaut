@@ -1,6 +1,6 @@
 # 1.3 planı: iPhone 1.3 ve Mac 1.3 birlikte (taslak)
 
-> Tarih: 2026-10-23. Durum: **kararlar alındı, Adım 0 (prototip) bitti; Adım 1 onay bekliyor.**
+> Tarih: 2026-10-23. Durum: **Adım 0 (prototip) ve Adım 1 (çekirdek) bitti; Adım 2 (Mac) onay bekliyor.**
 > Bu belge eski `MAC-1.3-PLAN.md`'nin yerini alır. iPhone 1.2'nin kararları ve bulguları (K1–K17)
 > `IOS-1.2-PLAN.md`'de kalır. Yayın adımları `SURUM.md`'de.
 
@@ -33,6 +33,32 @@ dokunmadı, test bölgesi ve dosyalar silindi). Hepsi Mac'te, geliştirme imzas�
 
 Yan bulgu: Yeni bir paket kimliğinin iCloud kapsayıcısında tanınması 10–15 dakika sürdü. Yalnızca yeni hedefler
 (prototip, yeni uzantı) için önemli.
+
+## Adım 1 sonuçları (çekirdek, 2026-10-23)
+Arayüzsüz; `PastronautCore` 174 test (24'ü yeni, `MediaTests`), `MaccyTests` 109 test geçti; Mac ve iPhone derleniyor.
+
+- **Model:** `Clip.media` (`ClipMedia`: tür, dosyalar, piksel boyutu, tanınan metin). Medya öğesinin metni boş, kimliği
+  "media-" ile başlar ve kopyalanan içeriğin özetinden çıkar. `Clip.Kind`'a `image`, `pdf`, `file` eklendi.
+- **Şifreleme:** `MediaCipher` (AES-GCM; anahtar hesabın `SyncKey`'inden HKDF ile türer; her dosya kendi öğesine bağlı).
+- **Kayıtlar** (şema §4, kesinleşti):
+  - `Media`: şifreli `clipID`, `info` (ClipMedia JSON'u), `thumbnail`, `sourceApp`, `sourceAppName`, `collections`,
+    `title`; düz `kind`, `sourceDevice`, tarihler, `pinned`, `titleModifiedAt`, `schemaVersion` (3); dosyalar `files`
+    (şifreli `CKAsset` listesi). Dosyalar ve küçük resim yalnızca ilk kayıtta gider; sabitleme ya da başlık değişince
+    yeniden yüklenmez.
+  - `AppIcon`: şifreli `bundleIdentifier`, `name`, `png`; düz `modifiedAt`, `schemaVersion`. Kayıt adı "a-" + anahtarlı özet.
+  - `Settings`: şifreli `shared` (SharedSyncSettings JSON'u: gizlilik süzgeçleri ve Görseller ve Dosyalar). Anahtar
+    alanına dokunulmaz.
+  - JSON alanları eksik alanlara dayanıklı okunur; sonraki sürümler şema değiştirmeden alan ekleyebilir.
+- **Cihazdaki depo:** `MediaStore` (öğe başına klasör, dosyalar kendi adlarıyla, `thumbnail.jpg`; iPhone'da App Group).
+- **Görsel işleri:** `MediaProcessing` (HEIC'e çevirme ve 4096 px sınırı, ≤ 60 KB JPEG küçük resim, PDF ilk sayfa ve metin).
+- **Eşitleme (`ClipSync`):** Medya kayıtları alınır, dosyalar olay sırasında çözülüp depoya yazılır; inmeyen dosya
+  "bekliyor" olur ve `fetchPendingFiles` ile tek tek çekilir. Yetişme çekmesi dosyaları atlar (prototiple doğrulandı).
+  Alan sınırı ve en büyük öğe sınırı paylaşılan ayarlardan; aşan öğe "yalnızca bu cihazda". iCloud dolarsa
+  (`quotaExceeded`) medya o cihazda kalır. Ortak ayarlar en yeni değişiklikle birleşir. Simgeler: `publishAppIcon`,
+  `appIcon(for:)`. Mac'in budaması için `dismiss(ids:)` (karar 3): öğe iCloud'da kalır, ancak yeniden kopyalanırsa
+  geri gelir.
+- **Uygulamalar şimdilik medyayı göstermiyor:** Mac köprüsü ve iPhone listesi medya öğelerini atlıyor (Adım 2 ve 3'te
+  açılacak). Henüz hiçbir uygulama medya göndermiyor.
 
 ## 0. Kısaca
 - **Sürümler:** 1.3 = iPhone 1.3 (derleme 5) + Mac 1.3 (derleme 2).

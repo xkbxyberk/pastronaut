@@ -9,6 +9,10 @@ public enum ClipChange: Equatable, Sendable {
   case deleted(id: String)
   case collectionUpserted(ClipCollection)
   case collectionDeleted(id: String)
+  /// Since 1.3: another device changed the settings every device shares.
+  case settingsChanged(SharedSyncSettings)
+  /// Since 1.3: icons of these apps (bundle identifiers) arrived or changed; read them with `ClipSync.appIcon`.
+  case appIconsChanged([String])
 }
 
 public struct SyncStatus: Equatable, Sendable {
@@ -24,6 +28,10 @@ public struct SyncStatus: Equatable, Sendable {
   public var oldZoneCleared: Bool
   /// Clips kept on this device after iCloud forgot them (see `ClipSync.localOnly`).
   public var localOnlyClips: Int
+  /// Bytes of images and files in iCloud, for the whole account (see `MediaSettings.cloudBudgetBytes`).
+  public var mediaBytesInCloud: Int
+  /// Media clips whose files haven't downloaded yet.
+  public var pendingFiles: Int
 }
 
 /// Two-way sync of clips and collections with the user's private iCloud database, built on CKSyncEngine.
@@ -47,6 +55,18 @@ public actor ClipSync {
     var isLocalOnly = false
     /// Copied here since the server last had this clip; decides whether a clip deleted elsewhere comes back.
     var hasUnsentCopy = false
+    /// A media clip whose record arrived without its files (or with files that didn't open); fetched again.
+    var filesPending = false
+    /// Taken out of this device's history while it stays in iCloud (the Mac's history limit, for clips from
+    /// other devices). Not reported again unless copied after this date.
+    var dismissedAt: Date?
+  }
+
+  struct AppIconEntry: Codable {
+    var name: String?
+    var sha256: String
+    var modifiedAt: Date
+    var systemFields: Data?
   }
 
   struct CollectionEntry: Codable {
@@ -71,6 +91,13 @@ public actor ClipSync {
     var needsLegacyCleanup = true
     /// Clips deleted here while the original zone still existed, so moving it doesn't bring them back.
     var legacyTombstones: Set<String> = []
+    /// Since 1.3: settings every device shares, and the settings record's system fields to save them on.
+    var sharedSettings = SharedSyncSettings()
+    var settingsSystemFields: Data?
+    /// Changed here before the settings record was known; sent once it is.
+    var settingsUnsent = false
+    /// Since 1.3: app icons by bundle identifier. The PNGs are files (`ClipSync.appIconURL`).
+    var appIcons: [String: AppIconEntry] = [:]
 
     init() {}
 
@@ -84,11 +111,18 @@ public actor ClipSync {
       schema = try container.decodeIfPresent(Int.self, forKey: .schema) ?? 1
       needsLegacyCleanup = try container.decodeIfPresent(Bool.self, forKey: .needsLegacyCleanup) ?? true
       legacyTombstones = try container.decodeIfPresent(Set<String>.self, forKey: .legacyTombstones) ?? []
+      sharedSettings = try container.decodeIfPresent(SharedSyncSettings.self, forKey: .sharedSettings) ?? SharedSyncSettings()
+      settingsSystemFields = try container.decodeIfPresent(Data.self, forKey: .settingsSystemFields)
+      settingsUnsent = try container.decodeIfPresent(Bool.self, forKey: .settingsUnsent) ?? false
+      appIcons = try container.decodeIfPresent([String: AppIconEntry].self, forKey: .appIcons) ?? [:]
     }
   }
 
   private let container: CKContainer
   private let fileURL: URL
+  /// The decrypted bytes of media clips on this device.
+  public nonisolated let media: MediaStore
+  private let iconDirectory: URL
   private let keyFile: SyncKeyFile
   private let policy: SyncPolicy
   /// The mirror is this device's history (iPhone), so what iCloud forgets stays here as local-only clips.
@@ -115,6 +149,8 @@ public actor ClipSync {
   ) {
     self.container = CKContainer(identifier: containerIdentifier)
     self.fileURL = storageDirectory.appending(path: "clip-sync.json")
+    self.media = MediaStore(storageDirectory: storageDirectory)
+    self.iconDirectory = storageDirectory.appending(path: "app-icons")
     self.keyFile = SyncKeyFile(directory: storageDirectory)
     self.policy = policy
     self.keepsLocalHistory = keepsLocalHistory
@@ -144,7 +180,9 @@ public actor ClipSync {
       hasKey: state.key != nil,
       isMovingOldClips: state.needsLegacyCleanup && movedLegacyClips,
       oldZoneCleared: !state.needsLegacyCleanup,
-      localOnlyClips: state.localOnly.clips.count
+      localOnlyClips: state.localOnly.clips.count,
+      mediaBytesInCloud: state.mediaBytesInCloud(),
+      pendingFiles: state.entries.values.filter(\.filesPending).count
     )
   }
 
@@ -180,6 +218,128 @@ public actor ClipSync {
 
   public var collections: [ClipCollection] {
     state.collections.values.map(\.collection).ordered
+  }
+
+  // MARK: - Shared settings (since 1.3)
+
+  /// Settings every device shares: privacy filters and Images & Files.
+  public var sharedSettings: SharedSyncSettings {
+    state.sharedSettings
+  }
+
+  /// Changes the shared settings here and sends them to the other devices. The newest change wins everywhere.
+  public func updateSharedSettings(_ change: @Sendable (inout SharedSyncSettings) -> Void) {
+    var settings = state.sharedSettings
+    change(&settings)
+    settings.modifiedAt = state.sharedSettings.modifiedAt
+    guard settings != state.sharedSettings else { return }
+    settings.modifiedAt = max(.now, (state.sharedSettings.modifiedAt ?? .distantPast).addingTimeInterval(0.001))
+    state.sharedSettings = settings
+    queueSettingsSave()
+    persist()
+  }
+
+  private func queueSettingsSave() {
+    guard let engine, state.key != nil, state.settingsSystemFields != nil else {
+      state.settingsUnsent = true
+      return
+    }
+    state.settingsUnsent = false
+    engine.state.add(pendingRecordZoneChanges: [.saveRecord(SettingsRecord.recordID)])
+  }
+
+  // MARK: - App icons (since 1.3)
+
+  /// Sends an app's icon to the other devices (the Mac does; the iPhone can't read other apps' icons). Does
+  /// nothing when the same icon was sent already.
+  public func publishAppIcon(_ icon: AppIcon) {
+    guard icon.png.count <= AppIcon.maxBytes else { return }
+    let hash = ClipMedia.sha256(icon.png)
+    guard state.appIcons[icon.bundleIdentifier]?.sha256 != hash else { return }
+    do {
+      try FileManager.default.createDirectory(at: iconDirectory, withIntermediateDirectories: true)
+      try icon.png.write(to: appIconURL(for: icon.bundleIdentifier), options: .atomic)
+    } catch {
+      logger.error("Cannot keep an app icon: \(error.localizedDescription)")
+      return
+    }
+    state.appIcons[icon.bundleIdentifier] = AppIconEntry(
+      name: icon.name, sha256: hash, modifiedAt: icon.modifiedAt,
+      systemFields: state.appIcons[icon.bundleIdentifier]?.systemFields
+    )
+    if let engine, let key = state.key {
+      engine.state.add(pendingRecordZoneChanges: [.saveRecord(AppIconRecord.recordID(for: icon.bundleIdentifier, key: key))])
+    }
+    persist()
+  }
+
+  /// Where an app's icon is kept on this device (a PNG), whether or not it is there yet.
+  public nonisolated func appIconURL(for bundleIdentifier: String) -> URL {
+    iconDirectory.appending(path: ClipMedia.sha256(Data(bundleIdentifier.utf8)).prefix(32) + ".png")
+  }
+
+  /// An app's icon as a PNG, if one arrived (or was sent from here).
+  public nonisolated func appIcon(for bundleIdentifier: String) -> Data? {
+    try? Data(contentsOf: appIconURL(for: bundleIdentifier))
+  }
+
+  private func appIconBundleID(forRecordName name: String) -> String? {
+    guard let key = state.key else { return nil }
+    return state.appIcons.keys.first { key.recordName(forAppIcon: $0) == name }
+  }
+
+  // MARK: - Media (since 1.3)
+
+  /// Takes clips out of this device's history while they stay in iCloud and on the other devices: the Mac's
+  /// history limit does this for clips copied elsewhere. They are reported again only when copied again later.
+  public func dismiss(ids: some Sequence<String>) {
+    state.dismiss(ids)
+    persist()
+  }
+
+  /// Downloads files of media clips whose records came without them (a fetch that left the files out, or a
+  /// download that failed). Reports the clips whose files arrived. Called by `syncNow`.
+  public func fetchPendingFiles() async {
+    guard let key = state.key else { return }
+    let cipher = MediaCipher(syncKey: key)
+    var arrived: [ClipChange] = []
+    for id in state.entries.filter(\.value.filesPending).map(\.key).prefix(20) {
+      let recordID = ClipRecord.recordID(forClipID: id, key: key)
+      let result: Result<CKRecord, Error>?
+      do {
+        result = try await container.privateCloudDatabase.records(
+          for: [recordID], desiredKeys: [MediaRecord.filesField]
+        )[recordID]
+      } catch {
+        logger.error("Cannot fetch files: \(error.localizedDescription, privacy: .public)")
+        break
+      }
+      // The mirror may have changed while waiting.
+      guard let clip = state.entries[id]?.clip, state.entries[id]?.filesPending == true else { continue }
+      switch result {
+      case .success(let record)?:
+        if let urls = MediaRecord.encryptedFileURLs(of: record), media.storeDownloaded(urls, for: clip, cipher: cipher) {
+          state.entries[id]?.filesPending = false
+          if state.reveals(clip) { arrived.append(.upserted(clip)) }
+        } else {
+          logger.error("Files of \(recordID.recordName, privacy: .public) did not arrive or did not open")
+        }
+      case .failure(let error as CKError)? where error.code == .unknownItem:
+        state.entries[id]?.filesPending = false
+      default:
+        break
+      }
+    }
+    guard !arrived.isEmpty else { return }
+    persist()
+    await notify(arrived)
+  }
+
+  /// Removes media files of clips no longer mirrored here. Call at launch, not right after a delete that may be
+  /// undone.
+  @discardableResult
+  public func pruneMedia() -> Int {
+    media.prune(keeping: Set(state.entries.keys))
   }
 
   #if DEBUG
@@ -241,6 +401,7 @@ public actor ClipSync {
     }
     try await engine.fetchChanges()
     try await catchUp(syncEngine: engine)
+    await fetchPendingFiles()
     try await engine.sendChanges()
     await deleteLegacyZoneIfDone(engine: engine)
   }
@@ -269,8 +430,9 @@ public actor ClipSync {
     var moreComing = true
     do {
       while moreComing {
+        // Everything but media files: the engine's fetch brings those, and `fetchPendingFiles` the rest.
         let changes = try await container.privateCloudDatabase.recordZoneChanges(
-          inZoneWith: ClipRecord.zoneID, since: token
+          inZoneWith: ClipRecord.zoneID, since: token, desiredKeys: Self.catchUpKeys
         )
         for (_, result) in changes.modificationResultsByID {
           if case .success(let modification) = result { records.append(modification.record) }
@@ -313,6 +475,12 @@ public actor ClipSync {
     await apply(modifications: records, deletions: deletions, syncEngine: syncEngine, source: "catch-up")
   }
 
+  /// Every field of every record type in the zone, except media files.
+  static let catchUpKeys: [CKRecord.FieldKey] = Array(Set(
+    ClipRecord.fields + CollectionRecord.fields + SettingsRecord.fields + MediaRecord.fieldsWithoutFiles
+      + AppIconRecord.fields
+  )).sorted()
+
   // MARK: - Record-name key
 
   /// Reads (or creates) the account's key before anything is sent, so every record gets its private name.
@@ -338,9 +506,15 @@ public actor ClipSync {
       let oldRecords = state.entries.filter { $0.value.systemFields != nil }.keys.map {
         CKRecord.ID(recordName: previous.recordName(forClipID: $0), zoneID: ClipRecord.zoneID)
       }
-      engine.state.add(pendingRecordZoneChanges: oldRecords.map { .deleteRecord($0) })
+      let oldIcons = state.appIcons.filter { $0.value.systemFields != nil }.keys.map {
+        CKRecord.ID(recordName: previous.recordName(forAppIcon: $0), zoneID: ClipRecord.zoneID)
+      }
+      engine.state.add(pendingRecordZoneChanges: (oldRecords + oldIcons).map { .deleteRecord($0) })
       for id in state.entries.keys {
         state.entries[id]?.systemFields = nil
+      }
+      for id in state.appIcons.keys {
+        state.appIcons[id]?.systemFields = nil
       }
     }
     state.key = key
@@ -348,7 +522,11 @@ public actor ClipSync {
     clipIDsByRecordName = Self.recordNames(for: state.entries.keys, key: key)
     let unsent = state.unsentClipIDs.map { ClipRecord.recordID(forClipID: $0, key: key) }
     let unsentCollections = state.unsentCollectionIDs.map { CollectionRecord.recordID(for: $0) }
-    engine.state.add(pendingRecordZoneChanges: (unsent + unsentCollections).map { .saveRecord($0) })
+    // Only icons sent from here have a PNG to send; others arrive with their record.
+    let unsentIcons = state.appIcons.filter { $0.value.systemFields == nil }.keys.map {
+      AppIconRecord.recordID(for: $0, key: key)
+    }
+    engine.state.add(pendingRecordZoneChanges: (unsent + unsentCollections + unsentIcons).map { .saveRecord($0) })
     persist()
   }
 
@@ -645,10 +823,37 @@ public actor ClipSync {
       let base = entry.systemFields.flatMap(ClipRecord.record(fromSystemFields:))
       return CollectionRecord.record(for: entry.collection, updating: base)
     }
-    guard let key = state.key, let id = clipIDsByRecordName[name], let entry = state.entries[id],
+    if recordID == SettingsRecord.recordID {
+      // Only ever saved on top of the record that holds the key, which this device read first.
+      guard let base = state.settingsSystemFields.flatMap(ClipRecord.record(fromSystemFields:)) else { return nil }
+      SettingsRecord.write(state.sharedSettings, into: base)
+      return base
+    }
+    guard let key = state.key else { return nil }
+    if name.hasPrefix("a-") {
+      guard let bundleID = appIconBundleID(forRecordName: name), let entry = state.appIcons[bundleID],
+            let png = appIcon(for: bundleID) else { return nil }
+      let base = entry.systemFields.flatMap(ClipRecord.record(fromSystemFields:))
+      let icon = AppIcon(bundleIdentifier: bundleID, name: entry.name, png: png, modifiedAt: entry.modifiedAt)
+      return AppIconRecord.record(for: icon, key: key, updating: base)
+    }
+    guard let id = clipIDsByRecordName[name], let entry = state.entries[id],
           key.recordName(forClipID: id) == name else { return nil }
     let base = entry.systemFields.flatMap(ClipRecord.record(fromSystemFields:))
-    return ClipRecord.record(for: entry.clip, key: key, updating: base)
+    guard entry.clip.isMedia else {
+      return ClipRecord.record(for: entry.clip, key: key, updating: base)
+    }
+    // A media clip's content never changes: the files and thumbnail go up once, with the first save.
+    guard base == nil else {
+      return MediaRecord.record(for: entry.clip, key: key, updating: base)
+    }
+    guard let files = media.encryptedCopies(of: entry.clip, recordName: name, cipher: MediaCipher(syncKey: key)) else {
+      logger.error("Media \(name, privacy: .public) has no files here to send")
+      return nil
+    }
+    return MediaRecord.record(
+      for: entry.clip, key: key, thumbnail: media.thumbnail(for: id), encryptedFiles: files, updating: nil
+    )
   }
 
   /// Forgets what this device knew about iCloud after the zone disappeared (iCloud data deleted from another
@@ -659,6 +864,12 @@ public actor ClipSync {
     let forgottenCollections = state.forgetCloud(keeping: keeping, keepsLocalHistory: keepsLocalHistory)
     state.catchUpToken = nil
     state.key = nil
+    state.settingsSystemFields = nil
+    // A setting changed here goes to the new settings record.
+    state.settingsUnsent = state.settingsUnsent || state.sharedSettings.modifiedAt != nil
+    for id in state.appIcons.keys {
+      state.appIcons[id]?.systemFields = nil
+    }
     keyFile.write(nil)
     clipIDsByRecordName = [:]
     engine.state.remove(pendingRecordZoneChanges: engine.state.pendingRecordZoneChanges)
@@ -796,20 +1007,32 @@ extension ClipSync: CKSyncEngineDelegate {
     var result: [ClipChange] = []
 
     // The key names every clip record, so the settings record goes first.
-    if let settings = modifications.first(where: { $0.recordType == SettingsRecord.recordType }),
-       let key = SettingsRecord.key(from: settings) {
-      adopt(key, engine: syncEngine)
+    if let settings = modifications.first(where: { $0.recordType == SettingsRecord.recordType }) {
+      if let key = SettingsRecord.key(from: settings) {
+        adopt(key, engine: syncEngine)
+      }
+      if let change = applySettings(settings) { result.append(change) }
     }
-    if state.key == nil, modifications.contains(where: { $0.recordType == ClipRecord.recordType }) {
+    if state.key == nil,
+       modifications.contains(where: { [ClipRecord.recordType, MediaRecord.recordType].contains($0.recordType) }) {
       try? await ensureKey(engine: syncEngine)
     }
 
+    var icons: [String] = []
     for record in modifications {
       switch record.recordType {
       case ClipRecord.recordType:
-        if let change = applyClip(record, syncEngine: syncEngine) { result.append(change) }
+        if let change = applyClip(record, remote: ClipRecord.clip(from: record), syncEngine: syncEngine) {
+          result.append(change)
+        }
+      case MediaRecord.recordType:
+        if let change = applyClip(record, remote: MediaRecord.clip(from: record), syncEngine: syncEngine) {
+          result.append(change)
+        }
       case CollectionRecord.recordType:
         if let change = applyCollection(record, syncEngine: syncEngine) { result.append(change) }
+      case AppIconRecord.recordType:
+        if let bundleID = applyIcon(record) { icons.append(bundleID) }
       default:
         break
       }
@@ -821,10 +1044,16 @@ extension ClipSync: CKSyncEngineDelegate {
         if state.collections.removeValue(forKey: name) != nil {
           result.append(.collectionDeleted(id: name))
         }
-      } else if let id = clipIDsByRecordName[name], state.entries.removeValue(forKey: id) != nil {
-        result.append(.deleted(id: id))
+      } else if let id = clipIDsByRecordName[name], let removed = state.entries.removeValue(forKey: id) {
+        // Already gone from this device's history: nothing to report.
+        if removed.dismissedAt == nil { result.append(.deleted(id: id)) }
+      } else if name.hasPrefix("a-"), let bundleID = appIconBundleID(forRecordName: name) {
+        state.appIcons.removeValue(forKey: bundleID)
+        try? FileManager.default.removeItem(at: appIconURL(for: bundleID))
+        icons.append(bundleID)
       }
     }
+    if !icons.isEmpty { result.append(.appIconsChanged(icons)) }
 
     logger.notice("""
       Fetched (\(source, privacy: .public)): \(modifications.count) modifications, \(deletions.count) deletions, \
@@ -835,8 +1064,9 @@ extension ClipSync: CKSyncEngineDelegate {
     await notify(result)
   }
 
-  private func applyClip(_ record: CKRecord, syncEngine: CKSyncEngine) -> ClipChange? {
-    guard let remote = ClipRecord.clip(from: record) else {
+  /// Merges a fetched clip (text or media) into the mirror. `remote` is the record read as a clip.
+  private func applyClip(_ record: CKRecord, remote: Clip?, syncEngine: CKSyncEngine) -> ClipChange? {
+    guard let remote else {
       logger.error("Ignoring invalid clip record \(record.recordID.recordName, privacy: .public)")
       return nil
     }
@@ -844,8 +1074,12 @@ extension ClipSync: CKSyncEngineDelegate {
     let merged = local.map { $0.clip.merged(with: remote) } ?? remote
     if let key = state.key, !ClipRecord.isNamed(record, for: remote, key: key) {
       // Saved under an older key by a device that missed the change: keep the clip under its proper name and
-      // remove the stray record.
-      state.entries[remote.id] = MirrorEntry(clip: merged, systemFields: local?.systemFields)
+      // remove the stray record. A media clip's files were encrypted with the old key; they are sent again from
+      // here if this device has them.
+      state.entries[remote.id] = MirrorEntry(
+        clip: merged, systemFields: local?.systemFields, filesPending: local?.filesPending ?? false,
+        dismissedAt: local?.dismissedAt
+      )
       var changes: [CKSyncEngine.PendingRecordZoneChange] = [.deleteRecord(record.recordID)]
       if let recordID = recordID(forClipID: remote.id) { changes.append(.saveRecord(recordID)) }
       syncEngine.state.add(pendingRecordZoneChanges: changes)
@@ -854,7 +1088,9 @@ extension ClipSync: CKSyncEngineDelegate {
       state.entries[remote.id] = MirrorEntry(
         clip: merged,
         systemFields: ClipRecord.systemFields(of: record),
-        hasUnsentCopy: (local?.hasUnsentCopy ?? false) && merged.lastCopiedAt > remote.lastCopiedAt
+        hasUnsentCopy: (local?.hasUnsentCopy ?? false) && merged.lastCopiedAt > remote.lastCopiedAt,
+        filesPending: merged.isMedia && !receiveFiles(of: record, for: merged),
+        dismissedAt: local?.dismissedAt
       )
       clipIDsByRecordName[record.recordID.recordName] = remote.id
       if merged != remote {
@@ -863,7 +1099,56 @@ extension ClipSync: CKSyncEngineDelegate {
       }
     }
     state.legacyTombstones.remove(remote.id)
-    return merged != local?.clip ? .upserted(merged) : nil
+    guard merged != local?.clip || (local?.filesPending == true && state.entries[remote.id]?.filesPending == false)
+    else { return nil }
+    return state.reveals(merged) ? .upserted(merged) : nil
+  }
+
+  /// Keeps the thumbnail and files of a fetched media record. True when the files are here (now or already).
+  private func receiveFiles(of record: CKRecord, for clip: Clip) -> Bool {
+    if let thumbnail = MediaRecord.thumbnail(of: record), media.thumbnail(for: clip.id) == nil {
+      try? media.storeThumbnail(thumbnail, for: clip.id)
+    }
+    if media.hasFiles(for: clip) { return true }
+    // The engine leaves the downloaded files in a cache folder: decrypt them into the store now.
+    guard let key = state.key, let urls = MediaRecord.encryptedFileURLs(of: record) else { return false }
+    let stored = media.storeDownloaded(urls, for: clip, cipher: MediaCipher(syncKey: key))
+    if !stored { logger.error("Files of \(record.recordID.recordName, privacy: .public) did not open") }
+    return stored
+  }
+
+  /// The shared settings in the settings record. Reports them when another device's change is newer.
+  private func applySettings(_ record: CKRecord) -> ClipChange? {
+    state.settingsSystemFields = ClipRecord.systemFields(of: record)
+    let remote = SettingsRecord.sharedSettings(from: record) ?? SharedSyncSettings()
+    let merged = state.sharedSettings.merged(with: remote)
+    defer {
+      if merged != remote || state.settingsUnsent { queueSettingsSave() }
+    }
+    guard merged != state.sharedSettings else { return nil }
+    state.sharedSettings = merged
+    return .settingsChanged(merged)
+  }
+
+  /// An app icon from another device; returns its bundle identifier when it is new or changed here.
+  private func applyIcon(_ record: CKRecord) -> String? {
+    guard let icon = AppIconRecord.icon(from: record) else { return nil }
+    let local = state.appIcons[icon.bundleIdentifier]
+    let systemFields = ClipRecord.systemFields(of: record)
+    guard local.map({ icon.modifiedAt > $0.modifiedAt }) ?? true else {
+      state.appIcons[icon.bundleIdentifier]?.systemFields = systemFields
+      return nil
+    }
+    do {
+      try FileManager.default.createDirectory(at: iconDirectory, withIntermediateDirectories: true)
+      try icon.png.write(to: appIconURL(for: icon.bundleIdentifier), options: .atomic)
+    } catch {
+      return nil
+    }
+    state.appIcons[icon.bundleIdentifier] = AppIconEntry(
+      name: icon.name, sha256: ClipMedia.sha256(icon.png), modifiedAt: icon.modifiedAt, systemFields: systemFields
+    )
+    return icon.bundleIdentifier
   }
 
   private func applyCollection(_ record: CKRecord, syncEngine: CKSyncEngine) -> ClipChange? {
@@ -882,10 +1167,21 @@ extension ClipSync: CKSyncEngineDelegate {
   }
 
   private func handleSent(_ sent: CKSyncEngine.Event.SentRecordZoneChanges, syncEngine: CKSyncEngine) async {
+    for record in sent.savedRecords + sent.failedRecordSaves.map(\.record)
+    where record.recordType == MediaRecord.recordType {
+      // Uploaded, or encrypted again for the next try.
+      media.removeEncryptedCopies(recordName: record.recordID.recordName)
+    }
     for record in sent.savedRecords {
       let name = record.recordID.recordName
       if record.recordType == CollectionRecord.recordType {
         state.collections[name]?.systemFields = ClipRecord.systemFields(of: record)
+      } else if record.recordType == SettingsRecord.recordType {
+        state.settingsSystemFields = ClipRecord.systemFields(of: record)
+      } else if record.recordType == AppIconRecord.recordType {
+        if let bundleID = appIconBundleID(forRecordName: name) {
+          state.appIcons[bundleID]?.systemFields = ClipRecord.systemFields(of: record)
+        }
       } else if let id = clipIDsByRecordName[name], state.entries[id] != nil {
         state.entries[id]?.systemFields = ClipRecord.systemFields(of: record)
         state.entries[id]?.hasUnsentCopy = false
@@ -893,6 +1189,7 @@ extension ClipSync: CKSyncEngineDelegate {
     }
 
     var resend: [CKRecord.ID] = []
+    var changedSettings: SharedSyncSettings?
     var zoneIsGone = false
     var unsentClips: Set<String> = []
     var deletedElsewhere: [ClipChange] = []
@@ -905,18 +1202,37 @@ extension ClipSync: CKSyncEngineDelegate {
       case .serverRecordChanged:
         // Another device saved first: merge with the server version and retry on top of it.
         guard let serverRecord = failure.error.serverRecord else { continue }
-        if isCollection {
+        if serverRecord.recordType == SettingsRecord.recordType {
+          state.settingsSystemFields = ClipRecord.systemFields(of: serverRecord)
+          let remote = SettingsRecord.sharedSettings(from: serverRecord) ?? SharedSyncSettings()
+          guard state.sharedSettings.merged(with: remote) != remote else {
+            // The other device's change is newer.
+            if remote != state.sharedSettings {
+              state.sharedSettings = remote
+              changedSettings = remote
+            }
+            continue
+          }
+        } else if serverRecord.recordType == AppIconRecord.recordType {
+          guard let bundleID = appIconBundleID(forRecordName: name) else { continue }
+          state.appIcons[bundleID]?.systemFields = ClipRecord.systemFields(of: serverRecord)
+        } else if isCollection {
           guard let remote = CollectionRecord.collection(from: serverRecord),
                 let local = state.collections[name]?.collection else { continue }
           state.collections[name] = CollectionEntry(
             collection: local.merged(with: remote), systemFields: ClipRecord.systemFields(of: serverRecord)
           )
         } else {
-          guard let clipID, let remote = ClipRecord.clip(from: serverRecord),
-                let local = state.entries[clipID]?.clip else { continue }
-          state.entries[clipID] = MirrorEntry(
-            clip: local.merged(with: remote), systemFields: ClipRecord.systemFields(of: serverRecord)
-          )
+          let remote = serverRecord.recordType == MediaRecord.recordType
+            ? MediaRecord.clip(from: serverRecord) : ClipRecord.clip(from: serverRecord)
+          guard let clipID, let remote, let entry = state.entries[clipID] else { continue }
+          // The server already has the files (another device copied the same thing): only the fields go now.
+          var merged = entry
+          merged.clip = entry.clip.merged(with: remote)
+          merged.systemFields = ClipRecord.systemFields(of: serverRecord)
+          merged.hasUnsentCopy = false
+          merged.isLocalOnly = false
+          state.entries[clipID] = merged
         }
         resend.append(recordID)
       case .zoneNotFound:
@@ -941,6 +1257,12 @@ extension ClipSync: CKSyncEngineDelegate {
       case .batchRequestFailed:
         // Rejected only because another record in the same batch failed.
         resend.append(recordID)
+      case .quotaExceeded:
+        // iCloud is full. Images and files stay on this device (sent again only when asked); text keeps trying.
+        lastError = failure.error.localizedDescription
+        if let clipID, state.entries[clipID]?.clip.isMedia == true {
+          state.entries[clipID]?.isLocalOnly = true
+        }
       case .networkFailure, .networkUnavailable, .zoneBusy, .serviceUnavailable, .notAuthenticated,
            .operationCancelled, .requestRateLimited:
         // CKSyncEngine retries these on its own.
@@ -988,7 +1310,7 @@ extension ClipSync: CKSyncEngineDelegate {
     }
     lastSyncAt = .now
     persist()
-    await notify(deletedElsewhere + forgotten)
+    await notify(deletedElsewhere + forgotten + (changedSettings.map { [.settingsChanged($0)] } ?? []))
   }
 }
 
@@ -1011,7 +1333,7 @@ extension CKSyncEngine.PendingDatabaseChange {
   }
 }
 
-// Files written before 1.2 have no local-only or copy marks.
+// Files written before 1.2 have no local-only or copy marks; before 1.3, no media marks.
 extension ClipSync.MirrorEntry {
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -1019,6 +1341,8 @@ extension ClipSync.MirrorEntry {
     systemFields = try container.decodeIfPresent(Data.self, forKey: .systemFields)
     isLocalOnly = try container.decodeIfPresent(Bool.self, forKey: .isLocalOnly) ?? false
     hasUnsentCopy = try container.decodeIfPresent(Bool.self, forKey: .hasUnsentCopy) ?? false
+    filesPending = try container.decodeIfPresent(Bool.self, forKey: .filesPending) ?? false
+    dismissedAt = try container.decodeIfPresent(Date.self, forKey: .dismissedAt)
   }
 }
 

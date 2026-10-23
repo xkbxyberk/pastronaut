@@ -33,6 +33,11 @@ public enum ClipRecord {
     static let schemaVersion = "schemaVersion"
   }
 
+  static let fields = [
+    Field.text, Field.sourceApp, Field.sourceAppName, Field.collections, Field.title, Field.kind, Field.sourceDevice,
+    Field.firstCopiedAt, Field.lastCopiedAt, Field.modifiedAt, Field.pinned, Field.titleModifiedAt, Field.schemaVersion
+  ]
+
   public static func recordID(forClipID clipID: String, key: SyncKey) -> CKRecord.ID {
     CKRecord.ID(recordName: key.recordName(forClipID: clipID), zoneID: zoneID)
   }
@@ -127,6 +132,8 @@ public enum CollectionRecord {
     static let modifiedAt = "modifiedAt"
     static let schemaVersion = "schemaVersion"
   }
+
+  static let fields = [Field.name, Field.order, Field.createdAt, Field.modifiedAt, Field.schemaVersion]
 
   public static func recordID(for collectionID: String) -> CKRecord.ID {
     CKRecord.ID(recordName: collectionID, zoneID: ClipRecord.zoneID)

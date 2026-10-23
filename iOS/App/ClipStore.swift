@@ -138,7 +138,8 @@ final class ClipStore {
     #if DEBUG
     if DemoClips.isOn { return }
     #endif
-    let latest = await sync.clips.inHistoryOrder
+    // Images and files arrive from 1.3 on; shown once this app can (PLAN-1.3 step 3).
+    let latest = await sync.clips.filter { !$0.isMedia }.inHistoryOrder
     let latestCollections = await sync.collections
     let changed = latest != clips
     if changed {

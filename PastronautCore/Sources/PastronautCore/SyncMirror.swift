@@ -38,22 +38,42 @@ extension ClipSync.PersistedState {
     collections.filter { $0.value.systemFields == nil && !$0.value.isLocalOnly }.map(\.key)
   }
 
+  /// Bytes of the media clips in iCloud (or on their way), apart from `clipID`. Every device sees every upload, so
+  /// this is the account's total.
+  func mediaBytesInCloud(excluding clipID: String? = nil) -> Int {
+    entries.reduce(0) { total, item in
+      guard item.key != clipID, !item.value.isLocalOnly, let media = item.value.clip.media else { return total }
+      return total + media.totalBytes
+    }
+  }
+
+  /// Whether a media clip may go to iCloud under the shared settings: syncing on, small enough, and room left in
+  /// the iCloud budget. Text clips always may.
+  func mediaAllows(_ clip: Clip, inCloudBesides used: Int? = nil) -> Bool {
+    guard let media = clip.media else { return true }
+    let settings = sharedSettings.media
+    let used = used ?? mediaBytesInCloud(excluding: clip.id)
+    return settings.syncEnabled && media.totalBytes <= settings.maxItemBytes
+      && used + media.totalBytes <= settings.cloudBudgetBytes
+  }
+
   /// Merges a local change into the mirror; false when the clip is not eligible or nothing changed.
   /// A later copy time marks the clip as copied here since the server last had it. A capture (the text was
   /// copied again) is new data and syncs even for a local-only clip; tapping, pinning or editing one doesn't.
   ///
   /// `privacy` keeps matching clips (codes, cards) on this device: a new one is local-only from the start, and a
-  /// capture never sends one.
+  /// capture never sends one. Media the shared settings don't allow (off, too large, budget full) is kept the
+  /// same way.
   mutating func stage(
     _ clip: Clip,
     policy: SyncPolicy,
     isCapture: Bool = false,
     privacy: PrivacyOptions = PrivacyOptions()
   ) -> Bool {
-    guard policy.isEligible(clip.text) else { return false }
+    guard policy.isEligible(clip) else { return false }
     let existing = entries[clip.id]
     let merged = existing.map { $0.clip.merged(with: clip) } ?? clip
-    let allowed = privacy.allows(merged.text, pinned: merged.pinned)
+    let allowed = privacy.allows(merged.privacyText, pinned: merged.pinned) && mediaAllows(merged)
     let isLocalOnly = existing.map { $0.isLocalOnly && !(isCapture && allowed) } ?? !allowed
     let releases = existing?.isLocalOnly == true && !isLocalOnly
     guard merged != existing?.clip || releases else { return false }
@@ -62,9 +82,31 @@ extension ClipSync.PersistedState {
       clip: merged,
       systemFields: existing?.systemFields,
       isLocalOnly: isLocalOnly,
-      hasUnsentCopy: (existing?.hasUnsentCopy ?? false) || copiedAgain
+      hasUnsentCopy: (existing?.hasUnsentCopy ?? false) || copiedAgain,
+      filesPending: existing?.filesPending ?? false,
+      // Copied again here: shown again.
+      dismissedAt: copiedAgain ? nil : existing?.dismissedAt
     )
     legacyTombstones.remove(clip.id)
+    return true
+  }
+
+  // MARK: - Hidden on this device (Mac history limit)
+
+  /// The Mac's history limit removed clips that came from another device: they leave this Mac's history but stay
+  /// in iCloud and on the other devices. A later copy of one shows it again.
+  mutating func dismiss(_ clipIDs: some Sequence<String>, at date: Date = .now) {
+    for id in clipIDs where entries[id] != nil {
+      entries[id]?.dismissedAt = date
+    }
+  }
+
+  /// Whether a fetched version of a clip should be reported to the app. A hidden clip stays hidden unless it was
+  /// copied after it was hidden; then it is shown again.
+  mutating func reveals(_ clip: Clip) -> Bool {
+    guard let dismissedAt = entries[clip.id]?.dismissedAt else { return true }
+    guard clip.lastCopiedAt > dismissedAt else { return false }
+    entries[clip.id]?.dismissedAt = nil
     return true
   }
 
@@ -106,11 +148,19 @@ extension ClipSync.PersistedState {
   }
 
   /// Clears the local-only marks so the clips and collections are sent again. Returns what was released.
-  /// Clips that `privacy` keeps on this device stay.
+  /// Clips that `privacy` keeps on this device stay, and so does media beyond the shared limits (newest first
+  /// fills the iCloud budget).
   mutating func releaseLocalOnly(privacy: PrivacyOptions = PrivacyOptions()) -> LocalOnlyIDs {
     var released = localOnly
-    released.clips = released.clips.filter { id in
-      entries[id].map { privacy.allows($0.clip.text, pinned: $0.clip.pinned) } ?? false
+    let candidates = released.clips
+      .compactMap { entries[$0]?.clip }
+      .filter { privacy.allows($0.privacyText, pinned: $0.pinned) }
+      .sorted { $0.lastCopiedAt > $1.lastCopiedAt }
+    var used = mediaBytesInCloud()
+    released.clips = []
+    for clip in candidates where mediaAllows(clip, inCloudBesides: used) {
+      released.clips.insert(clip.id)
+      used += clip.media?.totalBytes ?? 0
     }
     for id in released.clips {
       entries[id]?.isLocalOnly = false

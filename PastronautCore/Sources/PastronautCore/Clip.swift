@@ -6,6 +6,10 @@ public struct Clip: Codable, Equatable, Hashable, Identifiable, Sendable {
   public enum Kind: String, Codable, Sendable {
     case text
     case url
+    /// Since 1.3: clips with `media`. Their `text` is empty; what to show and search is in `media`.
+    case image
+    case pdf
+    case file
   }
 
   public enum Device: String, Codable, Sendable {
@@ -14,9 +18,13 @@ public struct Clip: Codable, Equatable, Hashable, Identifiable, Sendable {
     case ipad
   }
 
-  /// Stable identity derived from the content (see `Clip.id(for:)`), shared by every device.
+  /// Stable identity derived from the content (see `Clip.id(for:)` and `ClipMedia.clipID(for:)`), shared by every
+  /// device.
   public let id: String
+  /// The copied text; empty for media clips.
   public let text: String
+  /// An image, PDF or files (since 1.3); nil for text. The bytes are in a `MediaStore`, not here.
+  public private(set) var media: ClipMedia?
   public var kind: Kind
   /// Bundle identifier of the app the text was copied from (Mac uses it for icons and ignore rules).
   public var sourceApp: String?
@@ -63,6 +71,59 @@ public struct Clip: Codable, Equatable, Hashable, Identifiable, Sendable {
     self.pinned = pinned
     self.collectionIDs = Self.normalized(collectionIDs)
   }
+
+  /// A media clip. `contentHashes` are the SHA-256 of what was copied, before any conversion, so copying the
+  /// same thing again finds this clip (see `ClipMedia.clipID(for:)`).
+  public init(
+    media: ClipMedia,
+    contentHashes: [String],
+    sourceApp: String? = nil,
+    sourceAppName: String? = nil,
+    sourceDevice: Device,
+    firstCopiedAt: Date = .now,
+    lastCopiedAt: Date? = nil,
+    modifiedAt: Date? = nil,
+    pinned: Bool = false,
+    collectionIDs: [String] = []
+  ) {
+    self.init(
+      id: ClipMedia.clipID(for: contentHashes), media: media, sourceApp: sourceApp, sourceAppName: sourceAppName,
+      sourceDevice: sourceDevice, firstCopiedAt: firstCopiedAt, lastCopiedAt: lastCopiedAt, modifiedAt: modifiedAt,
+      pinned: pinned, collectionIDs: collectionIDs
+    )
+  }
+
+  /// A media clip read back from iCloud, which knows the ID but not the original content.
+  init(
+    id: String,
+    media: ClipMedia,
+    sourceApp: String?,
+    sourceAppName: String?,
+    sourceDevice: Device,
+    firstCopiedAt: Date,
+    lastCopiedAt: Date?,
+    modifiedAt: Date?,
+    pinned: Bool,
+    collectionIDs: [String]
+  ) {
+    self.id = id
+    self.text = ""
+    self.media = media
+    self.kind = media.kind
+    self.sourceApp = sourceApp
+    self.sourceAppName = sourceAppName
+    self.sourceDevice = sourceDevice
+    self.firstCopiedAt = firstCopiedAt
+    self.lastCopiedAt = lastCopiedAt ?? firstCopiedAt
+    self.modifiedAt = modifiedAt ?? lastCopiedAt ?? firstCopiedAt
+    self.pinned = pinned
+    self.collectionIDs = Self.normalized(collectionIDs)
+  }
+
+  public var isMedia: Bool { media != nil }
+
+  /// What the privacy filters (codes, cards) look at: the text, or the text read from an image or PDF.
+  public var privacyText: String { media?.recognizedText ?? text }
 
   /// The longest title kept, in characters.
   public static let maxTitleLength = 100
@@ -144,6 +205,10 @@ public struct Clip: Codable, Equatable, Hashable, Identifiable, Sendable {
     result.firstCopiedAt = min(firstCopiedAt, other.firstCopiedAt)
     result.lastCopiedAt = max(lastCopiedAt, other.lastCopiedAt)
     result.modifiedAt = max(modifiedAt, other.modifiedAt)
+    // The content is the same; a version that read the text in it (OCR) knows more.
+    if result.media?.recognizedText == nil, let text = older.media?.recognizedText {
+      result.media?.recognizedText = text
+    }
     // The title follows its own last change, so a version that never had one doesn't erase it.
     if (older.titleModifiedAt ?? .distantPast) > (newer.titleModifiedAt ?? .distantPast) {
       result.takeTitle(from: older)
@@ -155,10 +220,10 @@ public struct Clip: Codable, Equatable, Hashable, Identifiable, Sendable {
 extension Clip {
   enum CodingKeys: String, CodingKey {
     case id, text, kind, sourceApp, sourceAppName, sourceDevice, firstCopiedAt, lastCopiedAt, modifiedAt, pinned
-    case collectionIDs, title, titleModifiedAt
+    case collectionIDs, title, titleModifiedAt, media
   }
 
-  /// Files written before collections existed have no `collectionIDs`; before 1.2, no title.
+  /// Files written before collections existed have no `collectionIDs`; before 1.2, no title; before 1.3, no media.
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     id = try container.decode(String.self, forKey: .id)
@@ -174,6 +239,7 @@ extension Clip {
     collectionIDs = Self.normalized(try container.decodeIfPresent([String].self, forKey: .collectionIDs) ?? [])
     title = try container.decodeIfPresent(String.self, forKey: .title)
     titleModifiedAt = try container.decodeIfPresent(Date.self, forKey: .titleModifiedAt)
+    media = try container.decodeIfPresent(ClipMedia.self, forKey: .media)
   }
 
   public func encode(to encoder: Encoder) throws {
@@ -193,5 +259,6 @@ extension Clip {
     }
     try container.encodeIfPresent(title, forKey: .title)
     try container.encodeIfPresent(titleModifiedAt, forKey: .titleModifiedAt)
+    try container.encodeIfPresent(media, forKey: .media)
   }
 }

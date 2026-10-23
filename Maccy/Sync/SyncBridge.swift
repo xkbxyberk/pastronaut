@@ -388,6 +388,8 @@ final class SyncBridge {
     for change in changes {
       switch change {
       case .upserted(let clip):
+        // Images and files arrive from 1.3 on; this Mac shows them once it can paste them (PLAN-1.3 step 2).
+        if clip.isMedia { continue }
         if let local = decorator(for: clip.id) {
           if local.isPinned != clip.pinned {
             History.shared.togglePin(local)
@@ -401,6 +403,8 @@ final class SyncBridge {
         }
       case .collectionUpserted, .collectionDeleted:
         // Shown from the mirror by refreshCollections.
+        break
+      case .settingsChanged, .appIconsChanged:
         break
       }
     }
