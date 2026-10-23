@@ -1,6 +1,7 @@
 # 1.3 planı: iPhone 1.3 ve Mac 1.3 birlikte (taslak)
 
-> Tarih: 2026-10-23. Durum: **Adım 0, 1 ve 2 (Mac) bitti; Mac'te elle bir bakış ve Adım 3 (iPhone) onay bekliyor.**
+> Tarih: 2026-10-23. Durum: **Adım 0, 1 ve 2 (Mac) bitti. Adım 3 (iPhone): tasarım önerisi hazır, onay bekliyor**
+> (tuval: https://claude.ai/artifact/L86xntrWRgjkSfAyegqo8V).
 > Bu belge eski `MAC-1.3-PLAN.md`'nin yerini alır. iPhone 1.2'nin kararları ve bulguları (K1–K17)
 > `IOS-1.2-PLAN.md`'de kalır. Yayın adımları `SURUM.md`'de.
 
