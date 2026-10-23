@@ -830,7 +830,8 @@ private struct ClipTile: View {
       .padding(.horizontal, 9)
       .frame(height: 20)
       .frame(maxWidth: .infinity)
-      .background(onDark ? AnyShapeStyle(Color.white.opacity(0.1)) : AnyShapeStyle(content.kind.strip))
+      // Opaque, over the key's own color (white, or about #4A4A4C in dark mode).
+      .background(onDark ? AnyShapeStyle(Color.white.opacity(0.1)) : AnyShapeStyle(content.kind.strip(onLight: 0xFFFFFF, onDark: 0x4A4A4C)))
     }
     .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70, alignment: .topLeading)
     .clipShape(RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous))

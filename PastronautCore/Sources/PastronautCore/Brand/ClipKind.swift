@@ -37,11 +37,26 @@ public enum ClipKind: String, CaseIterable, Sendable {
     return Color.pastronaut(light: light, dark: light)
   }
 
-  /// The band along the bottom of a card or keyboard tile: the kind's color, faint (1.3). The label on it uses
-  /// `tint`, which keeps at least 4.5:1 on it in both modes.
+  /// The band along the bottom of a card (1.3): the kind's color, faint, mixed into the card's own color so it is
+  /// opaque. A see-through band showed the page and the card's corner through it and looked like a separate piece.
+  /// The label on it uses `tint`, which keeps at least 4.5:1 on it in both modes.
   public var strip: Color {
+    strip(onLight: 0xFFFFFF, onDark: 0x1C1C1E)
+  }
+
+  /// The band over another surface (a keyboard key), given that surface's light and dark colors.
+  public func strip(onLight lightBase: Int, onDark darkBase: Int) -> Color {
     let (light, dark) = Self.palette[self] ?? (0x4F5868, 0xA3ADBB)
-    return Color.pastronaut(light: light, dark: dark, lightOpacity: 0.13, darkOpacity: 0.2)
+    return Color.pastronaut(light: Self.mix(lightBase, light, 0.13), dark: Self.mix(darkBase, dark, 0.2))
+  }
+
+  /// `amount` of `color` over `base`, as one opaque color.
+  static func mix(_ base: Int, _ color: Int, _ amount: Double) -> Int {
+    func channel(_ shift: Int) -> Int {
+      let b = Double((base >> shift) & 0xFF), c = Double((color >> shift) & 0xFF)
+      return Int((b * (1 - amount) + c * amount).rounded())
+    }
+    return channel(16) << 16 | channel(8) << 8 | channel(0)
   }
 
   /// Hex RGB pairs (light, dark). `color` has none: it shows the clip's own color. The light colors are deep

@@ -19,6 +19,10 @@ struct CardGrid<Card: View>: View {
 }
 
 struct ClipCard: View {
+  /// One shape for the card's surface, its clip, and the previews iOS lifts on touch and hold or drag; with a
+  /// rectangle there, the lifted card showed its bottom strip outside its corners.
+  static let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+
   let clip: Clip
   var isEditing = false
   var isSelected = false
@@ -72,11 +76,15 @@ struct ClipCard: View {
     }
     .frame(height: height)
     .foregroundStyle(foreground)
-    .background(background, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    .background(background)
+    // Picture, text and strip become one layer first, then that layer is cut to the card's shape.
+    .compositingGroup()
+    .clipShape(Self.shape)
+    .contentShape(.contextMenuPreview, Self.shape)
+    .contentShape(.dragPreview, Self.shape)
     .overlay {
       if isEditing || isHighlighted {
-        RoundedRectangle(cornerRadius: 20, style: .continuous)
+        Self.shape
           .strokeBorder(isSelected || isHighlighted ? Color.accentColor : Color.clear, lineWidth: 3)
       }
     }

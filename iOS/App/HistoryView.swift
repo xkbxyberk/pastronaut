@@ -738,8 +738,11 @@ struct HistoryView: View {
                 copy(clip)
               }
             }
+            // The lifted card keeps the card's shape (see `ClipCard.shape`).
+            .contentShape(.contextMenuPreview, ClipCard.shape)
             .contextMenu { if !isEditing { clipMenu(clip) } }
             // Drag a card into another app (iPhone and iPad): its text, or its image or files.
+            .contentShape(.dragPreview, ClipCard.shape)
             .modifier(ClipDrag(clip: clip))
             .accessibilityIdentifier(clip.pinned ? "card.pinned" : "card.unpinned")
             .id(clip.id)
