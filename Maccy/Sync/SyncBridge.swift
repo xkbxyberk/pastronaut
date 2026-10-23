@@ -27,15 +27,20 @@ extension Settings.PaneIdentifier {
 final class SyncBridge {
   static let shared = SyncBridge()
 
-  private let sync: ClipSync
-  private let logger = Logger(label: "com.xkbxyberk.pastronaut.sync")
+  let sync: ClipSync
+  let logger = Logger(label: "com.xkbxyberk.pastronaut.sync")
   private var isApplyingRemote = false
+  /// The history limit or "Keep history" is removing items (see `pruning`).
+  private var isPruning = false
+  /// Apps whose icon was offered to `ClipSync` this session.
+  var publishedIcons: Set<String> = []
   /// Serializes calls into the actor so a delete and a re-add of the same clip keep their order.
   private var tail: Task<Void, Never>?
   private var observation: Task<Void, Never>?
   private var privacyObservation: Task<Void, Never>?
+  private var mediaSettingsObservation: Task<Void, Never>?
 
-  private var isEnabled: Bool { Defaults[.iCloudSync] && !isApplyingRemote }
+  var isEnabled: Bool { Defaults[.iCloudSync] && !isApplyingRemote }
 
   private init() {
     let directory = URL.applicationSupportDirectory.appending(path: "Pastronaut")
@@ -72,7 +77,13 @@ final class SyncBridge {
     }
     privacyObservation = Task { [weak self] in
       for await _ in Defaults.updates(.syncSkipOneTimeCodes, .syncSkipCardNumbers, .syncPinnedOnly, initial: false) {
+        await self?.sendSharedSettings()
         await self?.applyPrivacyChange()
+      }
+    }
+    mediaSettingsObservation = Task { [weak self] in
+      for await _ in Defaults.updates(.mediaSyncEnabled, .mediaMaxItemBytes, .mediaCloudBudgetBytes, initial: false) {
+        await self?.sendSharedSettings()
       }
     }
   }
@@ -93,7 +104,7 @@ final class SyncBridge {
     guard Defaults[.iCloudSync] else { return }
     let privacy = privacy
     let blocked = await sync.clips
-      .filter { $0.sourceDevice == .mac && !privacy.allows($0.text, pinned: $0.isKept) }
+      .filter { $0.sourceDevice == .mac && !privacy.allows($0.privacyText, pinned: $0.isKept) }
       .map(\.id)
     if !blocked.isEmpty {
       logger.info("Privacy change removes \(blocked.count) clips from iCloud")
@@ -145,10 +156,12 @@ final class SyncBridge {
         await SyncBridge.shared.apply(changes)
       }
       await sync.start()
+      await sync.pruneMedia()
       await refreshCollections()
       uploadExistingHistory()
       // Catch up on changes made while this app was closed; the engine alone waits for a push.
       try? await sync.syncNow()
+      await reconcileSharedSettings()
     } else {
       await sync.setChangeHandler(nil)
       await sync.stop()
@@ -176,15 +189,26 @@ final class SyncBridge {
 
   func didAdd(_ item: HistoryItem) {
     scheduleRemovalIfOneTimeCode(item)
-    guard isEnabled, let clip = Self.clip(for: item, modifiedAt: item.lastCopiedAt),
-          privacy.allows(clip.text, pinned: clip.pinned || SyncedCollections.shared.isKept(item)) else { return }
+    guard isEnabled else { return }
+    if !item.universalClipboard { publishIcon(for: item.application) }
+    guard let clip = Self.clip(for: item, modifiedAt: item.lastCopiedAt) else {
+      didAddMedia(item)
+      return
+    }
+    guard privacy.allows(clip.text, pinned: clip.pinned || SyncedCollections.shared.isKept(item)) else { return }
     // A copy: the pin and collections iCloud already has for this text stay (this Mac may have had no pin key
     // left for it, and it doesn't keep collections itself).
     enqueue { await $0.recordCopy(clip) }
   }
 
   func didChangePin(_ item: HistoryItem) {
-    guard isEnabled, let clip = Self.clip(for: item, modifiedAt: .now) else { return }
+    guard isEnabled else { return }
+    if let id = item.pastronautMediaID {
+      let pinned = item.pin != nil
+      enqueue { await $0.modify(clipID: id) { $0.pinned = pinned } }
+      return
+    }
+    guard let clip = Self.clip(for: item, modifiedAt: .now) else { return }
     if privacy.allows(clip.text, pinned: clip.pinned || SyncedCollections.shared.isKept(item)) {
       let pinned = clip.pinned
       enqueue { await $0.modify(clipID: clip.id, fallback: clip) { $0.pinned = pinned } }
@@ -196,9 +220,36 @@ final class SyncBridge {
 
   func willDelete(_ items: [HistoryItem]) {
     guard isEnabled else { return }
-    let ids = items.compactMap(Self.clipID(of:))
+    // The history limit takes only this Mac's own copies out of iCloud; copies from other devices leave this
+    // Mac's history but stay in iCloud and on those devices.
+    let (ids, dismissed) = Self.removals(of: items, pruning: isPruning)
+    if !dismissed.isEmpty {
+      enqueue { await $0.dismiss(ids: dismissed) }
+    }
     guard !ids.isEmpty else { return }
     enqueue { await $0.delete(ids: ids) }
+  }
+
+  /// Clip IDs to delete from iCloud, and those only to hide here: the history limit hides copies from other
+  /// devices instead of deleting them.
+  static func removals(of items: [HistoryItem], pruning: Bool) -> (delete: [String], dismiss: [String]) {
+    var delete: [String] = [], dismiss: [String] = []
+    for item in items {
+      guard let id = clipID(of: item) else { continue }
+      if pruning && item.isFromIPhone {
+        dismiss.append(id)
+      } else {
+        delete.append(id)
+      }
+    }
+    return (delete, dismiss)
+  }
+
+  /// Runs removals made by the history limit or "Keep history" (see `willDelete`).
+  func pruning(_ body: () -> Void) {
+    isPruning = true
+    defer { isPruning = false }
+    body()
   }
 
   /// Clear (unpinned items): clips in a collection are kept, like pinned ones, so they stay in iCloud and
@@ -222,11 +273,18 @@ final class SyncBridge {
       enqueue { await $0.delete(ids: [previousClipID]) }
     }
     if let clip, privacy.allows(clip.text, pinned: clip.pinned) {
-      // The edited text is a new clip; it stays in the old one's collections.
+      // The edited text is a new clip; it stays in the old one's collections and keeps its title.
+      let itemID = item.persistentModelID
       enqueue { sync in
         var edited = clip
         if let previousClipID, let previous = await sync.clip(withID: previousClipID) {
           edited.collectionIDs = previous.collectionIDs
+          edited.takeTitle(from: previous)
+          if let title = previous.title {
+            await MainActor.run {
+              History.shared.allItems.first { $0.item.persistentModelID == itemID }?.item.title = title
+            }
+          }
         }
         await sync.upsert(edited)
       }
@@ -235,19 +293,26 @@ final class SyncBridge {
 
   // MARK: - Collections
 
-  /// Text this Mac may sync can go into a collection; images, files and blocked text can't.
+  /// Text this Mac may sync, and images and files that went to iCloud, can go into a collection; other images
+  /// and files and blocked text can't.
   func canCollect(_ item: HistoryItem) -> Bool {
-    guard Defaults[.iCloudSync], let text = Self.syncableText(of: item) else { return false }
+    guard Defaults[.iCloudSync] else { return false }
+    if item.pastronautMediaID != nil { return true }
+    guard let text = Self.syncableText(of: item) else { return false }
     // Putting something in a collection is a decision to keep it, like a pin.
     return privacy.allows(text, pinned: true)
   }
 
   func setMembership(_ isMember: Bool, of items: [HistoryItem], in collectionID: String) {
-    let clips = items.filter(canCollect).compactMap { Self.clip(for: $0, modifiedAt: $0.lastCopiedAt) }
-    guard !clips.isEmpty else { return }
+    // Media clips change only as iCloud has them (`modify` without a fallback).
+    let changes: [(id: String, fallback: Clip?)] = items.filter(canCollect).compactMap { item in
+      if let id = item.pastronautMediaID { return (id, nil) }
+      return Self.clip(for: item, modifiedAt: item.lastCopiedAt).map { ($0.id, $0) }
+    }
+    guard !changes.isEmpty else { return }
     enqueue { sync in
-      for clip in clips {
-        await sync.modify(clipID: clip.id, fallback: clip) { clip in
+      for change in changes {
+        await sync.modify(clipID: change.id, fallback: change.fallback) { clip in
           if isMember {
             clip.collectionIDs.append(collectionID)
           } else {
@@ -365,9 +430,14 @@ final class SyncBridge {
     logger.info("Uploading \(clips.count) existing clips")
     // As copies, so pins and collections iCloud has stay.
     enqueue { await $0.recordCopies(clips) }
+    // Icons of the apps in the history, so the iPhone can show where clips came from.
+    let apps = Set(History.shared.allItems.filter { !$0.item.universalClipboard }.compactMap(\.item.application))
+    for app in apps.prefix(100) {
+      publishIcon(for: app)
+    }
   }
 
-  private func enqueue(_ operation: @escaping @Sendable (ClipSync) async -> Void) {
+  func enqueue(_ operation: @escaping @Sendable (ClipSync) async -> Void) {
     let previous = tail
     let sync = sync
     tail = Task {
@@ -388,12 +458,19 @@ final class SyncBridge {
     for change in changes {
       switch change {
       case .upserted(let clip):
-        // Images and files arrive from 1.3 on; this Mac shows them once it can paste them (PLAN-1.3 step 2).
-        if clip.isMedia { continue }
         if let local = decorator(for: clip.id) {
           if local.isPinned != clip.pinned {
             History.shared.togglePin(local)
           }
+          applyTitle(of: clip, to: local.item)
+          // Copied again on another device: it moves up here too.
+          if clip.lastCopiedAt > local.item.lastCopiedAt {
+            local.item.lastCopiedAt = clip.lastCopiedAt
+            History.shared.reorder(local)
+          }
+        } else if clip.isMedia {
+          // Shown once its files are here; `ClipSync` reports it again when they arrive.
+          if sync.media.hasFiles(for: clip) { insertMedia(clip) }
         } else {
           insert(clip)
         }
@@ -404,13 +481,16 @@ final class SyncBridge {
       case .collectionUpserted, .collectionDeleted:
         // Shown from the mirror by refreshCollections.
         break
-      case .settingsChanged, .appIconsChanged:
+      case .settingsChanged(let settings):
+        applySharedSettings(settings)
+      case .appIconsChanged:
+        // This Mac shows its own apps' icons.
         break
       }
     }
   }
 
-  private func decorator(for clipID: String) -> HistoryItemDecorator? {
+  func decorator(for clipID: String) -> HistoryItemDecorator? {
     History.shared.allItems.first { Self.clipID(of: $0.item) == clipID }
   }
 
@@ -429,18 +509,47 @@ final class SyncBridge {
     item.application = clip.sourceApp
     item.firstCopiedAt = clip.firstCopiedAt
     item.lastCopiedAt = clip.lastCopiedAt
+    // Without a pin key left the item stays unpinned here, but it is kept (`SyncedCollections.isKept`).
     if clip.pinned, let pin = HistoryItem.availablePins.randomElement() {
       item.pin = pin
     }
-    item.title = item.generateTitle()
+    item.title = clip.title ?? item.generateTitle()
     History.shared.add(item)
+  }
+
+  /// A title given on another device (or taken away) shows here.
+  private func applyTitle(of clip: Clip, to item: HistoryItem) {
+    guard clip.titleModifiedAt != nil else { return }
+    let title = clip.title ?? (clip.isMedia ? Self.mediaTitle(of: clip) : item.generateTitle())
+    if item.title != title { item.title = title }
+  }
+
+  /// Gives an item a title (or removes it with nil) here and on the other devices.
+  func setTitle(_ title: String?, of item: HistoryItem) {
+    guard Defaults[.iCloudSync], let id = Self.clipID(of: item) else { return }
+    let fallback = Self.clip(for: item, modifiedAt: item.lastCopiedAt)
+    let isMedia = item.pastronautMediaID != nil
+    if let title {
+      item.title = title
+    } else if !isMedia {
+      item.title = item.generateTitle()
+    }
+    enqueue { sync in
+      await sync.modify(clipID: id, fallback: fallback) { $0.setTitle(title) }
+      if isMedia, title == nil, let clip = await sync.clip(withID: id) {
+        let untitled = SyncBridge.mediaTitle(of: clip)
+        await MainActor.run { SyncBridge.shared.decorator(for: id)?.item.title = untitled }
+      }
+      try? await sync.sendNow()
+    }
   }
 
   // MARK: - Mapping
 
-  /// Only plain-text items sync; images and files stay on this Mac.
+  /// Plain text by its hash; images and files by the ID they got when they went to iCloud (1.3). Other images
+  /// and files stay on this Mac.
   static func clipID(of item: HistoryItem) -> String? {
-    syncableText(of: item).map(Clip.id(for:))
+    item.pastronautMediaID ?? syncableText(of: item).map(Clip.id(for:))
   }
 
   static func clip(for item: HistoryItem, modifiedAt: Date) -> Clip? {
@@ -460,7 +569,7 @@ final class SyncBridge {
   }
 
   /// Readable app name for other devices, which cannot resolve a Mac bundle identifier.
-  private static func appName(for bundleIdentifier: String) -> String? {
+  static func appName(for bundleIdentifier: String) -> String? {
     guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else { return nil }
     return FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: "")
   }

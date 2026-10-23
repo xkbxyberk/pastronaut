@@ -66,6 +66,7 @@
 		DA13D7D02C19F8C300FA9E23 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = DA13D7CF2C19F8C300FA9E23 /* Defaults */; };
 		67CFBF7B8D2615BB1336A127 /* PastronautCore in Frameworks */ = {isa = PBXBuildFile; productRef = B072D60DDB83FC6A4050547E /* PastronautCore */; };
 		413D7FD3F22A45C693CF685F /* SyncBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */; };
+		CC9E9C9DAFE56C21028D040E /* SyncMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = B576224D7E67C7F47F43D1D2 /* SyncMedia.swift */; };
 		A1C0FFEE0000000000000032 /* OnboardingWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000031 /* OnboardingWindow.swift */; };
 		A1C0FFEE0000000000000042 /* PopupExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000041 /* PopupExtras.swift */; };
 		A1C0FFEE0000000000000044 /* Collections.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000043 /* Collections.swift */; };
@@ -92,6 +93,7 @@
 		DA1969212C3F6C6800258481 /* HistoryItemAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1969202C3F6C6800258481 /* HistoryItemAction.swift */; };
 		DA1EDE432045B35300479723 /* HistoryDecoratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1EDE422045B35300479723 /* HistoryDecoratorTests.swift */; };
 		A93B57DA7C55E0283705CBEF /* SyncBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D97C13765AAE02C98427FD /* SyncBridgeTests.swift */; };
+		E7C63C478AA9C4C181057F6D /* SyncMediaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F50E35B20068A8EC993C46 /* SyncMediaTests.swift */; };
 		DA20FA722B082DD600056DD5 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA20FA712B082DD600056DD5 /* Notifier.swift */; };
 		DA20FA742B082E0100056DD5 /* Knock.caf in Resources */ = {isa = PBXBuildFile; fileRef = DA20FA732B082E0100056DD5 /* Knock.caf */; };
 		DA20FA762B082E0800056DD5 /* Write.caf in Resources */ = {isa = PBXBuildFile; fileRef = DA20FA752B082E0800056DD5 /* Write.caf */; };
@@ -280,6 +282,7 @@
 		DA00992F256411F90030E697 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		3787E55D54393A96440E4474 /* PastronautCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = PastronautCore; sourceTree = "<group>"; };
 		9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBridge.swift; sourceTree = "<group>"; };
+		B576224D7E67C7F47F43D1D2 /* SyncMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncMedia.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000031 /* OnboardingWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindow.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000041 /* PopupExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopupExtras.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000043 /* Collections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collections.swift; sourceTree = "<group>"; };
@@ -332,6 +335,7 @@
 		DA1969202C3F6C6800258481 /* HistoryItemAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryItemAction.swift; sourceTree = "<group>"; };
 		DA1EDE422045B35300479723 /* HistoryDecoratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDecoratorTests.swift; sourceTree = "<group>"; };
 		86D97C13765AAE02C98427FD /* SyncBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBridgeTests.swift; sourceTree = "<group>"; };
+		C2F50E35B20068A8EC993C46 /* SyncMediaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncMediaTests.swift; sourceTree = "<group>"; };
 		DA20FA712B082DD600056DD5 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
 		DA20FA732B082E0100056DD5 /* Knock.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Knock.caf; sourceTree = "<group>"; };
 		DA20FA752B082E0800056DD5 /* Write.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Write.caf; sourceTree = "<group>"; };
@@ -728,6 +732,7 @@
 			isa = PBXGroup;
 			children = (
 				9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */,
+				B576224D7E67C7F47F43D1D2 /* SyncMedia.swift */,
 				A1C0FFEE0000000000000031 /* OnboardingWindow.swift */,
 				A1C0FFEE0000000000000041 /* PopupExtras.swift */,
 				A1C0FFEE0000000000000043 /* Collections.swift */,
@@ -821,6 +826,7 @@
 				DA360DB21E3DF137005C6F6B /* HistoryTests.swift */,
 				DA1EDE422045B35300479723 /* HistoryDecoratorTests.swift */,
 				86D97C13765AAE02C98427FD /* SyncBridgeTests.swift */,
+				C2F50E35B20068A8EC993C46 /* SyncMediaTests.swift */,
 				DAFE2DE8268A9B1B00990986 /* HistoryItemTests.swift */,
 				DA384E85232746D800603999 /* SearchTests.swift */,
 				DA696BD12401EEE900DE80CF /* SorterTests.swift */,
@@ -1175,6 +1181,7 @@
 				DA3CE8001E44A62500B3AA98 /* ClipboardTests.swift in Sources */,
 				DA1EDE432045B35300479723 /* HistoryDecoratorTests.swift in Sources */,
 				A93B57DA7C55E0283705CBEF /* SyncBridgeTests.swift in Sources */,
+				E7C63C478AA9C4C181057F6D /* SyncMediaTests.swift in Sources */,
 				DAE2850223225BD90080E394 /* ColorImageTests.swift in Sources */,
 				DA384E86232746D800603999 /* SearchTests.swift in Sources */,
 				DA696BD22401EEE900DE80CF /* SorterTests.swift in Sources */,
@@ -1244,6 +1251,7 @@
 				2FD499452FFC489400149F02 /* MovableByWindowBackgroundModifier.swift in Sources */,
 				DAAEB196219694AE00A7883C /* About.swift in Sources */,
 				413D7FD3F22A45C693CF685F /* SyncBridge.swift in Sources */,
+				CC9E9C9DAFE56C21028D040E /* SyncMedia.swift in Sources */,
 				A1C0FFEE0000000000000032 /* OnboardingWindow.swift in Sources */,
 				A1C0FFEE0000000000000042 /* PopupExtras.swift in Sources */,
 				A1C0FFEE0000000000000044 /* Collections.swift in Sources */,

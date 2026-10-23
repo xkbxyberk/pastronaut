@@ -205,7 +205,7 @@ enum HistoryRetention {
       age.isExpired(lastCopiedAt: $0.item.lastCopiedAt, pinned: $0.isPinned || SyncedCollections.shared.isKept($0.item), now: now)
     }
     guard !expired.isEmpty else { return }
-    expired.forEach(AppState.shared.history.delete)
+    SyncBridge.shared.pruning { expired.forEach(AppState.shared.history.delete) }
   }
 
   @MainActor
@@ -523,6 +523,28 @@ struct HistoryItemContextMenu: View {
       }
     }
     CollectionsContextMenu(item: item)
+    if Defaults[.iCloudSync], SyncBridge.clipID(of: item.item) != nil {
+      let hasTitle = SyncedCollections.shared.hasTitle(item.item)
+      Button {
+        AppState.shared.popup.close()
+        if let title = CollectionPrompt.askTitle(initial: hasTitle ? item.item.title : "") {
+          SyncBridge.shared.setTitle(title, of: item.item)
+        }
+      } label: {
+        if hasTitle {
+          Label { Text("Edit Title…", tableName: "Pastronaut") } icon: { Image(systemName: "character.cursor.ibeam") }
+        } else {
+          Label { Text("Add Title…", tableName: "Pastronaut") } icon: { Image(systemName: "character.cursor.ibeam") }
+        }
+      }
+      if hasTitle {
+        Button {
+          SyncBridge.shared.setTitle(nil, of: item.item)
+        } label: {
+          Label { Text("Remove Title", tableName: "Pastronaut") } icon: { Image(systemName: "xmark.circle") }
+        }
+      }
+    }
     if Self.isFiltered {
       Button {
         Self.reveal(item)

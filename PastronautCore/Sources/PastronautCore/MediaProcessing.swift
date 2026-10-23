@@ -113,13 +113,37 @@ public enum MediaProcessing {
     UTType(type)?.conforms(to: .image) ?? false
   }
 
-  /// A file name for an image copied without one ("Image 2026-10-23 at 10.42.heic").
+  /// A file name for an image copied without one ("Image 2026-10-23 at 10.42.08.heic").
   public static func defaultName(forImageOfType type: String, at date: Date = .now) -> String {
+    defaultName(prefix: "Image", type: type, at: date)
+  }
+
+  /// A file name for content copied without one: "<prefix> 2026-10-23 at 10.42.08.<extension of type>".
+  public static func defaultName(prefix: String, type: String, at date: Date = .now) -> String {
     let formatter = DateFormatter()
     formatter.locale = Locale(identifier: "en_US_POSIX")
     formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
     let ext = UTType(type)?.preferredFilenameExtension ?? "png"
-    return "Image \(formatter.string(from: date)).\(ext)"
+    return "\(prefix) \(formatter.string(from: date)).\(ext)"
+  }
+
+  /// The image as PNG, for apps that don't take HEIC or JPEG from the pasteboard. Orientation applied.
+  public static func png(of imageData: Data) -> Data? {
+    guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
+          let size = pixelSize(of: imageData) else { return nil }
+    let options: [CFString: Any] = [
+      kCGImageSourceCreateThumbnailFromImageAlways: true,
+      kCGImageSourceThumbnailMaxPixelSize: max(size.width, size.height),
+      kCGImageSourceCreateThumbnailWithTransform: true
+    ]
+    guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+    return encode(image, as: .png, quality: 1)
+  }
+
+  /// A decoded image for text recognition.
+  public static func cgImage(of imageData: Data) -> CGImage? {
+    guard let source = CGImageSourceCreateWithData(imageData as CFData, nil) else { return nil }
+    return CGImageSourceCreateImageAtIndex(source, 0, nil)
   }
 
   // MARK: - Encoding

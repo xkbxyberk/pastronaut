@@ -52,7 +52,7 @@ struct SyncSettingsPane: View {
       } header: {
         Text(verbatim: "iCloud")
       } footer: {
-        Text("Text clips up to 100 KB are synced to your private iCloud database and shown in the Pastronaut keyboard on iPhone. Images, files and copies excluded by Ignore rules stay on this Mac.", tableName: "Pastronaut")
+        Text("Text clips up to 100 KB, images and files are synced to your private iCloud database and shown in Pastronaut on iPhone. Copies excluded by Ignore rules stay on this Mac.", tableName: "Pastronaut")
           .foregroundStyle(.secondary)
       }
 
@@ -69,6 +69,8 @@ struct SyncSettingsPane: View {
       } header: {
         Text("Privacy", tableName: "Pastronaut")
       } footer: {
+        Text("These switches apply to all your devices.", tableName: "Pastronaut")
+          .foregroundStyle(.secondary)
         Label {
           Text("Clip text and collection names are encrypted on this Mac before they reach iCloud (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved. Copies from password managers are never synced.", tableName: "Pastronaut")
         } icon: {
@@ -79,6 +81,8 @@ struct SyncSettingsPane: View {
           Text("Privacy Policy", tableName: "Pastronaut")
         }
       }
+
+      MediaSettingsSection(isEnabled: isEnabled, status: status)
 
       CollectionsSettingsSection()
 
@@ -198,5 +202,73 @@ enum QRCode {
     let image = NSImage(size: NSSize(width: size, height: size))
     image.addRepresentation(representation)
     return image
+  }
+}
+
+/// Sync › Images & Files (1.3). Everything but the image quality is shared by all devices (ClipSync.sharedSettings).
+struct MediaSettingsSection: View {
+  let isEnabled: Bool
+  let status: SyncStatus?
+  @Default(.mediaSyncEnabled) private var syncsMedia
+  @Default(.mediaQuality) private var quality
+  @Default(.mediaMaxItemBytes) private var maxItemBytes
+  @Default(.mediaCloudBudgetBytes) private var cloudBudgetBytes
+
+  var body: some View {
+    Section {
+      Toggle(isOn: $syncsMedia) {
+        VStack(alignment: .leading, spacing: 2) {
+          Text("Sync images and files", tableName: "Pastronaut")
+          Text("Images, PDFs and files you copy go to iCloud and your other devices.", tableName: "Pastronaut")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+      }
+      Group {
+        Picker(selection: $quality) {
+          Text("Optimized", tableName: "Pastronaut").tag(MediaQuality.optimized.rawValue)
+          Text("Original", tableName: "Pastronaut").tag(MediaQuality.original.rawValue)
+        } label: {
+          VStack(alignment: .leading, spacing: 2) {
+            Text("Image quality", tableName: "Pastronaut")
+            Text("Optimized saves images as HEIC, at most 4,096 pixels on the long side. This Mac's own setting.", tableName: "Pastronaut")
+              .font(.caption)
+              .foregroundStyle(.secondary)
+              .fixedSize(horizontal: false, vertical: true)
+          }
+        }
+        Picker(selection: $maxItemBytes) {
+          ForEach(MediaSettings.maxItemChoices, id: \.self) { Text(verbatim: Self.size($0)).tag($0) }
+        } label: {
+          Text("Largest item", tableName: "Pastronaut")
+        }
+        Picker(selection: $cloudBudgetBytes) {
+          ForEach(MediaSettings.cloudBudgetChoices, id: \.self) { Text(verbatim: Self.size($0)).tag($0) }
+        } label: {
+          Text("iCloud space", tableName: "Pastronaut")
+        }
+        LabeledContent {
+          Text("\(Self.size(status?.mediaBytesInCloud ?? 0)) of \(Self.size(cloudBudgetBytes))", tableName: "Pastronaut")
+        } label: {
+          Text("Used in iCloud", tableName: "Pastronaut")
+        }
+      }
+      .disabled(!syncsMedia)
+    } header: {
+      Text("Images & Files", tableName: "Pastronaut")
+    } footer: {
+      VStack(alignment: .leading, spacing: 6) {
+        Text("Every device downloads all images and files, up to the iCloud space above. Apart from image quality, these settings apply to all your devices. Larger items, and images and files copied before this update, stay on this Mac.", tableName: "Pastronaut")
+        Text("The first time you copy a file from Desktop, Documents or Downloads, macOS asks whether Pastronaut may read it. Without that, the file stays on this Mac.", tableName: "Pastronaut")
+      }
+      .foregroundStyle(.secondary)
+      .fixedSize(horizontal: false, vertical: true)
+    }
+    .disabled(!isEnabled)
+  }
+
+  static func size(_ bytes: Int) -> String {
+    ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .decimal)
   }
 }

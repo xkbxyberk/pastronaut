@@ -290,6 +290,12 @@ public actor ClipSync {
 
   // MARK: - Media (since 1.3)
 
+  /// Whether a media clip copied here would go to iCloud now (shared settings: on, size, budget). Lets the Mac
+  /// skip keeping a sync copy of what will stay on the Mac anyway.
+  public func allowsMedia(_ clip: Clip) -> Bool {
+    state.mediaAllows(clip)
+  }
+
   /// Takes clips out of this device's history while they stay in iCloud and on the other devices: the Mac's
   /// history limit does this for clips copied elsewhere. They are reported again only when copied again later.
   public func dismiss(ids: some Sequence<String>) {

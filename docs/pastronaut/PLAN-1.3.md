@@ -1,6 +1,6 @@
 # 1.3 planı: iPhone 1.3 ve Mac 1.3 birlikte (taslak)
 
-> Tarih: 2026-10-23. Durum: **Adım 0 (prototip) ve Adım 1 (çekirdek) bitti; Adım 2 (Mac) onay bekliyor.**
+> Tarih: 2026-10-23. Durum: **Adım 0, 1 ve 2 (Mac) bitti; Mac'te elle bir bakış ve Adım 3 (iPhone) onay bekliyor.**
 > Bu belge eski `MAC-1.3-PLAN.md`'nin yerini alır. iPhone 1.2'nin kararları ve bulguları (K1–K17)
 > `IOS-1.2-PLAN.md`'de kalır. Yayın adımları `SURUM.md`'de.
 
@@ -59,6 +59,32 @@ Arayüzsüz; `PastronautCore` 174 test (24'ü yeni, `MediaTests`), `MaccyTests` 
   geri gelir.
 - **Uygulamalar şimdilik medyayı göstermiyor:** Mac köprüsü ve iPhone listesi medya öğelerini atlıyor (Adım 2 ve 3'te
   açılacak). Henüz hiçbir uygulama medya göndermiyor.
+
+## Adım 2 sonuçları (Mac, 2026-10-23)
+`MaccyTests` 118 test (9'u yeni, `SyncMediaTests`), çekirdek 174 test geçti; Mac ve iPhone derleniyor. Gerçek kopyalarla
+ve iCloud'la deneme henüz yapılmadı: Debug derlemesi gerçek veriyi açar (kullanıcıya sorulur), asıl deneme Adım 4.
+
+- **Gönderme** (`Maccy/Sync/SyncMedia.swift`): Panodaki görsel (Optimized ise HEIC), PDF verisi ve Finder'da
+  kopyalanan dosyalar (kopyalandığı anda okunur; klasörler ve sınırı aşanlar Mac'te kalır) ana iş parçacığı dışında
+  okunur, küçük resim ve metin (görselde Vision, PDF'te PDFKit) çıkarılır, gizlilik süzgeçlerinden ve paylaşılan
+  sınırlardan geçerse gönderilir. Öğe, gönderildiği kimliği (`com.xkbxyberk.pastronaut.media-id`) yanında saklar;
+  yeniden kopyalanınca aynı öğe öne çıkar. Universal Clipboard'dan gelen görseller gönderilmez (gönderen cihaz kendi
+  eşitler). 1.3'ten önce kopyalanan görseller ve dosyalar gönderilmez.
+- **Alma:** Görsel kendi biçimiyle ve PNG olarak (her uygulama alsın diye), PDF ve dosyalar eşitleme deposundaki
+  dosya olarak geçmişe eklenir; dosyaları inmemiş öğe, dosyalar gelince eklenir.
+- **Başlıklar:** iPhone'da verilen başlık Mac'te görünür; menüde "Başlık Ekle…", "Başlığı Düzenle…", "Başlığı
+  Kaldır" (eşitleme açıkken). Düzenlenen metin başlığını korur.
+- **Hatalar:** iCloud'da sabitli öğe, Mac'te sabitleme harfi kalmasa da korunur (geçmiş sınırı silmez). Başka
+  cihazda yeniden kopyalanan öğe Mac'te öne çıkar (`History.reorder`).
+- **Budama (karar 3):** Geçmiş sınırı ve "Geçmişi sakla" süresi, başka cihazdan gelen öğeleri yalnızca Mac'ten
+  kaldırır (`ClipSync.dismiss`); Mac'in kendi kopyalarını iCloud'dan siler.
+- **Ortak ayarlar:** Gizlilik anahtarları ve Görseller ve Dosyalar (eşitle, en büyük öğe, iCloud alanı) bütün
+  cihazlarda ortak; görsel kalitesi Mac'in kendi ayarı. İlk açılışta iCloud'da hiç değiştirilmemişse Mac'teki eski
+  anahtarlar herkesin olur.
+- **Simgeler:** Mac, geçmişteki ve yeni kopyalardaki uygulamaların simgelerini (96 px PNG) bir kez gönderir.
+- **Ayarlar › Eşitleme:** "Görseller ve Dosyalar" bölümü (kullanılan iCloud alanıyla), metinler Türkçe.
+- **Maccy dosyalarına dokunuş:** `History.swift`'te geçmiş sınırı `SyncBridge.pruning` içinde çalışır ve
+  `reorder` eklendi (ikisi de "// Pastronaut" işaretli).
 
 ## 0. Kısaca
 - **Sürümler:** 1.3 = iPhone 1.3 (derleme 5) + Mac 1.3 (derleme 2).

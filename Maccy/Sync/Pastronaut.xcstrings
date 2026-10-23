@@ -950,17 +950,6 @@
         }
       }
     },
-    "Text clips up to 100 KB are synced to your private iCloud database and shown in the Pastronaut keyboard on iPhone. Images, files and copies excluded by Ignore rules stay on this Mac.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "100 KB'a kadar metin öğeleri özel iCloud veritabanına eşitlenir ve iPhone'daki Pastronaut klavyesinde görünür. Görseller, dosyalar ve Yok Say kurallarına takılan kopyalar bu Mac'te kalır."
-          }
-        }
-      }
-    },
     "Text that looks like a card number or IBAN stays on this Mac.": {
       "extractionState": "manual",
       "localizations": {
@@ -1595,6 +1584,237 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gizlilik Politikası"
+          }
+        }
+      }
+    },
+    "Shown instead of the item's first line, on all your devices.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm cihazlarında öğenin ilk satırı yerine gösterilir."
+          }
+        }
+      }
+    },
+    "Title": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlık"
+          }
+        }
+      }
+    },
+    "Save": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydet"
+          }
+        }
+      }
+    },
+    "Edit Title…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlığı Düzenle…"
+          }
+        }
+      }
+    },
+    "Add Title…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlık Ekle…"
+          }
+        }
+      }
+    },
+    "Remove Title": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlığı Kaldır"
+          }
+        }
+      }
+    },
+    "Text clips up to 100 KB, images and files are synced to your private iCloud database and shown in Pastronaut on iPhone. Copies excluded by Ignore rules stay on this Mac.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 KB'a kadar metin öğeleri, görseller ve dosyalar özel iCloud veritabanına eşitlenir ve iPhone'daki Pastronaut'ta görünür. Yok Say kurallarına takılan kopyalar bu Mac'te kalır."
+          }
+        }
+      }
+    },
+    "These switches apply to all your devices.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu anahtarlar tüm cihazlarında geçerlidir."
+          }
+        }
+      }
+    },
+    "Sync images and files": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görselleri ve dosyaları eşitle"
+          }
+        }
+      }
+    },
+    "Images, PDFs and files you copy go to iCloud and your other devices.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyaladığın görseller, PDF'ler ve dosyalar iCloud'a ve diğer cihazlarına gider."
+          }
+        }
+      }
+    },
+    "Optimized": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optimize"
+          }
+        }
+      }
+    },
+    "Original": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orijinal"
+          }
+        }
+      }
+    },
+    "Image quality": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görsel kalitesi"
+          }
+        }
+      }
+    },
+    "Optimized saves images as HEIC, at most 4,096 pixels on the long side. This Mac's own setting.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optimize, görselleri uzun kenarı en fazla 4.096 piksel olan HEIC olarak kaydeder. Yalnızca bu Mac'in ayarıdır."
+          }
+        }
+      }
+    },
+    "Largest item": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En büyük öğe"
+          }
+        }
+      }
+    },
+    "iCloud space": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud alanı"
+          }
+        }
+      }
+    },
+    "%@ of %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ / %2$@"
+          }
+        }
+      }
+    },
+    "Used in iCloud": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud'da kullanılan"
+          }
+        }
+      }
+    },
+    "Images & Files": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görseller ve Dosyalar"
+          }
+        }
+      }
+    },
+    "Every device downloads all images and files, up to the iCloud space above. Apart from image quality, these settings apply to all your devices. Larger items, and images and files copied before this update, stay on this Mac.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her cihaz, yukarıdaki iCloud alanına kadar tüm görselleri ve dosyaları indirir. Görsel kalitesi dışında bu ayarlar tüm cihazlarında geçerlidir. Daha büyük öğeler ve bu güncellemeden önce kopyalanan görseller ile dosyalar bu Mac'te kalır."
+          }
+        }
+      }
+    },
+    "The first time you copy a file from Desktop, Documents or Downloads, macOS asks whether Pastronaut may read it. Without that, the file stays on this Mac.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masaüstü, Belgeler ya da İndirilenler'den ilk kez bir dosya kopyaladığında macOS, Pastronaut'un onu okumasına izin verip vermeyeceğini sorar. İzin vermezsen dosya bu Mac'te kalır."
           }
         }
       }

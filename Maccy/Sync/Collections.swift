@@ -20,6 +20,11 @@ final class SyncedCollections {
   private(set) var membership: [String: [String]] = [:]
   /// iCloud sync is on, so collections can be used.
   private(set) var isAvailable = false
+  /// Clips pinned in iCloud. One this Mac couldn't pin (no pin key left) is still kept, so the history limit
+  /// doesn't remove it from iCloud and from the iPhone.
+  private(set) var pinnedInCloud: Set<String> = []
+  /// Clips with a title of their own (given here or on another device).
+  private(set) var titled: Set<String> = []
 
   private init() {}
 
@@ -30,6 +35,10 @@ final class SyncedCollections {
       let ids = clip.collectionIDs.filter(known.contains)
       if !ids.isEmpty { membership[clip.id] = ids }
     }
+    let pinned = Set(clips.filter(\.pinned).map(\.id))
+    if pinned != pinnedInCloud { pinnedInCloud = pinned }
+    let titled = Set(clips.filter { $0.title != nil }.map(\.id))
+    if titled != self.titled { self.titled = titled }
     if collections != self.collections { self.collections = collections }
     if membership != self.membership { self.membership = membership }
     if isAvailable != self.isAvailable { self.isAvailable = isAvailable }
@@ -46,10 +55,15 @@ final class SyncedCollections {
     collectionIDs(of: item).contains(collectionID)
   }
 
-  /// In a collection: history limits, "Keep history" and Clear leave it alone, like a pinned item.
+  /// In a collection, or pinned in iCloud: history limits, "Keep history" and Clear leave it alone, like a
+  /// pinned item.
   func isKept(_ item: HistoryItem) -> Bool {
-    guard !membership.isEmpty else { return false }
-    return !collectionIDs(of: item).isEmpty
+    guard !membership.isEmpty || !pinnedInCloud.isEmpty, let id = SyncBridge.clipID(of: item) else { return false }
+    return membership[id] != nil || pinnedInCloud.contains(id)
+  }
+
+  func hasTitle(_ item: HistoryItem) -> Bool {
+    SyncBridge.clipID(of: item).map(titled.contains) ?? false
   }
 
   func count(in collectionID: String) -> Int {
@@ -79,6 +93,24 @@ enum CollectionPrompt {
     NSApp.activate(ignoringOtherApps: true)
     guard alert.runModal() == .alertFirstButtonReturn else { return nil }
     return ClipCollection.cleanName(field.stringValue)
+  }
+
+  /// Asks for an item's title (shown instead of its first line, on every device); nil when cancelled or empty.
+  static func askTitle(initial: String) -> String? {
+    let alert = NSAlert()
+    alert.messageText = String(localized: "Title", table: "Pastronaut")
+    alert.informativeText = String(localized: "Shown instead of the item's first line, on all your devices.", table: "Pastronaut")
+    alert.addButton(withTitle: String(localized: "Save", table: "Pastronaut"))
+    alert.addButton(withTitle: String(localized: "Cancel", table: "Pastronaut"))
+    let field = NSTextField(string: initial)
+    field.placeholderString = String(localized: "Title", table: "Pastronaut")
+    field.frame = NSRect(x: 0, y: 0, width: 260, height: 24)
+    alert.accessoryView = field
+    alert.window.initialFirstResponder = field
+    NSApp.activate(ignoringOtherApps: true)
+    guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+    let title = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    return title.isEmpty ? nil : String(title.prefix(Clip.maxTitleLength))
   }
 
   /// Asks for a name, creates the collection and puts `items` in it.

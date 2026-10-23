@@ -175,7 +175,8 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
   @MainActor
   private func limitHistorySize(to maxSize: Int) {
     if allUnpinnedItems.count >= maxSize {
-      allUnpinnedItems[maxSize...].filter { !SyncedCollections.shared.isKept($0.item) }.forEach(delete) // Pastronaut
+      let excess = allUnpinnedItems[maxSize...].filter { !SyncedCollections.shared.isKept($0.item) } // Pastronaut
+      SyncBridge.shared.pruning { excess.forEach(delete) } // Pastronaut
     }
   }
 
@@ -521,6 +522,19 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
     updateUnpinnedShortcuts()
     if item.isUnpinned {
       AppState.shared.navigator.scrollTarget = item.id
+    }
+  }
+
+  // Pastronaut: the item was copied again on another device; it moves to where a copy here would put it.
+  @MainActor
+  func reorder(_ item: HistoryItemDecorator) {
+    guard item.isUnpinned, allUnpinnedItems.contains(item) else { return }
+    allUnpinnedItems.removeAll { $0 == item }
+    insertUnpinned(item)
+    if searchQuery.isEmpty {
+      updateUnpinnedShortcuts()
+    } else {
+      updateSearchResults()
     }
   }
 
