@@ -130,11 +130,23 @@ public extension PrivacyOptions {
   static let phoneCodesKey = "keepOneTimeCodesOnDevice"
   static let phoneCardsKey = "keepCardNumbersOnDevice"
 
+  /// Since 1.3 the switches are shared by every device (`SharedSyncSettings`); the app keeps this copy for the
+  /// keyboard and the Share extension, which save without it.
+  static let phonePinnedOnlyKey = "syncPinnedOnly"
+
   static func onPhone(in defaults: UserDefaults?) -> PrivacyOptions {
     PrivacyOptions(
       skipOneTimeCodes: defaults?.bool(forKey: phoneCodesKey) ?? false,
-      skipCardNumbers: defaults?.bool(forKey: phoneCardsKey) ?? false
+      skipCardNumbers: defaults?.bool(forKey: phoneCardsKey) ?? false,
+      pinnedOnly: defaults?.bool(forKey: phonePinnedOnlyKey) ?? false
     )
+  }
+
+  /// Keeps the copy for the extensions in step with the shared settings.
+  static func writeOnPhone(_ options: PrivacyOptions, in defaults: UserDefaults?) {
+    defaults?.set(options.skipOneTimeCodes, forKey: phoneCodesKey)
+    defaults?.set(options.skipCardNumbers, forKey: phoneCardsKey)
+    defaults?.set(options.pinnedOnly, forKey: phonePinnedOnlyKey)
   }
 }
 

@@ -1,9 +1,9 @@
 import PastronautCore
 import SwiftUI
 
-/// All / Mac / iPhone and one chip for collections, which opens a menu (choose, new, rename, delete). The bar never
-/// scrolls: when space runs short the chips drop their counts, then their titles. On iOS 26 and later: glass
-/// capsules whose tinted selection flows between them.
+/// All, Mac, iPhone, Images, Files, and one chip for collections, which opens a menu (choose, new, rename, delete).
+/// Centred; only "All" is written out, the others are symbols (VoiceOver reads their names). On iOS 26 and later:
+/// glass capsules whose tinted selection flows between them.
 struct ScopeBar: View {
   @Environment(ClipStore.self) private var store
   @Environment(CollectionActions.self) private var actions
@@ -17,20 +17,24 @@ struct ScopeBar: View {
 
   var body: some View {
     if #available(iOS 26.0, *) {
-      ViewThatFits(in: .horizontal) {
-        glassRow(.full)
-        glassRow(.noCounts)
-        glassRow(.iconsOnly)
-      }
-      .padding(.horizontal, 16)
-      .frame(maxWidth: .infinity, alignment: .leading)
+      glassRow(.iconsOnly)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity, alignment: .center)
       .accessibilityElement(children: .contain)
       .accessibilityIdentifier("deviceFilter")
     } else {
       HStack(spacing: 8) {
         Picker("Device", selection: $scope) {
           ForEach(DeviceFilter.allCases) { filter in
-            Text(filter.title).tag(HistoryScope.device(filter))
+            Group {
+              if filter == .all {
+                Text(filter.title)
+              } else {
+                Image(systemName: filter.systemImage)
+                  .accessibilityLabel(Text(filter.title))
+              }
+            }
+            .tag(HistoryScope.device(filter))
           }
         }
         .pickerStyle(.segmented)
@@ -83,11 +87,13 @@ struct ScopeBar: View {
       withAnimation(.bouncy(duration: 0.35)) { scope = .device(filter) }
     } label: {
       HStack(spacing: 5) {
-        Image(systemName: filter.systemImage)
-          .font(.footnote.weight(.semibold))
-        if density != .iconsOnly {
+        if filter == .all {
           Text(filter.title)
             .lineLimit(1)
+        } else {
+          Image(systemName: filter.systemImage)
+            .font(.footnote.weight(.semibold))
+            .frame(minWidth: 20)
         }
         if density == .full, let count = counts[filter] {
           Text(count, format: .number)
@@ -97,8 +103,8 @@ struct ScopeBar: View {
       }
       .font(.subheadline.weight(.semibold))
       .foregroundStyle(isSelected ? Color.onAccent : Color.primary)
-      .padding(.horizontal, density == .iconsOnly ? 11 : 12)
-      .padding(.vertical, 9)
+      .padding(.horizontal, filter == .all ? 14 : 12)
+      .padding(.vertical, 10)
       .contentShape(Capsule())
     }
     .buttonStyle(.plain)

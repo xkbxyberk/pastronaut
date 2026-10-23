@@ -17,7 +17,7 @@ enum SpotlightIndex {
   }
 
   static func update(with clips: [Clip]) {
-    let pinned = isEnabled ? clips.filter(\.pinned) : []
+    let pinned = isEnabled ? clips.filter { $0.pinned && !$0.isMedia } : []
     let signature = pinned.map(\.id).sorted().joined(separator: ",")
     let defaults = UserDefaults.standard
     guard signature != defaults.string(forKey: signatureKey) ?? "" else { return }

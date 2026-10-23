@@ -78,17 +78,6 @@
         }
       }
     },
-    "Pastronaut saves text and links.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pastronaut metin ve bağlantı kaydeder."
-          }
-        }
-      }
-    },
     "Saved to Pastronaut": {
       "extractionState": "manual",
       "localizations": {
@@ -118,6 +107,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eşitlemek için çok büyük"
+          }
+        }
+      }
+    },
+    "Pastronaut saves text, links, images, PDFs and files.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut metin, bağlantı, görsel, PDF ve dosya kaydeder."
+          }
+        }
+      }
+    },
+    "Images and files up to 50 MB can be saved.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "50 MB'a kadar görsel ve dosya kaydedilebilir."
           }
         }
       }

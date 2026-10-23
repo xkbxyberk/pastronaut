@@ -235,64 +235,27 @@ nonisolated enum MediaCapture {
     var hasMedia: Bool { !fileURLs.isEmpty || imageData != nil || pdfData != nil }
   }
 
-  struct Part {
-    var name: String
-    var type: String
-    var data: Data
-    /// What was copied, before conversion (names the clip).
-    var original: Data
-  }
-
   /// The clip, with its files and thumbnail in the store; nil when it may not go to iCloud (too large, budget
   /// full, sync off, a privacy filter, a folder) or can't be read.
   @concurrent
   static func capture(_ source: Source, quality: MediaQuality, privacy: PrivacyOptions, sync: ClipSync) async -> Clip? {
     let settings = await sync.sharedSettings.media
-    guard settings.syncEnabled, let parts = read(source, quality: quality, maxBytes: settings.maxItemBytes) else {
+    guard settings.syncEnabled, let parts = read(source, quality: quality, maxBytes: settings.maxItemBytes),
+          let prepared = await MediaIntake.prepare(
+            parts, sourceApp: source.sourceApp, sourceAppName: source.sourceAppName, device: .mac,
+            copiedAt: source.copiedAt, pinned: source.pinned
+          ) else {
       return nil
     }
-    let files = parts.map { ClipMedia.File(name: $0.name, type: $0.type, data: $0.data) }
-    let kind: Clip.Kind
-    if files.count == 1, MediaProcessing.isImage(files[0].type) {
-      kind = .image
-    } else if files.count == 1, MediaProcessing.isPDF(files[0].type) {
-      kind = .pdf
-    } else {
-      kind = .file
-    }
-    let first = parts[0].data
-    let size = kind == .image ? MediaProcessing.pixelSize(of: first) : nil
-    var text: String?
-    var thumbnail: Data?
-    switch kind {
-    case .image:
-      text = await recognizedText(in: first)
-      thumbnail = MediaProcessing.thumbnail(ofImage: first)
-    case .pdf:
-      text = MediaProcessing.text(inPDF: first)
-      thumbnail = MediaProcessing.thumbnail(ofPDF: first)
-    default:
-      break
-    }
-    let media = ClipMedia(kind: kind, files: files, pixelWidth: size?.width, pixelHeight: size?.height, recognizedText: text)
-    let clip = Clip(
-      media: media, contentHashes: parts.map { ClipMedia.sha256($0.original) }, sourceApp: source.sourceApp,
-      sourceAppName: source.sourceAppName, sourceDevice: .mac, firstCopiedAt: source.copiedAt,
-      lastCopiedAt: source.copiedAt, pinned: source.pinned
-    )
-    guard privacy.allows(clip.privacyText, pinned: clip.pinned), await sync.allowsMedia(clip) else { return nil }
-    do {
-      try sync.media.store(parts.map(\.data), for: clip)
-      if let thumbnail { try sync.media.storeThumbnail(thumbnail, for: clip.id) }
-    } catch {
-      return nil
-    }
-    return clip
+    guard privacy.allows(prepared.clip.privacyText, pinned: prepared.clip.pinned),
+          await sync.allowsMedia(prepared.clip),
+          (try? MediaIntake.store(prepared, in: sync.media)) != nil else { return nil }
+    return prepared.clip
   }
 
   /// The bytes to send. Files are read now: macOS lets this app read a file copied in Finder only while it runs
   /// (and asks once for Desktop, Documents and Downloads).
-  static func read(_ source: Source, quality: MediaQuality, maxBytes: Int) -> [Part]? {
+  static func read(_ source: Source, quality: MediaQuality, maxBytes: Int) -> [MediaIntake.Part]? {
     if !source.fileURLs.isEmpty {
       var total = 0
       for url in source.fileURLs {
@@ -302,30 +265,19 @@ nonisolated enum MediaCapture {
         total += size
         guard total <= maxBytes else { return nil }
       }
-      var parts: [Part] = []
+      var parts: [MediaIntake.Part] = []
       for url in source.fileURLs {
         guard let data = try? Data(contentsOf: url) else { return nil }
-        let name = url.lastPathComponent
-        parts.append(Part(name: name, type: MediaProcessing.type(ofFileNamed: name), data: data, original: data))
+        parts.append(MediaIntake.file(named: url.lastPathComponent, data: data))
       }
       return parts
     }
     if let image = source.imageData {
-      guard let prepared = MediaProcessing.prepared(image, quality: quality), prepared.data.count <= maxBytes else {
-        return nil
-      }
-      let name = MediaProcessing.defaultName(forImageOfType: prepared.type, at: source.copiedAt)
-      return [Part(name: name, type: prepared.type, data: prepared.data, original: image)]
+      return MediaIntake.image(image, quality: quality, maxBytes: maxBytes, copiedAt: source.copiedAt).map { [$0] }
     }
     if let pdf = source.pdfData, pdf.count <= maxBytes {
-      let name = MediaProcessing.defaultName(prefix: "Document", type: UTType.pdf.identifier, at: source.copiedAt)
-      return [Part(name: name, type: UTType.pdf.identifier, data: pdf, original: pdf)]
+      return [MediaIntake.pdf(pdf, copiedAt: source.copiedAt)]
     }
     return nil
-  }
-
-  static func recognizedText(in imageData: Data) async -> String? {
-    guard let image = MediaProcessing.cgImage(of: imageData) else { return nil }
-    return try? await TextRecognition.text(in: image)
   }
 }

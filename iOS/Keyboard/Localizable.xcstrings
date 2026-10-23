@@ -462,6 +462,126 @@
           }
         }
       }
+    },
+    "Image": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görsel"
+          }
+        }
+      }
+    },
+    "PDF": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF"
+          }
+        }
+      }
+    },
+    "File": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya"
+          }
+        }
+      }
+    },
+    "Downloading": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İniyor"
+          }
+        }
+      }
+    },
+    "%lld more files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dosya daha"
+          }
+        }
+      }
+    },
+    "Copied": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalandı"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyala"
+          }
+        }
+      }
+    },
+    "Needs Full Access": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam Erişim Gerekiyor"
+          }
+        }
+      }
+    },
+    "Not on this iPhone yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz bu iPhone'da değil"
+          }
+        }
+      }
+    },
+    "Touch and hold the text field, then choose Paste.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yazı alanına basılı tut, sonra Yapıştır'ı seç."
+          }
+        }
+      }
+    },
+    "Images and files need Allow Full Access. Text always types.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görseller ve dosyalar için Tam Erişim gerekir. Metinler her zaman yazılır."
+          }
+        }
+      }
+    },
+    "Open Pastronaut once to download it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirmesi için Pastronaut'u bir kez aç."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

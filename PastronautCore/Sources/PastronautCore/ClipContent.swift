@@ -12,6 +12,20 @@ public enum ClipContent: Equatable, Sendable {
   case address(String)
   case code
   case text
+  /// Since 1.3: clips with media. Never detected in text; they come from `Clip.media` (`init(clip:)`).
+  case image
+  case pdf
+  case file
+
+  /// What a clip is: its media kind, or what its text looks like.
+  public init(clip: Clip) {
+    switch clip.media?.kind {
+    case .image?: self = .image
+    case .pdf?: self = .pdf
+    case .file?, .text?, .url?: self = .file
+    case nil: self.init(clip.text)
+    }
+  }
 
   public init(_ text: String) {
     let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -53,6 +67,16 @@ public enum ClipContent: Equatable, Sendable {
     case .address: .address
     case .code: .code
     case .text: .text
+    case .image: .image
+    case .pdf: .pdf
+    case .file: .file
+    }
+  }
+
+  public var isMedia: Bool {
+    switch self {
+    case .image, .pdf, .file: true
+    default: false
     }
   }
 

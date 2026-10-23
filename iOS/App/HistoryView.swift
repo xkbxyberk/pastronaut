@@ -122,6 +122,9 @@ struct HistoryView: View {
         case .clipboardEmpty: showToast("The clipboard has no text", systemImage: "doc.questionmark")
         case .tooLarge: showToast("Too large to sync", systemImage: "exclamationmark.triangle")
         case .noTextFound: showToast("No text found on these pages", systemImage: "doc.questionmark")
+        case .stillDownloading: showToast("Still downloading from iCloud", systemImage: "icloud.and.arrow.down")
+        case .keptOnThisIPhone:
+          showToast("Saved on this iPhone only", systemImage: "icloud.slash", for: .seconds(2.6))
         case nil: break
         }
       }
@@ -347,8 +350,9 @@ struct HistoryView: View {
       }
     }
     ToolbarItemGroup(placement: .topBarTrailing) {
-      PasteButton(payloadType: String.self) { strings in
-        Task { @MainActor in store.save(strings.first) }
+      // Text, an image, a PDF or files: whatever the clipboard holds.
+      PasteButton(supportedContentTypes: [.plainText, .url, .image, .pdf, .data]) { providers in
+        Task { @MainActor in store.save(providers: providers) }
       }
       .labelStyle(.iconOnly)
       .buttonBorderShape(.circle)
@@ -566,6 +570,15 @@ struct HistoryView: View {
         Label("Open Link", systemImage: "safari")
       }
     }
+    if let text = clip.media?.recognizedText {
+      Button {
+        store.copyText(text)
+        Haptics.success()
+        showToast("Copied")
+      } label: {
+        Label("Copy Text", systemImage: "text.viewfinder")
+      }
+    }
     Button {
       detail = clip
     } label: {
@@ -588,10 +601,12 @@ struct HistoryView: View {
       Label(clip.title == nil ? "Add Title…" : "Edit Title…", systemImage: "character.cursor.ibeam")
     }
     .accessibilityIdentifier("titleAction")
-    Button {
-      editing = clip
-    } label: {
-      Label("Edit…", systemImage: "pencil")
+    if !clip.isMedia {
+      Button {
+        editing = clip
+      } label: {
+        Label("Edit…", systemImage: "pencil")
+      }
     }
     Button {
       store.togglePin(clip)
@@ -603,7 +618,13 @@ struct HistoryView: View {
       }
     }
     CollectionMenu(clips: [clip])
-    ShareLink(item: clip.text)
+    if clip.isMedia {
+      if MediaFiles.hasFiles(for: clip) {
+        ShareLink(items: MediaFiles.fileURLs(for: clip))
+      }
+    } else {
+      ShareLink(item: clip.text)
+    }
     Divider()
     Button(role: .destructive) {
       deleteWithUndo([clip])
@@ -708,7 +729,8 @@ struct HistoryView: View {
               isEditing: isEditing,
               isSelected: selection.contains(clip.id),
               isHighlighted: highlightID == clip.id,
-              isLocalOnly: store.localOnly.clips.contains(clip.id)
+              isLocalOnly: store.localOnly.clips.contains(clip.id),
+              isDownloading: store.pendingFiles.contains(clip.id)
             ) {
               if isEditing {
                 if selection.contains(clip.id) { selection.remove(clip.id) } else { selection.insert(clip.id) }
@@ -717,8 +739,8 @@ struct HistoryView: View {
               }
             }
             .contextMenu { if !isEditing { clipMenu(clip) } }
-            // Drag a card's text into another app (iPhone and iPad).
-            .draggable(clip.text)
+            // Drag a card into another app (iPhone and iPad): its text, or its image or files.
+            .modifier(ClipDrag(clip: clip))
             .accessibilityIdentifier(clip.pinned ? "card.pinned" : "card.unpinned")
             .id(clip.id)
           }
@@ -786,6 +808,9 @@ struct ClipRow: View {
       let path = url.path().count > 1 ? url.path() : nil
       return (clip.title ?? PreviewStore.shared.preview(for: clip)?.title ?? host, clip.title == nil ? path : host)
     }
+    if clip.isMedia {
+      return (clip.title ?? clip.mediaCaption ?? "", clip.mediaSummary)
+    }
     if let title = clip.title { return (title, clip.preview) }
     let parts = clip.preview.split(whereSeparator: \.isNewline).map(String.init)
     return (parts.first ?? clip.preview, parts.count > 1 ? parts.dropFirst().joined(separator: " ") : nil)
@@ -813,9 +838,13 @@ struct ClipRow: View {
             .lineLimit(1)
         }
         HStack(spacing: 5) {
+          // The kind on a band of its color, like a card's strip.
           Text(content.kindName)
-            .fontWeight(.semibold)
+            .fontWeight(.bold)
             .foregroundStyle(content.kind.tint)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 1)
+            .background(content.kind.strip, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
           Text(verbatim: "·")
           AgeText(date: clip.lastCopiedAt)
           if clip.pinned {
@@ -856,6 +885,8 @@ private struct ScanSheets: ViewModifier {
           showsDocumentScanner = false
           isReadingScan = true
           Task {
+            // The pages are kept as a PDF; the text read from them can be checked and saved as text too.
+            await store.saveScannedPDF(pages)
             let text = await TextRecognition.text(inPages: pages)
             isReadingScan = false
             if let text {
@@ -925,10 +956,13 @@ private struct ClipDialogs: ViewModifier {
 
 // MARK: - Filtering and sections
 
+/// The choices along the top: everything, by device, or by kind (1.3: images; PDFs and files).
 enum DeviceFilter: String, CaseIterable, Identifiable {
   case all
   case mac
   case iphone
+  case images
+  case files
 
   var id: Self { self }
 
@@ -937,6 +971,8 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
     case .all: "All"
     case .mac: "Mac"
     case .iphone: "iPhone"
+    case .images: "Images"
+    case .files: "Files"
     }
   }
 
@@ -945,6 +981,8 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
     case .all: "tray"
     case .mac: "laptopcomputer"
     case .iphone: "iphone"
+    case .images: "photo"
+    case .files: "doc"
     }
   }
 
@@ -953,6 +991,8 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
     case .all: true
     case .mac: clip.sourceDevice == .mac
     case .iphone: clip.sourceDevice != .mac
+    case .images: clip.content == .image
+    case .files: clip.content == .pdf || clip.content == .file
     }
   }
 }
@@ -1048,6 +1088,8 @@ extension ClipSearchToken {
     case .address: "Addresses"
     case .code: "Code"
     case .text: "Text"
+    case .image: "Images"
+    case .file: "Files"
     }
   }
 
@@ -1063,6 +1105,26 @@ extension ClipSearchToken {
     case .address: "mappin.and.ellipse"
     case .code: "chevron.left.forwardslash.chevron.right"
     case .text: "text.alignleft"
+    case .image: "photo"
+    case .file: "doc"
+    }
+  }
+}
+
+/// A card dragged into another app: its text, or its image, PDF or files (with their names).
+private struct ClipDrag: ViewModifier {
+  let clip: Clip
+
+  func body(content: Content) -> some View {
+    if clip.isMedia {
+      content.onDrag {
+        guard let url = MediaFiles.fileURLs(for: clip).first, MediaFiles.hasFiles(for: clip),
+              let provider = NSItemProvider(contentsOf: url) else { return NSItemProvider() }
+        provider.suggestedName = url.lastPathComponent
+        return provider
+      }
+    } else {
+      content.draggable(clip.text)
     }
   }
 }

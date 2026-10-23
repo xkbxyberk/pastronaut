@@ -60,6 +60,81 @@ struct ClipDetailView: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("detailTitle")
+        if clip.isMedia {
+          MediaDetailSection(clip: clip) { copy(clip) }
+          HStack(spacing: 10) {
+            pinButton(clip)
+            deleteButton
+          }
+        } else {
+          textSection(clip)
+        }
+
+        CollectionMenu(clips: [clip]) {
+          CollectionsRow(names: store.collections.filter { clip.isIn($0.id) }.map(\.name))
+        }
+        .buttonStyle(.plain)
+
+        InfoList(
+          clip: clip,
+          isLocalOnly: store.localOnly.clips.contains(clip.id),
+          isDownloading: store.pendingFiles.contains(clip.id)
+        )
+      }
+      .padding()
+    }
+    // Grouped background so the white cards stand out in light mode, like Settings.
+    .background(Color(uiColor: .systemGroupedBackground))
+    .sheet(isPresented: $isEditing) {
+      ClipEditor(text: clip.text) { newText in
+        if let newID = store.edit(clip, to: newText) {
+          clipID = newID
+        }
+      }
+    }
+    .alert(Text(clip.title == nil ? "Add Title" : "Edit Title"), isPresented: $isTitling) {
+      TextField("Title", text: $titleDraft)
+      Button("Save") { store.setTitle(titleDraft, for: clip) }
+      if clip.title != nil {
+        Button("Remove Title", role: .destructive) { store.setTitle(nil, for: clip) }
+      }
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text("Shown instead of the text, and found when you search. The text itself doesn't change.")
+    }
+    .confirmationDialog("Delete this clip?", isPresented: $confirmsDelete, titleVisibility: .visible) {
+      Button("Delete", role: .destructive) {
+        store.delete(clip)
+        dismiss()
+      }
+    } message: {
+      Text("It is removed from all your devices.")
+    }
+  }
+
+  private func pinButton(_ clip: Clip) -> some View {
+    Button {
+      store.togglePin(clip)
+    } label: {
+      ActionTile(title: clip.pinned ? "Unpin" : "Pin", systemImage: clip.pinned ? "pin.slash" : "pin")
+    }
+    .secondaryActionStyle()
+    .tint(.pin)
+  }
+
+  private var deleteButton: some View {
+    Button(role: .destructive) {
+      confirmsDelete = true
+    } label: {
+      ActionTile(title: "Delete", systemImage: "trash")
+    }
+    .secondaryActionStyle()
+    .tint(.red)
+  }
+
+  /// The text, Copy, the smart action, and Share, Pin, Edit, Delete.
+  @ViewBuilder
+  private func textSection(_ clip: Clip) -> some View {
         // Content layer: a plain card. Glass is for the controls around it.
         Text(clip.text)
           .font(clip.content.usesMonospacedFont ? .body.monospaced() : .body)
@@ -94,64 +169,15 @@ struct ClipDetailView: View {
             ActionTile(title: "Share", systemImage: "square.and.arrow.up")
           }
           .secondaryActionStyle()
-          Button {
-            store.togglePin(clip)
-          } label: {
-            ActionTile(title: clip.pinned ? "Unpin" : "Pin", systemImage: clip.pinned ? "pin.slash" : "pin")
-          }
-          .secondaryActionStyle()
-          .tint(.pin)
+          pinButton(clip)
           Button {
             isEditing = true
           } label: {
             ActionTile(title: "Edit", systemImage: "pencil")
           }
           .secondaryActionStyle()
-          Button(role: .destructive) {
-            confirmsDelete = true
-          } label: {
-            ActionTile(title: "Delete", systemImage: "trash")
-          }
-          .secondaryActionStyle()
-          .tint(.red)
+          deleteButton
         }
-
-        CollectionMenu(clips: [clip]) {
-          CollectionsRow(names: store.collections.filter { clip.isIn($0.id) }.map(\.name))
-        }
-        .buttonStyle(.plain)
-
-        InfoList(clip: clip, isLocalOnly: store.localOnly.clips.contains(clip.id))
-      }
-      .padding()
-    }
-    // Grouped background so the white cards stand out in light mode, like Settings.
-    .background(Color(uiColor: .systemGroupedBackground))
-    .sheet(isPresented: $isEditing) {
-      ClipEditor(text: clip.text) { newText in
-        if let newID = store.edit(clip, to: newText) {
-          clipID = newID
-        }
-      }
-    }
-    .alert(Text(clip.title == nil ? "Add Title" : "Edit Title"), isPresented: $isTitling) {
-      TextField("Title", text: $titleDraft)
-      Button("Save") { store.setTitle(titleDraft, for: clip) }
-      if clip.title != nil {
-        Button("Remove Title", role: .destructive) { store.setTitle(nil, for: clip) }
-      }
-      Button("Cancel", role: .cancel) {}
-    } message: {
-      Text("Shown instead of the text, and found when you search. The text itself doesn't change.")
-    }
-    .confirmationDialog("Delete this clip?", isPresented: $confirmsDelete, titleVisibility: .visible) {
-      Button("Delete", role: .destructive) {
-        store.delete(clip)
-        dismiss()
-      }
-    } message: {
-      Text("It is removed from all your devices.")
-    }
   }
 
   private func copy(_ clip: Clip) {
@@ -185,7 +211,7 @@ private struct SmartAction {
     case .address(let address):
       guard let url = Coordinates.directionsURL(to: address) else { return nil }
       (title, systemImage, self.url) = ("Get Directions", "arrow.triangle.turn.up.right.diamond", url)
-    case .color, .code, .text:
+    case .color, .code, .text, .image, .pdf, .file:
       return nil
     }
   }
@@ -268,6 +294,7 @@ private struct CollectionsRow: View {
 private struct InfoList: View {
   let clip: Clip
   let isLocalOnly: Bool
+  var isDownloading = false
 
   var body: some View {
     VStack(spacing: 0) {
@@ -283,13 +310,21 @@ private struct InfoList: View {
         Text(clip.lastCopiedAt, format: .dateTime.day().month().hour().minute())
       }
       Divider()
-      row("Characters") {
-        Text(clip.text.count, format: .number)
+      if let summary = clip.mediaSummary {
+        row("Size") {
+          Text(verbatim: summary)
+        }
+      } else {
+        row("Characters") {
+          Text(clip.text.count, format: .number)
+        }
       }
       Divider()
       row("iCloud") {
         if isLocalOnly {
           Label("Only on This iPhone", systemImage: "icloud.slash")
+        } else if isDownloading {
+          Label("Downloading", systemImage: "icloud.and.arrow.down")
         } else {
           Label("Encrypted", systemImage: "lock")
         }
@@ -371,6 +406,9 @@ private extension ClipContent {
     case .address: "Address"
     case .code: "Code"
     case .text: "Text"
+    case .image: "Image"
+    case .pdf: "PDF"
+    case .file: "File"
     }
   }
 }

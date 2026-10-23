@@ -45,7 +45,10 @@ final class ShareViewController: UIViewController {
 @MainActor
 @Observable
 final class ShareModel {
-  enum State { case saving, saved, savedOffline, nothing, tooLarge, unavailable }
+  enum State { case saving, saved, savedOffline, nothing, tooLarge, tooLargeFile, unavailable }
+
+  /// A shared photo, PDF or file larger than this is not saved: an extension has little memory to read it in.
+  static let maxFileBytes = 50 * MediaSettings.megabyte
 
   /// How long the sheet waits for iCloud. The inbox already has the clips, so after this the app sends them.
   static let uploadWait: Duration = .seconds(8)
@@ -60,6 +63,10 @@ final class ShareModel {
   private(set) var chosenCollection: String?
   private(set) var isFinished = false
   @ObservationIgnored private var saved: [Clip] = []
+  /// Saved images and files wait in the inbox for the app, which sends them (they are too large to send from here
+  /// in the time a share sheet stays open).
+  @ObservationIgnored private var savedMedia: [Clip] = []
+  @ObservationIgnored private var files: SharedClipFiles?
   @ObservationIgnored private var cloud: KeyboardCloud?
 
   var offersCollections: Bool {
@@ -67,7 +74,18 @@ final class ShareModel {
   }
 
   func add(to collection: ClipCollection) {
-    guard !isFinished, let cloud else { return }
+    guard !isFinished else { return }
+    if !savedMedia.isEmpty {
+      withAnimation(.snappy) { chosenCollection = collection.name }
+      // The app adds inbox clips to the collections they carry.
+      for var clip in savedMedia {
+        clip.collectionIDs.append(collection.id)
+        try? files?.appendToInbox(clip)
+      }
+      isFinished = true
+      return
+    }
+    guard let cloud else { return }
     withAnimation(.snappy) { chosenCollection = collection.name }
     let clips = saved
     Task {
@@ -81,7 +99,7 @@ final class ShareModel {
   func save(from items: [NSExtensionItem]) async {
     let texts = await Self.texts(in: items).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     guard !texts.isEmpty else {
-      state = .nothing
+      await saveMedia(from: Attachments(providers: items.flatMap { $0.attachments ?? [] }))
       return
     }
     preview = texts.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.joined(separator: "\n")
@@ -120,6 +138,30 @@ final class ShareModel {
     }
     WidgetCenter.shared.reloadAllTimelines()
     withAnimation(.snappy) { state = uploaded ? .saved : .savedOffline }
+  }
+
+  /// Photos, PDFs and other files (1.3): one clip each, kept in the App Group for the app to send.
+  private func saveMedia(from attachments: Attachments) async {
+    guard let files = SharedClipFiles() else {
+      state = .unavailable
+      return
+    }
+    self.files = files
+    let store = MediaStore(storageDirectory: files.directory)
+    let quality = MediaQuality(rawValue: SharedSettings.defaults?.string(forKey: "mediaQuality") ?? "") ?? .optimized
+    let prepared = await attachments.prepare(quality: quality, maxBytes: Self.maxFileBytes, limit: Self.maxItems)
+    for item in prepared.clips {
+      guard (try? MediaIntake.store(item, in: store)) != nil else { continue }
+      try? files.appendToInbox(item.clip)
+      savedMedia.append(item.clip)
+    }
+    guard !savedMedia.isEmpty else {
+      state = prepared.tooLarge > 0 ? .tooLargeFile : .nothing
+      return
+    }
+    preview = savedMedia.compactMap { $0.title ?? $0.media?.files.first?.name }.prefix(3).joined(separator: ", ")
+    collections = Array(files.currentCollections().prefix(6))
+    withAnimation(.snappy) { state = .savedOffline }
   }
 
   /// Every shared link (Safari shares the page's text too, so links win), otherwise every plain text, otherwise the
@@ -222,7 +264,7 @@ struct ShareView: View {
     case .saving: "arrow.up.circle"
     case .saved, .savedOffline: "checkmark.circle.fill"
     case .nothing: "questionmark.circle"
-    case .tooLarge, .unavailable: "exclamationmark.triangle.fill"
+    case .tooLarge, .tooLargeFile, .unavailable: "exclamationmark.triangle.fill"
     }
   }
 
@@ -230,7 +272,7 @@ struct ShareView: View {
     switch model.state {
     case .saving: .secondary
     case .saved, .savedOffline: .green
-    case .nothing, .tooLarge, .unavailable: .orange
+    case .nothing, .tooLarge, .tooLargeFile, .unavailable: .orange
     }
   }
 
@@ -239,7 +281,7 @@ struct ShareView: View {
     case .saving: "Saving…"
     case .saved, .savedOffline: "Saved to Pastronaut"
     case .nothing: "Nothing to save"
-    case .tooLarge: "Too large to sync"
+    case .tooLarge, .tooLargeFile: "Too large to sync"
     case .unavailable: "Couldn't save"
     }
   }
@@ -247,10 +289,35 @@ struct ShareView: View {
   private var detail: LocalizedStringKey? {
     switch model.state {
     case .savedOffline: "It reaches your Mac the next time Pastronaut opens."
-    case .nothing: "Pastronaut saves text and links."
+    case .nothing: "Pastronaut saves text, links, images, PDFs and files."
     case .tooLarge: "Clips up to 100 KB are synced."
+    case .tooLargeFile: "Images and files up to 50 MB can be saved."
     case .unavailable: "Open Pastronaut once, then share again."
     case .saving, .saved: nil
     }
+  }
+}
+
+/// The share's attachments, read off the main thread (item providers aren't sendable; each is read once).
+struct Attachments: @unchecked Sendable {
+  let providers: [NSItemProvider]
+
+  struct Result: Sendable {
+    var clips: [MediaIntake.Prepared] = []
+    var tooLarge = 0
+  }
+
+  func prepare(quality: MediaQuality, maxBytes: Int, limit: Int) async -> Result {
+    var result = Result()
+    for provider in providers.prefix(limit) {
+      guard let part = await MediaIntake.parts(from: [provider], quality: quality, maxBytes: maxBytes).first else {
+        result.tooLarge += 1
+        continue
+      }
+      if let prepared = await MediaIntake.prepare([part], device: .iphone) {
+        result.clips.append(prepared)
+      }
+    }
+    return result
   }
 }

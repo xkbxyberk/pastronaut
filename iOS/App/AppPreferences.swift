@@ -60,6 +60,10 @@ final class AppPreferences {
   static let shared = AppPreferences()
   static let appearanceKey = "appearance"
   static let onboardingKey = "hasCompletedOnboarding"
+  /// Settings › Images & Files › Image Quality: this iPhone's own (`MediaQuality`).
+  static let mediaQualityKey = "mediaQuality"
+  /// Settings › History › Keep History (`HistoryAge`); forever by default.
+  static let historyAgeKey = "historyAge"
   private static let systemLanguagesKey = "AppleLanguages"
 
   var language: AppLanguage {

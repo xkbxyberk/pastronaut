@@ -26,6 +26,8 @@
 	<string>Pastronaut uses the camera only while you scan text or a document. Nothing is recorded, and the text is read on this iPhone.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Pastronaut can ask for Face ID before showing your clipboard history.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Pastronaut adds an image to Photos only when you choose Save to Photos.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

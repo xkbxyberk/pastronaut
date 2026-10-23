@@ -13,10 +13,8 @@ struct SettingsView: View {
   @AppStorage(AppPreferences.appearanceKey) private var appearance = AppAppearance.system
   @AppStorage(PrivacyCover.recordingKey) private var hidesWhileRecording = true
   @AppStorage(PrivacyCover.switcherKey) private var hidesInSwitcher = false
-  @AppStorage(PrivacyOptions.phoneCodesKey, store: UserDefaults(suiteName: PastronautIDs.appGroup))
-  private var keepsCodes = false
-  @AppStorage(PrivacyOptions.phoneCardsKey, store: UserDefaults(suiteName: PastronautIDs.appGroup))
-  private var keepsCards = false
+  @AppStorage(AppPreferences.historyAgeKey) private var historyAge = HistoryAge.forever.rawValue
+  @State private var pendingHistoryAge: HistoryAge?
   @State private var pausedUntil: Date?
   @State private var isUploadingLocalOnly = false
   @State private var isImporting = false
@@ -141,6 +139,16 @@ struct SettingsView: View {
         .disabled(isUploadingLocalOnly)
         .accessibilityIdentifier("uploadLocalOnly")
       }
+      NavigationLink {
+        MediaSettingsView()
+      } label: {
+        Label {
+          Text("Images & Files")
+        } icon: {
+          SettingsIcon(systemImage: "photo.on.rectangle", color: .pink)
+        }
+      }
+      .accessibilityIdentifier("mediaSettings")
       Button("Sync Now") {
         Task { await store.refresh() }
       }
@@ -150,7 +158,7 @@ struct SettingsView: View {
       if !store.localOnly.clips.isEmpty {
         Text("These clips stayed on this iPhone when iCloud no longer had them (its data was deleted, or the iPhone used another account), or because Privacy keeps them here. They are sent only when you choose Upload to iCloud Again; codes and cards Privacy keeps here stay.")
       }
-      Text("Text clips sync through your private iCloud database. Clip text and collection names are encrypted on this device before upload (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved.")
+      Text("Clips, images and files sync through your private iCloud database. Their contents and collection names are encrypted on this device before upload (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved.")
     }
   }
 
@@ -268,6 +276,41 @@ struct SettingsView: View {
         }
         .accessibilityIdentifier("pauseSaving")
       }
+      Picker(selection: Binding(
+        get: { HistoryAge(rawValue: historyAge) ?? .forever },
+        set: { newAge in
+          let current = HistoryAge(rawValue: historyAge) ?? .forever
+          if newAge.isShorter(than: current) && store.expiredCount(for: newAge) > 0 {
+            pendingHistoryAge = newAge
+          } else {
+            historyAge = newAge.rawValue
+          }
+        }
+      )) {
+        ForEach(HistoryAge.allCases, id: \.self) { age in
+          Text(age.title).tag(age)
+        }
+      } label: {
+        Label {
+          Text("Keep History")
+        } icon: {
+          SettingsIcon(systemImage: "clock.arrow.circlepath", color: .blue)
+        }
+      }
+      .accessibilityIdentifier("historyAge")
+      .confirmationDialog(
+        Text("Delete older clips?"),
+        isPresented: Binding(get: { pendingHistoryAge != nil }, set: { if !$0 { pendingHistoryAge = nil } }),
+        titleVisibility: .visible,
+        presenting: pendingHistoryAge
+      ) { age in
+        Button("Delete \(store.expiredCount(for: age)) Clips", role: .destructive) {
+          historyAge = age.rawValue
+          store.applyHistoryAge()
+        }
+      } message: { _ in
+        Text("Clips copied on this iPhone are deleted everywhere; clips from your Mac only leave this iPhone. Pinned clips and clips in a collection stay.")
+      }
     } header: {
       Text("Clipboard")
     } footer: {
@@ -313,28 +356,45 @@ struct SettingsView: View {
       }
       .disabled(lock.isEnabled)
       .accessibilityIdentifier("hideInSwitcher")
-      Toggle(isOn: $keepsCodes) {
+      // Shared by every device since 1.3: a code copied anywhere stays on the device it was copied on.
+      Toggle(isOn: sharedPrivacy(\.skipOneTimeCodes)) {
         Label {
-          Text("Keep One-Time Codes on This iPhone")
+          Text("Keep One-Time Codes on Their Device")
         } icon: {
           SettingsIcon(systemImage: "number", color: .orange)
         }
       }
-      .onChange(of: keepsCodes) { Task { await store.updatePrivacy() } }
       .accessibilityIdentifier("keepCodes")
-      Toggle(isOn: $keepsCards) {
+      Toggle(isOn: sharedPrivacy(\.skipCardNumbers)) {
         Label {
-          Text("Keep Card Numbers and IBANs on This iPhone")
+          Text("Keep Card Numbers and IBANs on Their Device")
         } icon: {
           SettingsIcon(systemImage: "creditcard", color: .green)
         }
       }
-      .onChange(of: keepsCards) { Task { await store.updatePrivacy() } }
       .accessibilityIdentifier("keepCards")
+      Toggle(isOn: sharedPrivacy(\.pinnedOnly)) {
+        Label {
+          Text("Sync Pinned Clips Only")
+        } icon: {
+          SettingsIcon(systemImage: "pin", color: .pin)
+        }
+      }
+      .accessibilityIdentifier("pinnedOnly")
     } header: {
       Text("Privacy")
     } footer: {
-      Text("While the screen is recorded or shown on another display, your clips are covered. Kept codes and cards are saved here but never sent to iCloud, from now on. Pastronaut asks for \(lock.methodName) when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for \(lock.methodName). Pinned clips can show up when you search your iPhone; choosing one copies it. Search stays off while the lock is on.")
+      Text("While the screen is recorded or shown on another display, your clips are covered. Kept codes and cards are saved on the device they were copied on but never sent to iCloud, from now on; these three switches apply to all your devices, and images count by the text in them. Pastronaut asks for \(lock.methodName) when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for \(lock.methodName). Pinned clips can show up when you search your iPhone; choosing one copies it. Search stays off while the lock is on.")
+    }
+  }
+
+  /// A privacy switch every device shares.
+  private func sharedPrivacy(_ path: WritableKeyPath<SharedSyncSettings, Bool>) -> Binding<Bool> {
+    Binding {
+      store.sharedSettings[keyPath: path]
+    } set: { value in
+      nonisolated(unsafe) let path = path
+      store.updateSharedSettings { $0[keyPath: path] = value }
     }
   }
 

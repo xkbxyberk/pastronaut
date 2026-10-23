@@ -23,13 +23,16 @@ extension ClipContent {
     case .address: "Address"
     case .code: "Code"
     case .text: "Text"
+    case .image: "Image"
+    case .pdf: "PDF"
+    case .file: "File"
     }
   }
 
   var usesMonospacedFont: Bool {
     switch self {
     case .link, .code, .color: true
-    case .email, .phone, .address, .text: false
+    case .email, .phone, .address, .text, .image, .pdf, .file: false
     }
   }
 }
@@ -41,8 +44,12 @@ extension Clip {
 
   var isFromMac: Bool { sourceDevice == .mac }
 
-  /// For list rows: surrounding blank lines (common when copying from Notes) would waste a preview line.
-  var preview: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
+  /// For list rows: surrounding blank lines (common when copying from Notes) would waste a preview line. Media
+  /// clips have no text: their title, the text read from them, or their file names.
+  var preview: String {
+    if isMedia { return title ?? mediaCaption ?? "" }
+    return text.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
 }
 
 /// The kind's symbol in the kind's color on a soft circle of that color, or a swatch for colors. `glass` makes the
@@ -119,7 +126,7 @@ final class ClipContentCache: @unchecked Sendable {
   func content(for clip: Clip) -> ClipContent {
     let key = clip.id as NSString
     if let hit = cache.object(forKey: key) { return hit.content }
-    let content = ClipContent(clip.text)
+    let content = ClipContent(clip: clip)
     cache.setObject(Box(content), forKey: key)
     return content
   }

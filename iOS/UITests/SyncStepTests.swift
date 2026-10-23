@@ -704,6 +704,76 @@ final class SyncStepTests: XCTestCase {
         attachScreenshot(named: "e-pause-menu")
       }
       report(["ok": true])
+    case "shots13":
+      // Design review of 1.3 (images, PDFs, files), made-up clips only (PT_DEMO): cards light and dark, the new
+      // filters, an image's and a PDF's details, an image's menu, and Settings › Images & Files. Ends with the app
+      // closed.
+      defer {
+        XCUIDevice.shared.appearance = .dark
+        app.terminate()
+      }
+      app.launchEnvironment["PT_DEMO"] = "1"
+      app.launchEnvironment["PT_E2E_PREVIEWS"] = "1"
+      app.launchArguments += ["-appearance", "system"]
+      func card(_ kinds: [String]) -> XCUIElement {
+        let predicate = NSPredicate(format: "identifier BEGINSWITH 'card.' AND (label CONTAINS %@ OR label CONTAINS %@)", kinds[0], kinds[1])
+        return app.descendants(matching: .any).matching(predicate).firstMatch
+      }
+      for appearance in [XCUIDevice.Appearance.light, .dark] {
+        XCUIDevice.shared.appearance = appearance
+        app.launch()
+        Thread.sleep(forTimeInterval: 8)
+        let name = appearance == .light ? "light" : "dark"
+        attachScreenshot(named: "m-cards-\(name)")
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "m-cards-\(name)-2")
+        app.terminate()
+      }
+      XCUIDevice.shared.appearance = .light
+      app.launch()
+      Thread.sleep(forTimeInterval: 8)
+      for filter in ["images", "files"] {
+        let chip = app.buttons["filter.\(filter)"].firstMatch
+        if chip.waitForExistence(timeout: 3) {
+          chip.tap()
+          Thread.sleep(forTimeInterval: 1.2)
+          attachScreenshot(named: "m-filter-\(filter)")
+        }
+      }
+      app.buttons["filter.all"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1)
+      for (shotName, kinds) in [("image", ["Image", "Görsel"]), ("pdf", ["PDF", "PDF"])] {
+        let target = card(kinds)
+        guard target.waitForExistence(timeout: 5) else { continue }
+        target.press(forDuration: 1.0)
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "m-menu-\(shotName)")
+        let details = app.buttons["showDetails"].firstMatch
+        if details.waitForExistence(timeout: 3) {
+          details.tap()
+          Thread.sleep(forTimeInterval: 2.5)
+          attachScreenshot(named: "m-detail-\(shotName)")
+          app.swipeUp()
+          Thread.sleep(forTimeInterval: 1)
+          attachScreenshot(named: "m-detail-\(shotName)-2")
+          app.navigationBars.buttons.firstMatch.tap()
+          Thread.sleep(forTimeInterval: 1)
+        }
+      }
+      app.buttons["settingsButton"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1.5)
+      let media = app.buttons["mediaSettings"].firstMatch
+      for _ in 0..<4 where !media.isHittable {
+        app.swipeUp()
+      }
+      attachScreenshot(named: "m-settings-sync")
+      if media.isHittable {
+        media.tap()
+        Thread.sleep(forTimeInterval: 1.5)
+        attachScreenshot(named: "m-settings-media")
+      }
+      report(["ok": true])
     case "selectShots":
       // Design review: select mode, the new clip sheet and the clipboard settings.
       bringUp()

@@ -723,28 +723,6 @@
         }
       }
     },
-    "Keep Card Numbers and IBANs on This iPhone": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kart Numaralarını ve IBAN'ları Bu iPhone'da Tut"
-          }
-        }
-      }
-    },
-    "Keep One-Time Codes on This iPhone": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tek Kullanımlık Kodları Bu iPhone'da Tut"
-          }
-        }
-      }
-    },
     "More": {
       "extractionState": "manual",
       "localizations": {
@@ -1082,17 +1060,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kaydetme duraklatıldığında Pastronaut ve klavyesi panoyu kendiliğinden kaydetmez; Yapıştır düğmesi, Paylaş ve Kestirmeler yine kaydeder. Pastronaut'u ya da klavyesini açtığında yeni kopya kendiliğinden kaydedilir. Tek kullanımlık kodlar, kart numaraları ve IBAN'lar atlanır. iPhone panoyu arka planda okuyamaz; art arda birkaç şey kopyalarsan yalnızca sonuncusu kaydedilir, diğerleri için Paylaş menüsünü ya da Yapıştır düğmesini kullan. iOS'un her seferinde sormaması için Diğer Uygulamalardan Yapıştır ayarını İzin Ver yap."
-          }
-        }
-      }
-    },
-    "While the screen is recorded or shown on another display, your clips are covered. Kept codes and cards are saved here but never sent to iCloud, from now on. Pastronaut asks for %@ when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for %@. Pinned clips can show up when you search your iPhone; choosing one copies it. Search stays off while the lock is on.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ekran kaydedilirken ya da başka bir ekranda gösterilirken öğelerin örtülür. Burada tutulan kodlar ve kartlar bundan sonra kaydedilir ama iCloud'a hiç gönderilmez. Pastronaut açılırken %1$@ ister ve widget'lar öğelerini gizler. Klavye kullanılabilir kalır, çünkü iPhone klavyeleri %2$@ isteyemez. Sabitlenen öğeler iPhone'da aramada çıkabilir; birini seçmek onu kopyalar. Kilit kullanılırken arama kapalı kalır."
           }
         }
       }
@@ -2582,17 +2549,6 @@
         }
       }
     },
-    "Text clips sync through your private iCloud database. Clip text and collection names are encrypted on this device before upload (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metin öğeleri özel iCloud veritabanın üzerinden eşitlenir. Öğe metinleri ve koleksiyon adları yüklenmeden önce bu cihazda şifrelenir (Gelişmiş Veri Koruması açıksa uçtan uca); iCloud hangi metinleri kaydettiğini anlayamaz."
-          }
-        }
-      }
-    },
     "Privacy Policy": {
       "extractionState": "manual",
       "localizations": {
@@ -3260,6 +3216,477 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eşitleniyor…"
+          }
+        }
+      }
+    },
+    "Image": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görsel"
+          }
+        }
+      }
+    },
+    "PDF": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF"
+          }
+        }
+      }
+    },
+    "File": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya"
+          }
+        }
+      }
+    },
+    "Downloading": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İniyor"
+          }
+        }
+      }
+    },
+    "%lld more files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dosya daha"
+          }
+        }
+      }
+    },
+    "Still downloading from iCloud": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud'dan hâlâ iniyor"
+          }
+        }
+      }
+    },
+    "Saved on this iPhone only": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca bu iPhone'a kaydedildi"
+          }
+        }
+      }
+    },
+    "Copy Text": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metni Kopyala"
+          }
+        }
+      }
+    },
+    "Images": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görseller"
+          }
+        }
+      }
+    },
+    "Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar"
+          }
+        }
+      }
+    },
+    "Text in the PDF": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF'teki metin"
+          }
+        }
+      }
+    },
+    "Text in the Image": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görseldeki metin"
+          }
+        }
+      }
+    },
+    "Save to Photos": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraflar'a Kaydet"
+          }
+        }
+      }
+    },
+    "Save to Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar'a Kaydet"
+          }
+        }
+      }
+    },
+    "Markup": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İşaretle"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aç"
+          }
+        }
+      }
+    },
+    "Saved to Photos": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraflar'a kaydedildi"
+          }
+        }
+      }
+    },
+    "Couldn't save to Photos": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraflar'a kaydedilemedi"
+          }
+        }
+      }
+    },
+    "Allow Pastronaut to add photos in Settings › Privacy & Security › Photos.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar › Gizlilik ve Güvenlik › Fotoğraflar'dan Pastronaut'un fotoğraf eklemesine izin ver."
+          }
+        }
+      }
+    },
+    "Size": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boyut"
+          }
+        }
+      }
+    },
+    "Images & Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görseller ve Dosyalar"
+          }
+        }
+      }
+    },
+    "Clips, images and files sync through your private iCloud database. Their contents and collection names are encrypted on this device before upload (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğeler, görseller ve dosyalar özel iCloud veritabanın üzerinden eşitlenir. İçerikleri ve koleksiyon adları yüklenmeden önce bu cihazda şifrelenir (Gelişmiş Veri Koruması açıksa uçtan uca); iCloud hangi metinleri kaydettiğini anlayamaz."
+          }
+        }
+      }
+    },
+    "Keep History": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmişi Sakla"
+          }
+        }
+      }
+    },
+    "Delete older clips?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eski öğeler silinsin mi?"
+          }
+        }
+      }
+    },
+    "Delete %lld Clips": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Öğeyi Sil"
+          }
+        }
+      }
+    },
+    "Clips copied on this iPhone are deleted everywhere; clips from your Mac only leave this iPhone. Pinned clips and clips in a collection stay.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu iPhone'da kopyalanan öğeler her yerden silinir; Mac'ten gelenler yalnızca bu iPhone'dan kalkar. Sabitlenen ve koleksiyondaki öğeler kalır."
+          }
+        }
+      }
+    },
+    "Keep One-Time Codes on Their Device": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tek Kullanımlık Kodları Kendi Cihazında Tut"
+          }
+        }
+      }
+    },
+    "Keep Card Numbers and IBANs on Their Device": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kart ve IBAN Numaralarını Kendi Cihazında Tut"
+          }
+        }
+      }
+    },
+    "Sync Pinned Clips Only": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca Sabitlenenleri Eşitle"
+          }
+        }
+      }
+    },
+    "Forever": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonsuza Dek"
+          }
+        }
+      }
+    },
+    "1 Day": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Gün"
+          }
+        }
+      }
+    },
+    "1 Week": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Hafta"
+          }
+        }
+      }
+    },
+    "1 Month": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Ay"
+          }
+        }
+      }
+    },
+    "1 Year": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Yıl"
+          }
+        }
+      }
+    },
+    "Sync Images and Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görselleri ve Dosyaları Eşitle"
+          }
+        }
+      }
+    },
+    "On all your devices": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm cihazlarında"
+          }
+        }
+      }
+    },
+    "Optimized": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optimize"
+          }
+        }
+      }
+    },
+    "Original": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orijinal"
+          }
+        }
+      }
+    },
+    "Image Quality": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görsel Kalitesi"
+          }
+        }
+      }
+    },
+    "Optimized: HEIC, at most 4,096 pixels. This iPhone's own setting.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optimize: HEIC, en fazla 4.096 piksel. Yalnızca bu iPhone'un ayarı."
+          }
+        }
+      }
+    },
+    "Largest Item": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Büyük Öğe"
+          }
+        }
+      }
+    },
+    "iCloud Space": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Alanı"
+          }
+        }
+      }
+    },
+    "Every device downloads all images and files, up to the iCloud space. To keep them off mobile data, turn off Mobile Data for Pastronaut in iOS Settings.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her cihaz, iCloud alanına kadar tüm görselleri ve dosyaları indirir. Mobil veriyle inmesin istersen iOS Ayarlar'da Pastronaut için Mobil Veri'yi kapat."
+          }
+        }
+      }
+    },
+    "Used in iCloud": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud'da Kullanılan"
+          }
+        }
+      }
+    },
+    "On This iPhone": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu iPhone'da"
+          }
+        }
+      }
+    },
+    "Larger than the limit, or saved while iCloud space was full. Those that fit go up, newest first.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sınırdan büyük ya da iCloud alanı doluyken kaydedildi. Sığanlar en yeniden başlayarak yüklenir."
+          }
+        }
+      }
+    },
+    "While the screen is recorded or shown on another display, your clips are covered. Kept codes and cards are saved on the device they were copied on but never sent to iCloud, from now on; these three switches apply to all your devices, and images count by the text in them. Pastronaut asks for %@ when you open it, and widgets hide your clips. The keyboard stays available, because iPhone keyboards can't ask for %@. Pinned clips can show up when you search your iPhone; choosing one copies it. Search stays off while the lock is on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekran kaydedilirken ya da başka bir ekranda gösterilirken öğelerin örtülür. Tutulan kodlar ve kartlar bundan sonra kopyalandıkları cihazda kaydedilir ama iCloud'a hiç gönderilmez; bu üç anahtar tüm cihazlarında geçerlidir, görseller içlerindeki metne göre değerlendirilir. Pastronaut açılırken %1$@ ister ve widget'lar öğelerini gizler. Klavye kullanılabilir kalır, çünkü iPhone klavyeleri %2$@ isteyemez. Sabitlenen öğeler iPhone'da aramada çıkabilir; birini seçmek onu kopyalar. Kilit kullanılırken arama kapalı kalır."
           }
         }
       }

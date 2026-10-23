@@ -171,6 +171,8 @@ extension ClipSearchToken {
     case .address: String(localized: "Addresses", table: "Pastronaut")
     case .code: String(localized: "Code", table: "Pastronaut")
     case .text: String(localized: "Text", table: "Pastronaut")
+    case .image: String(localized: "Images", table: "Pastronaut")
+    case .file: String(localized: "Files", table: "Pastronaut")
     }
   }
 
@@ -186,6 +188,8 @@ extension ClipSearchToken {
     case .address: "mappin.and.ellipse"
     case .code: "chevron.left.forwardslash.chevron.right"
     case .text: "text.alignleft"
+    case .image: "photo"
+    case .file: "doc"
     }
   }
 }
@@ -347,6 +351,7 @@ extension ClipKind {
     case .address: String(localized: "Address", table: "Pastronaut")
     case .color: String(localized: "Color", table: "Pastronaut")
     case .image: String(localized: "Image", table: "Pastronaut")
+    case .pdf: String(localized: "PDF", table: "Pastronaut")
     case .file: String(localized: "File", table: "Pastronaut")
     }
   }

@@ -66,6 +66,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         NSFaceIDUsageDescription: Pastronaut can ask for Face ID before showing your clipboard history.
         NSCameraUsageDescription: Pastronaut uses the camera only while you scan text or a document. Nothing is recorded, and the text is read on this iPhone.
+        NSPhotoLibraryAddUsageDescription: Pastronaut adds an image to Photos only when you choose Save to Photos.
     entitlements:
       path: App/Pastronaut.entitlements
       properties:
@@ -168,6 +169,10 @@ targets:
             NSExtensionActivationRule:
               NSExtensionActivationSupportsText: true
               NSExtensionActivationSupportsWebURLWithMaxCount: 20
+              # 1.3: photos, PDFs and files, one clip each.
+              NSExtensionActivationSupportsImageWithMaxCount: 20
+              NSExtensionActivationSupportsMovieWithMaxCount: 5
+              NSExtensionActivationSupportsFileWithMaxCount: 20
     entitlements:
       path: Share/PastronautShare.entitlements
       properties:
@@ -210,6 +215,10 @@ targets:
             NSExtensionActivationRule:
               NSExtensionActivationSupportsText: true
               NSExtensionActivationSupportsWebURLWithMaxCount: 20
+              # 1.3: photos, PDFs and files, one clip each.
+              NSExtensionActivationSupportsImageWithMaxCount: 20
+              NSExtensionActivationSupportsMovieWithMaxCount: 5
+              NSExtensionActivationSupportsFileWithMaxCount: 20
     entitlements:
       path: Action/PastronautAction.entitlements
       properties:

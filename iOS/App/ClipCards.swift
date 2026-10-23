@@ -25,6 +25,8 @@ struct ClipCard: View {
   /// Briefly outlined after "Show in History".
   var isHighlighted = false
   var isLocalOnly = false
+  /// A media clip whose files are still on their way.
+  var isDownloading = false
   let onTap: () -> Void
   @Environment(\.openURL) private var openURL
   /// Every tile has this height; it grows with Dynamic Type so text still fits.
@@ -39,10 +41,12 @@ struct ClipCard: View {
       Button(action: onTap) {
         VStack(alignment: .leading, spacing: 0) {
           media
-          main
-            // Room for the selection circle in the corner.
-            .padding(.trailing, isEditing ? 26 : 0)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+          if !content.isMedia {
+            main
+              // Room for the selection circle in the corner.
+              .padding(.trailing, isEditing ? 26 : 0)
+              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+          }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .contentShape(Rectangle())
@@ -65,8 +69,6 @@ struct ClipCard: View {
         .padding(.bottom, 2)
       }
       footer
-        .padding(.horizontal, 12)
-        .frame(height: 30)
     }
     .frame(height: height)
     .foregroundStyle(foreground)
@@ -104,6 +106,13 @@ struct ClipCard: View {
   @ViewBuilder
   private var media: some View {
     switch content {
+    case .image, .pdf, .file:
+      MediaTileContent(clip: clip, isDownloading: isDownloading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(alignment: .bottom) { mediaCaption }
+        .overlay(alignment: .topTrailing) {
+          if isLocalOnly && !isEditing { LocalOnlyBadge().padding(8) }
+        }
     case .address:
       if let image = preview?.image {
         picture(image, height: 64)
@@ -135,9 +144,35 @@ struct ClipCard: View {
       .accessibilityHidden(true)
   }
 
+  /// A title (or a PDF's name) along the bottom of the picture.
+  @ViewBuilder
+  private var mediaCaption: some View {
+    if content == .pdf {
+      Text(verbatim: clip.title ?? clip.media?.files.first?.name ?? "")
+        .font(.footnote.weight(.semibold))
+        .lineLimit(1)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial)
+    } else if content == .image, let title = clip.title {
+      Text(verbatim: title)
+        .font(.footnote.weight(.bold))
+        .foregroundStyle(.white)
+        .lineLimit(1)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(red: 0.05, green: 0.13, blue: 0.21).opacity(0.62), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .padding(8)
+    }
+  }
+
   @ViewBuilder
   private var main: some View {
     switch content {
+    case .image, .pdf, .file:
+      EmptyView()
     case .link(let url):
       VStack(alignment: .leading, spacing: 2) {
         Text(verbatim: clip.title ?? preview?.title ?? url.host() ?? url.absoluteString)
@@ -219,26 +254,25 @@ struct ClipCard: View {
     }
   }
 
+  /// The kind strip: what it is in its color, when, and where from (1.3).
   private var footer: some View {
-    HStack(spacing: 5) {
-      Image(systemName: content.symbolName)
-        .foregroundStyle(onDarkCard ? AnyShapeStyle(.white.opacity(0.85)) : AnyShapeStyle(content.kind.tint))
-      Text(content.kindName)
-        .fontWeight(.semibold)
-        .foregroundStyle(onDarkCard ? AnyShapeStyle(.white.opacity(0.85)) : AnyShapeStyle(content.kind.tint))
-      Text(verbatim: "·")
-      AgeText(date: clip.lastCopiedAt)
-      Spacer(minLength: 0)
+    KindStrip(content: content, date: clip.lastCopiedAt, tone: stripTone) {
       if clip.pinned {
         Image(systemName: "pin.fill")
           .foregroundStyle(onDarkCard ? Color.white : Color.pin)
           .accessibilityLabel(Text("Pinned clip"))
       }
-      SourceBadge(clip: clip, onDarkCard: onDarkCard, isLocalOnly: isLocalOnly)
+      // Media shows "only on this iPhone" on its picture.
+      SourceBadge(clip: clip, onDarkCard: onDarkCard, isLocalOnly: isLocalOnly && !content.isMedia)
     }
-    .font(.caption)
-    .lineLimit(1)
-    .foregroundStyle(onDarkCard ? AnyShapeStyle(.white.opacity(0.8)) : AnyShapeStyle(.secondary))
+  }
+
+  private var stripTone: KindStripTone {
+    switch content {
+    case .code: .onDark
+    case .color(let hex): HexColor.isLight(hex) ? .onLight : .onDark
+    default: .plain
+    }
   }
 
   static func firstLine(of text: String) -> String {
@@ -287,7 +321,13 @@ struct SourceBadge: View {
       Image(systemName: "icloud.slash")
         .accessibilityLabel(Text("Only on This iPhone"))
     }
-    if clip.isFromMac, let app = clip.sourceAppName, let initial = app.first {
+    if clip.isFromMac, let bundle = clip.sourceApp, let icon = MediaFiles.appIcon(for: bundle) {
+      // The Mac sends each app's own icon (1.3).
+      Image(uiImage: icon)
+        .resizable()
+        .frame(width: 18, height: 18)
+        .accessibilityLabel(Text(verbatim: "Mac, \(clip.sourceAppName ?? "")"))
+    } else if clip.isFromMac, let app = clip.sourceAppName, let initial = app.first {
       Text(verbatim: String(initial).uppercased())
         .font(.caption2.weight(.heavy))
         .frame(width: 18, height: 18)
@@ -313,7 +353,9 @@ struct ClipThumbnail: View {
   var body: some View {
     let content = clip.content
     Group {
-      if let image = PreviewStore.shared.preview(for: clip)?.image {
+      if content.isMedia {
+        MediaTileContent(clip: clip, isCompact: true)
+      } else if let image = PreviewStore.shared.preview(for: clip)?.image {
         Image(uiImage: image)
           .resizable()
           .scaledToFill()
@@ -418,5 +460,17 @@ struct PreviewPromptCard: View {
     }
     .padding(16)
     .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+  }
+}
+
+/// "Only on this iPhone", on the corner of a picture: too large, iCloud full, or kept here by a privacy setting.
+struct LocalOnlyBadge: View {
+  var body: some View {
+    Image(systemName: "icloud.slash")
+      .font(.footnote.weight(.bold))
+      .foregroundStyle(Color(red: 0.54, green: 0.35, blue: 0.04))
+      .frame(width: 26, height: 26)
+      .background(Color(red: 0.98, green: 0.92, blue: 0.82), in: Circle())
+      .accessibilityLabel(Text("Only on This iPhone"))
   }
 }

@@ -110,12 +110,16 @@ public struct MediaStore: Sendable {
   }
 
   /// Removes the folders of clips not in `clipIDs`, and encrypted copies older than a day. Returns how many clip
-  /// folders went.
+  /// folders went. A folder written in the last hour stays: an extension may have just saved it for the app.
   @discardableResult
   public func prune(keeping clipIDs: Set<String>, now: Date = .now) -> Int {
     let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+    let recent = now.addingTimeInterval(-3_600)
     var removed = 0
     for name in names where ClipMedia.isMediaID(name) && !clipIDs.contains(name) {
+      let url = directory.appending(path: name)
+      let date = (try? FileManager.default.attributesOfItem(atPath: url.path)[.modificationDate] as? Date) ?? .distantPast
+      guard date < recent else { continue }
       remove(clipID: name)
       removed += 1
     }

@@ -171,9 +171,39 @@ final class KeyboardModel {
 
   func type(_ clip: Clip) {
     click()
-    insert(clip.text)
+    if clip.isMedia {
+      copyMedia(clip)
+    } else {
+      insert(clip.text)
+    }
     if isSearching { endSearch() }
     focused = nil
+  }
+
+  /// What the keyboard last said about an image or a file (1.3); cleared after a few seconds.
+  enum MediaMessage: Equatable { case copied, needsFullAccess, notDownloaded }
+  private(set) var mediaMessage: MediaMessage?
+  @ObservationIgnored private var mediaMessageTask: Task<Void, Never>?
+
+  /// A keyboard can't put an image into a text field; it puts it on the clipboard (Full Access) to paste.
+  private func copyMedia(_ clip: Clip) {
+    let message: MediaMessage
+    if !hasFullAccess {
+      message = .needsFullAccess
+    } else if MediaPasteboard.copy(clip) {
+      // Our own copy: not a new clip to save.
+      defaults?.set(UIPasteboard.general.changeCount, forKey: lastCapturedChangeCountKey)
+      message = .copied
+    } else {
+      message = .notDownloaded
+    }
+    mediaMessage = message
+    mediaMessageTask?.cancel()
+    mediaMessageTask = Task { [weak self] in
+      try? await Task.sleep(for: .seconds(4))
+      guard !Task.isCancelled else { return }
+      self?.mediaMessage = nil
+    }
   }
 
   // MARK: Queue
@@ -190,7 +220,11 @@ final class KeyboardModel {
   func typeNextInQueue() {
     guard let clip = nextInQueue else { return }
     click()
-    insert(clip.text)
+    if clip.isMedia {
+      copyMedia(clip)
+    } else {
+      insert(clip.text)
+    }
     queue?.advance()
     saveQueue()
   }
@@ -459,6 +493,10 @@ private struct BrowsePanel: View {
           .padding(.horizontal, 4)
       }
 
+      if let message = model.mediaMessage {
+        MediaMessageBar(message: message)
+      }
+
       ClipGrid(model: model)
 
       CategoryBar(model: model)
@@ -590,7 +628,7 @@ private struct ClipGrid: View {
             // The latest Mac copy has its own key above; don't show it twice.
             LazyVGrid(columns: columns, spacing: 6) {
               ForEach(clips.filter { $0.id != latest?.id }, id: \.id) { clip in
-                ClipTile(clip: clip) { model.type(clip) } onLongPress: { model.focused = clip }
+                ClipTile(clip: clip, hasFullAccess: model.hasFullAccess) { model.type(clip) } onLongPress: { model.focused = clip }
               }
             }
           }
@@ -700,6 +738,7 @@ private extension ClipTile {
   /// A link shows its page's name (from the app's previews) or its site, not the whole address.
   func label(for content: ClipContent) -> String {
     if let title = clip.title { return title }
+    if let caption = clip.mediaCaption { return caption }
     if case .link(let url) = content {
       return PreviewThumbnails.shared.title(for: clip.id) ?? url.host() ?? clip.text.keyboardPreview
     }
@@ -719,6 +758,7 @@ private extension ClipTile {
 /// press opens its actions. Code is dark and colors are drawn in their own color, as in the app.
 private struct ClipTile: View {
   let clip: Clip
+  var hasFullAccess = true
   let onTap: () -> Void
   let onLongPress: () -> Void
 
@@ -734,7 +774,25 @@ private struct ClipTile: View {
     }
     VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .top, spacing: 8) {
-        if let thumbnail {
+        if content.isMedia {
+          MediaTileContent(clip: clip, isCompact: true)
+            .frame(width: 50)
+            .frame(maxHeight: .infinity)
+            .clipped()
+            .padding(.leading, -9)
+            .padding(.top, -7)
+            .overlay(alignment: .topLeading) {
+              if !hasFullAccess {
+                Image(systemName: "lock.fill")
+                  .font(.system(size: 9, weight: .bold))
+                  .foregroundStyle(.white)
+                  .frame(width: 18, height: 18)
+                  .background(Color.black.opacity(0.6), in: Circle())
+                  .padding(.top, -3)
+                  .accessibilityLabel(Text("Needs Full Access"))
+              }
+            }
+        } else if let thumbnail {
           Image(uiImage: thumbnail)
             .resizable()
             .scaledToFill()
@@ -749,11 +807,11 @@ private struct ClipTile: View {
           .multilineTextAlignment(.leading)
           .frame(maxWidth: .infinity, alignment: .leading)
       }
-      Spacer(minLength: 2)
+      .padding(.horizontal, 9)
+      .padding(.top, 7)
+      .frame(maxHeight: .infinity, alignment: .topLeading)
+      // The kind strip, as on the app's cards (1.3).
       HStack(spacing: 4) {
-        Circle()
-          .fill(onDark ? Color.white.opacity(0.9) : content.kind.tint)
-          .frame(width: 6, height: 6)
         Text(content.kindName)
           .fontWeight(.bold)
           .foregroundStyle(onDark ? AnyShapeStyle(Color.white.opacity(0.9)) : AnyShapeStyle(content.kind.tint))
@@ -769,11 +827,13 @@ private struct ClipTile: View {
       .font(.system(size: 10.5))
       .foregroundStyle(onDark ? AnyShapeStyle(Color.white.opacity(0.75)) : AnyShapeStyle(.secondary))
       .lineLimit(1)
+      .padding(.horizontal, 9)
+      .frame(height: 20)
+      .frame(maxWidth: .infinity)
+      .background(onDark ? AnyShapeStyle(Color.white.opacity(0.1)) : AnyShapeStyle(content.kind.strip))
     }
-    .padding(.horizontal, 9)
-    .padding(.top, 7)
-    .padding(.bottom, 6)
     .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70, alignment: .topLeading)
+    .clipShape(RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous))
     .background {
       if let swatch {
         RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous).fill(swatch)
@@ -808,11 +868,19 @@ private struct ActionPanel: View {
       ScrollView {
         // One Text with up to 100 KB would cost the keyboard more memory than iOS allows it; "Type" still
         // inserts the whole clip.
-        Text(clip.text.count > ActionPanel.shownCharacters
-             ? clip.text.prefix(ActionPanel.shownCharacters) + "…" : clip.text)
-          .font(.system(size: 15))
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding(10)
+        if clip.isMedia {
+          MediaTileContent(clip: clip)
+            .frame(maxWidth: .infinity)
+            .frame(height: 150)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(10)
+        } else {
+          Text(clip.text.count > ActionPanel.shownCharacters
+               ? clip.text.prefix(ActionPanel.shownCharacters) + "…" : clip.text)
+            .font(.system(size: 15))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(10)
+        }
       }
       .frame(maxHeight: .infinity)
       .keyBackground(radius: 18)
@@ -849,7 +917,7 @@ private struct ActionPanel: View {
         Button {
           model.type(clip)
         } label: {
-          Label("Type", systemImage: "return.left")
+          Label(clip.isMedia ? "Copy" : "Type", systemImage: clip.isMedia ? "doc.on.doc" : "return.left")
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(Color.onAccent)
             .frame(maxWidth: .infinity, minHeight: KeyboardMetrics.keyHeight)
@@ -1100,3 +1168,50 @@ private extension KeyboardModel.Tab {
   }
 }
 
+
+/// A short line above the grid after tapping an image or a file.
+private struct MediaMessageBar: View {
+  let message: KeyboardModel.MediaMessage
+
+  var body: some View {
+    HStack(spacing: 8) {
+      Image(systemName: symbol)
+        .foregroundStyle(message == .copied ? Color.accentColor : Color.orange)
+      VStack(alignment: .leading, spacing: 1) {
+        Text(title).font(.system(size: 13, weight: .bold))
+        Text(detail).font(.system(size: 11.5)).foregroundStyle(.secondary)
+      }
+      Spacer(minLength: 0)
+    }
+    .padding(.horizontal, 12)
+    .padding(.vertical, 6)
+    .frame(maxWidth: .infinity, minHeight: 44)
+    .background(KeyStyle.key, in: RoundedRectangle(cornerRadius: KeyboardMetrics.keyRadius, style: .continuous))
+    .accessibilityElement(children: .combine)
+    .accessibilityIdentifier("mediaMessage")
+  }
+
+  private var symbol: String {
+    switch message {
+    case .copied: "checkmark.circle.fill"
+    case .needsFullAccess: "lock.fill"
+    case .notDownloaded: "icloud.and.arrow.down"
+    }
+  }
+
+  private var title: LocalizedStringKey {
+    switch message {
+    case .copied: "Copied"
+    case .needsFullAccess: "Needs Full Access"
+    case .notDownloaded: "Not on this iPhone yet"
+    }
+  }
+
+  private var detail: LocalizedStringKey {
+    switch message {
+    case .copied: "Touch and hold the text field, then choose Paste."
+    case .needsFullAccess: "Images and files need Allow Full Access. Text always types."
+    case .notDownloaded: "Open Pastronaut once to download it."
+    }
+  }
+}

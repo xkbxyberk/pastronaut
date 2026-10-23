@@ -1,6 +1,6 @@
 # 1.3 planı: iPhone 1.3 ve Mac 1.3 birlikte (taslak)
 
-> Tarih: 2026-10-23. Durum: **Adım 0, 1 ve 2 (Mac) bitti. Adım 3 (iPhone): tasarım önerisi hazır, onay bekliyor**
+> Tarih: 2026-10-23. Durum: **Adım 0, 1, 2 bitti. Adım 3 (iPhone): tasarım onaylandı, kod yazıldı; telefonda göz kontrolü bekliyor**
 > (tuval: https://claude.ai/artifact/L86xntrWRgjkSfAyegqo8V).
 > Bu belge eski `MAC-1.3-PLAN.md`'nin yerini alır. iPhone 1.2'nin kararları ve bulguları (K1–K17)
 > `IOS-1.2-PLAN.md`'de kalır. Yayın adımları `SURUM.md`'de.
@@ -86,6 +86,29 @@ ve iCloud'la deneme henüz yapılmadı: Debug derlemesi gerçek veriyi açar (ku
 - **Ayarlar › Eşitleme:** "Görseller ve Dosyalar" bölümü (kullanılan iCloud alanıyla), metinler Türkçe.
 - **Maccy dosyalarına dokunuş:** `History.swift`'te geçmiş sınırı `SyncBridge.pruning` içinde çalışır ve
   `reorder` eklendi (ikisi de "// Pastronaut" işaretli).
+
+## Adım 3 sonuçları (iPhone, 2026-10-23)
+Çekirdek 180 test, `MaccyTests` 118 test geçti; iPhone uygulaması ve bütün uzantıları derleniyor. Telefonda göz kontrolü
+(`SyncStepTests` adımı `shots13`, yalnızca tanıtım verisi) ve gerçek iCloud denemesi (Adım 4) kaldı.
+
+- **Kutular:** görsel kutuyu doldurur (başlık varsa üstünde şerit), PDF ilk sayfasıyla ve adıyla, dosyalar simgeleriyle;
+  inen dosyada dönen gösterge, "yalnızca bu iPhone'da" rozeti. Alt satır türün renginde şerit (`ClipKind.strip`);
+  Mac'ten gelen kartta uygulamanın gerçek simgesi.
+- **Üst satır:** ortalanmış; "Tümü" yazılı, Mac, iPhone, Görseller, Dosyalar ve Koleksiyonlar simgeli.
+- **Liste:** türün renginde etiket, görsel/PDF küçük resmi.
+- **Ayrıntı:** görsel Canlı Metin ile (VisionKit), tam ekran Quick Look, İşaretle (düzenlenen kopya yeni öğe olur),
+  görseldeki/PDF'teki metin ve "Metni Kopyala", Kopyala, Paylaş, Fotoğraflar'a/Dosyalar'a Kaydet.
+- **Menü ve sürükleme:** "Metni Kopyala", dosyaları paylaşma; kartı başka uygulamaya görsel/dosya olarak sürükleme.
+- **Kaydetme:** Yapıştır düğmesi görsel/PDF/dosya da alır; "Açılınca Panoyu Kaydet" görsel ve PDF'i de kaydeder (içinde
+  kod ya da kart görünen görsel otomatik kaydedilmez); Belge Tara sayfaları PDF olarak da saklar; Paylaş ve Eylem
+  fotoğraf, video, PDF ve dosya alır (öğe başına 50 MB; uygulama açılınca iCloud'a gider).
+- **Klavye:** görsel ve dosyalar küçük resimle; dokununca panoya kopyalar (Tam Erişim gerekir, yoksa kilit ve açıklama);
+  kutuların altında tür şeridi.
+- **Ayarlar:** Eşitleme › Görseller ve Dosyalar sayfası (ortak ayarlar, görsel kalitesi, iCloud ve iPhone'da kullanılan
+  alan, iCloud'a yeniden yükle); gizlilik anahtarları artık ortak (1.2'deki iPhone anahtarları ilk açılışta herkesin
+  olur); "Geçmişi Sakla" (iPhone'un kendi kopyalarını her yerden siler, Mac'tekileri yalnızca iPhone'dan kaldırır).
+- **Widget, Kestirmeler, Spotlight:** yalnızca metin öğeleri (görseller bu sürümde orada yok).
+- **Yeni izin:** Fotoğraflar'a yalnızca ekleme (`NSPhotoLibraryAddUsageDescription`), TR çevirisiyle.
 
 ## 0. Kısaca
 - **Sürümler:** 1.3 = iPhone 1.3 (derleme 5) + Mac 1.3 (derleme 2).

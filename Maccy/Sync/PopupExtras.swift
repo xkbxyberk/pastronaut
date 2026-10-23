@@ -751,7 +751,7 @@ private struct PreviewAction {
     case .address(let address):
       guard let url = Coordinates.directionsURL(to: address) else { return nil }
       (title, systemImage, self.url) = ("Get Directions", "arrow.triangle.turn.up.right.diamond", url)
-    case .code, .color, .text:
+    case .code, .color, .text, .image, .pdf, .file:
       return nil
     }
   }

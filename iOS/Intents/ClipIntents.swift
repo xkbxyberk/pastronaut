@@ -82,7 +82,8 @@ enum ClipClipboard {
     SharedSettings.defaults?.set(UIPasteboard.general.changeCount, forKey: AutoCapture.lastChangeCountKey)
   }
 
-  static var clips: [Clip] { SharedClipFiles()?.currentClips() ?? [] }
+  /// Text clips: widgets and Shortcuts hand over text. Images and files stay in the app and the keyboard.
+  static var clips: [Clip] { SharedClipFiles()?.currentClips().filter { !$0.isMedia } ?? [] }
 }
 
 /// The copy button on a widget row.

@@ -268,7 +268,9 @@ import UniformTypeIdentifiers
     try store.store([Data("a".utf8)], for: kept)
     try store.store([Data("b".utf8)], for: gone)
     try store.storeThumbnail(Data([1]), for: gone.id)
-    #expect(store.prune(keeping: [kept.id]) == 1)
+    // Just written (an extension may be handing it to the app): kept for now.
+    #expect(store.prune(keeping: [kept.id]) == 0)
+    #expect(store.prune(keeping: [kept.id], now: .now.addingTimeInterval(7_200)) == 1)
     #expect(store.hasFiles(for: kept))
     #expect(!store.hasFiles(for: gone))
     #expect(store.thumbnail(for: gone.id) == nil)
@@ -439,5 +441,84 @@ import UniformTypeIdentifiers
     let ok13 = state.stage(existing.copiedAgain(copy), policy: .default, isCapture: true)
     #expect(ok13)
     #expect(state.entries[clip.id]?.dismissedAt == nil)
+  }
+
+  // MARK: - Kinds and search (1.3 iPhone)
+
+  @Test func mediaClipsHaveKindsOfTheirOwn() {
+    #expect(ClipContent(clip: imageClip()) == .image)
+    #expect(ClipContent(clip: clip(files: [("a.pdf", Data("%PDF".utf8))])).kind == .file)
+    let pdf = Clip(media: ClipMedia(kind: .pdf, files: [ClipMedia.File(name: "a.pdf", type: "com.adobe.pdf", data: Data([1]))]),
+                   contentHashes: ["p"], sourceDevice: .mac)
+    #expect(ClipContent(clip: pdf) == .pdf)
+    #expect(ClipContent(clip: pdf).kind == .pdf)
+    #expect(ClipContent(clip: Clip(text: "https://apple.com", sourceDevice: .mac)).kind == .link)
+    #expect(ClipContent(clip: pdf).isMedia && !ClipContent("hi").isMedia)
+  }
+
+  @Test func imagesAndFilesHaveTheirOwnSearchChips() {
+    let image = imageClip()
+    let pdf = Clip(media: ClipMedia(kind: .pdf, files: [ClipMedia.File(name: "a.pdf", type: "com.adobe.pdf", data: Data([1]))]),
+                   contentHashes: ["p"], sourceDevice: .mac)
+    let text = Clip(text: "hello", sourceDevice: .mac)
+    #expect(ClipSearchToken.image.matches(image) && !ClipSearchToken.image.matches(pdf))
+    #expect(ClipSearchToken.file.matches(pdf) && !ClipSearchToken.file.matches(text))
+    #expect(!ClipSearchToken.text.matches(image))
+    #expect(ClipSearchToken.allMatch([.pinned, .image], clip: image) == false)
+  }
+
+  @Test func searchFindsTheTextInImagesAndFileNames() {
+    let receipt = imageClip(recognizedText: "Kahve Dünyası fiş")
+    let report = clip(files: [("Rapor-Ekim.pdf", Data("%PDF".utf8))])
+    let clips = [receipt, report, Clip(text: "başka", sourceDevice: .mac)]
+    #expect(clips.matching("kahve").map(\.id) == [receipt.id])
+    #expect(clips.matching("rapor-ekim").map(\.id) == [report.id])
+  }
+
+  @Test func preparedMediaHasTheRightKindAndThumbnail() async throws {
+    let png = png(width: 800, height: 600)
+    let image = try #require(await MediaIntake.prepare([MediaIntake.Part(name: "a.png", type: "public.png", data: png)],
+                                                       device: .iphone, readsText: false))
+    #expect(image.clip.kind == .image)
+    #expect(image.clip.media?.pixelWidth == 800)
+    #expect(image.thumbnail != nil)
+
+    let document = try #require(await MediaIntake.prepare([MediaIntake.pdf(pdf(text: "Fatura"))], device: .iphone))
+    #expect(document.clip.kind == .pdf)
+    #expect(document.clip.media?.recognizedText?.contains("Fatura") == true)
+
+    let two = try #require(await MediaIntake.prepare(
+      [MediaIntake.file(named: "a.txt", data: Data("a".utf8)), MediaIntake.file(named: "b.txt", data: Data("b".utf8))],
+      device: .mac
+    ))
+    #expect(two.clip.kind == .file)
+    #expect(two.files.count == 2)
+    // The same content is the same clip.
+    let again = try #require(await MediaIntake.prepare(
+      [MediaIntake.file(named: "a.txt", data: Data("a".utf8)), MediaIntake.file(named: "b.txt", data: Data("b".utf8))],
+      device: .iphone
+    ))
+    #expect(again.clip.id == two.clip.id)
+  }
+
+  @Test func scannedPagesBecomeOnePDF() throws {
+    let context = CGContext(data: nil, width: 300, height: 400, bitsPerComponent: 8, bytesPerRow: 0,
+                            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    let page = context.makeImage()!
+    let data = try #require(MediaIntake.pdf(from: [page, page]))
+    let document = try #require(CGPDFDocument(CGDataProvider(data: data as CFData)!))
+    #expect(document.numberOfPages == 2)
+  }
+
+  @Test func sharedItemsAreReadAsParts() async throws {
+    let png = png(width: 200, height: 100)
+    let image = NSItemProvider(item: png as NSData, typeIdentifier: UTType.png.identifier)
+    let pdf = NSItemProvider(item: pdf(text: "x") as NSData, typeIdentifier: UTType.pdf.identifier)
+    let parts = await MediaIntake.parts(from: [image, pdf], quality: .original, maxBytes: 10_000_000)
+    #expect(parts.map(\.type) == [UTType.png.identifier, UTType.pdf.identifier])
+    let none = await MediaIntake.parts(from: [image], quality: .original, maxBytes: 10)
+    #expect(none.isEmpty)
+    let link = NSItemProvider(item: URL(string: "https://apple.com")! as NSURL, typeIdentifier: UTType.url.identifier)
+    #expect(await MediaIntake.text(from: [link]) == "https://apple.com")
   }
 }

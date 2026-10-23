@@ -190,6 +190,16 @@ public actor ClipSync {
     state.entries.values.map(\.clip)
   }
 
+  /// The clips this device's history shows: all but those taken out of it here (`dismiss(ids:)`).
+  public var visibleClips: [Clip] {
+    state.entries.values.filter { $0.dismissedAt == nil }.map(\.clip)
+  }
+
+  /// Media clips whose files haven't arrived yet (see `fetchPendingFiles`).
+  public var pendingFileIDs: Set<String> {
+    Set(state.entries.filter(\.value.filesPending).keys)
+  }
+
   /// Clips and collections kept on this device only (see `keepsLocalHistory`).
   public var localOnly: LocalOnlyIDs {
     state.localOnly
@@ -275,7 +285,13 @@ public actor ClipSync {
 
   /// Where an app's icon is kept on this device (a PNG), whether or not it is there yet.
   public nonisolated func appIconURL(for bundleIdentifier: String) -> URL {
-    iconDirectory.appending(path: ClipMedia.sha256(Data(bundleIdentifier.utf8)).prefix(32) + ".png")
+    Self.appIconURL(for: bundleIdentifier, storageDirectory: iconDirectory.deletingLastPathComponent())
+  }
+
+  /// The same, for code that reads the storage directory without a `ClipSync` (the keyboard, widgets).
+  public static func appIconURL(for bundleIdentifier: String, storageDirectory: URL) -> URL {
+    storageDirectory.appending(path: "app-icons")
+      .appending(path: ClipMedia.sha256(Data(bundleIdentifier.utf8)).prefix(32) + ".png")
   }
 
   /// An app's icon as a PNG, if one arrived (or was sent from here).

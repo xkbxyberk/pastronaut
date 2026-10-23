@@ -13,6 +13,9 @@ public enum ClipSearchToken: String, CaseIterable, Hashable, Identifiable, Senda
   case address
   case code
   case text
+  /// Since 1.3: images; PDFs and other files.
+  case image
+  case file
 
   public var id: Self { self }
 
@@ -22,12 +25,15 @@ public enum ClipSearchToken: String, CaseIterable, Hashable, Identifiable, Senda
     switch self {
     case .pinned: .pin
     case .today, .thisWeek: .date
-    case .link, .email, .phone, .color, .address, .code, .text: .kind
+    case .link, .email, .phone, .color, .address, .code, .text, .image, .file: .kind
     }
   }
 
   public func matches(_ clip: Clip, now: Date = .now, calendar: Calendar = .current) -> Bool {
-    matches(text: clip.text, pinned: clip.pinned, lastCopiedAt: clip.lastCopiedAt, now: now, calendar: calendar)
+    switch group {
+    case .kind: kind(of: ClipContent(clip: clip))
+    case .pin, .date: matches(text: nil, pinned: clip.pinned, lastCopiedAt: clip.lastCopiedAt, now: now, calendar: calendar)
+    }
   }
 
   /// `text` is nil for images and files on the Mac: they match pin and date chips, never a kind.
@@ -40,12 +46,18 @@ public enum ClipSearchToken: String, CaseIterable, Hashable, Identifiable, Senda
     case .thisWeek:
       let start = calendar.date(byAdding: .day, value: -6, to: calendar.startOfDay(for: now)) ?? now
       return lastCopiedAt >= start
-    case .link, .email, .phone, .color, .address, .code, .text:
+    case .link, .email, .phone, .color, .address, .code, .text, .image, .file:
       return text.map { kind(of: ClipContent($0)) } ?? false
     }
   }
 
   /// Chips of one group widen, groups narrow (see the type's comment). No chips match everything.
+  public static func allMatch(_ tokens: [ClipSearchToken], clip: Clip, now: Date = .now, calendar: Calendar = .current) -> Bool {
+    Dictionary(grouping: tokens, by: \.group).values.allSatisfy { group in
+      group.contains { $0.matches(clip, now: now, calendar: calendar) }
+    }
+  }
+
   public static func allMatch(
     _ tokens: [ClipSearchToken],
     text: String?,
@@ -62,7 +74,7 @@ public enum ClipSearchToken: String, CaseIterable, Hashable, Identifiable, Senda
   private func kind(of content: ClipContent) -> Bool {
     switch (self, content) {
     case (.link, .link), (.email, .email), (.phone, .phone), (.color, .color), (.address, .address), (.code, .code),
-         (.text, .text):
+         (.text, .text), (.image, .image), (.file, .pdf), (.file, .file):
       true
     default:
       false
@@ -80,10 +92,8 @@ public extension Collection<Clip> {
   ) -> [Clip] {
     let query = Self.searchKey(query.trimmingCharacters(in: .whitespacesAndNewlines))
     return filter { clip in
-      (query.isEmpty || Self.searchKey(clip.text).contains(query)
-        || clip.title.map { Self.searchKey($0).contains(query) } == true)
-        && ClipSearchToken.allMatch(tokens, text: clip.text, pinned: clip.pinned, lastCopiedAt: clip.lastCopiedAt,
-                                    now: now, calendar: calendar)
+      (query.isEmpty || clip.searchableTexts.contains { Self.searchKey($0).contains(query) })
+        && ClipSearchToken.allMatch(tokens, clip: clip, now: now, calendar: calendar)
     }
   }
 
@@ -115,5 +125,12 @@ public enum ClipSource: String, CaseIterable, Codable, Sendable {
   /// Newest copies first; pinned clips are not moved to the top, since "latest" means the last copy.
   public func latest(from clips: some Collection<Clip>, count: Int) -> [Clip] {
     Array(clips.filter(includes).sorted { $0.lastCopiedAt > $1.lastCopiedAt }.prefix(count))
+  }
+}
+
+extension Clip {
+  /// What a search looks in: the text and the title, and for media the text read from it and the file names.
+  var searchableTexts: [String] {
+    [text, title, media?.recognizedText].compactMap { $0 } + (media?.files.map(\.name) ?? [])
   }
 }

@@ -1,5 +1,6 @@
 import CloudKit
 import Observation
+import UniformTypeIdentifiers
 import PastronautCore
 import SwiftUI
 import UIKit
@@ -18,6 +19,10 @@ final class ClipStore {
   /// Kept on this iPhone after iCloud data was deleted or the account changed; sent only on request.
   private(set) var localOnly = LocalOnlyIDs()
   private(set) var status: SyncStatus?
+  /// Media clips whose files are still on their way.
+  private(set) var pendingFiles: Set<String> = []
+  /// Settings every device shares (privacy filters, Images & Files); see `updateSharedSettings`.
+  private(set) var sharedSettings = SharedSyncSettings()
   private(set) var hasFinishedFirstSync = false
   private var runningRefreshes = 0
   private var accountState: CKAccountStatus?
@@ -27,6 +32,10 @@ final class ClipStore {
     case clipboardEmpty
     case tooLarge
     case noTextFound
+    /// An image or a file was tapped before its files arrived.
+    case stillDownloading
+    /// Saved, but kept on this iPhone: larger than the limit, iCloud space full, or Images & Files off.
+    case keptOnThisIPhone
   }
 
   /// A short message for the history screen; set again for every event, so the same notice shows twice.
@@ -96,7 +105,7 @@ final class ClipStore {
     if DemoClips.isOn {
       SharedSettings.defaults?.set(Date.now.addingTimeInterval(15 * 60), forKey: SharedSettings.demoUntilKey)
       SharedSettings.defaults?.set(Bundle.main.preferredLocalizations.first ?? "en", forKey: SharedSettings.demoLanguageKey)
-      clips = DemoClips.clips.inHistoryOrder
+      clips = (DemoClips.clips + (await DemoMedia.make())).inHistoryOrder
       collections = DemoClips.collections
       hasFinishedFirstSync = true
       try? files?.writeSnapshot(clips)
@@ -108,11 +117,14 @@ final class ClipStore {
     await sync.setChangeHandler { _ in
       await ClipStore.shared.reload()
     }
-    await updatePrivacy()
+    // This iPhone's copy until the shared settings are read (`reconcileSharedSettings`).
+    await sync.setPrivacy(PrivacyOptions.onPhone(in: sharedDefaults))
     await sync.start()
     await ingestInbox()
     await reload()
     PreviewStore.shared.prune(keeping: Set(clips.map(\.id)))
+    // After the inbox: what the keyboard and Share saved is in the mirror now.
+    await sync.pruneMedia()
   }
 
   /// Pulls the keyboard's captures and the latest iCloud changes. Called on launch, foreground and push.
@@ -129,7 +141,9 @@ final class ClipStore {
     defer { runningRefreshes -= 1 }
     await ingestInbox()
     try? await sync.syncNow()
+    await reconcileSharedSettings()
     await reload()
+    applyHistoryAge()
     hasFinishedFirstSync = true
     await updateAccountStatus()
   }
@@ -138,8 +152,7 @@ final class ClipStore {
     #if DEBUG
     if DemoClips.isOn { return }
     #endif
-    // Images and files arrive from 1.3 on; shown once this app can (PLAN-1.3 step 3).
-    let latest = await sync.clips.filter { !$0.isMedia }.inHistoryOrder
+    let latest = await sync.visibleClips.inHistoryOrder
     let latestCollections = await sync.collections
     let changed = latest != clips
     if changed {
@@ -149,6 +162,15 @@ final class ClipStore {
       collections = latestCollections
     }
     status = await sync.status
+    let latestPending = await sync.pendingFileIDs
+    if latestPending != pendingFiles { pendingFiles = latestPending }
+    let latestSettings = await sync.sharedSettings
+    if latestSettings != sharedSettings {
+      // Another device changed them: the filters and the extensions' copy follow.
+      sharedSettings = latestSettings
+      PrivacyOptions.writeOnPhone(latestSettings.privacy, in: sharedDefaults)
+      await sync.setPrivacy(latestSettings.privacy)
+    }
     let latestLocalOnly = await sync.localOnly
     if latestLocalOnly != localOnly {
       localOnly = latestLocalOnly
@@ -166,7 +188,15 @@ final class ClipStore {
   // MARK: - User actions
 
   func copy(_ clip: Clip) {
-    UIPasteboard.general.string = clip.text
+    if clip.isMedia {
+      guard MediaPasteboard.copy(clip) else {
+        notice = .stillDownloading
+        Task { await sync.fetchPendingFiles() }
+        return
+      }
+    } else {
+      UIPasteboard.general.string = clip.text
+    }
     // Our own copy is already in the history; don't save it again on the next launch.
     sharedDefaults?.set(UIPasteboard.general.changeCount, forKey: AutoCapture.lastChangeCountKey)
     // Copying moves the clip up but keeps where it came from: a Mac clip stays under the Mac filter.
@@ -263,6 +293,13 @@ final class ClipStore {
       await reload()
       await upload()
     }
+  }
+
+  /// Copies text that isn't a clip yet (the text read from an image) and keeps it as one.
+  func copyText(_ text: String) {
+    UIPasteboard.general.string = text
+    sharedDefaults?.set(UIPasteboard.general.changeCount, forKey: AutoCapture.lastChangeCountKey)
+    save(text)
   }
 
   // MARK: - Collections
@@ -452,8 +489,17 @@ final class ClipStore {
     guard AutoCapture.isActive(in: sharedDefaults), isOnboardingFinished else { return }
     let pasteboard = UIPasteboard.general
     let changeCount = pasteboard.changeCount
-    guard pasteboard.hasStrings,
-          changeCount != sharedDefaults?.object(forKey: AutoCapture.lastChangeCountKey) as? Int else { return }
+    guard changeCount != sharedDefaults?.object(forKey: AutoCapture.lastChangeCountKey) as? Int else { return }
+    if !pasteboard.hasStrings, MediaLoader.hasMedia(pasteboard) {
+      sharedDefaults?.set(changeCount, forKey: AutoCapture.lastChangeCountKey)
+      let parts = MediaLoader.parts(from: pasteboard, quality: mediaQuality, maxBytes: Self.maxLocalMediaBytes)
+      // Saved like text: never one that shows a code or a card number.
+      if await saveMedia(parts, sensitiveCheck: true) == .saved {
+        notice = .savedFromClipboard
+      }
+      return
+    }
+    guard pasteboard.hasStrings else { return }
     // Marked before reading, so a declined permission prompt isn't shown again for the same copy.
     sharedDefaults?.set(changeCount, forKey: AutoCapture.lastChangeCountKey)
     guard let text = pasteboard.string, AutoCapture.allows(text) else { return }
@@ -493,6 +539,115 @@ final class ClipStore {
     await reload()
     await upload()
     return .saved
+  }
+
+  // MARK: - Keep History (1.3)
+
+  var historyAge: HistoryAge {
+    HistoryAge(rawValue: UserDefaults.standard.string(forKey: AppPreferences.historyAgeKey) ?? "") ?? .forever
+  }
+
+  private func expired(for age: HistoryAge, now: Date = .now) -> [Clip] {
+    clips.filter { age.isExpired(lastCopiedAt: $0.lastCopiedAt, pinned: $0.isKept, now: now) }
+  }
+
+  func expiredCount(for age: HistoryAge) -> Int {
+    expired(for: age).count
+  }
+
+  /// Removes clips older than "Keep History": this iPhone's own copies everywhere, other devices' copies from this
+  /// iPhone only (they stay in iCloud and on the Mac). Pinned clips and clips in collections stay.
+  func applyHistoryAge() {
+    let old = expired(for: historyAge)
+    guard !old.isEmpty else { return }
+    let own = old.filter { $0.sourceDevice != .mac }.map(\.id)
+    let others = old.filter { $0.sourceDevice == .mac }.map(\.id)
+    clips.removeAll { clip in old.contains { $0.id == clip.id } }
+    Task {
+      await sync.delete(ids: own)
+      await sync.dismiss(ids: others)
+      await reload()
+      await upload()
+    }
+  }
+
+  // MARK: - Images, PDFs and files (1.3)
+
+  /// Larger things are not kept at all: the history is no place for a film.
+  static let maxLocalMediaBytes = 200 * MediaSettings.megabyte
+
+  /// The quality this iPhone sends images in (Settings › Images & Files).
+  var mediaQuality: MediaQuality {
+    MediaQuality(rawValue: sharedDefaults?.string(forKey: AppPreferences.mediaQualityKey) ?? "") ?? .optimized
+  }
+
+  /// Saves an image, a PDF or files as one clip. It goes to iCloud when the shared limits allow, otherwise it stays on
+  /// this iPhone (and says so). `sensitiveCheck` keeps automatic saves from storing an image with a code in it.
+  @discardableResult
+  func saveMedia(
+    _ parts: [MediaIntake.Part],
+    to collectionID: String? = nil,
+    sensitiveCheck: Bool = false
+  ) async -> SaveResult {
+    guard !parts.isEmpty else { return .empty }
+    guard parts.reduce(0, { $0 + $1.data.count }) <= Self.maxLocalMediaBytes else { return .tooLarge }
+    await start()
+    guard let prepared = await MediaIntake.prepare(parts, device: .iphone) else { return .empty }
+    if sensitiveCheck, let text = prepared.clip.media?.recognizedText, !AutoCapture.allows(text) { return .empty }
+    do {
+      try MediaIntake.store(prepared, in: sync.media)
+    } catch {
+      return .empty
+    }
+    let goesToICloud = await sync.allowsMedia(prepared.clip)
+    await sync.recordCopy(prepared.clip)
+    if let collectionID {
+      await sync.setMembership(true, of: [prepared.clip.id], in: collectionID)
+    }
+    await reload()
+    await upload()
+    if !goesToICloud { notice = .keptOnThisIPhone }
+    return .saved
+  }
+
+  /// What the system Paste button hands over: text, an image, a PDF or files.
+  func save(providers items: [NSItemProvider]) {
+    let providers = MediaLoader.Providers(items: items)
+    Task {
+      if let text = await MediaLoader.text(from: providers) {
+        if await saveNow(text) == .tooLarge { notice = .tooLarge }
+        return
+      }
+      let parts = await MediaLoader.parts(from: providers, quality: mediaQuality, maxBytes: Self.maxLocalMediaBytes)
+      if await saveMedia(parts) == .tooLarge { notice = .tooLarge }
+    }
+  }
+
+  /// A copy Markup made of an image or a PDF: a new clip, in the same collections.
+  func saveEdited(_ url: URL, from original: Clip) async {
+    guard let data = try? Data(contentsOf: url) else { return }
+    let part = MediaIntake.file(named: url.lastPathComponent, data: data)
+    let parts = MediaProcessing.isImage(part.type)
+      ? [MediaIntake.image(data, quality: mediaQuality, maxBytes: Self.maxLocalMediaBytes)].compactMap { $0 }
+      : [part]
+    _ = await saveMedia(parts, to: original.collectionIDs.first)
+  }
+
+  /// Scanned pages as a PDF clip, next to the text read from them.
+  func saveScannedPDF(_ pages: [CGImage]) async {
+    guard let pdf = MediaLoader.pdf(from: pages) else { return }
+    _ = await saveMedia([MediaIntake.pdf(pdf, name: MediaProcessing.defaultName(prefix: "Scan", type: UTType.pdf.identifier))])
+  }
+
+  /// Changes the settings every device shares; the other devices follow.
+  func updateSharedSettings(_ change: @escaping @Sendable (inout SharedSyncSettings) -> Void) {
+    Task {
+      await start()
+      await sync.updateSharedSettings(change)
+      await updatePrivacy()
+      await reload()
+      await upload()
+    }
   }
 
   private func upsert(_ clip: Clip) {
@@ -535,8 +690,26 @@ final class ClipStore {
   }
 
   /// Settings › Privacy changed: codes and cards copied from now on stay on this iPhone, or sync again.
+  /// The privacy filters every device shares decide what leaves this iPhone; the keyboard and Share keep a copy.
   func updatePrivacy() async {
-    await sync.setPrivacy(PrivacyOptions.onPhone(in: sharedDefaults))
+    let privacy = await sync.sharedSettings.privacy
+    PrivacyOptions.writeOnPhone(privacy, in: sharedDefaults)
+    await sync.setPrivacy(privacy)
+  }
+
+  private var reconciledSettings = false
+
+  /// Once per launch, after the first sync: before 1.3 the code and card switches were this iPhone's own. If
+  /// nobody changed the shared ones yet, these become everyone's.
+  private func reconcileSharedSettings() async {
+    guard !reconciledSettings else { return }
+    reconciledSettings = true
+    let shared = await sync.sharedSettings
+    let local = PrivacyOptions.onPhone(in: sharedDefaults)
+    if shared.modifiedAt == nil, local != shared.privacy {
+      await sync.updateSharedSettings { $0.privacy = local }
+    }
+    await updatePrivacy()
   }
 
   // MARK: - Queue and combining
