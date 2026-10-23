@@ -55,7 +55,11 @@ enum MediaFiles {
 
   /// "2.4 MB"
   static func size(_ bytes: Int) -> String {
-    ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
+    let formatter = ByteCountFormatter()
+    formatter.countStyle = .file
+    // "0 KB", not "Zero KB".
+    formatter.allowsNonnumericFormatting = false
+    return formatter.string(fromByteCount: Int64(bytes))
   }
 }
 
@@ -188,10 +192,13 @@ struct MediaTileContent: View {
       switch content {
       case .image:
         if let image = MediaFiles.thumbnail(for: clip) {
-          Image(uiImage: image)
-            .resizable()
-            .scaledToFill()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+          // The picture fills the space it is given and never asks for more (a tall photo would push the strip out).
+          Color.clear
+            .overlay {
+              Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+            }
             .clipped()
         } else {
           placeholder(content)

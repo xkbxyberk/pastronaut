@@ -24,16 +24,9 @@ struct MediaSettingsView: View {
           }
         }
         .accessibilityIdentifier("syncMediaToggle")
-        Picker(selection: $quality) {
+        Picker("Image Quality", selection: $quality) {
           Text("Optimized").tag(MediaQuality.optimized.rawValue)
           Text("Original").tag(MediaQuality.original.rawValue)
-        } label: {
-          VStack(alignment: .leading, spacing: 2) {
-            Text("Image Quality")
-            Text("Optimized: HEIC, at most 4,096 pixels. This iPhone's own setting.")
-              .font(.footnote)
-              .foregroundStyle(.secondary)
-          }
         }
         Picker("Largest Item", selection: shared(\.maxItemBytes)) {
           ForEach(MediaSettings.maxItemChoices, id: \.self) { Text(verbatim: MediaFiles.size($0)).tag($0) }
@@ -42,7 +35,10 @@ struct MediaSettingsView: View {
           ForEach(MediaSettings.cloudBudgetChoices, id: \.self) { Text(verbatim: MediaFiles.size($0)).tag($0) }
         }
       } footer: {
-        Text("Every device downloads all images and files, up to the iCloud space. To keep them off mobile data, turn off Mobile Data for Pastronaut in iOS Settings.")
+        VStack(alignment: .leading, spacing: 6) {
+          Text("Optimized: HEIC, at most 4,096 pixels. This iPhone's own setting.")
+          Text("Every device downloads all images and files, up to the iCloud space. To keep them off mobile data, turn off Mobile Data for Pastronaut in iOS Settings.")
+        }
       }
       .disabled(store.status == nil)
 

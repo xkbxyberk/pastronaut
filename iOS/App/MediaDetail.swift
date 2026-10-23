@@ -50,7 +50,8 @@ struct MediaDetailSection: View {
   @ViewBuilder
   private var picture: some View {
     let content = clip.content
-    ZStack(alignment: .bottomTrailing) {
+    // Live Text puts its own button in the bottom corner; ours goes to the top.
+    ZStack(alignment: .topTrailing) {
       Group {
         if content == .image, hasFiles, let url = urls.first {
           LiveTextImage(url: url)
@@ -62,7 +63,7 @@ struct MediaDetailSection: View {
             .frame(height: content == .file ? 180 : 330)
         }
       }
-      .background(content.kind.strip)
+      .background(content == .image ? AnyShapeStyle(Color(uiColor: .secondarySystemGroupedBackground)) : AnyShapeStyle(content.kind.strip))
       .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
       if hasFiles {
         Button {
