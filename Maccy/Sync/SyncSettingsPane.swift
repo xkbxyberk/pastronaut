@@ -72,7 +72,7 @@ struct SyncSettingsPane: View {
         Text("These switches apply to all your devices.", tableName: "Pastronaut")
           .foregroundStyle(.secondary)
         Label {
-          Text("Clip text and collection names are encrypted on this Mac before they reach iCloud (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved. Copies from password managers are never synced.", tableName: "Pastronaut")
+          Text("Clip text, images, files and collection names are encrypted on this Mac before they reach iCloud (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved. Copies from password managers are never synced.", tableName: "Pastronaut")
         } icon: {
           Image(systemName: "lock")
         }
@@ -269,6 +269,10 @@ struct MediaSettingsSection: View {
   }
 
   static func size(_ bytes: Int) -> String {
-    ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .decimal)
+    let formatter = ByteCountFormatter()
+    formatter.countStyle = .decimal
+    // "0 KB", not "Zero KB".
+    formatter.allowsNonnumericFormatting = false
+    return formatter.string(fromByteCount: Int64(bytes))
   }
 }

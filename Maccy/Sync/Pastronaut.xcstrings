@@ -1566,17 +1566,6 @@
         }
       }
     },
-    "Clip text and collection names are encrypted on this Mac before they reach iCloud (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved. Copies from password managers are never synced.": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Öğe metinleri ve koleksiyon adları iCloud'a gitmeden önce bu Mac'te şifrelenir (Gelişmiş Veri Koruması açıksa uçtan uca); iCloud hangi metinleri kaydettiğini anlayamaz. Parola yöneticilerinden yapılan kopyalar hiç eşitlenmez."
-          }
-        }
-      }
-    },
     "Privacy Policy": {
       "extractionState": "manual",
       "localizations": {
@@ -1815,6 +1804,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Masaüstü, Belgeler ya da İndirilenler'den ilk kez bir dosya kopyaladığında macOS, Pastronaut'un onu okumasına izin verip vermeyeceğini sorar. İzin vermezsen dosya bu Mac'te kalır."
+          }
+        }
+      }
+    },
+    "Clip text, images, files and collection names are encrypted on this Mac before they reach iCloud (end-to-end with Advanced Data Protection), and iCloud can't tell which texts you saved. Copies from password managers are never synced.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğe metinleri, görseller, dosyalar ve koleksiyon adları iCloud'a gitmeden önce bu Mac'te şifrelenir (Gelişmiş Veri Koruması açıksa uçtan uca); iCloud hangi metinleri kaydettiğini anlayamaz. Parola yöneticilerinden yapılan kopyalar hiç eşitlenmez."
           }
         }
       }

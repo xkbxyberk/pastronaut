@@ -642,6 +642,44 @@ class MaccyUITests: XCTestCase {
     }
   }
 
+  // Pastronaut 1.3: the row menu with titles, and Settings › Sync with Images & Files. Made-up clips; the sync
+  // pane reads iCloud Sync's own on/off from the app's settings, so run it with sync on.
+  func testPastronaut13Shots() throws {
+    for text in ["Toplantı Perşembe 14:00'te", "git push origin main"] {
+      copyToClipboard(text)
+    }
+    popUpWithMouse()
+    let row = historyRow("git push origin main")
+    XCTAssertTrue(row.waitForExistence(timeout: 3))
+    row.rightClick()
+    XCTAssertTrue(app.menuItems["context-delete"].firstMatch.waitForExistence(timeout: 3))
+    attachScreenshot(app.menus.containing(.menuItem, identifier: "context-delete").firstMatch, named: "13-context-menu")
+    app.typeKey(.escape, modifierFlags: [])
+    app.typeKey(.escape, modifierFlags: [])
+    sleep(1)
+
+    app.statusItems.firstMatch.rightClick()
+    let settings = app.menuItems.matching(NSPredicate(format: "title BEGINSWITH 'Settings' OR title BEGINSWITH 'Ayarlar'")).firstMatch
+    XCTAssertTrue(settings.waitForExistence(timeout: 3))
+    settings.click()
+    let sync = app.toolbars.buttons.matching(NSPredicate(format: "label == 'Sync' OR label == 'Eşitleme'")).firstMatch
+    XCTAssertTrue(sync.waitForExistence(timeout: 5))
+    sync.click()
+    sleep(2)
+    // The settings window is the one with the toolbar (the popup is a dialog without one).
+    let window = [app.windows, app.dialogs]
+      .map { $0.containing(.toolbar, identifier: nil).firstMatch }
+      .first { $0.exists } ?? app.windows.firstMatch
+    attachScreenshot(window, named: "13-settings-top")
+    // The form scrolls when the pointer is over it.
+    let form = window.scrollViews.firstMatch
+    for (index, delta) in [-8.0, -16.0].enumerated() {
+      form.scroll(byDeltaX: 0, deltaY: delta * 40)
+      sleep(1)
+      attachScreenshot(window, named: "13-settings-media-\(index)")
+    }
+  }
+
   // Pastronaut: row context menu, undo after deleting, "Show in History" and the timed pause.
   func testPastronautPopupExtras() throws {
     for text in ["c0ffee", "git push origin main", "Toplantı Perşembe 14:00'te"] {
