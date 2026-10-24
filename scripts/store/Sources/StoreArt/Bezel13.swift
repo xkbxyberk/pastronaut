@@ -1,5 +1,6 @@
 import AppKit
 import ImageIO
+import PastronautCore
 import SwiftUI
 
 // App Store pictures for 1.3 (APPSTORE.md §9): the real screenshots, status and menu bars included, inside Apple's
@@ -10,7 +11,8 @@ import SwiftUI
 //   <raw dir>/mac/m13-<lang>-….png      Mac, the whole screen (MaccyUITests `testPastronaut13StoreShots`)
 //   <bezel dir>: the PNGs from Apple's bezel downloads. Their license allows them only in mock-ups of apps for
 //   Apple platforms; they are never committed or shared, so the folder lives outside git.
-// Writes iphone-1…10.png (1320 × 2868) and mac-1…6.png (2880 × 1800) per language, opaque.
+// Writes iphone-1…10.png (1320 × 2868), mac-1…6.png (2880 × 1800), header.png (3840 × 1646) and search.png
+// (3840 × 2560) per language, opaque.
 
 struct Bezel {
   let image: CGImage
@@ -368,6 +370,7 @@ func runBezel13(raw: URL, bezels: URL, out: URL) throws {
       try writeOpaque(try render(view, width: 2880, height: 1800), to: dir.appending(path: "mac-\(index + 1).png"))
     }
   }
+  try runArt13(raw: raw, bezels: bezels, out: out)
 }
 
 // MARK: - Sizes for Mac frame 2
@@ -390,4 +393,124 @@ func bodyWidth13(_ bezel: Bezel) -> CGFloat {
     }
   }
   return CGFloat(max(1, maxX - minX + 1))
+}
+
+// MARK: - Header and search result (iOS 27 and later; can change without a new version)
+
+/// What 1.3 adds to the pills: pictures and the text in them.
+let pills13: [(Words, Color, String)] = [
+  (["en": "Paste keyboard", "tr": "Yapıştırma klavyesi"], Brand.code, "keyboard"),
+  (["en": "Photos & PDFs", "tr": "Fotoğraf ve PDF"], Brand.address, "photo.on.rectangle"),
+  (["en": "Text in pictures", "tr": "Resimdeki yazı"], Brand.link, "text.viewfinder"),
+  (["en": "Mac sync", "tr": "Mac'le eşitleme"], Brand.email, "laptopcomputer.and.iphone")
+]
+
+/// A whole iPhone, straight, at `height`.
+struct Phone13: View {
+  let device: CGImage
+  let height: CGFloat
+
+  var body: some View {
+    Image(decorative: device, scale: 1)
+      .resizable()
+      .interpolation(.high)
+      .frame(width: height * CGFloat(device.width) / CGFloat(device.height), height: height)
+  }
+}
+
+/// Product page header, 3840 × 1646 (21:9), dark. The message sits in the centered safe area (1646 × 661); two
+/// iPhones on each side are decoration that narrow screens may cut.
+struct Header13: View {
+  let lang: String
+  /// Left pair, then right pair.
+  let phones: [CGImage]
+
+  var body: some View {
+    let height: CGFloat = 1180
+    ZStack(alignment: .topLeading) {
+      WideBackground(dark: true)
+      Phone13(device: phones[0], height: height).position(x: 300, y: 823 + 40)
+      Phone13(device: phones[1], height: height).position(x: 860, y: 823 - 40)
+      Phone13(device: phones[2], height: height).position(x: 3840 - 860, y: 823 - 40)
+      Phone13(device: phones[3], height: height).position(x: 3840 - 300, y: 823 + 40)
+      VStack(spacing: 40) {
+        PastronautWordmark(size: 128).environment(\.colorScheme, .dark)
+        Text(tagline[lang] ?? "")
+          .font(.system(size: 88, weight: .heavy))
+          .tracking(-1)
+          .foregroundStyle(.white)
+        FeaturePills(lang: lang, dark: true, size: 30, items: pills13)
+      }
+      .position(x: 1920, y: 823)
+    }
+    .frame(width: 3840, height: 1646)
+    .clipped()
+  }
+}
+
+/// Search result picture, 3840 × 2560 (3:2), light. Everything that matters is in the centered safe area
+/// (2168 × 1030): what the app is on the left, two iPhones on the right.
+struct Search13: View {
+  let lang: String
+  let phones: [CGImage]
+
+  static let line: Words = ["en": "Clipboard history\n+ paste keyboard", "tr": "Pano geçmişi ve\nyapıştırma klavyesi"]
+  static let sub: Words = ["en": "Text, photos, PDFs and files.\niPhone and Mac, in your own iCloud.",
+                           "tr": "Metin, fotoğraf, PDF ve dosya.\niPhone ve Mac, kendi iCloud'unda."]
+
+  var body: some View {
+    // A margin inside the safe area, so nothing touches its edge.
+    let height: CGFloat = 950
+    let phoneWidth = height * CGFloat(phones[0].width) / CGFloat(phones[0].height)
+    ZStack(alignment: .topLeading) {
+      WideBackground(dark: false)
+      VStack(alignment: .leading, spacing: 0) {
+        PastronautWordmark(size: 88).environment(\.colorScheme, .light)
+          .padding(.bottom, 34)
+        Text(Self.line[lang] ?? "")
+          .font(.system(size: 92, weight: .heavy))
+          .tracking(-1.5)
+          .foregroundStyle(Brand.ink)
+          .fixedSize()
+        Text(Self.sub[lang] ?? "")
+          .font(.system(size: 44, weight: .medium))
+          .foregroundStyle(Brand.muted)
+          .padding(.top, 22)
+          .fixedSize()
+        FeaturePills(lang: lang, size: 34, perRow: 2, items: pills13)
+          .padding(.top, 40)
+      }
+      .frame(width: 1100, alignment: .leading)
+      .position(x: 836 + 70 + 550, y: 1280)
+      Phone13(device: phones[0], height: height).position(x: 3004 - 50 - phoneWidth * 1.5 - 30, y: 1280)
+      Phone13(device: phones[1], height: height).position(x: 3004 - 50 - phoneWidth / 2, y: 1280)
+    }
+    .frame(width: 3840, height: 2560)
+    .clipped()
+  }
+}
+
+@MainActor
+func runArt13(raw: URL, bezels: URL, out: URL) throws {
+  let phoneLight = try Bezel(bezels.appending(path: "iPhone 18 Pro Max - Silver - Portrait.png"))
+  let phoneDark = try Bezel(bezels.appending(path: "iPhone 18 Pro Max - Black - Portrait.png"))
+  for lang in ["en", "tr"] {
+    func phone(_ name: String, sheet: Bool = false) throws -> CGImage {
+      let path = "\(lang)/s13-\(lang)-\(name).png"
+      guard let source = CGImageSourceCreateWithURL(raw.appending(path: path) as CFURL, nil),
+            let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+        throw NSError(domain: "StoreArt missing \(path)", code: 5)
+      }
+      let bezel = name.hasSuffix("dark") ? phoneDark : phoneLight
+      return bezel.device(showing: sheet ? sheetBandCleaned(image) : image)
+    }
+    let dir = out.appending(path: lang)
+    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    let header = Header13(lang: lang, phones: [
+      try phone("04-search-dark"), try phone("02-all-dark"), try phone("07-cards-dark"), try phone("08-queue-dark", sheet: true)
+    ])
+    try writeOpaque(try render(header, width: 3840, height: 1646), to: dir.appending(path: "header.png"))
+    let search = Search13(lang: lang, phones: [try phone("02-all-light"), try phone("06-detail-poster-light")])
+    try writeOpaque(try render(search, width: 3840, height: 2560), to: dir.appending(path: "search.png"))
+  }
 }

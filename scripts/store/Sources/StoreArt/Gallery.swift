@@ -416,6 +416,7 @@ struct FeaturePills: View {
   var size: CGFloat = 44
   /// Pills per row.
   var perRow = 4
+  var items = Self.items
 
   static let items: [(Words, Color, String)] = [
     (["en": "Paste keyboard", "tr": "Yapıştırma klavyesi"], Brand.code, "keyboard"),
@@ -426,9 +427,9 @@ struct FeaturePills: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: size * 0.4) {
-      ForEach(Array(stride(from: 0, to: Self.items.count, by: perRow)), id: \.self) { start in
+      ForEach(Array(stride(from: 0, to: items.count, by: perRow)), id: \.self) { start in
         HStack(spacing: size * 0.4) {
-          ForEach(Array(Self.items[start..<min(start + perRow, Self.items.count)].enumerated()), id: \.offset) { _, item in
+          ForEach(Array(items[start..<min(start + perRow, items.count)].enumerated()), id: \.offset) { _, item in
             pill(item)
           }
         }
