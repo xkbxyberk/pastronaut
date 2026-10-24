@@ -1,4 +1,4 @@
-# App Store: Pastronaut for iPhone and Mac (v4, 2026-10-22: iPhone 1.2)
+# App Store: Pastronaut for iPhone and Mac (v5, 2026-10-24: 1.3 for iPhone and Mac)
 
 Copy-ready App Store Connect metadata for one product on two devices, the research behind it, and every form
 answer. Character counts were measured. Everything describes the app as it is at this commit.
@@ -117,17 +117,21 @@ answer. Character counts were measured. Everything describes the app as it is at
 - **Price:** Free, no in-app purchases.
 
 ## 4. Keywords [100] (single words, no spaces, nothing from the name or subtitle)
+For 1.3 the iPhone fields trade the weakest words of 1.2 (reply, quick, phrase, multiple) for what 1.3 adds (image,
+pdf, file, screenshot); the Mac fields swap queue and preview for pdf and screenshot. The 1.2 sets are in git history.
+
 | | iPhone | Mac |
 |---|---|---|
-| **English (U.S.)** | `keyboard,snippet,text,widget,template,reply,quick,phrase,note,link,organizer,save,pin,multiple,mac` (98) | `menubar,menu,bar,pasteboard,snippet,text,image,file,search,shortcut,pin,queue,preview,ocr,iphone` (96) |
-| **English (U.K.)** | `keyboard,snippet,text,widget,template,reply,quick,phrase,note,link,organiser,save,pin,multiple,mac` (98) | `menubar,menu,bar,pasteboard,snippet,text,image,file,search,shortcut,pin,queue,preview,ocr,iphone` (96) |
-| **Turkish** | `klavye,yönetici,geçmiş,kopya,metin,not,bağlantı,parçacık,şablon,hızlı,yanıt,widget,kaydet,mac` (93) | `menü,çubuğu,kısayol,parçacık,metin,görsel,dosya,arama,önizleme,sıra,iphone,yönetici,geçmiş` (90) |
+| **English (U.S.)** | `keyboard,snippet,text,image,pdf,file,screenshot,widget,template,note,link,organizer,save,pin,mac` (96) | `menubar,menu,bar,pasteboard,snippet,text,image,pdf,file,screenshot,search,shortcut,pin,ocr,iphone` (97) |
+| **English (U.K.)** | `keyboard,snippet,text,image,pdf,file,screenshot,widget,template,note,link,organiser,save,pin,mac` (96) | `menubar,menu,bar,pasteboard,snippet,text,image,pdf,file,screenshot,search,shortcut,pin,ocr,iphone` (97) |
+| **Turkish** | `klavye,yönetici,geçmiş,kopya,metin,görsel,pdf,dosya,ekran,görüntüsü,parçacık,şablon,widget,mac` (94) | `menü,çubuğu,kısayol,parçacık,metin,görsel,pdf,dosya,ekran,görüntüsü,arama,önizleme,iphone,geçmiş` (96) |
 
 **What these cover, combined with the name and subtitle:**
-- **iPhone:** "clipboard keyboard", "copy paste keyboard", "paste keyboard", "text snippets", "quick reply",
-  "clipboard widget", "clipboard organizer", "multiple copy paste", "clipboard mac".
-- **Mac:** "clipboard menu bar", "pasteboard manager", "clipboard history search", "text snippets", "copy paste
-  shortcut", "clipboard iphone".
+- **iPhone:** "clipboard keyboard", "copy paste keyboard", "text snippets", "clipboard image", "pdf clipboard",
+  "screenshot sync", "clipboard widget", "clipboard organizer", "clipboard mac".
+- **Mac:** "clipboard menu bar", "pasteboard manager", "screenshot clipboard", "clipboard history search", "copy paste
+  shortcut", "clipboard iphone", "ocr".
+- **Turkish:** "pano klavye", "ekran görüntüsü", "kopya geçmişi", "pdf", "metin şablonu".
 
 **Why each language has its own field:**
 - English (U.K.) repeats the core set, because it is the English that Türkiye and most countries search. "organiser"
@@ -138,194 +142,230 @@ answer. Character counts were measured. Everything describes the app as it is at
 100-character field. Use it only as a real Spanish page:
 - Name: `Pastronaut: Portapapeles`
 - Subtitle: `Copiar, pegar y sincronizar`
-- Keywords: `historial,teclado,copiar,pegar,texto,notas,fragmento,plantilla,respuesta,rapida,widget,mac`
+- Keywords: `historial,teclado,copiar,pegar,texto,notas,fragmento,plantilla,imagen,pdf,archivo,widget,mac`
 
 **After launch:** follow the rankings for a few weeks, then replace the words that never move.
 
 ## 5. Promotional text [170] (can change any time, no review)
 | | iPhone | Mac |
 |---|---|---|
-| **EN** | `Every copy you save, one tap away in any app: a clipboard keyboard, smart cards, collections and widgets. Great on its own, even better with your Mac.` (150) | `Your clipboard history in the menu bar. Preview with Space, paste a list in order, find anything with filters, and have it all on your iPhone too.` (146) |
-| **TR** | `Kaydettiğin her kopya, her uygulamada bir dokunuş uzağında: pano klavyesi, akıllı kartlar, koleksiyonlar ve widget'lar. Tek başına iyi, Mac'le daha iyi.` (152) | `Pano geçmişin menü çubuğunda. Space ile önizle, listeyi sırayla yapıştır, süzgeçlerle her şeyi bul; hepsi iPhone'unda da olsun.` (127) |
+| **EN** | `Text, links, photos, PDFs and files from your Mac and iPhone, one tap away in any app. New in 1.3: pictures and files sync too, and the words inside them are searchable.` (169) | `Your clipboard history in the menu bar, now with screenshots, PDFs and files that sync to your iPhone. Preview with Space, filter by kind, paste a list in order.` (161) |
+| **TR** | `Mac'inden ve iPhone'undan metin, bağlantı, fotoğraf, PDF ve dosya, her uygulamada bir dokunuşla. 1.3'te yeni: resimler ve dosyalar da eşitleniyor, içleri de aranıyor.` (166) | `Pano geçmişin menü çubuğunda; artık iPhone'unla eşitlenen ekran görüntüleri, PDF'ler ve dosyalarla. Space ile önizle, türe göre süz, listeyi sırayla yapıştır.` (158) |
 
 English (U.K.) uses the English texts; only "organizer" becomes "organiser" if it appears.
 
-## 6. Description: iPhone (1.2)
-About 2,900 characters each (limit 4,000). The 1.1 text is in git history.
+## 6. Description: iPhone (1.3)
+How the 1.3 texts are written (research in §1 and §14):
+- **The first two lines sell.** Only about 170–255 characters show before "more". They say what you get (everything you
+  copy, on both devices, pasted anywhere) and remove the first doubts (no account, no subscription, no tracking).
+- **The description is not searched,** so it is written to convince, not stuffed with keywords (those are in §4).
+- **Apple's marketing rules:** Apple product names are never set in capitals (so "ON YOUR iPhone TOO", not "IPHONE"),
+  products are named instead of "iOS" or "macOS", and the other app is "Pastronaut for Mac / for iPhone".
+- **Short benefit bullets,** one idea each; the honest iPhone limit (only the app on screen reads the clipboard)
+  stays, said plainly.
+
+About 2,993 characters in English and 3,163 in Turkish (limit 4,000). The 1.2 text is in git history.
 
 ### English
 ```
-Your iPhone remembers only the last thing you copied. Pastronaut remembers what you save — and its keyboard pastes any of it, in any app, with one tap. Use it on its own, or with Pastronaut for Mac to have your Mac's clipboard on your iPhone too.
+Everything you copy on iPhone and Mac — text, links, photos, PDFs and files — in one private history, with a keyboard that pastes any of it in any app. No account. No subscription. No tracking.
+
+ONE CLIPBOARD, TWO DEVICES
+– Copy on your Mac, find it on your iPhone a moment later, and the other way round
+– Screenshots, photos, PDFs and files travel too, not just text
+– It all syncs through your own iCloud; there are no Pastronaut servers
+– Great on its own as well: Pastronaut for Mac is optional
 
 PASTE ANYTHING, IN ANY APP
-– The Pastronaut keyboard shows your clips in a tidy two-column grid, newest first, with link and map thumbnails
-– The latest copy from your Mac waits at the top
-– Tabs for recent, pinned, Mac, iPhone and each collection; search with letters and numbers
-– Paste a list in order: select clips, start a queue, and every tap on the keyboard types the next one
+– The Pastronaut keyboard shows your clips as tidy thumbnails, newest first, with the latest copy from your Mac on top
+– Tap a clip to type it; with Full Access, tap a photo or file to put it on the clipboard
+– Paste a list in order: start a queue, and every tap types the next one
+
+PHOTOS, PDFS AND FILES
+– Screenshots and photos show as pictures, PDFs show their first page, files show their name and size
+– The words inside images and PDFs are searchable: type "invoice", find the invoice
+– Select text with Live Text, mark up a copy, save to Photos or Files, or share it
+– You choose the largest item and how much iCloud space they may use
+
+FIND IT IN SECONDS
+– Search text, titles and the words inside pictures
+– Filter by source (All, Mac, iPhone), by kind (links, code, addresses, images, PDFs and more) and by collection, all at once
+– Give any clip a title so it's easy to spot
 
 SAVE IN ONE TAP
-iOS lets only the app in front read the clipboard, so Pastronaut makes saving one tap:
-– Open the app ("Save Clipboard on Opening")
-– Tap Paste in the Pastronaut keyboard
-– Share text or links to Pastronaut, or tap "Save to Pastronaut" in the share sheet
+iPhone lets only the app on screen read the clipboard, so Pastronaut makes saving a single tap:
+– Open the app (Save Clipboard on Opening), or tap + and then Paste
+– Share text, links, photos and files to Pastronaut, or tap "Save to Pastronaut" in the share sheet
 – Use the Control Center button, Back Tap or the Action button
-– Type a new clip with +, or touch and hold + to scan text or a document with the camera
+– Scan text or a document with the camera
 
 EVERY KIND, ITS OWN CARD
-– Addresses and map coordinates: a map and Get Directions
-– Links: a page preview (sign-in and reset links are never opened)
-– Code in color, colors as swatches, Call and Write Email buttons
-– Give any clip a title, so it is easy to spot and to find
-– Prefer it calm? Turn previews off for a compact list
+– Addresses with a map and directions, links with a page preview, code in color, colors as swatches
+– Call and Write Email buttons, and the icon of the Mac app a copy came from
 
-PIN, COLLECT, FIND
-– Pin what you reuse; keep addresses, snippets or a project's links in collections, and export a collection as a file
-– Search by text or title, or filter by kind and date
-– Combine several clips into one and copy it
-– Deleted something by mistake? Undo
+PIN, COLLECT, ORGANIZE
+– Pin what you reuse; keep addresses, snippets or a project's links in collections
+– Combine clips into one, export a collection, undo a delete
+– Keep History for a day, a week, a month, a year or forever
 
 WIDGETS, CONTROLS AND SHORTCUTS
-– Recent clips on the Home Screen (also from one collection), the latest on the Lock Screen
+– Recent clips on the Home Screen, the latest on the Lock Screen
 – Control Center: save the clipboard, or pause saving for a while
-– Shortcuts: Get Clip, Get Latest Clip, Copy Latest Clip, Get Recent Clips, Save to Pastronaut, Add to Collection
-
-ON YOUR MAC TOO
-Pastronaut for Mac keeps your whole history in the menu bar — press Space to preview, paste a list in order, filter as you type — and syncs it with your iPhone through your own iCloud.
+– Shortcuts: get, copy and save clips, and add them to a collection
 
 PRIVATE BY DESIGN
 – No account, no servers, no analytics, no ads
-– Your clips stay on your devices and in your private iCloud database; text is encrypted on your device before upload, and end-to-end with Advanced Data Protection
+– Text, titles and files are encrypted on your device before they reach iCloud, end-to-end with Advanced Data Protection
+– One-time codes, card numbers and IBANs are never saved automatically, and one switch keeps them off iCloud on every device
 – Optional Face ID lock; your clips are covered while the screen is recorded
-– One-time codes, card numbers and IBANs are never saved automatically, and the ones you save can stay on this iPhone only
-– Scanning reads the text on your iPhone; no photo is kept
 
 FREE AND OPEN SOURCE
-No subscription and no in-app purchases. The source code is public.
+No subscription, no in-app purchases, and the source code is public. Pastronaut for Mac is free on the Mac App Store.
 ```
 
 ### Türkçe
 ```
-iPhone yalnızca son kopyaladığın şeyi hatırlar. Pastronaut kaydettiklerini hatırlar; klavyesi de istediğini her uygulamada tek dokunuşla yapıştırır. Tek başına kullan ya da Pastronaut for Mac ile Mac'inin panosu da iPhone'unda olsun.
+iPhone'da ve Mac'te kopyaladığın her şey — metin, bağlantı, fotoğraf, PDF ve dosya — tek bir özel geçmişte; klavyesi de istediğini her uygulamada yapıştırır. Hesap yok. Abonelik yok. İzleme yok.
+
+TEK PANO, İKİ CİHAZ
+– Mac'te kopyala, bir an sonra iPhone'unda bul; tersi de geçerli
+– Yalnızca metin değil: ekran görüntüleri, fotoğraflar, PDF'ler ve dosyalar da gider gelir
+– Hepsi kendi iCloud'un üzerinden eşitlenir; Pastronaut'un sunucusu yok
+– Tek başına da harika: Pastronaut for Mac isteğe bağlı
 
 HER ŞEYİ, HER UYGULAMADA YAPIŞTIR
-– Pastronaut klavyesi öğelerini en yenisi başta, bağlantı ve harita küçük resimleriyle iki sütunlu düzenli bir ızgarada gösterir
-– Mac'ten gelen son kopya en üstte seni bekler
-– Son, sabitlenenler, Mac, iPhone ve her koleksiyon için sekmeler; harf ve rakamla arama
-– Bir listeyi sırayla yapıştır: öğeleri seç, sırayı başlat; klavyede her dokunuş sıradakini yazar
+– Pastronaut klavyesi öğelerini en yenisi başta, düzenli küçük resimlerle gösterir; Mac'ten gelen son kopya en üstte
+– Bir öğeye dokun, yazılsın; Tam Erişim'le bir fotoğrafa ya da dosyaya dokun, panoya gitsin
+– Bir listeyi sırayla yapıştır: sırayı başlat, her dokunuş sıradakini yazsın
+
+FOTOĞRAFLAR, PDF'LER VE DOSYALAR
+– Ekran görüntüleri ve fotoğraflar resim olarak, PDF'ler ilk sayfasıyla, dosyalar adı ve boyutuyla görünür
+– Görsellerdeki ve PDF'lerdeki kelimeler aranabilir: "fatura" yaz, faturayı bul
+– Canlı Metin'le metni seç, bir kopyasını işaretle, Fotoğraflar'a ya da Dosyalar'a kaydet, paylaş
+– En büyük öğeyi ve ne kadar iCloud alanı kullanacaklarını sen seçersin
+
+SANİYELER İÇİNDE BUL
+– Metinde, başlıklarda ve resimlerin içindeki kelimelerde ara
+– Kaynağa (Tümü, Mac, iPhone), türe (bağlantı, kod, adres, görsel, PDF ve fazlası) ve koleksiyona göre, hepsi birlikte süz
+– Her öğeye bir başlık ver, kolayca göze çarpsın
 
 TEK DOKUNUŞLA KAYDET
-iOS panoyu yalnızca öndeki uygulamanın okumasına izin verir; Pastronaut kaydetmeyi tek dokunuşa indirir:
-– Uygulamayı aç ("Açılınca Panoyu Kaydet")
-– Pastronaut klavyesinde Yapıştır'a dokun
-– Metni ya da bağlantıyı Pastronaut'la paylaş ya da paylaşım sayfasında "Pastronaut'a Kaydet"e dokun
+iPhone panoyu yalnızca ekrandaki uygulamanın okumasına izin verir; Pastronaut kaydetmeyi tek dokunuşa indirir:
+– Uygulamayı aç (Açılınca Panoyu Kaydet) ya da +'ya, ardından Yapıştır'a dokun
+– Metni, bağlantıyı, fotoğrafı ve dosyayı Pastronaut'la paylaş ya da paylaşım sayfasında "Pastronaut'a Kaydet"e dokun
 – Denetim Merkezi düğmesini, Arkaya Dokun'u ya da Eylem düğmesini kullan
-– + ile yeni bir öğe yaz ya da +'ya basılı tutup kamerayla metin veya belge tara
+– Kamerayla metin ya da belge tara
 
 HER TÜRE KENDİ KARTI
-– Adres ve harita koordinatı: harita ve Yol Tarifi (Türk adreslerini de tanır)
-– Bağlantı: sayfa önizlemesi (giriş ve şifre sıfırlama bağlantıları hiç açılmaz)
-– Renkli kod, renk örnekleri, Ara ve E-posta Yaz düğmeleri
-– Her öğeye bir başlık ver; kolayca göz at, kolayca bul
-– Sade mi istersin? Önizlemeleri kapat, kompakt liste olsun
+– Haritası ve yol tarifiyle adresler (Türk adreslerini de tanır), sayfa önizlemesiyle bağlantılar, renkli kod, renk örnekleri
+– Ara ve E-posta Yaz düğmeleri; Mac'ten gelen kopyada geldiği uygulamanın simgesi
 
-SABİTLE, KOLEKSİYONLA, BUL
-– Sık kullandıklarını sabitle; adresleri, parçacıkları ya da bir projenin bağlantılarını koleksiyonlarda tut, bir koleksiyonu dosya olarak dışa aktar
-– Metinle ya da başlıkla ara, türe ve tarihe göre süz
-– Birkaç öğeyi birleştirip tek seferde kopyala
-– Yanlışlıkla mı sildin? Geri al
+SABİTLE, KOLEKSİYONLA, DÜZENLE
+– Sık kullandığını sabitle; adresleri, parçacıkları ya da bir projenin bağlantılarını koleksiyonlarda tut
+– Öğeleri birleştir, bir koleksiyonu dışa aktar, silmeyi geri al
+– Geçmişi bir gün, bir hafta, bir ay, bir yıl ya da süresiz sakla
 
 WIDGET'LAR, DENETİMLER VE KESTİRMELER
-– Ana Ekran'da son öğeler (bir koleksiyondan da), Kilitli Ekran'da son öğe
+– Ana Ekran'da son öğeler, Kilitli Ekran'da en sonuncusu
 – Denetim Merkezi: panoyu kaydet ya da kaydetmeyi bir süre duraklat
-– Kestirmeler: Öğe Al, Son Öğeyi Al, Son Öğeyi Kopyala, Son Öğeleri Al, Pastronaut'a kaydet, Koleksiyona Ekle
-
-MAC'İNDE DE
-Pastronaut for Mac tüm geçmişini menü çubuğunda tutar — Space ile önizle, bir listeyi sırayla yapıştır, yazarken süz — ve kendi iCloud'un üzerinden iPhone'unla eşitler.
+– Kestirmeler: öğe al, kopyala, kaydet ve koleksiyona ekle
 
 GİZLİLİK ÖNCELİKLİ
 – Hesap yok, sunucu yok, analiz yok, reklam yok
-– Öğelerin cihazlarında ve özel iCloud veritabanında kalır; metin yüklenmeden önce cihazında şifrelenir, Gelişmiş Veri Koruması açıksa uçtan uca şifrelidir
+– Metinler, başlıklar ve dosyalar iCloud'a gitmeden önce cihazında şifrelenir; Gelişmiş Veri Koruması açıksa uçtan uca
+– Tek kullanımlık kodlar, kart numaraları ve IBAN'lar kendiliğinden kaydedilmez; tek bir anahtar onları her cihazda iCloud'un dışında tutar
 – İsteğe bağlı Face ID kilidi; ekran kaydedilirken öğelerin örtülür
-– Tek kullanımlık kodlar, kart numaraları ve IBAN'lar kendiliğinden kaydedilmez; kaydettiklerin istersen yalnızca bu iPhone'da kalır
-– Tarama metni iPhone'unda okur; fotoğraf saklanmaz
 
 ÜCRETSİZ VE AÇIK KAYNAK
-Abonelik yok, uygulama içi satın alma yok. Kaynak kodu herkese açık.
+Abonelik yok, uygulama içi satın alma yok, kaynak kodu herkese açık. Pastronaut for Mac, Mac App Store'da ücretsiz.
 ```
 
-## 7. Description: Mac (for the Mac App Store)
+## 7. Description: Mac (for the Mac App Store, 1.3)
+Rewritten for 1.3: the 1.0 text didn't know images, PDFs and files sync, the new filter menu, titles or the plain
+Advanced settings. Same rules as §6. About 2,163 characters in English and 2,239 in Turkish.
+
 ### English
 ```
-Your clipboard normally holds one thing. Pastronaut keeps everything you copy — text, links, images, files — one shortcut away in the menu bar, and on your iPhone too.
+Everything you copy — text, links, screenshots, PDFs and files — in a fast history in your menu bar, and on your iPhone too. No account. No subscription. No tracking.
 
 NEVER LOSE A COPY
-– A fast, keyboard-first history: press ⇧⌘C, type to search, Return to copy, ⌥Return to paste
-– Colored icons for links, code, emails, phone numbers, addresses, colors, images and files
+– Press ⇧⌘C, type to search, Return to copy, ⌥Return to paste right where you were typing
+– Colored icons for links, code, emails, phone numbers, addresses, colors, images, PDFs and files
 – Copies that password managers mark as concealed are never saved
 
 LOOK BEFORE YOU PASTE
-– Press Space for a preview that fits the kind: code in color, color swatches, open a link, get directions
-– Text in copied images is recognized, so you can find screenshots by their words
-
-PASTE A LIST, IN ORDER
-– Select a few items, press Return, and every ⌘V pastes the next one — made for forms and repetitive work
-– Paste as plain text whenever you want formatting gone
+– Press Space for a preview that fits: code in color, color swatches, the picture itself, open a link, get directions
+– Text in screenshots and PDFs is recognized, so you can find them by their words
 
 FIND IT FAST
-– Type filters into the search: type:link, app:Safari, date:yesterday, from:iphone
+– One filter menu for source (All, This Mac, iPhone), kind and collection; what you pick shows as chips you can remove
+– Or type filters into the search: type:link, app:Safari, date:yesterday, from:iphone
 – ⌘G jumps from a result to its place in your history
 
-KEEP WHAT MATTERS
-– Pin items, keep collections, pause copying for a while, undo a delete with ⌘Z
-– Hide Pastronaut while sharing your screen
+PASTE A LIST, IN ORDER
+– Select a few items, press Return, and every ⌘V pastes the next one; made for forms and repetitive work
+– Paste as plain text whenever you want formatting gone
 
-ON YOUR IPHONE TOO
-With Pastronaut for iPhone, everything syncs through your own private iCloud, and a keyboard pastes your history in any iPhone app.
+ON YOUR iPhone TOO
+– Copy a screenshot here and it's on your iPhone a moment later; save a photo there and it's in your history here
+– Pins, titles and collections stay in step, and privacy switches are set once for both
+– Pastronaut for iPhone adds a keyboard that pastes your history in any app
+
+KEEP WHAT MATTERS
+– Pin items, keep collections, give items a title
+– Pause copying, or ignore only the next copy, from the menu bar icon or Settings
+– Undo a delete with ⌘Z; hide Pastronaut while you share your screen
 
 PRIVATE BY DESIGN
 – No account, no servers, no analytics, no ads
-– Text is encrypted on your Mac before it reaches iCloud (end-to-end with Advanced Data Protection)
+– Text and files are encrypted on your Mac before they reach iCloud, end-to-end with Advanced Data Protection
 – Keep one-time codes and card numbers out of sync, or sync only what you pin
+– Choose the largest image or file and how much iCloud space they may use, or keep them on this Mac
 
 FREE AND OPEN SOURCE
-No subscription and no in-app purchases. Based on Maccy (not affiliated); the source code is public.
+No subscription and no in-app purchases. Based on Maccy (not affiliated); the source code is public. Pastronaut for iPhone is free on the App Store.
 ```
 
 ### Türkçe
 ```
-Panon normalde tek bir şey tutar. Pastronaut kopyaladığın her şeyi — metin, bağlantı, görsel, dosya — menü çubuğunda bir kısayol uzağında tutar; iPhone'unda da.
+Kopyaladığın her şey — metin, bağlantı, ekran görüntüsü, PDF ve dosya — menü çubuğunda hızlı bir geçmişte; iPhone'unda da. Hesap yok. Abonelik yok. İzleme yok.
 
 HİÇBİR KOPYAYI KAYBETME
-– Klavyeyle hızlı bir geçmiş: ⇧⌘C'ye bas, yazarak ara, Return ile kopyala, ⌥Return ile yapıştır
-– Bağlantı, kod, e-posta, telefon, adres, renk, görsel ve dosya için renkli simgeler
+– ⇧⌘C'ye bas, yazarak ara, Return ile kopyala, ⌥Return ile tam yazdığın yere yapıştır
+– Bağlantı, kod, e-posta, telefon, adres, renk, görsel, PDF ve dosya için renkli simgeler
 – Parola yöneticilerinin gizli diye işaretlediği kopyalar hiç kaydedilmez
 
 YAPIŞTIRMADAN ÖNCE BAK
-– Space'e bas, türe uygun bir önizleme açılsın: renkli kod, renk örneği, bağlantıyı aç, yol tarifi al
-– Kopyalanan görsellerdeki metin tanınır; ekran görüntülerini içindeki kelimelerle bulursun
-
-LİSTEYİ SIRAYLA YAPIŞTIR
-– Birkaç öğe seç, Return'e bas; her ⌘V sıradakini yapıştırır — formlar ve tekrarlı işler için
-– İstediğinde biçimsiz düz metin olarak yapıştır
+– Space'e bas, türe uygun önizleme açılsın: renkli kod, renk örneği, resmin kendisi, bağlantıyı aç, yol tarifi al
+– Ekran görüntülerindeki ve PDF'lerdeki metin tanınır; onları içindeki kelimelerle bulursun
 
 HIZLA BUL
-– Aramaya süzgeç yaz: tür:bağlantı, uygulama:Safari, tarih:dün, cihaz:iphone
+– Kaynak (Tümü, Bu Mac, iPhone), tür ve koleksiyon için tek bir süzgeç menüsü; seçtiklerin kaldırılabilir etiketler olarak görünür
+– Ya da aramaya süzgeç yaz: tür:bağlantı, uygulama:Safari, tarih:dün, cihaz:iphone
 – ⌘G ile sonuçtan geçmişteki yerine atla
 
-ÖNEMLİLERİ SAKLA
-– Sabitle, koleksiyon tut, kopyalamayı bir süre duraklat, silmeyi ⌘Z ile geri al
-– Ekran paylaşırken Pastronaut'u gizle
+LİSTEYİ SIRAYLA YAPIŞTIR
+– Birkaç öğe seç, Return'e bas; her ⌘V sıradakini yapıştırır, formlar ve tekrarlı işler için
+– İstediğinde biçimsiz düz metin olarak yapıştır
 
-İPHONE'UNDA DA
-Pastronaut for iPhone ile her şey kendi özel iCloud'un üzerinden eşitlenir; bir klavye de geçmişini her iPhone uygulamasında yapıştırır.
+iPhone'UNDA DA
+– Burada bir ekran görüntüsü kopyala, bir an sonra iPhone'unda olsun; orada bir fotoğraf kaydet, buradaki geçmişine düşsün
+– Sabitlemeler, başlıklar ve koleksiyonlar uyumlu kalır; gizlilik anahtarlarını iki cihaz için bir kez ayarlarsın
+– Pastronaut for iPhone, geçmişini her uygulamada yapıştıran bir klavye ekler
+
+ÖNEMLİLERİ SAKLA
+– Sabitle, koleksiyon tut, öğelere başlık ver
+– Kopyalamayı duraklat ya da yalnızca sonraki kopyayı yok say: menü çubuğu simgesinden ya da Ayarlar'dan
+– Silmeyi ⌘Z ile geri al; ekran paylaşırken Pastronaut'u gizle
 
 GİZLİLİK ÖNCELİKLİ
 – Hesap yok, sunucu yok, analiz yok, reklam yok
-– Metin iCloud'a gitmeden önce Mac'inde şifrelenir (Gelişmiş Veri Koruması açıksa uçtan uca)
+– Metinler ve dosyalar iCloud'a gitmeden önce Mac'inde şifrelenir; Gelişmiş Veri Koruması açıksa uçtan uca
 – Tek kullanımlık kodları ve kart numaralarını eşitlemenin dışında tut ya da yalnızca sabitlediklerini eşitle
+– En büyük görseli ya da dosyayı ve ne kadar iCloud alanı kullanacaklarını seç ya da onları bu Mac'te tut
 
 ÜCRETSİZ VE AÇIK KAYNAK
-Abonelik yok, uygulama içi satın alma yok. Maccy'ye dayanır (onunla bağlantılı değildir); kaynak kodu herkese açık.
+Abonelik yok, uygulama içi satın alma yok. Maccy'ye dayanır (onunla bağlantılı değildir); kaynak kodu herkese açık. Pastronaut for iPhone, App Store'da ücretsiz.
 ```
 
 ## 8. What's New
@@ -405,6 +445,78 @@ Pastronaut 1.2: yeni bir kat boya ve cep dolusu yeni numara.
 • iCloud'u temizlemek artık öğelerini de götürmüyor: yeniden yükleyene kadar "Yalnızca Bu iPhone'da" kalıyorlar.
 ```
 
+### 1.3 (iPhone build 5, Mac build 2)
+Light and a little playful, like 1.1 and 1.2. No "✕" or "›" (App Store Connect refused "✕" in 1.2); bullets (•) are
+fine. Same English text for English (U.S.) and English (U.K.).
+
+**The Mac's jump from 1.0 to 1.3** is explained in its first lines: the iPhone app went through 1.1 and 1.2, and from
+1.3 both apps share one version number. GitHub users come from 0.1.0; their release notes (Sparkle, Adım 7) say the
+same with "0.1.0".
+
+iPhone, English (1,353):
+```
+Pastronaut 1.3: your clipboard learned to carry pictures.
+
+• Photos, screenshots, PDFs and files now travel between your Mac and your iPhone. Copy a screenshot on the Mac, and it's on your iPhone before your coffee cools.
+• The words inside images and PDFs are searchable. Type "invoice", find the invoice. Revolutionary, we know.
+• Open a picture to select its text with Live Text, mark up a copy, save it to Photos or Files, or share it.
+• A new filter bar: All, Mac and iPhone in one glass capsule you can slide your finger along, and a filter button for every kind (PDFs included) and your collections. Mix them freely.
+• The + button now holds Paste, Type a Clip, Scan Text and Scan Document. Paste shows up only when there's something to paste.
+• Settings has a new Images & Files page: the largest item, how much iCloud space to use, and image quality.
+• Privacy switches are now shared with your Mac. Set them once, enjoy them twice.
+• Cards from your Mac show the icon of the app they came from.
+• Keep History: let old clips go after a day, a week, a month or a year. Pinned clips and collections stay.
+• The setup guide was rebuilt: one task at a time, one big button, no scrolling treasure hunt. It even checks the paste permission by itself.
+• Sync got sturdier, thanks to a very picky test that tossed copies between two devices for hours.
+```
+
+iPhone, Türkçe (1,409):
+```
+Pastronaut 1.3: panon resim taşımayı öğrendi.
+
+• Fotoğraflar, ekran görüntüleri, PDF'ler ve dosyalar artık Mac'inle iPhone'un arasında gidip geliyor. Mac'te bir ekran görüntüsü kopyala; kahven soğumadan iPhone'unda.
+• Görsellerdeki ve PDF'lerdeki kelimeler aranabiliyor. "Fatura" yaz, faturayı bul. Devrim niteliğinde, biliyoruz.
+• Bir resmi aç: Canlı Metin'le metnini seç, bir kopyasını işaretle, Fotoğraflar'a ya da Dosyalar'a kaydet ya da paylaş.
+• Yeni süzgeç çubuğu: Tümü, Mac ve iPhone parmağınla kaydırabildiğin tek bir cam kapsülde; yanındaki süzgeç düğmesinde her tür (PDF'ler dahil) ve koleksiyonların. Dilediğin gibi birleştir.
+• + düğmesinde artık Yapıştır, Yazarak Ekle, Metni Tara ve Belge Tara var. Yapıştır yalnızca yapıştıracak bir şey varken görünüyor.
+• Ayarlar'da yeni bir Görseller ve Dosyalar sayfası: en büyük öğe, ne kadar iCloud alanı kullanılacağı ve görsel kalitesi.
+• Gizlilik anahtarları artık Mac'inle ortak. Bir kez ayarla, iki cihazda keyfini sür.
+• Mac'ten gelen kartlarda geldiği uygulamanın simgesi var.
+• Geçmişi Sakla: eski öğeler bir gün, bir hafta, bir ay ya da bir yıl sonra gitsin. Sabitlenenler ve koleksiyondakiler kalır.
+• Kurulum rehberi baştan yapıldı: her seferinde tek iş, tek büyük düğme, kaydırmalı hazine avı yok. Yapıştırma iznini de kendisi kontrol ediyor.
+• Eşitleme sağlamlaştı; iki cihaz arasında saatlerce kopya atıp tutan çok titiz bir test sayesinde.
+```
+
+Mac, English (1,154):
+```
+Pastronaut for Mac 1.3. Yes, straight from 1.0: the iPhone app took 1.1 and 1.2 for a spin, and from now on both apps share one version number. The Mac didn't miss a thing; it just arrived fashionably late.
+
+• Screenshots, images, PDFs and files now sync with your iPhone. Copy one here, find it there.
+• Text in screenshots and PDFs is searchable on both devices.
+• A new filter bar: All, This Mac and iPhone in one capsule, and a filter button for every kind, your collections, pins and dates. What you pick shows as chips you can remove.
+• Give items a title, and titles you give on your iPhone show here too.
+• A new Images & Files section in Settings: sync on or off, the largest item, iCloud space and image quality.
+• Privacy switches are shared with your iPhone. Set them once.
+• Advanced settings in plain words: Pause Copying and Ignore Only the Next Copy. The command-line tricks are still there, tucked away.
+• The history limit now removes only this Mac's own copies from iCloud; what you copied on your iPhone stays there.
+• Fixes: pins that arrive from your iPhone are kept, and copying something again moves it to the top on both devices.
+```
+
+Mac, Türkçe (1,240):
+```
+Pastronaut for Mac 1.3. Evet, 1.0'dan doğrudan 1.3'e: 1.1 ve 1.2'yi iPhone uygulaması bizim için denedi, bundan sonra iki uygulama aynı sürüm numarasını taşıyor. Mac hiçbir şey kaçırmadı; yalnızca şık bir gecikmeyle geldi.
+
+• Ekran görüntüleri, görseller, PDF'ler ve dosyalar artık iPhone'unla eşitleniyor. Burada kopyala, orada bul.
+• Ekran görüntülerindeki ve PDF'lerdeki metin iki cihazda da aranabiliyor.
+• Yeni süzgeç çubuğu: Tümü, Bu Mac ve iPhone tek bir kapsülde; yanındaki süzgeç düğmesinde her tür, koleksiyonların, sabitlenenler ve tarihler. Seçtiklerin kaldırılabilir etiketler olarak görünüyor.
+• Öğelere başlık ver; iPhone'da verdiğin başlıklar da burada görünüyor.
+• Ayarlar'da yeni Görseller ve Dosyalar bölümü: eşitlemeyi aç ya da kapat, en büyük öğe, iCloud alanı ve görsel kalitesi.
+• Gizlilik anahtarları iPhone'unla ortak. Bir kez ayarla.
+• Gelişmiş ayarlar artık anlaşılır: Kopyalamayı Duraklat ve Yalnızca Sonraki Kopyayı Yok Say. Komut satırı numaraları hâlâ orada, bir kenarda.
+• Geçmiş sınırı artık iCloud'dan yalnızca bu Mac'in kendi kopyalarını siliyor; iPhone'da kopyaladıkların orada kalıyor.
+• Düzeltmeler: iPhone'dan gelen sabitlemeler korunuyor; bir şeyi yeniden kopyalayınca iki cihazda da en üste çıkıyor.
+```
+
 ## 9. Pictures
 All pictures use made-up clips only (`PT_DEMO`; `DemoClips.swift`). They are made in four steps:
 1. iPhone shots, in each language: SyncStepTests `storeShots12` (`PT_SHOTS_LANG` = en / tr). It passes
@@ -417,7 +529,41 @@ All pictures use made-up clips only (`PT_DEMO`; `DemoClips.swift`). They are mad
 The output is opaque PNGs in `appstore-screenshots/store/<lang>/`. Upload the English set to English (U.S.) and
 English (U.K.), and the Turkish set to Turkish.
 
-### iPhone (since 1.2): `iphone-1…10.png`, 1320 × 2868 (upload in this order; ten is App Store Connect's limit)
+### 1.3 set: plan (to be built after approval; the 1.2 set below stays live until then)
+Research behind it (sources in §14):
+- Only the first three frames show in search results, so they carry the story: sync, the new kinds, the keyboard.
+- One message per frame, a caption of at most ~6 words above the device, readable at thumbnail size.
+- Device frames: either Apple's own bezels (Apple Design Resources: used as they are, never tilted, cropped or
+  shadowed; text beside the device, not on it; correct relative size when a Mac and an iPhone stand together; the
+  files must never go into git or be shared) or our own drawn bodies as in 1.2. **Decision: open.**
+- Sizes: iPhone 1320 × 2868 (6.9"; App Store Connect scales it down for smaller phones). Mac 2880 × 1800. Opaque PNG.
+- Same order, palette and pictures in both languages; only the captions and the app language change.
+
+**iPhone, `iphone-1…10.png`**
+| # | Eyebrow | English | Turkish | Picture |
+|---|---|---|---|---|
+| 1 | SYNC · EŞİTLE | Copy on your Mac, paste on your iPhone | Mac'te kopyala, iPhone'da yapıştır | History with Mac clips, a picture from the Mac on top |
+| 2 | NEW · YENİ | Photos, PDFs and files, too | Fotoğraf, PDF ve dosya da | Grid: image, PDF and file cards beside text cards |
+| 3 | PASTE · YAPIŞTIR | Paste anything, in any app | Her kopya, her uygulamada | Keyboard with an image tile, "Copied" message |
+| 4 | FIND · BUL | Find the words inside pictures | Resimdeki yazıyı bile bul | Search hit inside a screenshot's text |
+| 5 | FILTER · SÜZ | Source, kind, collection: one tap | Kaynak, tür, koleksiyon: tek dokunuş | Scope bar with the Kind submenu open |
+| 6 | LOOK · BAK | Select text, mark up, save | Yazıyı seç, işaretle, kaydet | An image open full screen with its actions |
+| 7 | SMART CARDS · AKILLI KARTLAR | Every kind, its own card | Her türe kendi kartı | Map, code and link cards (dark) |
+| 8 | QUEUE · SIRA | Paste a list, in order | Bir listeyi sırayla yapıştır | Keyboard queue (dark) |
+| 9 | ORGANIZE · DÜZENLE | Pin it, name it, collect it | Sabitle, adlandır, topla | A clip's menu with title and collections |
+| 10 | PRIVATE · GİZLİ | No account. No tracking. | Hesap yok. İzleme yok. | Settings: encryption note and privacy switches |
+
+**Mac, `mac-1…6.png`**
+| # | Eyebrow | English | Turkish | Picture |
+|---|---|---|---|---|
+| 1 | PASTRONAUT | Your clipboard history, one click away | Pano geçmişin, bir tık uzağında | Menu bar history with image and PDF rows |
+| 2 | SYNC · EŞİTLE | Copy on one, paste on the other | Birinde kopyala, ötekinde yapıştır | MacBook and iPhone side by side, true to size |
+| 3 | PREVIEW · ÖNİZLE | Press Space to look closer | Space'e bas, yakından bak | Image or PDF preview |
+| 4 | FILTER · SÜZ | Filter by device, kind or collection | Cihaza, türe, koleksiyona göre süz | Filter menu with the Kind submenu and chips |
+| 5 | FIND · BUL | Find screenshots by their words | Ekran görüntüsünü yazısıyla bul | Search hit in a screenshot's text |
+| 6 | QUEUE · SIRA | Paste a list, in order | Bir listeyi sırayla yapıştır | Three items queued |
+
+### 1.2 set (live) · iPhone: `iphone-1…10.png`, 1320 × 2868 (upload in this order; ten is App Store Connect's limit)
 Each frame shows the whole phone (a body drawn from simple shapes, a clean "9:41" status bar), a large caption, and
 enlarged pieces of the same real screen ("callouts", positions in `Gallery.swift`). One orbit line with stars runs
 through all ten frames. Light and dark frames alternate.
@@ -437,7 +583,7 @@ through all ten frames. Light and dark frames alternate.
 
 The 1.0–1.1 set (seven frames, screens cropped at the bottom) is in git history.
 
-### Mac: `mac-1…5.png`, 2880 × 1800 (for the Mac App Store)
+### 1.2 set (live) · Mac: `mac-1…5.png`, 2880 × 1800 (for the Mac App Store)
 | # | Eyebrow | English | Turkish | Picture |
 |---|---|---|---|---|
 | 1 | PASTRONAUT | Your clipboard, on Mac and iPhone | Panon, Mac'te ve iPhone'da | Panorama, left: the menu bar history |
@@ -480,6 +626,10 @@ Not needed: the first release is iPhone-only. iPad comes back after it is tested
   and in the Mac App Store build.
 - **Camera (1.2):** used only while the user scans text or a document; the text is read on the device and nothing
   is stored or sent. Still "Data Not Collected".
+- **Images, PDFs and files (1.3):** stored on the user's devices and, with sync on, in their private iCloud database,
+  encrypted on the device. The developer receives nothing: still "Data Not Collected".
+- **Photos (1.3):** add-only permission (`NSPhotoLibraryAddUsageDescription`), asked when the user saves an image to
+  Photos; the library is never read. Nothing to declare.
 
 ## 11. Age rating (expected 4+)
 - **Features:** No to every question:
@@ -495,6 +645,28 @@ Not needed: the first release is iPhone-only. iPad comes back after it is tested
 HTTPS). Not legal advice.
 
 ## 13. App Review notes
+### iPhone (1.3)
+The 1.2 text below, plus this block after the 1.2 block:
+```
+New in 1.3:
+- Images, PDFs and files: saved from the clipboard (the system Paste button in the + menu at the bottom, or Save Clipboard on Opening), from the Share sheet and "Save to Pastronaut", and from Scan Document. With iCloud sync they go to the user's private CloudKit database; file contents are encrypted on the device before upload. Settings › Sync › Images & Files sets the largest item and the iCloud space they may use.
+- Photos: add-only permission, asked only when the user taps "Save to Photos" on an image. The app never reads the photo library.
+- Text in images and PDFs is recognized on the device (Apple's text recognition and PDFKit) so it can be searched. Nothing is sent anywhere for this.
+- Keyboard: tapping a text clip types it, as before, with or without Full Access. Tapping an image or file puts it on the clipboard; that needs Full Access, and without it the keyboard shows a short explanation instead.
+- Paste moved from the top bar into the + menu. It is the system Paste button and appears only while the clipboard holds something.
+- App icons on cards come from the user's own Mac through the same private iCloud database.
+```
+
+### Mac (1.3)
+The Mac text below, plus:
+```
+New in 1.3:
+- With iCloud sync on (off until the user turns it on in Settings › Sync), images, PDFs and files copied on the Mac sync to the user's iPhone, and the iPhone's reach this Mac. File contents are encrypted on the Mac before upload. Settings › Sync › Images & Files can turn this off and sets the largest item and the iCloud space.
+- A file copied in Finder is read at the moment it is copied, inside the app sandbox. For files in Desktop, Documents or Downloads macOS may ask once for access to that folder; without it the item stays on this Mac only.
+- Text in screenshots and PDFs is recognized on the Mac (Apple's text recognition and PDFKit) for search.
+- Settings › Advanced: Pause Copying and Ignore Only the Next Copy (the same switches as Option-click and Option-Shift-click on the menu bar icon).
+```
+
 ### iPhone (1.2)
 The 1.1 text below, plus this block after "The app can be shown in English or Turkish":
 ```
@@ -573,3 +745,17 @@ Privacy policy: Settings › Sync › Privacy Policy, and https://xkbxyberk.gith
   [Keyword field guide 2026](https://www.applaunchflow.com/blog/app-store-keyword-field-guide-2026)
 - Category survey: App Store search results for "clipboard keyboard", "clipboard manager", "copy paste keyboard" (U.S.)
   and "pano klavye", "kopyala yapıştır" (Türkiye), 2026-10-18.
+- 1.3 research (2026-10-24):
+  - [Apple: Marketing Resources and Identity Guidelines](https://developer.apple.com/app-store/marketing/guidelines/)
+    (product bezels "as is", no cropping, tilting, shadows or simulated devices; product names never in capitals;
+    name products, not iOS or macOS)
+  - [Apple Design Resources](https://developer.apple.com/design/resources/) (iPhone 18 and MacBook Pro M5 bezels;
+    license: mock-ups of apps that run only on Apple platforms, the files themselves are not redistributed)
+  - [Screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications)
+    (iPhone 1320 × 2868, Mac 2880 × 1800, up to 10 each, no transparency)
+  - Description: [AppTweak](https://www.apptweak.com/en/aso-blog/app-store-description-best-practices),
+    [AppFollow](https://appfollow.io/blog/aso-description), [Adjust](https://www.adjust.com/blog/mobile-app-description/)
+    (first 170–255 characters; outcome first; remove doubts early; short benefit bullets)
+  - Screenshots: [AppFollow](https://appfollow.io/blog/aso-screenshots-best-practices),
+    [AppTweak](https://www.apptweak.com/en/aso-blog/how-to-optimize-your-app-screenshots)
+    (the first three frames carry the pitch; one benefit per frame; captions readable at thumbnail size; real UI)
