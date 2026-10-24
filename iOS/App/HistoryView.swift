@@ -17,6 +17,7 @@ struct HistoryView: View {
   @State private var editMode: EditMode = .inactive
   @State private var selection = Set<String>()
   @State private var confirmsBulkDelete = false
+  /// Pin and date chips in the search field. Kind chips there are the scope's kind (`searchChips`).
   @State private var tokens: [ClipSearchToken] = []
   @State private var heldBackIDs: Set<String> = []
   @State private var isAwayFromTop = false
@@ -30,6 +31,9 @@ struct HistoryView: View {
   @State private var revealID: String?
   @State private var highlightID: String?
   @State private var isSearchPresented = false
+  /// The clipboard holds something to paste (checked without reading it, so no paste prompt).
+  @State private var clipboardHasContent = false
+  @Environment(\.scenePhase) private var scenePhase
   @State private var showsTextScanner = false
   @State private var showsDocumentScanner = false
   @State private var isReadingScan = false
@@ -92,16 +96,7 @@ struct HistoryView: View {
           )
         } else if sections.isEmpty {
           if store.searchText.isEmpty && tokens.isEmpty {
-            switch scope {
-            case .device(let filter):
-              ContentUnavailableView("Nothing from this device", systemImage: filter.systemImage)
-            case .collection:
-              ContentUnavailableView(
-                "No clips in this collection",
-                systemImage: "folder",
-                description: Text("Touch and hold a clip and choose Add to Collection.")
-              )
-            }
+            emptyScope
           } else {
             ContentUnavailableView.search(text: store.searchText)
           }
@@ -128,15 +123,11 @@ struct HistoryView: View {
         case nil: break
         }
       }
-      // Chips for kind, date and pins; the device bar stays separate.
-      .searchable(
-        text: $store.searchText,
-        tokens: $tokens,
-        suggestedTokens: .constant(suggestedTokens),
-        isPresented: $isSearchPresented
-      ) { token in
-        Label(token.title, systemImage: token.systemImage)
-      }
+      // Chips for kind, date and pins. A kind chip is the filter menu's kind: choosing one in either place shows
+      // in both.
+      .modifier(HistorySearch(
+        text: $store.searchText, chips: searchChips, suggested: suggestedChips, isPresented: $isSearchPresented
+      ))
       .refreshable { await store.refresh() }
       // A fixed bar with the logotype instead of a large title: the large title collapsing on scroll fought the
       // filter bar under it and made the list jump.
@@ -227,23 +218,53 @@ struct HistoryView: View {
     matchedClips.filter(scope.includes).sectioned()
   }
 
+  /// Nothing matches the source, kind and collection chosen.
+  @ViewBuilder
+  private var emptyScope: some View {
+    if scope.collectionID != nil && scope.kind == nil && scope.source == .all {
+      ContentUnavailableView(
+        "No clips in this collection",
+        systemImage: "folder",
+        description: Text("Touch and hold a clip and choose Add to Collection.")
+      )
+    } else if scope.hasFilters {
+      ContentUnavailableView {
+        Label("Nothing matches these filters", systemImage: "line.3.horizontal.decrease")
+      } actions: {
+        Button("Clear Filters") {
+          withAnimation(.snappy) {
+            scope.kind = nil
+            scope.collectionID = nil
+          }
+        }
+      }
+    } else {
+      ContentUnavailableView("Nothing from this device", systemImage: scope.source.systemImage)
+    }
+  }
+
   private var title: Text {
     guard !showsScopeBar else { return Text(verbatim: "Pastronaut") }
-    switch scope {
-    case .device(let filter): return Text(filter.title)
-    case .collection(let id): return Text(verbatim: store.collections.first { $0.id == id }?.name ?? "")
-    }
+    if let id = scope.collectionID { return Text(verbatim: store.collections.first { $0.id == id }?.name ?? "") }
+    if let kind = scope.kind { return Text(kind.pluralTitle) }
+    return Text(scope.source.title)
   }
 
   private var filterBar: some View {
     let clips = matchedClips
-    let counts = Dictionary(uniqueKeysWithValues: DeviceFilter.allCases.map { filter in
-      (filter, clips.filter(filter.includes).count)
-    })
+    // What each choice would show with the other choices kept: the kind menu counts within the source and
+    // collection, the collections within the source and kind.
+    var withoutKind = scope
+    withoutKind.kind = nil
+    var withoutCollection = scope
+    withoutCollection.collectionID = nil
+    let forKinds = clips.filter(withoutKind.includes)
+    let forCollections = clips.filter(withoutCollection.includes)
+    let kindCounts = Dictionary(grouping: forKinds, by: { $0.content.kind }).mapValues(\.count)
     let collectionCounts = Dictionary(uniqueKeysWithValues: store.collections.map { collection in
-      (collection.id, clips.count { $0.isIn(collection.id) })
+      (collection.id, forCollections.count { $0.isIn(collection.id) })
     })
-    return ScopeBar(scope: $scope, counts: counts, collectionCounts: collectionCounts)
+    return ScopeBar(scope: $scope, kindCounts: kindCounts, collectionCounts: collectionCounts)
   }
 
   private var isEditing: Bool { editMode.isEditing }
@@ -318,9 +339,26 @@ struct HistoryView: View {
     }
   }
 
-  /// Offered while searching; a chip already in the field isn't offered again.
-  private var suggestedTokens: [ClipSearchToken] {
-    ClipSearchToken.allCases.filter { !tokens.contains($0) }
+  /// The chips in the search field: pins and dates as typed, and the scope's kind.
+  private var searchChips: Binding<[SearchChip]> {
+    Binding {
+      tokens.map(SearchChip.token) + (scope.kind.map { [.kind($0)] } ?? [])
+    } set: { chips in
+      tokens = chips.compactMap(\.token)
+      // One kind at a time, as in the menu: the one chosen last.
+      let kinds = chips.compactMap(\.kind)
+      if scope.kind != kinds.last {
+        withAnimation(.snappy) { scope.kind = kinds.last }
+      }
+    }
+  }
+
+  /// Offered while searching: pins and dates not chosen yet, and the kinds there are clips of.
+  private var suggestedChips: [SearchChip] {
+    let others = ClipSearchToken.allCases.filter { !$0.isKind && !tokens.contains($0) }.map(SearchChip.token)
+    let present = Set(store.clips.map { $0.content.kind })
+    let kinds = ClipKind.allCases.filter { present.contains($0) && $0 != scope.kind }.map(SearchChip.kind)
+    return others + kinds
   }
 
   /// Only what the list shows: the selection outlives a change of scope or search, and acting on clips the
@@ -349,14 +387,8 @@ struct HistoryView: View {
         }
       }
     }
-    ToolbarItemGroup(placement: .topBarTrailing) {
-      // Text, an image, a PDF or files: whatever the clipboard holds.
-      PasteButton(supportedContentTypes: [.plainText, .url, .image, .pdf, .data]) { providers in
-        Task { @MainActor in store.save(providers: providers) }
-      }
-      .labelStyle(.iconOnly)
-      .buttonBorderShape(.circle)
-      if #unavailable(iOS 26.0) {
+    if #unavailable(iOS 26.0) {
+      ToolbarItemGroup(placement: .topBarTrailing) {
         newClipButton
       }
     }
@@ -388,9 +420,22 @@ struct HistoryView: View {
     }
   }
 
-  /// Tap: type a new clip. Touch and hold: scan text or a document with the camera.
+  /// "+": paste what the clipboard holds (only offered when it holds something), type a clip, or scan text or a
+  /// document with the camera.
   private var newClipButton: some View {
     Menu {
+      if clipboardHasContent {
+        // Text, an image, a PDF or files. The system button pastes without the paste prompt.
+        PasteButton(supportedContentTypes: [.plainText, .url, .image, .pdf, .data]) { providers in
+          Task { @MainActor in store.save(providers: providers) }
+        }
+      }
+      Button {
+        showsNewClip = true
+      } label: {
+        Label("Type a Clip", systemImage: "square.and.pencil")
+      }
+      .accessibilityIdentifier("typeClipButton")
       if TextScannerSheet.isAvailable {
         Button {
           showsTextScanner = true
@@ -409,10 +454,25 @@ struct HistoryView: View {
       }
     } label: {
       Label("New Clip", systemImage: "plus")
-    } primaryAction: {
-      showsNewClip = true
     }
     .accessibilityIdentifier("newClipButton")
+    .task(id: scenePhase) { await watchClipboard() }
+  }
+
+  /// Keeps `clipboardHasContent` current while the app is in front: copies made in another app (iPad side by
+  /// side) or here. Only the change count and the item count are read, which never asks for permission.
+  private func watchClipboard() async {
+    guard scenePhase == .active else { return }
+    var seen = -1
+    while !Task.isCancelled {
+      let pasteboard = UIPasteboard.general
+      if pasteboard.changeCount != seen {
+        seen = pasteboard.changeCount
+        let hasContent = pasteboard.numberOfItems > 0
+        if hasContent != clipboardHasContent { clipboardHasContent = hasContent }
+      }
+      try? await Task.sleep(for: .seconds(1))
+    }
   }
 
   @ToolbarContentBuilder
@@ -959,13 +1019,12 @@ private struct ClipDialogs: ViewModifier {
 
 // MARK: - Filtering and sections
 
-/// The choices along the top: everything, by device, or by kind (1.3: images; PDFs and files).
+/// Where clips were copied: everywhere, on the Mac, or on this iPhone (and iPads). Kinds and collections are in
+/// the filter menu next to it.
 enum DeviceFilter: String, CaseIterable, Identifiable {
   case all
   case mac
   case iphone
-  case images
-  case files
 
   var id: Self { self }
 
@@ -974,18 +1033,14 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
     case .all: "All"
     case .mac: "Mac"
     case .iphone: "iPhone"
-    case .images: "Images"
-    case .files: "Files"
     }
   }
 
   var systemImage: String {
     switch self {
-    case .all: "tray"
+    case .all: "tray.full"
     case .mac: "laptopcomputer"
     case .iphone: "iphone"
-    case .images: "photo"
-    case .files: "doc"
     }
   }
 
@@ -994,8 +1049,81 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
     case .all: true
     case .mac: clip.sourceDevice == .mac
     case .iphone: clip.sourceDevice != .mac
-    case .images: clip.content == .image
-    case .files: clip.content == .pdf || clip.content == .file
+    }
+  }
+}
+
+extension ClipKind {
+  /// The kind as a filter: "Links", "PDFs".
+  var pluralTitle: LocalizedStringKey {
+    switch self {
+    case .text: "Text"
+    case .link: "Links"
+    case .code: "Code"
+    case .email: "Emails"
+    case .phone: "Phone Numbers"
+    case .address: "Addresses"
+    case .color: "Colors"
+    case .image: "Images"
+    case .pdf: "PDFs"
+    case .file: "Files"
+    }
+  }
+}
+
+/// The search field with its chips; on its own so the history's body stays quick to compile.
+private struct HistorySearch: ViewModifier {
+  @Binding var text: String
+  let chips: Binding<[SearchChip]>
+  let suggested: [SearchChip]
+  @Binding var isPresented: Bool
+
+  func body(content: Content) -> some View {
+    content.searchable(text: $text, tokens: chips, suggestedTokens: .constant(suggested), isPresented: $isPresented) {
+      (chip: SearchChip) in
+      Label(chip.title, systemImage: chip.systemImage)
+    }
+  }
+}
+
+/// A chip in the search field: a pin or date chip, or a kind (the same kind the filter menu chooses).
+enum SearchChip: Hashable, Identifiable {
+  case token(ClipSearchToken)
+  case kind(ClipKind)
+
+  var id: Self { self }
+
+  var token: ClipSearchToken? {
+    if case .token(let token) = self { return token }
+    return nil
+  }
+
+  var kind: ClipKind? {
+    if case .kind(let kind) = self { return kind }
+    return nil
+  }
+
+  var title: LocalizedStringKey {
+    switch self {
+    case .token(let token): token.title
+    case .kind(let kind): kind.pluralTitle
+    }
+  }
+
+  var systemImage: String {
+    switch self {
+    case .token(let token): token.systemImage
+    case .kind(let kind): kind.symbolName
+    }
+  }
+}
+
+extension ClipSearchToken {
+  /// Kinds are chosen as the scope's kind on the iPhone (`SearchChip.kind`), not as these chips.
+  var isKind: Bool {
+    switch self {
+    case .pinned, .today, .thisWeek: false
+    case .link, .email, .phone, .color, .address, .code, .text, .image, .file: true
     }
   }
 }

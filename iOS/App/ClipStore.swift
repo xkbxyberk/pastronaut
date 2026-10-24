@@ -614,12 +614,19 @@ final class ClipStore {
   func save(providers items: [NSItemProvider]) {
     let providers = MediaLoader.Providers(items: items)
     Task {
+      let result: SaveResult
       if let text = await MediaLoader.text(from: providers) {
-        if await saveNow(text) == .tooLarge { notice = .tooLarge }
-        return
+        result = await saveNow(text)
+      } else {
+        let parts = await MediaLoader.parts(from: providers, quality: mediaQuality, maxBytes: Self.maxLocalMediaBytes)
+        result = await saveMedia(parts)
       }
-      let parts = await MediaLoader.parts(from: providers, quality: mediaQuality, maxBytes: Self.maxLocalMediaBytes)
-      if await saveMedia(parts) == .tooLarge { notice = .tooLarge }
+      // Always say what happened: a clip already in the history only moves up, which is easy to miss.
+      switch result {
+      case .saved: notice = .savedFromClipboard
+      case .empty: notice = .clipboardEmpty
+      case .tooLarge: notice = .tooLarge
+      }
     }
   }
 

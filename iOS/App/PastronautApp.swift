@@ -70,7 +70,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     // Stands in for another app's copy (the test runner may not write the clipboard from the background).
     // Local only, so Universal Clipboard can't carry it to the Mac and hide a failed save.
     if let text = ProcessInfo.processInfo.environment["PT_E2E_PASTEBOARD"] {
-      UIPasteboard.general.setItems([["public.utf8-plain-text": text]], options: [.localOnly: true])
+      // Empty: nothing on the clipboard at all.
+      UIPasteboard.general.setItems(text.isEmpty ? [] : [["public.utf8-plain-text": text]], options: [.localOnly: true])
     }
     // 1.3: an image with this text drawn on it, as if another app had copied a screenshot. Large and plain, so the
     // text recognition reads it back and the test can find the clip by it.

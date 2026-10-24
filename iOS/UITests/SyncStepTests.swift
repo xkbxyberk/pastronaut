@@ -118,6 +118,10 @@ final class SyncStepTests: XCTestCase {
       let new = app.buttons["newClipButton"].firstMatch
       XCTAssertTrue(new.waitForExistence(timeout: 10), "new clip button missing")
       new.tap()
+      // "+" opens a menu (paste, type, scan): choose typing.
+      let type = menuButton("typeClipButton", labels: ["Type a Clip", "Yazarak Ekle"])
+      XCTAssertTrue(type.waitForExistence(timeout: 5), "Type a Clip missing")
+      type.tap()
       let editor = app.textViews["clipEditor"].firstMatch
       XCTAssertTrue(editor.waitForExistence(timeout: 5), "editor missing")
       editor.typeText(text)
@@ -166,6 +170,146 @@ final class SyncStepTests: XCTestCase {
       app.launch()
       let saved = row(match).waitForExistence(timeout: timeout)
       report(["ok": saved, "visible": saved])
+    case "menuProbe":
+      // Taps the collection PT_TEXT in the collections menu the way a finger does: at points across its row, not
+      // at the element. Reports which taps chose it (a tap that falls through reaches the list behind).
+      launchAtTop()
+      var results: [[String: Any]] = []
+      let menu = app.descendants(matching: .any)["collectionsMenu"].firstMatch
+      let chosenChip = app.buttons["activeCollection"].firstMatch
+      for offset in [0.08, 0.3, 0.5, 0.7, 0.92] {
+        // Start from no collection: the chip under the bar takes the last choice away.
+        if chosenChip.exists { chosenChip.tap() }
+        Thread.sleep(forTimeInterval: 0.8)
+        menu.tap()
+        // Menu items keep their identifier on some systems only; the chip under the bar has the same label.
+        let item = app.buttons.matching(NSPredicate(
+          format: "(identifier == %@ OR label BEGINSWITH %@) AND identifier != 'activeCollection'", "collection.\(text)", text
+        )).firstMatch
+        guard item.waitForExistence(timeout: 5) else {
+          results.append(["offset": offset, "reason": "item missing"])
+          dismissMenu()
+          continue
+        }
+        Thread.sleep(forTimeInterval: 0.6)
+        let frame = item.frame
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        origin.withOffset(CGVector(dx: frame.minX + frame.width * offset, dy: frame.midY)).tap()
+        Thread.sleep(forTimeInterval: 1.2)
+        let chosen = chosenChip.exists
+        results.append(["offset": offset, "chosen": chosen, "itemFrame": NSCoder.string(for: frame),
+                        "menuStillOpen": item.exists])
+        if item.exists { dismissMenu() }
+      }
+      if chosenChip.exists { chosenChip.tap() }
+      report(["ok": results.allSatisfy { $0["chosen"] as? Bool == true }, "taps": results,
+              "barFrame": NSCoder.string(for: menu.frame)])
+    case "sourceSlide":
+      // Touch All and slide to iPhone, then to Mac, without lifting in between each slide; then a plain tap on
+      // All. Each must leave that choice selected.
+      app.launchEnvironment["PT_DEMO"] = "1"
+      launchAtTop()
+      Thread.sleep(forTimeInterval: 1.5)
+      func control(_ id: String) -> XCUIElement { app.descendants(matching: .any)["filter.\(id)"].firstMatch }
+      func centre(_ id: String) -> XCUICoordinate { control(id).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)) }
+      centre("all").press(forDuration: 0.3, thenDragTo: centre("iphone"))
+      Thread.sleep(forTimeInterval: 0.8)
+      let slidToPhone = control("iphone").isSelected
+      centre("iphone").press(forDuration: 0.3, thenDragTo: centre("mac"))
+      Thread.sleep(forTimeInterval: 0.8)
+      let slidToMac = control("mac").isSelected
+      control("all").tap()
+      Thread.sleep(forTimeInterval: 0.8)
+      let tappedAll = control("all").isSelected
+      report(["ok": slidToPhone && slidToMac && tappedAll, "slidToPhone": slidToPhone, "slidToMac": slidToMac,
+              "tappedAll": tappedAll, "barHeight": control("all").frame.height])
+    case "plusShots":
+      // Design review: the "+" menu with something on the clipboard (Paste offered) and with nothing on it.
+      app.launchEnvironment["PT_DEMO"] = "1"
+      for (name, clipboard) in [("full", "Örnek metin"), ("empty", "")] {
+        app.launchEnvironment["PT_E2E_PASTEBOARD"] = clipboard
+        launchAtTop()
+        Thread.sleep(forTimeInterval: 2.5)
+        app.buttons["newClipButton"].firstMatch.tap()
+        Thread.sleep(forTimeInterval: 1.2)
+        attachScreenshot(named: "plus-\(name)")
+        let paste = app.buttons.matching(NSPredicate(format: "label IN %@", ["Paste", "Yapıştır"])).firstMatch
+        report(["case": name, "pasteShown": paste.exists])
+        dismissMenu()
+      }
+      report(["ok": true])
+    case "filterCheck":
+      // The filter menu with made-up clips (PT_DEMO): a kind narrows the list to that kind, a collection narrows it
+      // further, the chip under the bar takes a filter away, and Clear Filters takes both.
+      app.launchEnvironment["PT_DEMO"] = "1"
+      launchAtTop()
+      Thread.sleep(forTimeInterval: 1.5)
+      let allRows = rows.count
+      let menu = app.descendants(matching: .any)["collectionsMenu"].firstMatch
+      func choose(_ predicate: String) -> Bool {
+        let item = app.buttons.matching(NSPredicate(format: predicate)).firstMatch
+        guard item.waitForExistence(timeout: 3) else { return false }
+        item.tap()
+        Thread.sleep(forTimeInterval: 1)
+        return true
+      }
+      menu.tap()
+      let openedKinds = choose("identifier == 'kindMenu' OR label BEGINSWITH 'Tür' OR label BEGINSWITH 'Kind'")
+      let choseLinks = choose("identifier == 'kind.link' OR label BEGINSWITH 'Bağlantılar' OR label BEGINSWITH 'Links'")
+      let linkLabels = rows.allElementsBoundByIndex.map(\.label)
+      let onlyLinks = !linkLabels.isEmpty && linkLabels.allSatisfy { $0.contains("Bağlantı") || $0.contains("Link") }
+      menu.tap()
+      let choseCollection = choose("identifier == 'collection.\(text)' OR label BEGINSWITH '\(text)'")
+      let combined = rows.count
+      let chips = app.buttons["activeKind"].exists && app.buttons["activeCollection"].exists
+      app.buttons["activeKind"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1)
+      let afterChip = rows.count
+      let kindGone = !app.buttons["activeKind"].exists
+      menu.tap()
+      let cleared = choose("identifier == 'clearFilters' OR label BEGINSWITH 'Filtreleri Temizle' OR label BEGINSWITH 'Clear Filters'")
+      let restored = rows.count
+      report([
+        "ok": openedKinds && choseLinks && onlyLinks && choseCollection && chips && kindGone && cleared
+          && combined <= linkLabels.count && afterChip >= combined && restored == allRows,
+        "all": allRows, "links": linkLabels.count, "onlyLinks": onlyLinks, "linksInCollection": combined,
+        "afterChip": afterChip, "restored": restored, "chips": chips
+      ])
+    case "filterShots":
+      // Design review of the filter bar (1.3): the bar, its menu, the Kind submenu, and a kind and collection
+      // chosen, in light and dark. Attachments land in the result bundle.
+      defer { XCUIDevice.shared.appearance = .dark }
+      // Made-up clips only (PT_DEMO): the history on this iPhone is real.
+      app.launchEnvironment["PT_DEMO"] = "1"
+      for (name, appearance) in [("light", XCUIDevice.Appearance.light), ("dark", .dark)] {
+        XCUIDevice.shared.appearance = appearance
+        launchAtTop()
+        Thread.sleep(forTimeInterval: 1.5)
+        attachScreenshot(named: "filter-\(name)-bar")
+        let menu = app.descendants(matching: .any)["collectionsMenu"].firstMatch
+        menu.tap()
+        Thread.sleep(forTimeInterval: 1)
+        attachScreenshot(named: "filter-\(name)-menu")
+        let kinds = app.buttons.matching(NSPredicate(format: "identifier == 'kindMenu' OR label BEGINSWITH 'Tür' OR label BEGINSWITH 'Kind'")).firstMatch
+        if kinds.waitForExistence(timeout: 3) {
+          kinds.tap()
+          Thread.sleep(forTimeInterval: 1)
+          attachScreenshot(named: "filter-\(name)-kinds")
+          let link = app.buttons.matching(NSPredicate(format: "identifier == 'kind.link' OR label BEGINSWITH 'Bağlantılar' OR label BEGINSWITH 'Links'")).firstMatch
+          if link.waitForExistence(timeout: 3) { link.tap() } else { dismissMenu() }
+        } else {
+          dismissMenu()
+        }
+        Thread.sleep(forTimeInterval: 0.8)
+        if !text.isEmpty {
+          menu.tap()
+          let item = menuItem(text)
+          if item.waitForExistence(timeout: 3) { item.tap() } else { dismissMenu() }
+        }
+        Thread.sleep(forTimeInterval: 1.2)
+        attachScreenshot(named: "filter-\(name)-chosen")
+      }
+      report(["ok": true])
     case "shared":
       // 1.3: changes settings every device shares (PT_E2E_SHARED, e.g. "maxItemBytes=25000000"), then gives the
       // change time to be sent.

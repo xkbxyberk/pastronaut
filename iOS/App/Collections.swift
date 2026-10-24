@@ -3,23 +3,25 @@ import SwiftUI
 import UIKit
 
 /// What the history shows: one device's clips, or one collection.
-enum HistoryScope: Hashable {
-  case device(DeviceFilter)
-  case collection(String)
+/// What the history shows: clips from one device or all, of one kind or all, in one collection or not. The three
+/// combine (Mac + Links + "Work"); the search field's kind chips set the same kind.
+struct HistoryScope: Hashable {
+  var source: DeviceFilter = .all
+  var kind: ClipKind?
+  var collectionID: String?
 
-  static let all = HistoryScope.device(.all)
+  static let all = HistoryScope()
+
+  static func collection(_ id: String) -> HistoryScope {
+    HistoryScope(collectionID: id)
+  }
 
   func includes(_ clip: Clip) -> Bool {
-    switch self {
-    case .device(let filter): filter.includes(clip)
-    case .collection(let id): clip.isIn(id)
-    }
+    source.includes(clip) && (kind.map { clip.content.kind == $0 } ?? true) && (collectionID.map(clip.isIn) ?? true)
   }
 
-  var collectionID: String? {
-    if case .collection(let id) = self { return id }
-    return nil
-  }
+  /// Kind or collection: what the filter button holds (the source has its own control).
+  var hasFilters: Bool { kind != nil || collectionID != nil }
 }
 
 // MARK: - Creating, renaming and deleting
@@ -64,7 +66,7 @@ struct CollectionDialogs: ViewModifier {
         Button("Create") {
           let members = actions.creating ?? []
           if let created = store.createCollection(named: actions.name, with: members), actions.selectsCreated {
-            scope = .collection(created.id)
+            scope.collectionID = created.id
           }
           actions.creating = nil
         }
@@ -91,7 +93,7 @@ struct CollectionDialogs: ViewModifier {
       ) {
         Button("Delete Collection", role: .destructive) {
           if let collection = actions.deleting {
-            if scope == .collection(collection.id) { scope = .all }
+            if scope.collectionID == collection.id { scope.collectionID = nil }
             store.deleteCollection(collection)
           }
           actions.deleting = nil
@@ -156,8 +158,21 @@ struct ScopeSidebar: View {
       Section {
         ForEach(DeviceFilter.allCases) { filter in
           row(title: filter.title, systemImage: filter.systemImage, count: store.clips.filter(filter.includes).count)
-            .tag(HistoryScope.device(filter))
+            .tag(HistoryScope(source: filter))
             .accessibilityIdentifier("sidebar.\(filter.rawValue)")
+        }
+      }
+      let kinds = ClipKind.allCases.filter { kind in store.clips.contains { $0.content.kind == kind } }
+      if !kinds.isEmpty {
+        Section {
+          ForEach(kinds, id: \.self) { kind in
+            row(title: kind.pluralTitle, systemImage: kind.symbolName,
+                count: store.clips.count { $0.content.kind == kind })
+              .tag(HistoryScope(kind: kind))
+              .accessibilityIdentifier("sidebar.kind.\(kind.rawValue)")
+          }
+        } header: {
+          Text("Kind")
         }
       }
       Section {
@@ -228,7 +243,7 @@ struct RootView: View {
     // The collection on screen was deleted on another device: back to all clips.
     .onChange(of: store.collections) {
       if let id = scope.collectionID, !store.collections.contains(where: { $0.id == id }) {
-        scope = .all
+        scope.collectionID = nil
       }
     }
     .task(id: scenePhase) {
