@@ -1915,7 +1915,7 @@ C1ED8D4B13F84BEAB4445DB4 /* PastronautAdvancedPane.swift in Sources */ = {isa = 
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = V88QY49A4T;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1930,7 +1930,7 @@ C1ED8D4B13F84BEAB4445DB4 /* PastronautAdvancedPane.swift in Sources */ = {isa = 
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.xkbxyberk.pastronaut;
 				PRODUCT_MODULE_NAME = Maccy;
 				PRODUCT_NAME = Pastronaut;
@@ -1952,7 +1952,7 @@ C1ED8D4B13F84BEAB4445DB4 /* PastronautAdvancedPane.swift in Sources */ = {isa = 
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = V88QY49A4T;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1967,7 +1967,7 @@ C1ED8D4B13F84BEAB4445DB4 /* PastronautAdvancedPane.swift in Sources */ = {isa = 
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.xkbxyberk.pastronaut;
 				PRODUCT_MODULE_NAME = Maccy;
 				PRODUCT_NAME = Pastronaut;
