@@ -428,6 +428,25 @@ Tuval: https://claude.ai/artifact/Gbwuweu2E3QmnUV3bCAiGX
 - Production'a sen gönderirsin. Bu, ilk 1.3 derlemesi App Store Connect'e yüklenmeden önce yapılmalı.
 - Alan adları ve türleri Production'a gittikten sonra değişmez. Bu yüzden Adım 1'de testlerle sabitlenir.
 
+### Adım 5 kontrol listesi: CloudKit Console (2026-10-24)
+
+Kapsayıcı `iCloud.com.xkbxyberk.pastronaut`. Production'a giden alan ve tür geri alınamaz.
+1. Development › Schema › Record Types'ta prototipten kalan `ProtoMedia` varsa sil (ProtoMedia13 bölgesi
+   silinmişti, kaydı yok). Production'a gitmemeli.
+2. Development'ta beklenenler (E2E hepsini yazdı):
+   - `Media`: clipID (Encrypted String), info (Encrypted Bytes), thumbnail (Encrypted Bytes), sourceApp,
+     sourceAppName, title (Encrypted String), collections (Encrypted String List), kind, sourceDevice (String),
+     firstCopiedAt, lastCopiedAt, modifiedAt, titleModifiedAt (Date/Time), pinned, schemaVersion (Int(64)),
+     files (Asset List).
+   - `AppIcon`: bundleIdentifier, name (Encrypted String), png (Encrypted Bytes), modifiedAt (Date/Time),
+     schemaVersion (Int(64)).
+   - `Settings`: yeni alan shared (Encrypted Bytes); idKey zaten Production'da.
+3. Deploy Schema Changes… özetinde yalnızca bunlar olmalı: yeni türler Media, AppIcon; Settings.shared. Başka
+   bir şey görünürse yayınlamadan dur.
+4. Deploy; sonra Production › Record Types'ta Media, AppIcon ve Settings.shared'ı doğrula.
+5. Sıra: ilk 1.3 derlemesi App Store Connect'e yüklenmeden önce. Dizin (index) gerekmez: eşitleme sorgu
+   kullanmıyor, bölge değişikliklerini çekiyor.
+
 ## 5. İş sırası
 Her adımın sonunda commit ve kısa bir rapor olur.
 
