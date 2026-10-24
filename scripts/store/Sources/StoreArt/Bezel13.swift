@@ -418,21 +418,53 @@ struct Phone13: View {
   }
 }
 
-/// Product page header, 3840 × 1646 (21:9), dark. The message sits in the centered safe area (1646 × 661); two
-/// iPhones on each side are decoration that narrow screens may cut.
-struct Header13: View {
-  let lang: String
-  /// Left pair, then right pair.
-  let phones: [CGImage]
+/// A MacBook with an iPhone in front of one of its corners, both true to size (`phoneToMac`: picture widths).
+struct MacAndPhoneGroup13: View {
+  let mac: CGImage
+  let phone: CGImage
+  let macWidth: CGFloat
+  let phoneToMac: CGFloat
+  /// The iPhone stands at the MacBook's right front corner, or at its left.
+  var phoneOnRight = true
+
+  var size: CGSize {
+    let macHeight = macWidth * CGFloat(mac.height) / CGFloat(mac.width)
+    let phoneWidth = macWidth * phoneToMac
+    return CGSize(width: macWidth + phoneWidth * 0.55, height: max(macHeight, phoneWidth * CGFloat(phone.height) / CGFloat(phone.width)))
+  }
 
   var body: some View {
-    let height: CGFloat = 1180
+    let macHeight = macWidth * CGFloat(mac.height) / CGFloat(mac.width)
+    let phoneWidth = macWidth * phoneToMac
+    let phoneHeight = phoneWidth * CGFloat(phone.height) / CGFloat(phone.width)
+    ZStack(alignment: phoneOnRight ? .bottomTrailing : .bottomLeading) {
+      Image(decorative: mac, scale: 1)
+        .resizable()
+        .interpolation(.high)
+        .frame(width: macWidth, height: macHeight)
+        .frame(maxWidth: .infinity, alignment: phoneOnRight ? .leading : .trailing)
+        .frame(maxHeight: .infinity, alignment: .bottom)
+      Image(decorative: phone, scale: 1)
+        .resizable()
+        .interpolation(.high)
+        .frame(width: phoneWidth, height: phoneHeight)
+    }
+    .frame(width: size.width, height: size.height)
+  }
+}
+
+/// Product page header, 3840 × 1646 (21:9), dark. The message sits in the centered safe area (1646 × 661); on each
+/// side a MacBook with an iPhone in front, decoration that narrow screens may cut. Mac and iPhone: the app is on both.
+struct Header13: View {
+  let lang: String
+  let left: MacAndPhoneGroup13
+  let right: MacAndPhoneGroup13
+
+  var body: some View {
     ZStack(alignment: .topLeading) {
       WideBackground(dark: true)
-      Phone13(device: phones[0], height: height).position(x: 300, y: 823 + 40)
-      Phone13(device: phones[1], height: height).position(x: 860, y: 823 - 40)
-      Phone13(device: phones[2], height: height).position(x: 3840 - 860, y: 823 - 40)
-      Phone13(device: phones[3], height: height).position(x: 3840 - 300, y: 823 + 40)
+      left.position(x: 40 + left.size.width / 2, y: 823 + 60)
+      right.position(x: 3840 - 40 - right.size.width / 2, y: 823 + 60)
       VStack(spacing: 40) {
         PastronautWordmark(size: 128).environment(\.colorScheme, .dark)
         Text(tagline[lang] ?? "")
@@ -449,41 +481,37 @@ struct Header13: View {
 }
 
 /// Search result picture, 3840 × 2560 (3:2), light. Everything that matters is in the centered safe area
-/// (2168 × 1030): what the app is on the left, two iPhones on the right.
+/// (2168 × 1030), with a margin: what the app is on the left, the MacBook and the iPhone on the right.
 struct Search13: View {
   let lang: String
-  let phones: [CGImage]
+  let group: MacAndPhoneGroup13
 
   static let line: Words = ["en": "Clipboard history\n+ paste keyboard", "tr": "Pano geçmişi ve\nyapıştırma klavyesi"]
   static let sub: Words = ["en": "Text, photos, PDFs and files.\niPhone and Mac, in your own iCloud.",
                            "tr": "Metin, fotoğraf, PDF ve dosya.\niPhone ve Mac, kendi iCloud'unda."]
 
   var body: some View {
-    // A margin inside the safe area, so nothing touches its edge.
-    let height: CGFloat = 950
-    let phoneWidth = height * CGFloat(phones[0].width) / CGFloat(phones[0].height)
     ZStack(alignment: .topLeading) {
       WideBackground(dark: false)
       VStack(alignment: .leading, spacing: 0) {
-        PastronautWordmark(size: 88).environment(\.colorScheme, .light)
-          .padding(.bottom, 34)
+        PastronautWordmark(size: 80).environment(\.colorScheme, .light)
+          .padding(.bottom, 30)
         Text(Self.line[lang] ?? "")
-          .font(.system(size: 92, weight: .heavy))
+          .font(.system(size: 80, weight: .heavy))
           .tracking(-1.5)
           .foregroundStyle(Brand.ink)
           .fixedSize()
         Text(Self.sub[lang] ?? "")
-          .font(.system(size: 44, weight: .medium))
+          .font(.system(size: 40, weight: .medium))
           .foregroundStyle(Brand.muted)
-          .padding(.top, 22)
+          .padding(.top, 20)
           .fixedSize()
-        FeaturePills(lang: lang, size: 34, perRow: 2, items: pills13)
-          .padding(.top, 40)
+        FeaturePills(lang: lang, size: 30, perRow: 2, items: pills13)
+          .padding(.top, 36)
       }
-      .frame(width: 1100, alignment: .leading)
-      .position(x: 836 + 70 + 550, y: 1280)
-      Phone13(device: phones[0], height: height).position(x: 3004 - 50 - phoneWidth * 1.5 - 30, y: 1280)
-      Phone13(device: phones[1], height: height).position(x: 3004 - 50 - phoneWidth / 2, y: 1280)
+      .frame(width: 900, alignment: .leading)
+      .position(x: 836 + 60 + 450, y: 1280)
+      group.position(x: 3004 - 50 - group.size.width / 2, y: 1280)
     }
     .frame(width: 3840, height: 2560)
     .clipped()
@@ -494,23 +522,37 @@ struct Search13: View {
 func runArt13(raw: URL, bezels: URL, out: URL) throws {
   let phoneLight = try Bezel(bezels.appending(path: "iPhone 18 Pro Max - Silver - Portrait.png"))
   let phoneDark = try Bezel(bezels.appending(path: "iPhone 18 Pro Max - Black - Portrait.png"))
+  let macBezel = try Bezel(bezels.appending(path: macBezelFile13))
+  // Picture widths that make the two bodies as wide as the real devices.
+  let ratio = phoneWidthCM13 / macWidthCM13
+    * (bodyWidth13(macBezel) / CGFloat(macBezel.image.width))
+    * (CGFloat(phoneLight.image.width) / bodyWidth13(phoneLight))
   for lang in ["en", "tr"] {
-    func phone(_ name: String, sheet: Bool = false) throws -> CGImage {
-      let path = "\(lang)/s13-\(lang)-\(name).png"
+    func image(_ path: String) throws -> CGImage {
       guard let source = CGImageSourceCreateWithURL(raw.appending(path: path) as CFURL, nil),
             let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
         throw NSError(domain: "StoreArt missing \(path)", code: 5)
       }
+      return image
+    }
+    func phone(_ name: String, sheet: Bool = false) throws -> CGImage {
+      let shot = try image("\(lang)/s13-\(lang)-\(name).png")
       let bezel = name.hasSuffix("dark") ? phoneDark : phoneLight
-      return bezel.device(showing: sheet ? sheetBandCleaned(image) : image)
+      return bezel.device(showing: sheet ? sheetBandCleaned(shot) : shot)
+    }
+    func mac(_ name: String) throws -> CGImage {
+      macBezel.device(showing: try image("mac/m13-\(lang)-\(name).png"))
     }
     let dir = out.appending(path: lang)
     try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-    let header = Header13(lang: lang, phones: [
-      try phone("04-search-dark"), try phone("02-all-dark"), try phone("07-cards-dark"), try phone("08-queue-dark", sheet: true)
-    ])
+    let header = Header13(
+      lang: lang,
+      left: MacAndPhoneGroup13(mac: try mac("01-popup"), phone: try phone("02-all-dark"), macWidth: 980, phoneToMac: ratio),
+      right: MacAndPhoneGroup13(mac: try mac("03-preview"), phone: try phone("03-keyboard-copied-light", sheet: true),
+                                macWidth: 980, phoneToMac: ratio, phoneOnRight: false))
     try writeOpaque(try render(header, width: 3840, height: 1646), to: dir.appending(path: "header.png"))
-    let search = Search13(lang: lang, phones: [try phone("02-all-light"), try phone("06-detail-poster-light")])
+    let search = Search13(lang: lang, group: MacAndPhoneGroup13(
+      mac: try mac("01-popup"), phone: try phone("02-all-light"), macWidth: 1020, phoneToMac: ratio))
     try writeOpaque(try render(search, width: 3840, height: 2560), to: dir.appending(path: "search.png"))
   }
 }

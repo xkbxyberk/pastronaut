@@ -616,16 +616,17 @@ The 1.0–1.1 set (seven frames, screens cropped at the bottom) is in git histor
 | 5 | FIND · BUL | Type a filter, find it fast | Süzgeci yaz, hemen bul | `type:code` / `tür:kod` results |
 
 ### Header and search result for 1.3 (`store13/<lang>/header.png`, `search.png`; made by `StoreArt bezel13`)
-Same rules as the 1.3 frames: Apple's iPhone bezels, straight and whole, real 1.3 screens, made-up content. Only
-iPhones (these pictures are for the iPhone product page; a Mac at true size next to them would be tiny). Pills for
-1.3: Paste keyboard, Photos & PDFs, Text in pictures, Mac sync.
+Same rules as the 1.3 frames: Apple's bezels, straight and whole, real 1.3 screens, made-up content. A MacBook with an
+iPhone in front, true to size, so the first glance says "there's a Mac app too" (the user's idea). Pills for 1.3:
+Paste keyboard, Photos & PDFs, Text in pictures, Mac sync.
 - **`header.png`, 3840 × 1646, dark:** wordmark, "Every copy, one tap away." / "Her kopya, bir dokunuş uzağında."
-  and the pills in the centered safe area (1646 × 661); two iPhones on each side (search, history, cards, queue)
-  as decoration that narrow screens may cut.
+  and the pills in the centered safe area (1646 × 661). Left: the MacBook with the history popup, the iPhone's
+  history at its right front corner. Right, mirrored: the MacBook with the Space preview, the iPhone's keyboard at
+  its left front corner. Both pairs are decoration that narrow screens may cut.
 - **`search.png`, 3840 × 2560, light:** everything inside the centered safe area (2168 × 1030) with a margin: on the
   left the wordmark, "Clipboard history + paste keyboard" / "Pano geçmişi ve yapıştırma klavyesi", "Text, photos,
-  PDFs and files. iPhone and Mac, in your own iCloud." and the pills; on the right the history and a picture's
-  detail (the poster with the text read from it).
+  PDFs and files. iPhone and Mac, in your own iCloud." and the pills; on the right the MacBook with the history
+  popup and the iPhone's history in front.
 
 ### Header and search result of 1.2 (live until 1.3; optional, iOS 27 and later; can change without a new version)
 Redone for 1.2 in the gallery's style (`Gallery.swift`: `HeaderArt2`, `SearchArt2`): drawn phone bodies, one orbit
