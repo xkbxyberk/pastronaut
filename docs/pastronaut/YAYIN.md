@@ -112,7 +112,13 @@ Kaydet" varsayılan açık. Yalnızca iPhone kanalı (Mac değişmedi). Durum: �
 8. ✅ **iPhone 1.2 (4) onaylandı ve App Store'da yayında** (kullanıcı, 2026-10-23).
 
 **1.3 (ortak sürüm), karar 2026-10-23.** Kullanıcı tek bir ortak 1.3 seçti: iPhone 1.3 (5) ve Mac 1.3 (2) üç kanalda
-birlikte çıkar; Mac'e özel ara sürüm yok. Plan `PLAN-1.3.md` (taslak, onay bekliyor).
+birlikte çıkar; Mac'e özel ara sürüm yok. Plan `PLAN-1.3.md`.
+1. ✅ Adım 0–4: kod, iki cihazlı uçtan uca test (Koşu 6: 74/75), iPhone filtre çubuğu, kurulum rehberi, Mac filtre
+   çubuğu ve Gelişmiş sayfası (commit'li, henüz push edilmedi).
+2. ✅ **CloudKit şeması Production'da** (kullanıcı, 2026-10-24): yeni türler `Media` (22 alan) ve `AppIcon` (11),
+   `Settings.shared` (Encrypted Bytes), dizinler ve izinler. Önce Development'tan prototip kalıntısı `ProtoMedia`
+   silindi; `ProtoClip` zaten Production'daydı. Clip ve Collection değişmedi.
+3. ⏳ Adım 6: mağaza metinleri, ekran görüntüleri, gizlilik politikası. Adım 7: yayın (iPhone 1.3 (5), Mac 1.3 (2)).
 
 **Sürüm kuralı (2026-10-18'den sonra):** her sürüm üç kanalda çıkar (iPhone, Mac App Store, Mac GitHub/Sparkle);
 adımlar `SURUM.md`'de. Görünen sürüm: iPhone 1.2, Mac 1.0 (Mac App Store), GitHub 0.1.0. Sıradaki: ortak **1.3**; derleme

@@ -446,6 +446,9 @@ Kapsayıcı `iCloud.com.xkbxyberk.pastronaut`. Production'a giden alan ve tür g
 4. Deploy; sonra Production › Record Types'ta Media, AppIcon ve Settings.shared'ı doğrula.
 5. Sıra: ilk 1.3 derlemesi App Store Connect'e yüklenmeden önce. Dizin (index) gerekmez: eşitleme sorgu
    kullanmıyor, bölge değişikliklerini çekiyor.
+- **Sonuç (2026-10-24):** kullanıcı ProtoMedia'yı Development'tan sildi, Deploy özetinde yalnızca Settings'te 1 alan,
+  Media ve AppIcon türleri, 4 + 18 dizin ve üç rolün izinleri vardı. Production'da Media (22), AppIcon (11),
+  Settings (idKey, shared) doğrulandı. **Adım 5 tamam.**
 
 ## 5. İş sırası
 Her adımın sonunda commit ve kısa bir rapor olur.
