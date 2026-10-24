@@ -18,17 +18,22 @@ final class OnboardingFlowTests: XCTestCase {
     XCTAssertTrue(app.switches["onboardingPreviewsToggle"].exists || app.descendants(matching: .any)["onboardingPreviewsToggle"].exists)
     next.tap()
     XCTAssertTrue(app.staticTexts["Add the Pastronaut keyboard"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.buttons["openKeyboardSettings"].exists)
-    next.tap()
+    // One main action, whichever part of the keyboard setup this device is at; all without scrolling.
+    let keyboardMain = ["openKeyboardSettings", "tryKeyboard", "onboardingNext"].map { app.buttons[$0] }
+    XCTAssertTrue(keyboardMain.contains { $0.exists && $0.isHittable })
+    if next.exists { next.tap() } else { app.buttons["keyboardNotNow"].tap() }
     XCTAssertTrue(app.staticTexts["Paste without being asked"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.buttons["openPasteSettings"].exists)
+    let openSettings = app.buttons["openPasteSettings"]
+    XCTAssertTrue(openSettings.exists && openSettings.isHittable)
+    app.buttons["pasteAlreadyAllowed"].tap()
     let tryButton = app.buttons["tryClipboardSave"]
-    if !tryButton.isHittable { app.swipeUp() }
+    XCTAssertTrue(tryButton.waitForExistence(timeout: 3) && tryButton.isHittable)
     tryButton.tap()
     let result = app.descendants(matching: .any)["tryClipboardResult"]
     XCTAssertTrue(result.waitForExistence(timeout: 5))
     XCTAssertTrue(result.label.contains("Saved"))
     XCTAssertFalse(app.buttons["onboardingSkip"].exists)
+    XCTAssertTrue(next.waitForExistence(timeout: 3))
     XCTAssertEqual(next.label, "Start Using Pastronaut")
     next.tap()
     XCTAssertTrue(app.buttons["settingsButton"].firstMatch.waitForExistence(timeout: 5))
@@ -146,13 +151,16 @@ final class OnboardingFlowTests: XCTestCase {
     let next = app.buttons["onboardingNext"]
     XCTAssertTrue(next.waitForExistence(timeout: 10))
     next.tap()
-    let field = app.textFields["keyboardTryField"]
-    for _ in 0..<4 where !field.isHittable { app.swipeUp() }
-    XCTAssertTrue(field.waitForExistence(timeout: 5))
-    field.tap()
-    XCTAssertTrue(showPastronautKeyboard(), "Pastronaut keyboard is not added")
-    XCTAssertTrue(app.descendants(matching: .any)["fullAccessConfirmed"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.descendants(matching: .any)["setupStep2"].label.contains("Ready"))
+    let confirmed = app.descendants(matching: .any)["fullAccessConfirmed"]
+    // A device whose keyboard already reported Full Access shows the finished step straight away.
+    if !confirmed.waitForExistence(timeout: 3) {
+      let tryKeyboard = app.buttons["tryKeyboard"]
+      XCTAssertTrue(tryKeyboard.waitForExistence(timeout: 5) && tryKeyboard.isHittable)
+      tryKeyboard.tap()
+      XCTAssertTrue(showPastronautKeyboard(), "Pastronaut keyboard is not added")
+      XCTAssertTrue(confirmed.waitForExistence(timeout: 5))
+    }
+    XCTAssertTrue(next.waitForExistence(timeout: 3) && next.isHittable)
   }
 
   private func showPastronautKeyboard() -> Bool {

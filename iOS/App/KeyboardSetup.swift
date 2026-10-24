@@ -22,6 +22,15 @@ final class KeyboardSetup {
     let keyboards = UserDefaults.standard.stringArray(forKey: "AppleKeyboards") ?? []
     isKeyboardAdded = keyboards.contains(Self.keyboardBundleID)
     hasFullAccess = UserDefaults(suiteName: PastronautIDs.appGroup)?.object(forKey: Self.fullAccessSeenKey) != nil
+    #if DEBUG
+    // Screenshots of each part of the setup (PT_E2E_KEYBOARD = none, added or ready).
+    switch ProcessInfo.processInfo.environment["PT_E2E_KEYBOARD"] {
+    case "none": (isKeyboardAdded, hasFullAccess) = (false, false)
+    case "added": (isKeyboardAdded, hasFullAccess) = (true, false)
+    case "ready": (isKeyboardAdded, hasFullAccess) = (true, true)
+    default: break
+    }
+    #endif
   }
 }
 

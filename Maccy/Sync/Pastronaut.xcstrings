@@ -1851,6 +1851,149 @@
           }
         }
       }
+    },
+    "Kind": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tür"
+          }
+        }
+      }
+    },
+    "All Kinds": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm Türler"
+          }
+        }
+      }
+    },
+    "PDFs": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF'ler"
+          }
+        }
+      }
+    },
+    "Remove this filter": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu filtreyi kaldır"
+          }
+        }
+      }
+    },
+    "While paused, Pastronaut doesn't save new copies or sync them. Use it while you copy something sensitive, such as a password, then turn it back off.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duraklatılınca Pastronaut yeni kopyaları kaydetmez ve eşitlemez. Parola gibi hassas bir şey kopyalarken kullan, sonra yeniden kapat."
+          }
+        }
+      }
+    },
+    "Paused. The menu bar icon is dimmed until you turn this off.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duraklatıldı. Bunu kapatana kadar menü çubuğu simgesi soluk görünür."
+          }
+        }
+      }
+    },
+    "Ignore Only the Next Copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca Sonraki Kopyayı Yok Say"
+          }
+        }
+      }
+    },
+    "The next copy won't be saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonraki kopya kaydedilmeyecek."
+          }
+        }
+      }
+    },
+    "Shortcut: Option-click the menu bar icon to pause; Option-Shift-click to skip only the next copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kısayol: duraklatmak için menü çubuğu simgesine ⌥ ile, yalnızca sonraki kopyayı atlamak için ⌥⇧ ile tıkla."
+          }
+        }
+      }
+    },
+    "For scripts. The first time, macOS may ask to let Terminal reach Pastronaut's data.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betikler için. macOS ilk seferde Terminal'in Pastronaut verisine erişmesine izin isteyebilir."
+          }
+        }
+      }
+    },
+    "Command Line and Automation": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Komut Satırı ve Otomasyon"
+          }
+        }
+      }
+    },
+    "Pinned items and items in collections stay.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenenler ve koleksiyondaki ögeler kalır."
+          }
+        }
+      }
+    },
+    "Clearing the history also empties the clipboard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmiş temizlenirken pano da boşaltılır."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

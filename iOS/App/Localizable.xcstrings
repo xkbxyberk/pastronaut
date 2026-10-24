@@ -3778,6 +3778,347 @@
           }
         }
       }
+    },
+    "Try": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dene"
+          }
+        }
+      }
+    },
+    "Check": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontrol"
+          }
+        }
+      }
+    },
+    "Now": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi"
+          }
+        }
+      }
+    },
+    "Try the Pastronaut Keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut Klavyesini Dene"
+          }
+        }
+      }
+    },
+    "Back to Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'a Geri Dön"
+          }
+        }
+      }
+    },
+    "Check Now": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontrol Et"
+          }
+        }
+      }
+    },
+    "Already Allowed? Check": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaten İzin Verdim, Kontrol Et"
+          }
+        }
+      }
+    },
+    "Check Again": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekrar Kontrol Et"
+          }
+        }
+      }
+    },
+    "Turn on two switches in Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'da iki anahtarı aç"
+          }
+        }
+      }
+    },
+    "Open Settings takes you to Pastronaut's page: tap Keyboards, turn on both switches, then come back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'ı Aç seni Pastronaut'un sayfasına götürür: Klavyeler'e dokun, iki anahtarı da aç, sonra geri dön."
+          }
+        }
+      }
+    },
+    "Why Full Access? Nothing you type is sent anywhere": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neden Tam Erişim? Yazdıkların hiçbir yere gitmez"
+          }
+        }
+      }
+    },
+    "The keyboard is ready": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavye hazır"
+          }
+        }
+      }
+    },
+    "Full Access is on. The keyboard saves your new copies itself and stays up to date even when the app is closed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam Erişim açık. Klavye yeni kopyalarını kendisi kaydeder ve uygulama kapalıyken de güncel kalır."
+          }
+        }
+      }
+    },
+    "In password fields iPhone always switches to its own keyboard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parola alanlarında iPhone her zaman kendi klavyesine geçer."
+          }
+        }
+      }
+    },
+    "One-time codes, card numbers and IBANs are never saved this way.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tek kullanımlık kodlar, kart numaraları ve IBAN'lar bu yolla asla kaydedilmez."
+          }
+        }
+      }
+    },
+    "While it's off, this permission isn't needed. Save copies with the Paste button or by sharing them to Pastronaut.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalıyken bu izne gerek yok. Kopyalarını Yapıştır düğmesiyle ya da Pastronaut'a paylaşarak kaydedebilirsin."
+          }
+        }
+      }
+    },
+    "Choose Allow in Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'da İzin Ver'i seç"
+          }
+        }
+      }
+    },
+    "Open Settings takes you to Pastronaut's page: tap Paste from Other Apps, choose Allow, then come back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'ı Aç seni Pastronaut'un sayfasına götürür: Diğer Uygulamalardan Yapıştır'a dokun, İzin Ver'i seç, sonra geri dön."
+          }
+        }
+      }
+    },
+    "Check that it works": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalıştığını kontrol et"
+          }
+        }
+      }
+    },
+    "Copy a word in another app, such as Notes or Safari.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir uygulamada, örneğin Notlar ya da Safari'de, bir kelime kopyala."
+          }
+        }
+      }
+    },
+    "Come back here. Pastronaut checks by itself, or tap Check Now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buraya dön. Pastronaut kendisi kontrol eder; istersen Kontrol Et'e dokun."
+          }
+        }
+      }
+    },
+    "If iPhone asks whether to allow pasting, the setting isn't Allow yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone yapıştırmaya izin verilsin mi diye sorarsa ayar henüz İzin Ver değildir."
+          }
+        }
+      }
+    },
+    "Saved your copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyan kaydedildi"
+          }
+        }
+      }
+    },
+    "If iPhone didn't ask, everything is set: Pastronaut now saves your latest copy whenever you open it. If it asked, choose Allow in Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone sormadıysa her şey hazır: Pastronaut artık her açıldığında son kopyanı kaydeder. Sorduysa Ayarlar'da İzin Ver'i seç."
+          }
+        }
+      }
+    },
+    "Pastronaut copied that itself, so it doesn't test anything. Copy a word in Notes or Safari, then come back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu Pastronaut'un kendisi kopyaladı, bu yüzden bir şey sınamaz. Notlar ya da Safari'de bir kelime kopyala, sonra geri dön."
+          }
+        }
+      }
+    },
+    "Open the Pastronaut keyboard once": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut klavyesini bir kez aç"
+          }
+        }
+      }
+    },
+    "iPhone tells Pastronaut about Full Access only when its keyboard has been on screen.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone, Tam Erişim'i Pastronaut'a ancak klavyesi ekranda açıldığında bildirir."
+          }
+        }
+      }
+    },
+    "Touch and hold the globe key, then choose Pastronaut.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küre tuşuna basılı tut, sonra Pastronaut'u seç."
+          }
+        }
+      }
+    },
+    "No sign of the Pastronaut keyboard yet. If it's open, Full Access is still off: turn it on in Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut klavyesinden henüz haber yok. Klavye açıksa Tam Erişim hâlâ kapalıdır: Ayarlar'da aç."
+          }
+        }
+      }
+    },
+    "Waiting for the Pastronaut keyboard…": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut klavyesi bekleniyor…"
+          }
+        }
+      }
+    },
+    "Pastronaut saves your latest copy when you open it. Allow pasting once, and iPhone stops asking every time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut açıldığında son kopyanı kaydeder. Bir kez izin ver, iPhone her seferinde sormasın."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

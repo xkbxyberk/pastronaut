@@ -223,6 +223,39 @@ final class SyncStepTests: XCTestCase {
       let tappedAll = control("all").isSelected
       report(["ok": slidToPhone && slidToMac && tappedAll, "slidToPhone": slidToPhone, "slidToMac": slidToMac,
               "tappedAll": tappedAll, "barHeight": control("all").frame.height])
+    case "setupShots":
+      // Design review of the setup guide (made-up clips): each part of the keyboard step, then the paste step.
+      app.launchEnvironment["PT_DEMO"] = "1"
+      // PT_E2E keeps the guide away; here the guide is the point.
+      app.launchEnvironment["PT_E2E"] = nil
+      app.launchEnvironment["PT_AUTO_SAVE"] = "1"
+      app.launchArguments += ["-hasCompletedOnboarding", "NO"]
+      for stage in ["none", "added", "ready"] {
+        app.launchEnvironment["PT_E2E_KEYBOARD"] = stage
+        app.terminate()
+        app.launch()
+        let next = app.buttons["onboardingNext"]
+        guard next.waitForExistence(timeout: 10) else { break }
+        next.tap()
+        Thread.sleep(forTimeInterval: 1.5)
+        attachScreenshot(named: "setup-keyboard-\(stage)")
+        if stage == "added" {
+          app.buttons["tryKeyboard"].firstMatch.tap()
+          Thread.sleep(forTimeInterval: 1.5)
+          attachScreenshot(named: "setup-keyboard-try-focused")
+        }
+      }
+      // The keyboard is ready in the last launch: on to the paste step.
+      app.buttons["onboardingNext"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1.5)
+      attachScreenshot(named: "setup-paste-allow")
+      app.buttons["pasteAlreadyAllowed"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1.2)
+      attachScreenshot(named: "setup-paste-check")
+      app.buttons["tryClipboardSave"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1.5)
+      attachScreenshot(named: "setup-paste-done")
+      report(["ok": true])
     case "plusShots":
       // Design review: the "+" menu with something on the clipboard (Paste offered) and with nothing on it.
       app.launchEnvironment["PT_DEMO"] = "1"

@@ -199,6 +199,7 @@ final class ClipStore {
     }
     // Our own copy is already in the history; don't save it again on the next launch.
     sharedDefaults?.set(UIPasteboard.general.changeCount, forKey: AutoCapture.lastChangeCountKey)
+    noteOwnCopy()
     // Copying moves the clip up but keeps where it came from: a Mac clip stays under the Mac filter.
     var used = clip
     used.lastCopiedAt = .now
@@ -299,6 +300,7 @@ final class ClipStore {
   func copyText(_ text: String) {
     UIPasteboard.general.string = text
     sharedDefaults?.set(UIPasteboard.general.changeCount, forKey: AutoCapture.lastChangeCountKey)
+    noteOwnCopy()
     save(text)
   }
 
@@ -462,6 +464,15 @@ final class ClipStore {
     case denied
     case sensitive
     case tooLarge
+    /// Pastronaut put it there: reading it never asks, so it tests nothing.
+    case ownCopy
+  }
+
+  /// The pasteboard change count of the last copy this app made itself (the setup's check skips it).
+  private static let ownCopyChangeCountKey = "ownCopyChangeCount"
+
+  private func noteOwnCopy() {
+    UserDefaults.standard.set(UIPasteboard.general.changeCount, forKey: Self.ownCopyChangeCountKey)
   }
 
   func trySavingClipboard() async -> ClipboardTrial {
@@ -470,6 +481,9 @@ final class ClipStore {
     #endif
     let pasteboard = UIPasteboard.general
     guard pasteboard.hasStrings else { return .empty }
+    if pasteboard.changeCount == UserDefaults.standard.object(forKey: Self.ownCopyChangeCountKey) as? Int {
+      return .ownCopy
+    }
     sharedDefaults?.set(pasteboard.changeCount, forKey: AutoCapture.lastChangeCountKey)
     guard let text = pasteboard.string else { return .denied }
     guard AutoCapture.allows(text) else { return .sensitive }
@@ -740,6 +754,7 @@ final class ClipStore {
     let text = combined.combinedText(separator: separator)
     UIPasteboard.general.string = text
     sharedDefaults?.set(UIPasteboard.general.changeCount, forKey: AutoCapture.lastChangeCountKey)
+    noteOwnCopy()
     guard SyncPolicy.default.isEligible(text) else { return false }
     save(text)
     return true

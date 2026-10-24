@@ -12,6 +12,7 @@ struct HeaderView: View {
   }
 
   var body: some View {
+    VStack(alignment: .leading, spacing: 6) { // Pastronaut: chips for the chosen filters under the search
     HStack(alignment: .top, spacing: 0) {
       HStack(alignment: .center, spacing: 0) {
         ListHeaderView(
@@ -42,6 +43,9 @@ struct HeaderView: View {
       .opacity(appState.searchVisible ? 1 : 0)
       .accessibilityHidden(!appState.searchVisible)
       .layoutPriority(1)
+    }
+    ActiveFilterChips() // Pastronaut
+      .padding(.horizontal, Popup.horizontalPadding)
     }
     .padding(.top, Popup.verticalPadding)
     .padding(.horizontal, 10)

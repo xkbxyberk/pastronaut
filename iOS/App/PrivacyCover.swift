@@ -94,9 +94,11 @@ final class PrivacyCover {
 
 extension PrivacyCover {
   /// UI tests capture the screen, which iOS reports as a recording; the cover would hide what they look for.
+  /// Made-up clips (PT_DEMO) have nothing to hide either.
   fileprivate static var isTesting: Bool {
     #if DEBUG
-    return ProcessInfo.processInfo.environment["PT_E2E"] != nil
+    let environment = ProcessInfo.processInfo.environment
+    return environment["PT_E2E"] != nil || environment["PT_DEMO"] != nil
     #else
     return false
     #endif

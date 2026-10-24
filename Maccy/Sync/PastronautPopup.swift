@@ -41,6 +41,14 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
     }
   }
 
+  var systemImage: String {
+    switch self {
+    case .all: "tray.full"
+    case .mac: "laptopcomputer"
+    case .iphone: "iphone"
+    }
+  }
+
   func includes(_ item: HistoryItemDecorator) -> Bool {
     switch self {
     case .all: true
@@ -50,10 +58,43 @@ enum DeviceFilter: String, CaseIterable, Identifiable {
   }
 }
 
+extension HistoryItem {
+  /// What the item is, as the filter menu sorts it: a PDF (also one copied with a picture of it), an image, files
+  /// (PDF files count as PDFs), or the kind of its text.
+  var clipKind: ClipKind? {
+    if pdfData != nil { return .pdf }
+    if imageData != nil { return .image }
+    let files = fileURLs
+    if !files.isEmpty {
+      return files.allSatisfy { $0.pathExtension.lowercased() == "pdf" } ? .pdf : .file
+    }
+    return text.flatMap { $0.isEmpty ? nil : ClipContent($0).kind }
+  }
+}
+
+extension ClipKind {
+  /// The kind as a filter: "Links", "PDFs".
+  var filterTitle: String {
+    switch self {
+    case .text: String(localized: "Text", table: "Pastronaut")
+    case .link: String(localized: "Links", table: "Pastronaut")
+    case .code: String(localized: "Code", table: "Pastronaut")
+    case .email: String(localized: "Emails", table: "Pastronaut")
+    case .phone: String(localized: "Phone Numbers", table: "Pastronaut")
+    case .address: String(localized: "Addresses", table: "Pastronaut")
+    case .color: String(localized: "Colors", table: "Pastronaut")
+    case .image: String(localized: "Images", table: "Pastronaut")
+    case .pdf: String(localized: "PDFs", table: "Pastronaut")
+    case .file: String(localized: "Files", table: "Pastronaut")
+    }
+  }
+}
+
 extension History {
   /// The device filter, the filter menu's chips and the filters typed into the search, on top of the search.
   func passesFilters(_ item: HistoryItemDecorator) -> Bool {
     deviceFilter.includes(item)
+      && kindFilter.map { item.item.clipKind == $0 } ?? true
       && collectionFilter.map { SyncedCollections.shared.contains(item.item, in: $0) } ?? true
       && ClipSearchToken.allMatch(
       tokenFilter,
@@ -99,28 +140,27 @@ extension History {
   }
 }
 
-/// Kind, date and pin chips in a menu next to the device filter, the Mac side of the iPhone's search chips.
+/// The filter button next to the source: a Kind submenu (every kind in the history), the collections, pins and
+/// dates, and Clear Filters. The Mac side of the iPhone's filter menu; what is chosen shows as chips under the
+/// search (`ActiveFilterChips`).
 struct ClipFilterMenu: View {
   @Environment(AppState.self) private var appState
 
   var body: some View {
-    let tokens = appState.history.tokenFilter
-    let isFiltering = !tokens.isEmpty || appState.history.collectionFilter != nil
+    let history = appState.history
+    let isFiltering = history.hasPastronautFilters
     Menu {
+      kindMenu
       CollectionFilterSection()
       Section {
         toggle(.pinned)
         toggle(.today)
         toggle(.thisWeek)
       }
-      Section {
-        ForEach([ClipSearchToken.link, .email, .phone, .address, .color, .code, .text], id: \.self, content: toggle)
-      }
       if isFiltering {
         Divider()
         Button {
-          appState.history.tokenFilter = []
-          appState.history.collectionFilter = nil
+          history.clearPastronautFilters()
         } label: {
           Text("Clear Filters", tableName: "Pastronaut")
         }
@@ -131,15 +171,53 @@ struct ClipFilterMenu: View {
         Text("Or type in the search", tableName: "Pastronaut")
       }
     } label: {
-      Image(systemName: isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-        .foregroundStyle(isFiltering ? Color.accentColor : Color.secondary)
+      Image(systemName: "line.3.horizontal.decrease")
+        .font(.system(size: 12, weight: .semibold))
     }
     .menuStyle(.borderlessButton)
     .menuIndicator(.hidden)
+    // On the menu itself: a borderless menu drops what its label draws behind it.
+    .tint(isFiltering ? Color.white : Color.primary)
+    .foregroundStyle(isFiltering ? Color.white : Color.primary)
+    .frame(width: 26, height: 26)
+    .background(Circle().fill(isFiltering ? Color.accentColor : Color.primary.opacity(0.06)))
+    .overlay(Circle().strokeBorder(Color.primary.opacity(isFiltering ? 0 : 0.1), lineWidth: 0.5))
+    .contentShape(Circle())
     .fixedSize()
     .help(Text("Filter", tableName: "Pastronaut"))
     .accessibilityLabel(Text("Filter", tableName: "Pastronaut"))
     .accessibilityIdentifier("clip-filter-menu")
+  }
+
+  /// Kinds there are items of, with how many; the chosen one stays even when none are left.
+  private var kindMenu: some View {
+    let history = appState.history
+    var counts: [ClipKind: Int] = [:]
+    for decorator in history.allItems {
+      if let kind = decorator.item.clipKind { counts[kind, default: 0] += 1 }
+    }
+    let kinds = ClipKind.allCases.filter { (counts[$0] ?? 0) > 0 || $0 == history.kindFilter }
+    let title = history.kindFilter.map {
+      String(localized: "Kind", table: "Pastronaut") + ": " + $0.filterTitle
+    } ?? String(localized: "Kind", table: "Pastronaut")
+    return Menu {
+      Picker(selection: Binding(get: { history.kindFilter }, set: { history.kindFilter = $0 })) {
+        Text("All Kinds", tableName: "Pastronaut").tag(ClipKind?.none)
+        ForEach(kinds, id: \.self) { kind in
+          Label {
+            Text(verbatim: "\(kind.filterTitle)  ·  \(counts[kind] ?? 0)")
+          } icon: {
+            Image(systemName: kind.symbolName)
+          }
+          .tag(Optional(kind))
+        }
+      } label: {
+        EmptyView()
+      }
+      .pickerStyle(.inline)
+    } label: {
+      Label { Text(verbatim: title) } icon: { Image(systemName: "square.grid.2x2") }
+    }
   }
 
   private func toggle(_ token: ClipSearchToken) -> some View {
@@ -155,6 +233,68 @@ struct ClipFilterMenu: View {
     )) {
       Label { Text(verbatim: token.title) } icon: { Image(systemName: token.systemImage) }
     }
+  }
+}
+
+extension History {
+  /// A kind, a collection, or pin and date chips are chosen (the source has its own control).
+  var hasPastronautFilters: Bool {
+    kindFilter != nil || collectionFilter != nil || !tokenFilter.isEmpty
+  }
+
+  func clearPastronautFilters() {
+    kindFilter = nil
+    collectionFilter = nil
+    tokenFilter = []
+  }
+}
+
+/// What the filter menu chose, as removable chips under the search field. Nothing when no filter is on.
+struct ActiveFilterChips: View {
+  @Environment(AppState.self) private var appState
+
+  var body: some View {
+    let history = appState.history
+    if history.hasPastronautFilters {
+      HStack(spacing: 6) {
+        if let kind = history.kindFilter {
+          chip(kind.filterTitle, systemImage: kind.symbolName) { history.kindFilter = nil }
+        }
+        if let id = history.collectionFilter, let collection = SyncedCollections.shared.collection(withID: id) {
+          chip(collection.name, systemImage: "folder") { history.collectionFilter = nil }
+        }
+        ForEach(history.tokenFilter, id: \.self) { token in
+          chip(token.title, systemImage: token.systemImage) { history.tokenFilter.removeAll { $0 == token } }
+        }
+        Spacer(minLength: 0)
+      }
+      .accessibilityElement(children: .contain)
+      .accessibilityIdentifier("active-filters")
+    }
+  }
+
+  private func chip(_ title: String, systemImage: String, remove: @escaping () -> Void) -> some View {
+    Button(action: remove) {
+      HStack(spacing: 4) {
+        Image(systemName: systemImage)
+          .foregroundStyle(.secondary)
+        Text(verbatim: title)
+          .lineLimit(1)
+        Image(systemName: "xmark")
+          .font(.system(size: 8, weight: .bold))
+          .foregroundStyle(.secondary)
+      }
+      .font(.system(size: 11, weight: .semibold))
+      .padding(.horizontal, 8)
+      .frame(height: 22)
+      .background(Capsule().fill(Color.primary.opacity(0.06)))
+      .overlay(Capsule().strokeBorder(Color.primary.opacity(0.1), lineWidth: 0.5))
+      .contentShape(Capsule())
+    }
+    .buttonStyle(.plain)
+    .help(Text("Remove this filter", tableName: "Pastronaut"))
+    .accessibilityLabel(Text(verbatim: title))
+    .accessibilityHint(Text("Remove this filter", tableName: "Pastronaut"))
   }
 }
 
@@ -194,70 +334,59 @@ extension ClipSearchToken {
   }
 }
 
+/// All (symbol and name), This Mac and iPhone (symbols) in one capsule, and the filter button beside it.
 struct DeviceFilterPicker: View {
   @Environment(AppState.self) private var appState
-  @Namespace private var glassNamespace
+  @Namespace private var selectionNamespace
 
   var body: some View {
-    if #available(macOS 26.0, *) {
-      // Glass capsules; the tinted selection flows between them.
-      HStack(spacing: 6) {
-        GlassEffectContainer(spacing: 6) {
-          HStack(spacing: 4) {
-            ForEach(DeviceFilter.allCases) { filter in
-              chip(filter)
-            }
-          }
+    HStack(spacing: 6) {
+      HStack(spacing: 0) {
+        ForEach(DeviceFilter.allCases) { filter in
+          segment(filter)
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("device-filter")
-        ClipFilterMenu()
       }
-      // The chips keep their size; the search field gives way.
-      .fixedSize()
-    } else {
-      HStack(spacing: 4) {
-        segmented
-        ClipFilterMenu()
-      }
+      .padding(2)
+      .background(Capsule().fill(Color.primary.opacity(0.06)))
+      .overlay(Capsule().strokeBorder(Color.primary.opacity(0.1), lineWidth: 0.5))
+      .accessibilityElement(children: .contain)
+      .accessibilityIdentifier("device-filter")
+      ClipFilterMenu()
     }
+    // The capsule keeps its size; the search field gives way.
+    .fixedSize()
   }
 
-  @available(macOS 26.0, *)
-  private func chip(_ filter: DeviceFilter) -> some View {
+  private func segment(_ filter: DeviceFilter) -> some View {
     let isSelected = appState.history.deviceFilter == filter
     return Button {
-      withAnimation(.bouncy(duration: 0.3)) { appState.history.deviceFilter = filter }
+      withAnimation(.snappy(duration: 0.25)) { appState.history.deviceFilter = filter }
     } label: {
-      Text(verbatim: filter.title)
-        .lineLimit(1)
-        .font(.callout.weight(isSelected ? .semibold : .regular))
-        .foregroundStyle(isSelected ? Color.white : Color.primary)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 4)
-        .contentShape(Capsule())
+      HStack(spacing: 4) {
+        Image(systemName: filter.systemImage)
+          .font(.system(size: 11, weight: .semibold))
+        if filter == .all {
+          Text(verbatim: filter.title)
+            .font(.system(size: 11, weight: .semibold))
+            .lineLimit(1)
+        }
+      }
+      .foregroundStyle(isSelected ? Color.white : Color.primary)
+      .padding(.horizontal, filter == .all ? 9 : 8)
+      .frame(height: 22)
+      .background {
+        if isSelected {
+          Capsule()
+            .fill(Color.accentColor)
+            .matchedGeometryEffect(id: "selectedSource", in: selectionNamespace)
+        }
+      }
+      .contentShape(Capsule())
     }
     .buttonStyle(.plain)
-    .glassEffect(isSelected ? .regular.tint(.accentColor).interactive() : .regular.interactive(), in: Capsule())
-    .glassEffectID(filter, in: glassNamespace)
+    .help(Text(verbatim: filter.title))
     .accessibilityLabel(Text(verbatim: filter.title))
     .accessibilityAddTraits(isSelected ? .isSelected : [])
-  }
-
-  private var segmented: some View {
-    @Bindable var history = appState.history
-    return Picker(selection: $history.deviceFilter) {
-      ForEach(DeviceFilter.allCases) { filter in
-        Text(verbatim: filter.title).tag(filter)
-      }
-    } label: {
-      Text("Device", tableName: "Pastronaut")
-    }
-    .pickerStyle(.segmented)
-    .labelsHidden()
-    .fixedSize()
-    .controlSize(.small)
-    .accessibilityIdentifier("device-filter")
   }
 }
 

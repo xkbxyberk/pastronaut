@@ -678,6 +678,19 @@ class MaccyUITests: XCTestCase {
       sleep(1)
       attachScreenshot(window, named: "13-settings-media-\(index)")
     }
+    // Advanced, in plain words (1.3): closed, then with the commands shown.
+    let advanced = app.toolbars.buttons.matching(NSPredicate(format: "label == 'Advanced' OR label == 'Gelişmiş'")).firstMatch
+    XCTAssertTrue(advanced.waitForExistence(timeout: 3))
+    advanced.click()
+    sleep(1)
+    attachScreenshot(window, named: "13-advanced")
+    let commands = window.descendants(matching: .any)["commandLineSection"].firstMatch
+    if commands.exists {
+      let title = commands.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Command' OR label BEGINSWITH 'Komut'")).firstMatch
+      title.exists ? title.click() : commands.click()
+      sleep(1)
+      attachScreenshot(window, named: "13-advanced-commands")
+    }
   }
 
   // Pastronaut: row context menu, undo after deleting, "Show in History" and the timed pause.
@@ -873,13 +886,22 @@ class MaccyUITests: XCTestCase {
     let menu = app.descendants(matching: .any)["clip-filter-menu"].firstMatch
     XCTAssertTrue(menu.waitForExistence(timeout: 3))
     menu.click()
-    let links = app.menuItems.matching(NSPredicate(format: "title == 'Links' OR title == 'Bağlantılar'")).firstMatch
+    // Kinds are in a submenu ("Kind" › "Links  ·  1").
+    let kind = app.menuItems.matching(NSPredicate(format: "title BEGINSWITH 'Kind' OR title BEGINSWITH 'Tür'")).firstMatch
+    XCTAssertTrue(kind.waitForExistence(timeout: 3))
+    kind.hover()
+    let links = app.menuItems.matching(NSPredicate(format: "title BEGINSWITH 'Links' OR title BEGINSWITH 'Bağlantılar'")).firstMatch
     XCTAssertTrue(links.waitForExistence(timeout: 3))
     links.click()
     XCTAssertTrue(waitForNonExistence(historyRow("plain words for the filter"), timeout: 3))
     XCTAssertTrue(historyRow("https://example.com/filter").exists)
     XCTAssertFalse(historyRow("ayse@example.com").exists)
+    // The chosen kind shows as a chip under the search; removing it brings the rest back.
+    let chips = app.descendants(matching: .any)["active-filters"].firstMatch
+    XCTAssertTrue(chips.waitForExistence(timeout: 3))
     attachScreenshot(app.dialogs.firstMatch, named: "filter-links")
+    chips.buttons.firstMatch.click()
+    XCTAssertTrue(historyRow("plain words for the filter").waitForExistence(timeout: 3))
   }
 
   private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {

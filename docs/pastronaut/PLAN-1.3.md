@@ -196,6 +196,25 @@ Tasarım tuvali: https://claude.ai/artifact/5FSzpfhWsBi7qESDL11Y3c (C2 seçildi)
   içinde geliyor, bayt olarak okunuyordu). `MediaIntake.webURL(fromURLItem:)` listeyi açıyor; test
   `linksCopiedAsPropertyListsArePastedAsTheirAddress`.
 
+## Kurulum rehberi ve Mac ayarları (2026-10-24, kullanıcı kararları)
+
+Tuval: https://claude.ai/artifact/Gbwuweu2E3QmnUV3bCAiGX
+- **iPhone kurulum (Klavye A):** adım başına tek görev ve duruma göre değişen alt düğme; kaydırmadan görünür.
+  Klavye: Ayarlar ("Ayarlar'ı Aç") › Dene ("Pastronaut Klavyesini Dene", alan + küre tuşu ipucu; 8 sn sonra
+  Tam Erişim ipucu) › Hazır ("Devam"). "Neden Tam Erişim?" ayrı sayfada. "Şimdilik Geç" her aşamada.
+- **Yapıştır adımı:** "Açılınca Panoyu Kaydet" üstte; açıksa İzin Ver › Kontrol › Hazır. Uygulama içi kopyayla
+  deneme yapılamaz (iOS kendi kopyasını okurken izin sormaz); bunun yerine dönüşte kendiliğinden kontrol ve
+  Pastronaut'un kendi kopyasını tanıma (`ClipboardTrial.ownCopy`). "Zaten İzin Verdim, Kontrol Et" kısayolu.
+- **Mac çubuğu:** simgeli kaynak kapsülü (Tümü adıyla), filtre menüsünde Tür › (görsel, PDF, dosya dahil),
+  koleksiyonlar, Sabitlenenler/Bugün/Bu Hafta, Filtreleri Temizle; seçilenler aramanın altında etiket
+  (`History.kindFilter`, `ActiveFilterChips`).
+- **Mac Gelişmiş:** `PastronautAdvancedPane` (Maccy'nin sayfası dosyada duruyor, ayarlar listesinde yerine bu):
+  Kopyalamayı Duraklat, Yalnızca Sonraki Kopyayı Yok Say, kısayol satırı, komutlar kapalı bölümde kopyalama
+  düğmeleriyle, temizleme seçeneklerine açıklama.
+- Testler: iOS `OnboardingFlowTests` (yeni akış), `setupShots`; Mac `testPastronautFilterMenu` (alt menü,
+  etiket), `testPastronaut13Shots` (Gelişmiş). PT_DEMO'da gizlilik örtüsü kapalı (Xcode test kaydı örtüyü
+  açıyordu).
+
 ## 0. Kısaca
 - **Sürümler:** 1.3 = iPhone 1.3 (derleme 5) + Mac 1.3 (derleme 2).
   - Mac 1.3, Mac App Store'a ve GitHub'a aynı numarayla çıkar.

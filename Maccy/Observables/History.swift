@@ -52,6 +52,13 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
       filtersChanged()
     }
   }
+  // Pastronaut: one kind from the filter menu (links, images, PDFs…).
+  var kindFilter: ClipKind? {
+    didSet {
+      guard kindFilter != oldValue else { return }
+      filtersChanged()
+    }
+  }
 
   private func filtersChanged() {
     updateUnpinnedShortcuts()

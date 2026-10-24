@@ -67,6 +67,7 @@
 		67CFBF7B8D2615BB1336A127 /* PastronautCore in Frameworks */ = {isa = PBXBuildFile; productRef = B072D60DDB83FC6A4050547E /* PastronautCore */; };
 		413D7FD3F22A45C693CF685F /* SyncBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */; };
 		CC9E9C9DAFE56C21028D040E /* SyncMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = B576224D7E67C7F47F43D1D2 /* SyncMedia.swift */; };
+C1ED8D4B13F84BEAB4445DB4 /* PastronautAdvancedPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11B2E2BB479846D78699517B /* PastronautAdvancedPane.swift */; };
 		A1C0FFEE0000000000000032 /* OnboardingWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000031 /* OnboardingWindow.swift */; };
 		A1C0FFEE0000000000000042 /* PopupExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000041 /* PopupExtras.swift */; };
 		A1C0FFEE0000000000000044 /* Collections.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000043 /* Collections.swift */; };
@@ -283,6 +284,7 @@
 		3787E55D54393A96440E4474 /* PastronautCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = PastronautCore; sourceTree = "<group>"; };
 		9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBridge.swift; sourceTree = "<group>"; };
 		B576224D7E67C7F47F43D1D2 /* SyncMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncMedia.swift; sourceTree = "<group>"; };
+11B2E2BB479846D78699517B /* PastronautAdvancedPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastronautAdvancedPane.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000031 /* OnboardingWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindow.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000041 /* PopupExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopupExtras.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000043 /* Collections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collections.swift; sourceTree = "<group>"; };
@@ -733,6 +735,7 @@
 			children = (
 				9CEACC95F13424A18D3FC9E7 /* SyncBridge.swift */,
 				B576224D7E67C7F47F43D1D2 /* SyncMedia.swift */,
+				11B2E2BB479846D78699517B /* PastronautAdvancedPane.swift */,
 				A1C0FFEE0000000000000031 /* OnboardingWindow.swift */,
 				A1C0FFEE0000000000000041 /* PopupExtras.swift */,
 				A1C0FFEE0000000000000043 /* Collections.swift */,
@@ -1252,6 +1255,7 @@
 				DAAEB196219694AE00A7883C /* About.swift in Sources */,
 				413D7FD3F22A45C693CF685F /* SyncBridge.swift in Sources */,
 				CC9E9C9DAFE56C21028D040E /* SyncMedia.swift in Sources */,
+				C1ED8D4B13F84BEAB4445DB4 /* PastronautAdvancedPane.swift in Sources */,
 				A1C0FFEE0000000000000032 /* OnboardingWindow.swift in Sources */,
 				A1C0FFEE0000000000000042 /* PopupExtras.swift in Sources */,
 				A1C0FFEE0000000000000044 /* Collections.swift in Sources */,

@@ -177,7 +177,7 @@ class AppState: Sendable {
             title: advancedTitle,
             toolbarIcon: NSImage.gearshape2!
           ) {
-            AdvancedSettingsPane()
+            PastronautAdvancedPane() // Pastronaut: plain words, commands folded away
               .frame(minWidth: minimumWidth)
           }
         ]

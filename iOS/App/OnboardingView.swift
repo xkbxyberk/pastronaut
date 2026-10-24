@@ -23,7 +23,11 @@ struct OnboardingView: View {
   @Environment(\.openURL) private var openURL
   @Environment(\.scenePhase) private var scenePhase
   @AppStorage(AppPreferences.onboardingKey) private var hasCompletedOnboarding = false
+  @AppStorage(AutoCapture.settingKey, store: UserDefaults(suiteName: PastronautIDs.appGroup))
+  private var autoSave = true
   @State private var step: Step
+  @State private var paste = PasteProgress()
+  @FocusState private var isTryFieldFocused: Bool
   private let setup = KeyboardSetup.shared
 
   init(presentation: Presentation, initialStep: Step = .welcome) {
@@ -57,46 +61,135 @@ struct OnboardingView: View {
       TabView(selection: $step) {
         WelcomeStep()
           .tag(Step.welcome)
-        KeyboardStep(setup: setup, openSettings: openSettings)
+        KeyboardStep(setup: setup, isTryFieldFocused: $isTryFieldFocused, openSettings: openSettings)
           .tag(Step.keyboard)
-        PasteStep(openSettings: openSettings)
+        PasteStep(autoSave: $autoSave, progress: paste)
           .tag(Step.paste)
       }
       .tabViewStyle(.page(indexDisplayMode: .never))
+      // The buttons stay behind the keyboard: over it they covered what the try step says to do.
       footer
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
     .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
     .onAppear { setup.update() }
     .onChange(of: scenePhase) { _, phase in
-      if phase == .active { setup.update() }
+      guard phase == .active else { return }
+      setup.update()
+      // Back from Settings or from copying in another app: check without a tap.
+      if step == .paste, autoSave { paste.cameBack() }
     }
   }
 
+  // MARK: - Footer: one main action for where the person is
+
+  private struct FooterAction {
+    let title: LocalizedStringKey
+    let identifier: String
+    let action: () -> Void
+  }
+
   private var footer: some View {
-    VStack(spacing: 16) {
+    let main = mainAction
+    return VStack(spacing: 10) {
       PageIndicator(current: step)
-      Button(action: advance) {
-        Text(primaryTitle)
+        .padding(.bottom, 4)
+      Button(action: main.action) {
+        Text(main.title)
           .font(.headline)
           .frame(maxWidth: .infinity)
           .padding(.vertical, 4)
       }
       .primaryActionStyle()
       .controlSize(.large)
-      .accessibilityIdentifier("onboardingNext")
+      .accessibilityIdentifier(main.identifier)
+      if let other = otherAction {
+        Button(action: other.action) {
+          Text(other.title)
+            .font(.subheadline.weight(.medium))
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 32)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityIdentifier(other.identifier)
+      } else {
+        // Keeps the main button where it was when the second one comes and goes.
+        Color.clear.frame(height: 32)
+      }
     }
     .padding(.horizontal, 24)
     .padding(.top, 12)
     .padding(.bottom, 8)
     .frame(maxWidth: 560)
+    .animation(.snappy, value: step)
   }
 
-  private var primaryTitle: LocalizedStringKey {
-    guard step.next == nil else { return "Continue" }
-    return presentation == .firstLaunch ? "Start Using Pastronaut" : "Done"
+  private var finishTitle: LocalizedStringKey {
+    presentation == .firstLaunch ? "Start Using Pastronaut" : "Done"
+  }
+
+  private var mainAction: FooterAction {
+    let next = FooterAction(
+      title: step.next == nil ? finishTitle : "Continue", identifier: "onboardingNext", action: advance
+    )
+    switch step {
+    case .welcome:
+      return next
+    case .keyboard:
+      switch KeyboardStage(setup) {
+      case .settings:
+        return FooterAction(title: "Open Settings", identifier: "openKeyboardSettings", action: openSettings)
+      case .tryKeyboard:
+        return FooterAction(title: "Try the Pastronaut Keyboard", identifier: "tryKeyboard") {
+          isTryFieldFocused = true
+        }
+      case .done:
+        return next
+      }
+    case .paste:
+      guard autoSave else { return next }
+      switch paste.stage {
+      case .allow:
+        return FooterAction(title: "Open Settings", identifier: "openPasteSettings") {
+          paste.openedSettings()
+          openSettings()
+        }
+      case .check:
+        return FooterAction(title: "Check Now", identifier: "tryClipboardSave") { paste.check() }
+      case .done:
+        return next
+      }
+    }
+  }
+
+  private var otherAction: FooterAction? {
+    switch step {
+    case .welcome:
+      return nil
+    case .keyboard:
+      switch KeyboardStage(setup) {
+      case .settings:
+        return FooterAction(title: "Not Now", identifier: "keyboardNotNow", action: advance)
+      case .tryKeyboard:
+        return FooterAction(title: "Not Now", identifier: "keyboardNotNow", action: advance)
+      case .done:
+        return nil
+      }
+    case .paste:
+      guard autoSave else { return nil }
+      switch paste.stage {
+      case .allow:
+        return FooterAction(title: "Already Allowed? Check", identifier: "pasteAlreadyAllowed") { paste.stage = .check }
+      case .check:
+        return FooterAction(title: "Open Settings", identifier: "openPasteSettings", action: openSettings)
+      case .done:
+        return FooterAction(title: "Check Again", identifier: "tryClipboardSave") { paste.check() }
+      }
+    }
   }
 
   private func advance() {
+    isTryFieldFocused = false
     if let next = step.next {
       withAnimation(.snappy) { step = next }
     } else {
@@ -112,6 +205,70 @@ struct OnboardingView: View {
   private func openSettings() {
     if let url = URL(string: UIApplication.openSettingsURLString) {
       openURL(url)
+    }
+  }
+}
+
+/// Where the keyboard setup is: switches to turn on in Settings, the keyboard to open once (iOS tells the app
+/// about Full Access only when the keyboard has been on screen), or done.
+private enum KeyboardStage {
+  case settings
+  case tryKeyboard
+  case done
+
+  @MainActor
+  init(_ setup: KeyboardSetup) {
+    self = !setup.isKeyboardAdded ? .settings : (setup.hasFullAccess ? .done : .tryKeyboard)
+  }
+
+  var index: Int {
+    switch self {
+    case .settings: 0
+    case .tryKeyboard: 1
+    case .done: 2
+    }
+  }
+}
+
+/// The paste step: allow pasting in Settings, check it with a copy from another app, done. The check runs by
+/// itself when the person comes back to the app with a new copy.
+@MainActor
+@Observable
+final class PasteProgress {
+  enum Stage { case allow, check, done }
+
+  var stage: Stage = .allow
+  private(set) var trial: ClipStore.ClipboardTrial?
+  private(set) var isChecking = false
+  private var lastCheckedChangeCount: Int?
+  private var wentToSettings = false
+
+  func openedSettings() {
+    wentToSettings = true
+  }
+
+  /// The app is in front again: from Settings, the next thing is the check; with a new copy, the check itself.
+  func cameBack() {
+    if stage == .allow, wentToSettings {
+      withAnimation(.snappy) { stage = .check }
+    }
+    let pasteboard = UIPasteboard.general
+    guard stage != .allow, pasteboard.hasStrings, pasteboard.changeCount != lastCheckedChangeCount else { return }
+    check()
+  }
+
+  func check() {
+    guard !isChecking else { return }
+    isChecking = true
+    lastCheckedChangeCount = UIPasteboard.general.changeCount
+    Task {
+      let result = await ClipStore.shared.trySavingClipboard()
+      withAnimation(.snappy) {
+        trial = result
+        if result == .saved { stage = .done } else if stage == .allow { stage = .check }
+      }
+      if result == .saved { Haptics.success() }
+      isChecking = false
     }
   }
 }
@@ -177,160 +334,129 @@ private struct WelcomeStep: View {
 
 private struct KeyboardStep: View {
   let setup: KeyboardSetup
+  var isTryFieldFocused: FocusState<Bool>.Binding
   let openSettings: () -> Void
+  @State private var showsWhy = false
 
   var body: some View {
+    let stage = KeyboardStage(setup)
     StepPage(
       systemImage: "keyboard.fill",
       title: "Add the Pastronaut keyboard",
       subtitle: "Type what you copied on your Mac with a single tap, in any app."
     ) {
-      OnboardingCard {
-        StatusRow(title: "Keyboard", progress: setup.isKeyboardAdded ? .done : .notStarted)
-          .accessibilityIdentifier("setupStep1")
-        Divider()
-        StatusRow(
-          title: "Full Access",
-          progress: setup.hasFullAccess ? .done : (setup.isKeyboardAdded ? .needsKeyboardCheck : .notStarted)
-        )
-        .accessibilityIdentifier("setupStep2")
-      }
-
-      VStack(spacing: 10) {
-        SettingsMockup(title: Text(verbatim: "Pastronaut")) {
-          MockRow(icon: SettingsIcon(systemImage: "keyboard", color: .gray), title: Text("Keyboards"), isHighlighted: true) {
-            MockChevron()
+      ProgressStrip(
+        titles: ["Settings", "Try", "Ready"], current: stage.index, identifiers: ["setupStep1", "setupStep2", "setupStep3"]
+      )
+      switch stage {
+      case .settings:
+        OnboardingCard {
+          Text("Turn on two switches in Settings")
+            .font(.headline)
+          SettingsMockup(title: Text("Keyboards")) {
+            MockRow(icon: nil, title: Text(verbatim: "Pastronaut")) {
+              MockSwitch()
+            }
+            MockDivider()
+            MockRow(icon: nil, title: Text("Allow Full Access"), isHighlighted: true) {
+              MockSwitch()
+            }
           }
-          MockDivider()
-          MockRow(icon: SettingsIcon(systemImage: "doc.on.clipboard", color: .gray), title: Text("Paste from Other Apps")) {
-            MockChevron(value: Text("Ask"))
-          }
+          .accessibilityHidden(true)
+          Text("Open Settings takes you to Pastronaut's page: tap Keyboards, turn on both switches, then come back.")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+          whyButton
         }
-        MockArrow()
-        SettingsMockup(title: Text("Keyboards")) {
-          MockRow(icon: nil, title: Text(verbatim: "Pastronaut")) {
-            MockSwitch()
+      case .tryKeyboard:
+        KeyboardTryCard(setup: setup, isFocused: isTryFieldFocused, openSettings: openSettings)
+      case .done:
+        OnboardingCard {
+          VStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+              .font(.system(size: 48))
+              .foregroundStyle(.green)
+              .accessibilityHidden(true)
+            Text("The keyboard is ready")
+              .font(.title3.bold())
+            Text("Full Access is on. The keyboard saves your new copies itself and stays up to date even when the app is closed.")
+              .font(.subheadline)
+              .foregroundStyle(.secondary)
+              .multilineTextAlignment(.center)
+              .fixedSize(horizontal: false, vertical: true)
           }
-          MockDivider()
-          MockRow(icon: nil, title: Text("Allow Full Access"), isHighlighted: true) {
-            MockSwitch()
-          }
+          .frame(maxWidth: .infinity)
+          .accessibilityElement(children: .combine)
+          .accessibilityIdentifier("fullAccessConfirmed")
         }
-      }
-      .accessibilityHidden(true)
-
-      InstructionList(items: [
-        "Tap Open Settings below.",
-        "Choose Keyboards.",
-        "Turn on Pastronaut, then Allow Full Access.",
-        "Come back and open the Pastronaut keyboard once in the field below.",
-      ])
-
-      OpenSettingsButton(action: openSettings)
-        .accessibilityIdentifier("openKeyboardSettings")
-
-      KeyboardTryCard(setup: setup)
-
-      OnboardingCard {
-        Label("Why Full Access?", systemImage: "checkmark.shield.fill")
-          .font(.headline)
-          .foregroundStyle(Color.accentColor)
-        Text("With Full Access, the keyboard saves your new copies itself and fetches the latest history from iCloud, even when the app is closed.")
-          .font(.subheadline)
-          .fixedSize(horizontal: false, vertical: true)
-        Text("Without it, the keyboard still works and types your history as of the last time you opened Pastronaut.")
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
-        Label {
-          Text("Even with Full Access, nothing you type is sent anywhere. The keyboard only reads your history in your own iCloud and writes the copies you capture there.")
-        } icon: {
-          Image(systemName: "lock")
-        }
-        .font(.footnote)
-        .foregroundStyle(.secondary)
-        .fixedSize(horizontal: false, vertical: true)
       }
     }
+    .animation(.snappy, value: stage.index)
+    .onChange(of: setup.hasFullAccess) { _, hasFullAccess in
+      if hasFullAccess { Haptics.success() }
+    }
+    .sheet(isPresented: $showsWhy) { WhyFullAccess() }
+  }
+
+  private var whyButton: some View {
+    Button {
+      showsWhy = true
+    } label: {
+      Label("Why Full Access? Nothing you type is sent anywhere", systemImage: "checkmark.shield")
+        .font(.subheadline.weight(.semibold))
+    }
+    .buttonStyle(.borderless)
+    .accessibilityIdentifier("whyFullAccess")
+  }
+}
+
+/// What Full Access is for, in a sheet so the setup stays short.
+private struct WhyFullAccess: View {
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    NavigationStack {
+      ScrollView {
+        VStack(alignment: .leading, spacing: 16) {
+          Text("With Full Access, the keyboard saves your new copies itself and fetches the latest history from iCloud, even when the app is closed.")
+          Text("Without it, the keyboard still works and types your history as of the last time you opened Pastronaut.")
+            .foregroundStyle(.secondary)
+          Label {
+            Text("Even with Full Access, nothing you type is sent anywhere. The keyboard only reads your history in your own iCloud and writes the copies you capture there.")
+          } icon: {
+            Image(systemName: "lock")
+          }
+          .foregroundStyle(.secondary)
+          Text("In password fields iPhone always switches to its own keyboard.")
+            .foregroundStyle(.secondary)
+        }
+        .font(.body)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(24)
+      }
+      .navigationTitle(Text("Why Full Access?"))
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") { dismiss() }
+        }
+      }
+    }
+    .presentationDetents([.medium, .large])
   }
 }
 
 private struct PasteStep: View {
-  let openSettings: () -> Void
-  @AppStorage(AutoCapture.settingKey, store: UserDefaults(suiteName: PastronautIDs.appGroup))
-  private var autoSave = true
-  @State private var trial: ClipStore.ClipboardTrial?
-  @State private var isTrying = false
+  @Binding var autoSave: Bool
+  let progress: PasteProgress
 
   var body: some View {
     StepPage(
       systemImage: "doc.on.clipboard.fill",
       title: "Paste without being asked",
-      subtitle: "Pastronaut saves your new copy each time you open it. Allow pasting once, and iPhone stops asking for permission every time."
+      subtitle: "Pastronaut saves your latest copy when you open it. Allow pasting once, and iPhone stops asking every time."
     ) {
-      VStack(spacing: 10) {
-        SettingsMockup(title: Text(verbatim: "Pastronaut")) {
-          MockRow(icon: SettingsIcon(systemImage: "keyboard", color: .gray), title: Text("Keyboards")) {
-            MockChevron()
-          }
-          MockDivider()
-          MockRow(icon: SettingsIcon(systemImage: "doc.on.clipboard", color: .gray), title: Text("Paste from Other Apps"), isHighlighted: true) {
-            MockChevron(value: Text("Ask"))
-          }
-        }
-        MockArrow()
-        SettingsMockup(title: Text("Paste from Other Apps")) {
-          MockRow(icon: nil, title: Text("Ask")) { EmptyView() }
-          MockDivider()
-          MockRow(icon: nil, title: Text("Deny")) { EmptyView() }
-          MockDivider()
-          MockRow(icon: nil, title: Text("Allow"), isHighlighted: true) {
-            Image(systemName: "checkmark")
-              .font(.subheadline.weight(.semibold))
-              .foregroundStyle(Color.blue)
-          }
-        }
-      }
-      .accessibilityHidden(true)
-
-      InstructionList(items: [
-        "Tap Open Settings below.",
-        "Choose Paste from Other Apps.",
-        "Select Allow.",
-      ])
-
-      OpenSettingsButton(action: openSettings)
-        .accessibilityIdentifier("openPasteSettings")
-
-      OnboardingCard {
-        Label("Try it", systemImage: "wand.and.sparkles")
-          .font(.headline)
-          .foregroundStyle(Color.accentColor)
-        Text("Copy some text in another app, come back and tap Try Saving. If iPhone still asks, the setting isn't Allow yet.")
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
-        Button {
-          Task {
-            isTrying = true
-            trial = await ClipStore.shared.trySavingClipboard()
-            isTrying = false
-          }
-        } label: {
-          Label("Try Saving", systemImage: "doc.on.clipboard")
-            .frame(maxWidth: .infinity)
-        }
-        .primaryActionStyle()
-        .controlSize(.large)
-        .disabled(isTrying)
-        .accessibilityIdentifier("tryClipboardSave")
-        if let trial {
-          TrialResult(trial: trial)
-            .transition(.opacity)
-        }
-      }
-      .animation(.snappy, value: trial)
-
       OnboardingCard {
         Toggle(isOn: $autoSave) {
           Label {
@@ -340,10 +466,138 @@ private struct PasteStep: View {
           }
         }
         .accessibilityIdentifier("onboardingAutoSaveToggle")
-        Text("iPhone keeps only your latest copy. When you copy several things in a row, open Pastronaut or its keyboard in between, or share them to Pastronaut. One-time codes, card numbers and IBANs are never saved this way.")
+        Text("One-time codes, card numbers and IBANs are never saved this way.")
           .font(.footnote)
           .foregroundStyle(.secondary)
           .fixedSize(horizontal: false, vertical: true)
+      }
+
+      if !autoSave {
+        Text("While it's off, this permission isn't needed. Save copies with the Paste button or by sharing them to Pastronaut.")
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+          .padding(.horizontal, 4)
+      } else {
+        ProgressStrip(
+          titles: ["Allow", "Check", "Ready"], current: progress.stage.index,
+          identifiers: ["pasteStep1", "pasteStep2", "pasteStep3"]
+        )
+        switch progress.stage {
+        case .allow:
+          OnboardingCard {
+            Text("Choose Allow in Settings")
+              .font(.headline)
+            SettingsMockup(title: Text("Paste from Other Apps")) {
+              MockRow(icon: nil, title: Text("Ask")) { EmptyView() }
+              MockDivider()
+              MockRow(icon: nil, title: Text("Deny")) { EmptyView() }
+              MockDivider()
+              MockRow(icon: nil, title: Text("Allow"), isHighlighted: true) {
+                Image(systemName: "checkmark")
+                  .font(.subheadline.weight(.semibold))
+                  .foregroundStyle(Color.blue)
+              }
+            }
+            .accessibilityHidden(true)
+            Text("Open Settings takes you to Pastronaut's page: tap Paste from Other Apps, choose Allow, then come back.")
+              .font(.subheadline)
+              .foregroundStyle(.secondary)
+              .fixedSize(horizontal: false, vertical: true)
+          }
+        case .check:
+          OnboardingCard {
+            Text("Check that it works")
+              .font(.headline)
+            InstructionList(items: [
+              "Copy a word in another app, such as Notes or Safari.",
+              "Come back here. Pastronaut checks by itself, or tap Check Now.",
+              "If iPhone asks whether to allow pasting, the setting isn't Allow yet.",
+            ])
+            if let trial = progress.trial, trial != .saved {
+              TrialResult(trial: trial)
+                .transition(.opacity)
+            }
+          }
+        case .done:
+          OnboardingCard {
+            VStack(spacing: 10) {
+              Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(.green)
+                .accessibilityHidden(true)
+              Text("Saved your copy")
+                .font(.title3.bold())
+              Text("If iPhone didn't ask, everything is set: Pastronaut now saves your latest copy whenever you open it. If it asked, choose Allow in Settings.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("tryClipboardResult")
+          }
+        }
+      }
+    }
+    .animation(.snappy, value: progress.stage)
+    .animation(.snappy, value: autoSave)
+  }
+}
+
+private extension PasteProgress.Stage {
+  var index: Int {
+    switch self {
+    case .allow: 0
+    case .check: 1
+    case .done: 2
+    }
+  }
+}
+
+/// Three numbered steps in a row; the current one is lit and the finished ones are checked.
+private struct ProgressStrip: View {
+  let titles: [LocalizedStringKey]
+  let current: Int
+  let identifiers: [String]
+
+  var body: some View {
+    HStack(spacing: 8) {
+      ForEach(Array(titles.enumerated()), id: \.offset) { index, title in
+        let isDone = index < current, isCurrent = index == current
+        HStack(spacing: 7) {
+          ZStack {
+            Circle()
+              .fill(isDone ? Color.green : (isCurrent ? Color.accentColor : Color.secondary.opacity(0.25)))
+            if isDone {
+              Image(systemName: "checkmark")
+                .font(.caption2.weight(.heavy))
+                .foregroundStyle(.white)
+            } else {
+              Text(index + 1, format: .number)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(isCurrent ? Color.onAccent : Color.secondary)
+            }
+          }
+          .frame(width: 22, height: 22)
+          Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(isCurrent ? Color.primary : Color.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+          isCurrent ? Color.accentColor.opacity(0.16) : Color(uiColor: .secondarySystemGroupedBackground),
+          in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(title))
+        .accessibilityValue(isDone ? Text("Ready") : (isCurrent ? Text("Now") : Text("Not finished")))
+        .accessibilityIdentifier(identifiers[index])
       }
     }
   }
@@ -372,13 +626,14 @@ private struct TrialResult: View {
     case .denied: "iPhone blocked the paste. Set Paste from Other Apps to Allow, then try again."
     case .sensitive: "That copy looks like a code or a card number, so it wasn't saved. Copy something else to try."
     case .tooLarge: "Too large to sync"
+    case .ownCopy: "Pastronaut copied that itself, so it doesn't test anything. Copy a word in Notes or Safari, then come back."
     }
   }
 
   private var systemImage: String {
     switch trial {
     case .saved: "checkmark.circle.fill"
-    case .empty, .sensitive: "info.circle.fill"
+    case .empty, .sensitive, .ownCopy: "info.circle.fill"
     case .denied, .tooLarge: "exclamationmark.triangle.fill"
     }
   }
@@ -386,7 +641,7 @@ private struct TrialResult: View {
   private var color: Color {
     switch trial {
     case .saved: .green
-    case .empty, .sensitive: .secondary
+    case .empty, .sensitive, .ownCopy: .secondary
     case .denied, .tooLarge: .orange
     }
   }
@@ -468,74 +723,65 @@ private struct FeatureRow: View {
 
 private struct KeyboardTryCard: View {
   let setup: KeyboardSetup
+  var isFocused: FocusState<Bool>.Binding
+  let openSettings: () -> Void
   @State private var text = ""
-  @FocusState private var isFocused: Bool
+  @State private var waitedLong = false
 
   var body: some View {
     OnboardingCard {
-      Label("Try the keyboard", systemImage: "character.cursor.ibeam")
+      Text("Open the Pastronaut keyboard once")
         .font(.headline)
-        .foregroundStyle(Color.accentColor)
-      Text("Tap the field, then switch to Pastronaut with the globe key. Opening it once here also confirms Full Access.")
+      Text("iPhone tells Pastronaut about Full Access only when its keyboard has been on screen.")
         .font(.subheadline)
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)
+      HStack(spacing: 10) {
+        Image(systemName: "globe")
+          .font(.title3)
+          .frame(width: 40, height: 40)
+          .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+          .accessibilityHidden(true)
+        Text("Touch and hold the globe key, then choose Pastronaut.")
+          .font(.subheadline)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      if waitedLong {
+        Label("No sign of the Pastronaut keyboard yet. If it's open, Full Access is still off: turn it on in Settings.", systemImage: "info.circle.fill")
+          .font(.subheadline)
+          .foregroundStyle(.orange)
+          .fixedSize(horizontal: false, vertical: true)
+          .transition(.opacity)
+          .accessibilityIdentifier("fullAccessHint")
+        Button("Back to Settings", systemImage: "gear", action: openSettings)
+          .font(.subheadline.weight(.semibold))
+          .buttonStyle(.borderless)
+          .accessibilityIdentifier("openKeyboardSettingsAgain")
+      } else {
+        Label("Waiting for the Pastronaut keyboard…", systemImage: "clock")
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+      }
       TextField("Tap here to open the keyboard", text: $text)
-        .focused($isFocused)
+        .focused(isFocused)
         .padding(12)
         .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+          RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .strokeBorder(Color.accentColor, lineWidth: isFocused.wrappedValue ? 0 : 2)
+        }
         .accessibilityIdentifier("keyboardTryField")
-      if setup.hasFullAccess {
-        Label("Full Access is on.", systemImage: "checkmark.circle.fill")
-          .font(.subheadline)
-          .foregroundStyle(.green)
-          .transition(.opacity)
-          .accessibilityIdentifier("fullAccessConfirmed")
-      }
     }
-    .animation(.snappy, value: setup.hasFullAccess)
-    .task(id: isFocused) {
-      guard isFocused else { return }
+    .animation(.snappy, value: waitedLong)
+    .task(id: isFocused.wrappedValue) {
+      guard isFocused.wrappedValue else { return }
+      let start = Date()
       while !Task.isCancelled, !setup.hasFullAccess {
         setup.update()
+        if !waitedLong, Date().timeIntervalSince(start) > 8 { waitedLong = true }
         try? await Task.sleep(for: .seconds(1))
       }
     }
-    .onChange(of: setup.hasFullAccess) { _, hasFullAccess in
-      if hasFullAccess { Haptics.success() }
-    }
-  }
-}
-
-private struct StatusRow: View {
-  enum Progress {
-    case done
-    case needsKeyboardCheck
-    case notStarted
-  }
-
-  let title: LocalizedStringKey
-  let progress: Progress
-
-  var body: some View {
-    HStack {
-      Text(title)
-        .fontWeight(.semibold)
-      Spacer()
-      switch progress {
-      case .done:
-        Label("Ready", systemImage: "checkmark.circle.fill")
-          .foregroundStyle(.green)
-      case .needsKeyboardCheck:
-        Label("Open the keyboard once", systemImage: "hand.point.up.left.fill")
-          .foregroundStyle(.orange)
-      case .notStarted:
-        Text("Not finished")
-          .foregroundStyle(.secondary)
-      }
-    }
-    .font(.subheadline)
-    .accessibilityElement(children: .combine)
   }
 }
 
@@ -560,20 +806,6 @@ private struct InstructionList: View {
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-  }
-}
-
-private struct OpenSettingsButton: View {
-  let action: () -> Void
-
-  var body: some View {
-    Button(action: action) {
-      Label("Open Settings", systemImage: "gear")
-        .font(.headline)
-        .frame(maxWidth: .infinity)
-    }
-    .secondaryActionStyle()
-    .controlSize(.large)
   }
 }
 
