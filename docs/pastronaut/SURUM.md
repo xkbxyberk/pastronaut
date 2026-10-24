@@ -19,8 +19,8 @@ Mac'e dokunan her değişiklik **hem kanal 2 hem kanal 3** demektir.
   Kural: hata düzeltmesi son rakamı (1.1.1), yeni özellik ortadakini (1.2) artırır. Yalnızca bir kanal çıkarsa
   öbürleri o numarayı atlar; bir sonraki sürümleri en yüksek numaradan devam eder (aynı numara iki farklı içerikle
   çıkmaz).
-  Şu an (2026-10-23): iPhone **1.2** ve Mac **1.0** (Mac App Store) yayında, GitHub **0.1.0**. Sıradaki sürüm ortak
-  **1.3**: iPhone ve Mac birlikte, üç kanalda (`PLAN-1.3.md`).
+  Şu an (2026-10-24): iPhone **1.2** ve Mac **1.0** (Mac App Store) yayında, GitHub **0.1.0**. Ortak **1.3**
+  derlendi (iPhone 1.3 (5), Mac 1.3 (2)), yükleme ve yayın bekliyor (`YAYIN.md`).
 - **Derleme numarası (`CURRENT_PROJECT_VERSION`) her yüklemede artar:**
   - iPhone: `iOS/project.yml`. Yüklenen son: **4** (1.2, 2026-10-22) → sonraki **5**. Ayarlar'daki
     "1.2 (4)" bu numarayı gösterir; TestFlight ile App Store sürümünü ve hata bildirimlerini ayırt etmeye yarar.

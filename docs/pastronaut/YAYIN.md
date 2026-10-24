@@ -118,7 +118,18 @@ birlikte çıkar; Mac'e özel ara sürüm yok. Plan `PLAN-1.3.md`.
 2. ✅ **CloudKit şeması Production'da** (kullanıcı, 2026-10-24): yeni türler `Media` (22 alan) ve `AppIcon` (11),
    `Settings.shared` (Encrypted Bytes), dizinler ve izinler. Önce Development'tan prototip kalıntısı `ProtoMedia`
    silindi; `ProtoClip` zaten Production'daydı. Clip ve Collection değişmedi.
-3. ⏳ Adım 6: mağaza metinleri, ekran görüntüleri, gizlilik politikası. Adım 7: yayın (iPhone 1.3 (5), Mac 1.3 (2)).
+3. ✅ Adım 6 (2026-10-24): mağaza metinleri (`APPSTORE.md` §4–§8, §13), gizlilik politikası yayında (gh-pages
+   `d190e91`), ekran görüntüleri `appstore-screenshots/store13/{en,tr}`: 10 iPhone, 6 Mac, header ve arama görseli
+   (Apple çerçeveleri, gerçek ekranlar, demo içerik; `APPSTORE.md` §9). Bu sırada bulunan klavye hatası düzeltildi
+   (görsel kopyalayınca klavye kapanıyordu, `873d208`).
+4. ⏳ Adım 7 (2026-10-24): sürüm 1.3, iPhone derleme 5, Mac derleme 2 (`8285d12`). Testler: çekirdek 188, Mac 119.
+   - iPhone: Release arşivi hazır (`build/ios/Pastronaut.xcarchive`, beş paket 1.3 (5), gizlilik bildirimli,
+     Kestirmelerde ürün adı yok). **Yükleme kullanıcının "yükle" demesini bekliyor.**
+   - Mac App Store: `build/mas/export/Pastronaut.pkg` 1.3 (2) (Apple Distribution, Sparkle yok, sandbox, iCloud
+     Production). **Yükleme "yükle" bekliyor** (`scripts/appstore/build-mas.sh --upload`).
+   - GitHub: `build/github/Pastronaut-1.3.zip` notarize edildi (Accepted), staple'lı, Sparkle imzalı; notlar
+     `build/github/notes-1.3.md`, appcast kaydı `build/github/appcast-item-1.3.xml`. **Release ve appcast push'u
+     kullanıcı onayı bekliyor**; appcast en son.
 
 **Sürüm kuralı (2026-10-18'den sonra):** her sürüm üç kanalda çıkar (iPhone, Mac App Store, Mac GitHub/Sparkle);
 adımlar `SURUM.md`'de. Görünen sürüm: iPhone 1.2, Mac 1.0 (Mac App Store), GitHub 0.1.0. Sıradaki: ortak **1.3**; derleme
