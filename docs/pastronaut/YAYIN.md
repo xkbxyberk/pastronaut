@@ -131,6 +131,8 @@ birlikte çıkar; Mac'e özel ara sürüm yok. Plan `PLAN-1.3.md`.
      yüklemesi: build 3.
    - Kullanıcıda: iOS App ve macOS App › "+" › 1.3; metinler `APPSTORE.md` §6–§8, inceleme notu §13, görseller
      `store13/`; TestFlight, incelemeye gönderme.
+   - ✅ TestFlight'ta göründü; **iOS 1.3 (5) ve macOS 1.3 (2) incelemeye gönderildi, "Waiting for Review"**
+     (kullanıcı, 2026-10-24). Sırada: onay; ardından GitHub 1.3 yayını ve appcast.
    - GitHub: `build/github/Pastronaut-1.3.zip` notarize edildi (Accepted), staple'lı, Sparkle imzalı; notlar
      `build/github/notes-1.3.md`, appcast kaydı `build/github/appcast-item-1.3.xml`. **Release ve appcast push'u
      kullanıcı onayı bekliyor**; appcast en son.
