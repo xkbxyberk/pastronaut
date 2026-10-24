@@ -106,15 +106,27 @@ public enum MediaQuality: String, Codable, Sendable, CaseIterable {
   public static let maxLongEdge = 4096
 }
 
-/// Settings every device shares, kept in the account's settings record next to the record-name key. Merged as a
-/// whole by `modifiedAt`: the newest change wins.
+/// Settings every device shares, kept in the account's settings record next to the record-name key. Merged
+/// setting by setting: each one's newest change wins, so two devices changing different switches at once both
+/// keep their change (seen in the 1.3 E2E, T60b, when the whole newest version won).
 public struct SharedSyncSettings: Codable, Equatable, Sendable {
   public var skipOneTimeCodes: Bool
   public var skipCardNumbers: Bool
   public var pinnedOnly: Bool
   public var media: MediaSettings
-  /// Nil until someone changed a setting; then a device's defaults never replace it.
+  /// The latest change of any setting. Nil until someone changed one; then a device's defaults never replace it.
   public var modifiedAt: Date?
+  /// When each setting last changed (`Field` raw values), when that was before `modifiedAt`. A setting not listed
+  /// changed at `modifiedAt`, as in versions written before settings had their own times.
+  public var fieldModifiedAt: [String: Date] = [:]
+
+  /// The settings merged one by one.
+  public enum Field: String, CaseIterable, Sendable {
+    case skipOneTimeCodes, skipCardNumbers, pinnedOnly
+    case mediaSyncEnabled = "media.syncEnabled"
+    case mediaMaxItemBytes = "media.maxItemBytes"
+    case mediaCloudBudgetBytes = "media.cloudBudgetBytes"
+  }
 
   public init(privacy: PrivacyOptions = PrivacyOptions(), media: MediaSettings = MediaSettings(), modifiedAt: Date? = nil) {
     self.skipOneTimeCodes = privacy.skipOneTimeCodes
@@ -133,9 +145,66 @@ public struct SharedSyncSettings: Codable, Equatable, Sendable {
     }
   }
 
-  /// The newer of two versions; a version nobody changed loses to one somebody did.
+  /// When `field` last changed; nil when nobody changed it.
+  public func changedAt(_ field: Field) -> Date? {
+    fieldModifiedAt[field.rawValue] ?? modifiedAt
+  }
+
+  /// Each setting from the version that changed it last; one nobody changed loses to one somebody did. Ties keep
+  /// this version's.
   public func merged(with other: SharedSyncSettings) -> SharedSyncSettings {
-    (other.modifiedAt ?? .distantPast) > (modifiedAt ?? .distantPast) ? other : self
+    var result = self
+    var times: [Field: Date?] = [:]
+    for field in Field.allCases {
+      let mine = changedAt(field), theirs = other.changedAt(field)
+      if (theirs ?? .distantPast) > (mine ?? .distantPast) {
+        result.take(field, from: other)
+        times[field] = theirs
+      } else {
+        times[field] = mine
+      }
+    }
+    result.modifiedAt = [modifiedAt, other.modifiedAt].compactMap { $0 }.max()
+    result.fieldModifiedAt = [:]
+    for (field, time) in times {
+      if let time, time != result.modifiedAt { result.fieldModifiedAt[field.rawValue] = time }
+    }
+    return result
+  }
+
+  /// Marks the settings that differ from `before` as changed at `date`, and `date` as the latest change.
+  public mutating func stamp(changesSince before: SharedSyncSettings, at date: Date) {
+    var times: [Field: Date?] = [:]
+    for field in Field.allCases {
+      times[field] = isSame(field, as: before) ? before.changedAt(field) : date
+    }
+    modifiedAt = date
+    fieldModifiedAt = [:]
+    for (field, time) in times {
+      if let time, time != date { fieldModifiedAt[field.rawValue] = time }
+    }
+  }
+
+  func isSame(_ field: Field, as other: SharedSyncSettings) -> Bool {
+    switch field {
+    case .skipOneTimeCodes: skipOneTimeCodes == other.skipOneTimeCodes
+    case .skipCardNumbers: skipCardNumbers == other.skipCardNumbers
+    case .pinnedOnly: pinnedOnly == other.pinnedOnly
+    case .mediaSyncEnabled: media.syncEnabled == other.media.syncEnabled
+    case .mediaMaxItemBytes: media.maxItemBytes == other.media.maxItemBytes
+    case .mediaCloudBudgetBytes: media.cloudBudgetBytes == other.media.cloudBudgetBytes
+    }
+  }
+
+  private mutating func take(_ field: Field, from other: SharedSyncSettings) {
+    switch field {
+    case .skipOneTimeCodes: skipOneTimeCodes = other.skipOneTimeCodes
+    case .skipCardNumbers: skipCardNumbers = other.skipCardNumbers
+    case .pinnedOnly: pinnedOnly = other.pinnedOnly
+    case .mediaSyncEnabled: media.syncEnabled = other.media.syncEnabled
+    case .mediaMaxItemBytes: media.maxItemBytes = other.media.maxItemBytes
+    case .mediaCloudBudgetBytes: media.cloudBudgetBytes = other.media.cloudBudgetBytes
+    }
   }
 }
 
@@ -194,5 +263,6 @@ extension SharedSyncSettings {
     pinnedOnly = try container.decodeIfPresent(Bool.self, forKey: .pinnedOnly) ?? false
     media = try container.decodeIfPresent(MediaSettings.self, forKey: .media) ?? MediaSettings()
     modifiedAt = try container.decodeIfPresent(Date.self, forKey: .modifiedAt)
+    fieldModifiedAt = (try? container.decodeIfPresent([String: Date].self, forKey: .fieldModifiedAt)) ?? [:]
   }
 }

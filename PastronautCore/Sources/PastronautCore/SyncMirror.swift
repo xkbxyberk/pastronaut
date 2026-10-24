@@ -74,7 +74,10 @@ extension ClipSync.PersistedState {
     let existing = entries[clip.id]
     let merged = existing.map { $0.clip.merged(with: clip) } ?? clip
     let allowed = privacy.allows(merged.privacyText, pinned: merged.pinned) && mediaAllows(merged)
-    let isLocalOnly = existing.map { $0.isLocalOnly && !(isCapture && allowed) } ?? !allowed
+    // Held back only by a privacy rule that no longer applies (pinned while "Sync pinned items only" is on): it
+    // goes up now. Clips kept here for other reasons (another account, iCloud full) stay until asked.
+    let heldByPrivacy = existing.map { !privacy.allows($0.clip.privacyText, pinned: $0.clip.pinned) } ?? false
+    let isLocalOnly = existing.map { $0.isLocalOnly && !((isCapture || heldByPrivacy) && allowed) } ?? !allowed
     let releases = existing?.isLocalOnly == true && !isLocalOnly
     guard merged != existing?.clip || releases else { return false }
     let copiedAgain = merged.lastCopiedAt > existing?.clip.lastCopiedAt ?? .distantPast

@@ -141,6 +141,12 @@ public enum AppIconRecord {
     CKRecord.ID(recordName: key.recordName(forAppIcon: bundleIdentifier), zoneID: ClipRecord.zoneID)
   }
 
+  /// Named with `key` for the bundle identifier in it; not a stray saved under an older key.
+  public static func isNamed(_ record: CKRecord, key: SyncKey) -> Bool {
+    guard let bundleIdentifier = record.encryptedValues[Field.bundleIdentifier] as? String else { return false }
+    return record.recordID.recordName == key.recordName(forAppIcon: bundleIdentifier)
+  }
+
   public static func record(for icon: AppIcon, key: SyncKey, updating record: CKRecord? = nil) -> CKRecord {
     let record = record ?? CKRecord(recordType: recordType, recordID: recordID(for: icon.bundleIdentifier, key: key))
     record.encryptedValues[Field.bundleIdentifier] = icon.bundleIdentifier

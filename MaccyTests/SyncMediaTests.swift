@@ -81,6 +81,16 @@ class SyncMediaTests: XCTestCase {
     XCTAssertTrue(parts[0].name.hasPrefix("Document ") && parts[0].name.hasSuffix(".pdf"))
   }
 
+  /// Preview copies a PDF selection with a picture of it, which can be far over the limit (27 MB in the 1.3 E2E).
+  func testAPDFCopiedWithAPictureOfItIsSentAsThePDF() throws {
+    let picture = Data(repeating: 0, count: 5_000)
+    let parts = try XCTUnwrap(MediaCapture.read(
+      source(image: picture, pdf: Data("%PDF".utf8)), quality: .optimized, maxBytes: 1_000
+    ))
+    XCTAssertEqual(parts.count, 1)
+    XCTAssertTrue(parts[0].name.hasSuffix(".pdf"))
+  }
+
   // MARK: - Identity and titles
 
   func testMediaItemsAreFoundByTheIDTheyWereSentWith() {

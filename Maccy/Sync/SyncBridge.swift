@@ -75,8 +75,13 @@ final class SyncBridge {
         await self?.setEnabled(enabled)
       }
     }
+    // The sync layer keeps what the switches hold back (an unpinned image with "Sync pinned items only") on this
+    // Mac only, and sends it once it is allowed (pinned). Text is filtered before it gets there.
+    let initialPrivacy = privacy
+    enqueue { await $0.setPrivacy(initialPrivacy) }
     privacyObservation = Task { [weak self] in
       for await _ in Defaults.updates(.syncSkipOneTimeCodes, .syncSkipCardNumbers, .syncPinnedOnly, initial: false) {
+        if let privacy = self?.privacy { self?.enqueue { await $0.setPrivacy(privacy) } }
         await self?.sendSharedSettings()
         await self?.applyPrivacyChange()
       }
@@ -627,13 +632,21 @@ enum E2EControl {
     var text: String?
     var prefix: String?
     var tag: String?
-    /// Collection name for "collect" and "uncollect".
+    /// Collection name for "collect" and "uncollect" (and "collectMedia"); the title for "titleMedia".
     var name: String?
   }
 
   private static func handle(_ object: String?) {
     guard let data = object?.data(using: .utf8),
           let command = try? JSONDecoder().decode(Command.self, from: data) else { return }
+    // 1.3: images, PDFs and files, found by text in them or in their file names (`text`).
+    if command.op.hasSuffix("Media") {
+      Task {
+        await handleMedia(command)
+        await dump(prefix: command.prefix ?? "PTEST", tag: command.tag ?? command.op, full: false)
+      }
+      return
+    }
     let item = command.text.flatMap { text in History.shared.allItems.first { $0.item.text == text } }
     switch command.op {
     case "pin":
@@ -672,15 +685,73 @@ enum E2EControl {
       if let collection = SyncedCollections.shared.collections.first(where: { $0.name == command.name }) {
         SyncBridge.shared.deleteCollection(collection)
       }
+    case "mediaSync":
+      // {"op":"mediaSync","text":"on"}: Images & Files on or off (shared by every device).
+      Defaults[.mediaSyncEnabled] = command.text == "on"
+    case "pinNewest":
+      // The newest item, whatever it is (e.g. an image kept on this Mac by "Sync pinned items only").
+      if let newest = History.shared.allItems.max(by: { $0.item.lastCopiedAt < $1.item.lastCopiedAt }),
+         newest.item.pin == nil {
+        History.shared.togglePin(newest)
+      }
+    case "deleteUnsyncedMedia":
+      // {"op":"deleteUnsyncedMedia","text":"<from>,<to>"} (seconds since 2001): images and files the test copied
+      // that never went to iCloud, so none stay in this Mac's history.
+      let bounds = (command.text ?? "").split(separator: ",").compactMap { Double($0) }
+      if bounds.count == 2 {
+        let from = Date(timeIntervalSinceReferenceDate: bounds[0]), to = Date(timeIntervalSinceReferenceDate: bounds[1])
+        for decorator in History.shared.allItems where decorator.item.pastronautMediaID == nil
+          && (decorator.item.imageData != nil || !decorator.item.fileURLs.isEmpty)
+          && decorator.item.lastCopiedAt >= from && decorator.item.lastCopiedAt <= to {
+          History.shared.delete(decorator)
+        }
+      }
+    case "mediaLimit":
+      // {"op":"mediaLimit","text":"10000000"}: Largest Item (shared by every device).
+      if let bytes = command.text.flatMap(Int.init) { Defaults[.mediaMaxItemBytes] = bytes }
     case "sync":
       Task { try? await SyncBridge.shared.syncNow() }
     default:
       break
     }
-    Task { await dump(prefix: command.prefix ?? "PTEST", tag: command.tag ?? command.op) }
+    Task { await dump(prefix: command.prefix ?? "PTEST", tag: command.tag ?? command.op, full: command.op == "fullDump") }
   }
 
-  private static func dump(prefix: String, tag: String) async {
+  /// What a media clip can be found by: the text read from it and its file names.
+  private static func haystack(_ clip: Clip) -> String {
+    ([clip.media?.recognizedText ?? ""] + (clip.media?.files.map(\.name) ?? [])).joined(separator: " ")
+  }
+
+  private static func handleMedia(_ command: Command) async {
+    guard let needle = command.text, let sync,
+          let clip = await sync.clips.first(where: { $0.isMedia && haystack($0).contains(needle) }),
+          let item = SyncBridge.shared.decorator(for: clip.id) else { return }
+    switch command.op {
+    case "pinMedia":
+      if item.item.pin == nil { History.shared.togglePin(item) }
+    case "unpinMedia":
+      if item.item.pin != nil { History.shared.togglePin(item) }
+    case "deleteMedia":
+      History.shared.delete(item)
+    case "pruneMedia":
+      // As the history limit removes it (decision 3: another device's clip leaves this Mac only).
+      SyncBridge.shared.pruning { History.shared.delete(item) }
+    case "titleMedia":
+      SyncBridge.shared.setTitle(command.name, of: item.item)
+    case "collectMedia":
+      guard let name = command.name else { break }
+      if let collection = SyncedCollections.shared.collections.first(where: { $0.name == name }) {
+        SyncBridge.shared.setMembership(true, of: [item.item], in: collection.id)
+      } else {
+        SyncBridge.shared.createCollection(named: name, with: [item.item])
+      }
+    default:
+      break
+    }
+  }
+
+  /// `full`: also every clip in iCloud, as IDs and fields (no text), to compare with the iPhone's mirror.
+  private static func dump(prefix: String, tag: String, full: Bool = false) async {
     let status = await SyncBridge.shared.status()
     let mirrored = await sync?.clips ?? []
     func summary(_ text: String) -> String { text.count > 80 ? "\(text.prefix(80))…(\(text.count))" : text }
@@ -690,7 +761,8 @@ enum E2EControl {
         "text": summary(text),
         "pinned": decorator.item.pin != nil,
         "length": text.count,
-        "kept": SyncedCollections.shared.isKept(decorator.item)
+        "kept": SyncedCollections.shared.isKept(decorator.item),
+        "lastCopiedAt": decorator.item.lastCopiedAt.timeIntervalSinceReferenceDate
       ]
     }
     let collections = await sync?.collections ?? []
@@ -701,13 +773,64 @@ enum E2EControl {
         "text": summary(clip.text),
         "pinned": clip.pinned,
         "device": clip.sourceDevice.rawValue,
+        "id": clip.id,
+        "title": clip.title ?? NSNull(),
+        "lastCopiedAt": clip.lastCopiedAt.timeIntervalSinceReferenceDate,
         "collections": clip.collectionIDs.compactMap { names[$0] },
         // Must not be the content hash: record names are keyed (SyncKey).
         "keyedName": await sync?.recordName(forClipID: clip.id).map { $0 != clip.id && !$0.contains(clip.id.dropFirst(5)) } ?? false
       ])
     }
+    // 1.3: media in this Mac's history and in the sync mirror whose text or file names contain the prefix.
+    let mediaHistory: [[String: Any]] = History.shared.allItems.compactMap { decorator in
+      guard let id = decorator.item.pastronautMediaID,
+            let clip = mirrored.first(where: { $0.id == id }), haystack(clip).contains(prefix) else { return nil }
+      return [
+        "id": id, "title": decorator.item.title, "pinned": decorator.item.pin != nil, "kind": clip.kind.rawValue,
+        "device": clip.sourceDevice.rawValue, "files": clip.media?.files.map(\.name) ?? [],
+        "hasFiles": sync?.media.hasFiles(for: clip) ?? false,
+        "lastCopiedAt": decorator.item.lastCopiedAt.timeIntervalSinceReferenceDate,
+        "collections": clip.collectionIDs.compactMap { names[$0] }
+      ]
+    }
+    let localOnlyIDs = await sync?.localOnly.clips ?? []
+    let mediaMirror: [[String: Any]] = mirrored.filter { $0.isMedia && haystack($0).contains(prefix) }.map { clip in
+      [
+        "localOnly": localOnlyIDs.contains(clip.id),
+        "id": clip.id, "kind": clip.kind.rawValue, "pinned": clip.pinned, "device": clip.sourceDevice.rawValue,
+        "files": clip.media?.files.map(\.name) ?? [], "bytes": clip.media?.totalBytes ?? 0,
+        "text": String((clip.media?.recognizedText ?? "").prefix(80)), "title": clip.title ?? NSNull(),
+        "collections": clip.collectionIDs.compactMap { names[$0] }
+      ]
+    }
+    let shared = await sync?.sharedSettings
+    // Every clip in iCloud (not those kept on this Mac), without its text: titles as a short hash.
+    var everything: [[String: Any]] = []
+    if full, let sync {
+      let localOnly = await sync.localOnly.clips
+      for clip in mirrored where !localOnly.contains(clip.id) {
+        everything.append([
+          "id": clip.id, "pinned": clip.pinned, "lastCopiedAt": clip.lastCopiedAt.timeIntervalSinceReferenceDate,
+          "title": clip.title.map { String(ClipMedia.sha256(Data($0.utf8)).prefix(12)) } ?? NSNull(),
+          "collections": clip.collectionIDs.sorted(), "media": clip.isMedia
+        ])
+      }
+    }
     let state: [String: Any] = [
       "tag": tag,
+      "full": everything,
+      "media": mediaHistory,
+      "mediaMirror": mediaMirror,
+      "shared": [
+        "codes": shared?.skipOneTimeCodes ?? false, "cards": shared?.skipCardNumbers ?? false,
+        "pinnedOnly": shared?.pinnedOnly ?? false, "mediaSync": shared?.media.syncEnabled ?? true,
+        "maxItemBytes": shared?.media.maxItemBytes ?? 0, "cloudBudgetBytes": shared?.media.cloudBudgetBytes ?? 0
+      ],
+      "defaults": [
+        "maxItemBytes": Defaults[.mediaMaxItemBytes], "cards": Defaults[.syncSkipCardNumbers],
+        "codes": Defaults[.syncSkipOneTimeCodes], "pinnedOnly": Defaults[.syncPinnedOnly]
+      ],
+      "mediaBytesInCloud": status.mediaBytesInCloud,
       "enabled": Defaults[.iCloudSync],
       "running": status.isRunning,
       "synced": status.syncedClips,

@@ -184,6 +184,54 @@ import UniformTypeIdentifiers
     #expect(newer.merged(with: changed) == changed)
   }
 
+  /// Two devices change different switches at about the same time: both changes stay (T60b in the 1.3 E2E lost
+  /// the earlier one when the whole newest version won).
+  @Test func sharedSettingsMergeSettingBySetting() {
+    let base = SharedSyncSettings(modifiedAt: date)
+    var phone = base
+    phone.skipOneTimeCodes = true
+    phone.stamp(changesSince: base, at: date.addingTimeInterval(10))
+    var mac = base
+    mac.skipCardNumbers = true
+    mac.stamp(changesSince: base, at: date.addingTimeInterval(11))
+
+    for merged in [phone.merged(with: mac), mac.merged(with: phone)] {
+      #expect(merged.skipOneTimeCodes && merged.skipCardNumbers)
+      #expect(merged.modifiedAt == date.addingTimeInterval(11))
+      #expect(merged.changedAt(.skipOneTimeCodes) == date.addingTimeInterval(10))
+      #expect(merged.changedAt(.pinnedOnly) == date)
+    }
+    #expect(phone.merged(with: mac) == mac.merged(with: phone))
+  }
+
+  /// The same switch on two devices: the later change wins, whichever version is merged into which.
+  @Test func theLaterChangeOfOneSettingWins() {
+    let base = SharedSyncSettings(modifiedAt: date)
+    var on = base
+    on.pinnedOnly = true
+    on.stamp(changesSince: base, at: date.addingTimeInterval(5))
+    var off = on
+    off.pinnedOnly = false
+    off.stamp(changesSince: on, at: date.addingTimeInterval(6))
+    #expect(on.merged(with: off).pinnedOnly == false)
+    #expect(off.merged(with: on).pinnedOnly == false)
+  }
+
+  /// Only the settings that changed get the new time; the rest keep theirs, and the times survive the record.
+  @Test func onlyChangedSettingsAreStamped() throws {
+    let base = SharedSyncSettings(modifiedAt: date)
+    var changed = base
+    changed.media.maxItemBytes = 25 * MediaSettings.megabyte
+    changed.stamp(changesSince: base, at: date.addingTimeInterval(30))
+    #expect(changed.changedAt(.mediaMaxItemBytes) == date.addingTimeInterval(30))
+    #expect(changed.changedAt(.mediaSyncEnabled) == date)
+    #expect(changed.changedAt(.skipCardNumbers) == date)
+
+    let record = CKRecord(recordType: SettingsRecord.recordType, recordID: SettingsRecord.recordID)
+    SettingsRecord.write(changed, into: record)
+    #expect(SettingsRecord.sharedSettings(from: record) == changed)
+  }
+
   /// The catch-up fetch names the fields it wants; a field missing from that list would read as empty.
   @Test func theCatchUpFetchAsksForEveryFieldButTheFiles() throws {
     var clip = Clip(text: "t", sourceApp: "a", sourceAppName: "A", sourceDevice: .mac, pinned: true, collectionIDs: ["col-1"])
@@ -520,5 +568,32 @@ import UniformTypeIdentifiers
     #expect(none.isEmpty)
     let link = NSItemProvider(item: URL(string: "https://apple.com")! as NSURL, typeIdentifier: UTType.url.identifier)
     #expect(await MediaIntake.text(from: [link]) == "https://apple.com")
+  }
+  /// A conflict on an app icon sends this Mac's icon again only when it is newer and different (seen in the
+  /// 1.3 E2E: resending the same icon conflicted with every pending copy of the save, once a minute for ever).
+  @Test func iconConflictResendsOnlyANewerDifferentIcon() {
+    let png = Data(repeating: 1, count: 200)
+    let server = AppIcon(bundleIdentifier: "com.apple.Safari", name: "Safari", png: png, modifiedAt: date)
+    func entry(_ data: Data, at time: Date) -> ClipSync.AppIconEntry {
+      ClipSync.AppIconEntry(name: "Safari", sha256: ClipMedia.sha256(data), modifiedAt: time, systemFields: nil)
+    }
+    #expect(!entry(png, at: date).replaces(server))
+    #expect(!entry(png, at: date.addingTimeInterval(60)).replaces(server))
+    #expect(!entry(Data(repeating: 2, count: 200), at: date.addingTimeInterval(-60)).replaces(server))
+    #expect(entry(Data(repeating: 2, count: 200), at: date.addingTimeInterval(60)).replaces(server))
+  }
+  /// An icon record saved under an older key is a stray; system fields of another record are never built on.
+  @Test func strayIconRecordsAndForeignSystemFieldsAreNotUsed() throws {
+    let icon = AppIcon(bundleIdentifier: "com.apple.Safari", name: "Safari", png: Data(repeating: 1, count: 200))
+    let older = try #require(SyncKey(data: Data(repeating: 9, count: 32)))
+    #expect(AppIconRecord.isNamed(AppIconRecord.record(for: icon, key: key), key: key))
+    let stray = AppIconRecord.record(for: icon, key: older)
+    #expect(!AppIconRecord.isNamed(stray, key: key))
+
+    let proper = AppIconRecord.recordID(for: icon.bundleIdentifier, key: key)
+    #expect(ClipSync.base(ClipRecord.systemFields(of: stray), for: proper) == nil)
+    let own = ClipSync.base(ClipRecord.systemFields(of: AppIconRecord.record(for: icon, key: key)), for: proper)
+    #expect(own?.recordID.recordName == proper.recordName)
+    #expect(ClipSync.base(nil, for: proper) == nil)
   }
 }

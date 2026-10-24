@@ -255,6 +255,37 @@ import Testing
     #expect(state.unsentClipIDs == [note.id])
   }
 
+  /// "Sync pinned items only": an unpinned copy stays here, and pinning it sends it (seen in the 1.3 E2E: the
+  /// pinned clip stayed on the iPhone).
+  @Test func pinningAClipHeldBackByPinnedOnlySendsIt() {
+    let pinnedOnly = PrivacyOptions(pinnedOnly: true)
+    var state = ClipSync.PersistedState()
+    let note = Clip(text: "Buy milk", sourceDevice: .iphone, modifiedAt: Date(timeIntervalSince1970: 1_000))
+    _ = state.stage(note, policy: .default, isCapture: true, privacy: pinnedOnly)
+    #expect(state.localOnly.clips == [note.id])
+
+    var pinned = state.entries[note.id]!.clip
+    pinned.pinned = true
+    pinned.modifiedAt = Date(timeIntervalSince1970: 2_000)
+    let staged = state.stage(pinned, policy: .default, privacy: pinnedOnly)
+    #expect(staged)
+    #expect(state.localOnly.isEmpty)
+    #expect(state.unsentClipIDs == [note.id])
+  }
+
+  /// A pin doesn't send what another rule keeps here: a one-time code stays, pinned or not.
+  @Test func pinningAKeptCodeDoesNotSendIt() {
+    let rules = PrivacyOptions(skipOneTimeCodes: true, pinnedOnly: true)
+    var state = ClipSync.PersistedState()
+    let code = Clip(text: "482913", sourceDevice: .iphone, modifiedAt: Date(timeIntervalSince1970: 1_000))
+    _ = state.stage(code, policy: .default, isCapture: true, privacy: rules)
+    var pinned = state.entries[code.id]!.clip
+    pinned.pinned = true
+    pinned.modifiedAt = Date(timeIntervalSince1970: 2_000)
+    _ = state.stage(pinned, policy: .default, privacy: rules)
+    #expect(state.localOnly.clips == [code.id])
+  }
+
   @Test func copyingAKeptCodeAgainDoesNotSendIt() {
     var state = ClipSync.PersistedState()
     let code = Clip(text: "482913", sourceDevice: .iphone, firstCopiedAt: Date(timeIntervalSince1970: 1_000))

@@ -72,6 +72,55 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     if let text = ProcessInfo.processInfo.environment["PT_E2E_PASTEBOARD"] {
       UIPasteboard.general.setItems([["public.utf8-plain-text": text]], options: [.localOnly: true])
     }
+    // 1.3: an image with this text drawn on it, as if another app had copied a screenshot. Large and plain, so the
+    // text recognition reads it back and the test can find the clip by it.
+    if let text = ProcessInfo.processInfo.environment["PT_E2E_PASTEBOARD_IMAGE"] {
+      let image = UIGraphicsImageRenderer(size: CGSize(width: 1400, height: 320)).image { context in
+        UIColor.white.setFill()
+        context.fill(CGRect(x: 0, y: 0, width: 1400, height: 320))
+        (text as NSString).draw(at: CGPoint(x: 40, y: 110), withAttributes: [
+          .font: UIFont.systemFont(ofSize: 64, weight: .bold), .foregroundColor: UIColor.black
+        ])
+      }
+      if let png = image.pngData() {
+        UIPasteboard.general.setItems([["public.png": png]], options: [.localOnly: true])
+      }
+    }
+    // 1.3: a file saved as if shared to Pastronaut ("name|contents"; "name|@bytes:N" makes N bytes of filler).
+    if let spec = ProcessInfo.processInfo.environment["PT_E2E_SAVE_FILE"] {
+      let parts = spec.split(separator: "|", maxSplits: 1).map(String.init)
+      if parts.count == 2 {
+        let size = parts[1].hasPrefix("@bytes:") ? Int(parts[1].dropFirst(7)) : nil
+        let data = size.map { Data((0..<$0).map { UInt8(truncatingIfNeeded: $0 &* 31) }) } ?? Data(parts[1].utf8)
+        Task { @MainActor in
+          _ = await ClipStore.shared.saveMedia([MediaIntake.file(named: parts[0], data: data)])
+        }
+      }
+    }
+    // 1.3: changes a setting every device shares, as Settings would ("maxItemBytes=…", "codes=1", "cards=0",
+    // "pinnedOnly=1", "mediaSync=0"; several separated by commas).
+    if let spec = ProcessInfo.processInfo.environment["PT_E2E_SHARED"] {
+      let pairs = spec.split(separator: ",").compactMap { pair -> (String, String)? in
+        let parts = pair.split(separator: "=", maxSplits: 1).map(String.init)
+        return parts.count == 2 ? (parts[0], parts[1]) : nil
+      }
+      Task { @MainActor in
+        // After the launch's own sync, so the change is made on top of what iCloud has.
+        try? await Task.sleep(for: .seconds(4))
+        ClipStore.shared.updateSharedSettings { settings in
+          for (key, value) in pairs {
+            switch key {
+            case "maxItemBytes": settings.media.maxItemBytes = Int(value) ?? settings.media.maxItemBytes
+            case "mediaSync": settings.media.syncEnabled = value == "1"
+            case "codes": settings.skipOneTimeCodes = value == "1"
+            case "cards": settings.skipCardNumbers = value == "1"
+            case "pinnedOnly": settings.pinnedOnly = value == "1"
+            default: break
+            }
+          }
+        }
+      }
+    }
     // The end-to-end test cannot tap the system Paste button (it rejects synthetic touches), so it
     // hands the text over at launch and the same save path runs.
     if let text = ProcessInfo.processInfo.environment["PT_E2E_SAVE"] {

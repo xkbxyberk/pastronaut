@@ -65,7 +65,9 @@ extension SyncBridge {
       return
     }
     let source = MediaCapture.Source(
-      fileURLs: item.fileURLs,
+      // By name: the history item keeps its contents in no particular order, and the clip's ID follows the order
+      // of its files (the same Finder selection must give the same clip).
+      fileURLs: item.fileURLs.sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending },
       imageData: item.fileURLs.isEmpty ? item.imageData : nil,
       pdfData: item.pdfData,
       sourceApp: item.application,
@@ -247,7 +249,9 @@ nonisolated enum MediaCapture {
           ) else {
       return nil
     }
-    guard privacy.allows(prepared.clip.privacyText, pinned: prepared.clip.pinned),
+    // Pinned or not: with "Sync pinned items only" the copy is kept for sync but stays on this Mac until it is
+    // pinned (the sync layer holds it back). The files can only be read now.
+    guard privacy.allows(prepared.clip.privacyText, pinned: true),
           await sync.allowsMedia(prepared.clip),
           (try? MediaIntake.store(prepared, in: sync.media)) != nil else { return nil }
     return prepared.clip
@@ -272,11 +276,12 @@ nonisolated enum MediaCapture {
       }
       return parts
     }
-    if let image = source.imageData {
-      return MediaIntake.image(image, quality: quality, maxBytes: maxBytes, copiedAt: source.copiedAt).map { [$0] }
-    }
+    // A PDF first: Preview copies a PDF selection with a picture of it, often far larger than the PDF.
     if let pdf = source.pdfData, pdf.count <= maxBytes {
       return [MediaIntake.pdf(pdf, copiedAt: source.copiedAt)]
+    }
+    if let image = source.imageData {
+      return MediaIntake.image(image, quality: quality, maxBytes: maxBytes, copiedAt: source.copiedAt).map { [$0] }
     }
     return nil
   }

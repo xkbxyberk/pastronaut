@@ -97,8 +97,18 @@ final class SyncStepTests: XCTestCase {
       XCTAssertTrue(field.waitForExistence(timeout: 3), "title field missing")
       field.tap()
       field.typeText(env["PT_ACTION"] ?? "")
-      alert.buttons.matching(NSPredicate(format: "label IN %@", ["Save", "Kaydet"])).firstMatch.tap()
-      report(["ok": row(env["PT_ACTION"] ?? "").waitForExistence(timeout: 10)])
+      // What was typed and which buttons the alert had, to tell a test problem from an app one.
+      let typed = field.value as? String ?? ""
+      let buttons = alert.buttons.allElementsBoundByIndex.map(\.label)
+      // The keyboard's return key can carry the same label ("Kaydet"): try each until the alert closes.
+      let saves = alert.buttons.matching(NSPredicate(format: "label IN %@", ["Save", "Kaydet"]))
+      for index in 0..<saves.count where alert.exists {
+        let save = saves.element(boundBy: index)
+        if save.isHittable { save.tap() }
+        _ = alert.waitForNonExistence(timeout: 2)
+      }
+      report(["ok": row(env["PT_ACTION"] ?? "").waitForExistence(timeout: 10), "typed": typed, "buttons": buttons,
+              "alertGone": !alert.exists])
     case "copy":
       try existingRow().tap()
       report(["ok": UIPasteboard.general.string == text])
@@ -141,6 +151,28 @@ final class SyncStepTests: XCTestCase {
       allowPasteIfAsked()
       let saved = row(match).waitForExistence(timeout: timeout)
       report(["ok": saved, "visible": saved])
+    case "autoSaveImage":
+      // 1.3: like "autoSave", with an image that shows `text` (PT_E2E_PASTEBOARD_IMAGE). The row is found by the
+      // text the app reads from the image.
+      app.launchEnvironment["PT_AUTO_SAVE"] = "1"
+      app.launchEnvironment["PT_E2E_PASTEBOARD_IMAGE"] = text
+      app.launch()
+      allowPasteIfAsked()
+      let saved = row(match).waitForExistence(timeout: timeout)
+      report(["ok": saved, "visible": saved])
+    case "saveFile":
+      // 1.3: a file saved as Share would save it ("name|contents"); the row shows the file's name.
+      app.launchEnvironment["PT_E2E_SAVE_FILE"] = text
+      app.launch()
+      let saved = row(match).waitForExistence(timeout: timeout)
+      report(["ok": saved, "visible": saved])
+    case "shared":
+      // 1.3: changes settings every device shares (PT_E2E_SHARED, e.g. "maxItemBytes=25000000"), then gives the
+      // change time to be sent.
+      app.launchEnvironment["PT_E2E_SHARED"] = text
+      app.launch()
+      Thread.sleep(forTimeInterval: 12)
+      report(["ok": app.state == .runningForeground])
     case "collect":
       // Touch and hold the row, Add to Collection, then the collection named PT_ACTION, or New Collection… with
       // that name when it doesn't exist yet.

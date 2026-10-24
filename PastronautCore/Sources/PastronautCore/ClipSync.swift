@@ -67,6 +67,12 @@ public actor ClipSync {
     var sha256: String
     var modifiedAt: Date
     var systemFields: Data?
+
+    /// After a conflict: whether this device's icon should replace the one in iCloud. Not when iCloud has the
+    /// same or a newer one; sending it anyway would conflict again with every pending copy of the save.
+    func replaces(_ server: AppIcon) -> Bool {
+      modifiedAt > server.modifiedAt && sha256 != ClipMedia.sha256(server.png)
+    }
   }
 
   struct CollectionEntry: Codable {
@@ -237,13 +243,14 @@ public actor ClipSync {
     state.sharedSettings
   }
 
-  /// Changes the shared settings here and sends them to the other devices. The newest change wins everywhere.
+  /// Changes the shared settings here and sends them to the other devices. Each setting's newest change wins
+  /// everywhere.
   public func updateSharedSettings(_ change: @Sendable (inout SharedSyncSettings) -> Void) {
-    var settings = state.sharedSettings
+    let before = state.sharedSettings
+    var settings = before
     change(&settings)
-    settings.modifiedAt = state.sharedSettings.modifiedAt
-    guard settings != state.sharedSettings else { return }
-    settings.modifiedAt = max(.now, (state.sharedSettings.modifiedAt ?? .distantPast).addingTimeInterval(0.001))
+    guard SharedSyncSettings.Field.allCases.contains(where: { !settings.isSame($0, as: before) }) else { return }
+    settings.stamp(changesSince: before, at: max(.now, (before.modifiedAt ?? .distantPast).addingTimeInterval(0.001)))
     state.sharedSettings = settings
     queueSettingsSave()
     persist()
@@ -297,6 +304,18 @@ public actor ClipSync {
   /// An app's icon as a PNG, if one arrived (or was sent from here).
   public nonisolated func appIcon(for bundleIdentifier: String) -> Data? {
     try? Data(contentsOf: appIconURL(for: bundleIdentifier))
+  }
+
+  /// The last known server record to save on top of, when it is the record being saved. System fields kept for
+  /// a record under another name (an older key) would save that record instead.
+  static func base(_ systemFields: Data?, for recordID: CKRecord.ID) -> CKRecord? {
+    // By name and zone: the owner may read as the placeholder on one side and the account's name on the other.
+    guard let record = systemFields.flatMap(ClipRecord.record(fromSystemFields:)),
+          record.recordID.recordName == recordID.recordName,
+          record.recordID.zoneID.zoneName == recordID.zoneID.zoneName else {
+      return nil
+    }
+    return record
   }
 
   private func appIconBundleID(forRecordName name: String) -> String? {
@@ -842,7 +861,7 @@ public actor ClipSync {
     let name = recordID.recordName
     if ClipCollection.isValidID(name) {
       guard let entry = state.collections[name] else { return nil }
-      let base = entry.systemFields.flatMap(ClipRecord.record(fromSystemFields:))
+      let base = Self.base(entry.systemFields, for: recordID)
       return CollectionRecord.record(for: entry.collection, updating: base)
     }
     if recordID == SettingsRecord.recordID {
@@ -855,13 +874,13 @@ public actor ClipSync {
     if name.hasPrefix("a-") {
       guard let bundleID = appIconBundleID(forRecordName: name), let entry = state.appIcons[bundleID],
             let png = appIcon(for: bundleID) else { return nil }
-      let base = entry.systemFields.flatMap(ClipRecord.record(fromSystemFields:))
+      let base = Self.base(entry.systemFields, for: recordID)
       let icon = AppIcon(bundleIdentifier: bundleID, name: entry.name, png: png, modifiedAt: entry.modifiedAt)
       return AppIconRecord.record(for: icon, key: key, updating: base)
     }
     guard let id = clipIDsByRecordName[name], let entry = state.entries[id],
           key.recordName(forClipID: id) == name else { return nil }
-    let base = entry.systemFields.flatMap(ClipRecord.record(fromSystemFields:))
+    let base = Self.base(entry.systemFields, for: recordID)
     guard entry.clip.isMedia else {
       return ClipRecord.record(for: entry.clip, key: key, updating: base)
     }
@@ -1054,7 +1073,7 @@ extension ClipSync: CKSyncEngineDelegate {
       case CollectionRecord.recordType:
         if let change = applyCollection(record, syncEngine: syncEngine) { result.append(change) }
       case AppIconRecord.recordType:
-        if let bundleID = applyIcon(record) { icons.append(bundleID) }
+        if let bundleID = applyIcon(record, syncEngine: syncEngine) { icons.append(bundleID) }
       default:
         break
       }
@@ -1117,6 +1136,7 @@ extension ClipSync: CKSyncEngineDelegate {
       clipIDsByRecordName[record.recordID.recordName] = remote.id
       if merged != remote {
         // This device knows something newer (e.g. a later copy); push it back.
+        logger.debug("Newer here, saving again: \(record.recordID.recordName, privacy: .public) \(record.recordType, privacy: .public)")
         syncEngine.state.add(pendingRecordZoneChanges: [.saveRecord(record.recordID)])
       }
     }
@@ -1153,10 +1173,21 @@ extension ClipSync: CKSyncEngineDelegate {
   }
 
   /// An app icon from another device; returns its bundle identifier when it is new or changed here.
-  private func applyIcon(_ record: CKRecord) -> String? {
+  private func applyIcon(_ record: CKRecord, syncEngine: CKSyncEngine) -> String? {
     guard let icon = AppIconRecord.icon(from: record) else { return nil }
     let local = state.appIcons[icon.bundleIdentifier]
-    let systemFields = ClipRecord.systemFields(of: record)
+    var systemFields: Data? = ClipRecord.systemFields(of: record)
+    if let key = state.key, !AppIconRecord.isNamed(record, key: key) {
+      // Saved under an older key: remove the stray record and keep the icon under its proper name. Its system
+      // fields would name the stray record, and a save built on them never matches the pending one (seen in the
+      // 1.3 E2E: the same icons went up every minute).
+      systemFields = local?.systemFields
+      var changes: [CKSyncEngine.PendingRecordZoneChange] = [.deleteRecord(record.recordID)]
+      if local?.systemFields == nil {
+        changes.append(.saveRecord(AppIconRecord.recordID(for: icon.bundleIdentifier, key: key)))
+      }
+      syncEngine.state.add(pendingRecordZoneChanges: changes)
+    }
     guard local.map({ icon.modifiedAt > $0.modifiedAt }) ?? true else {
       state.appIcons[icon.bundleIdentifier]?.systemFields = systemFields
       return nil
@@ -1215,35 +1246,53 @@ extension ClipSync: CKSyncEngineDelegate {
     var zoneIsGone = false
     var unsentClips: Set<String> = []
     var deletedElsewhere: [ClipChange] = []
+    var conflictChanges: [ClipChange] = []
+    var changedIcons: [String] = []
     for failure in sent.failedRecordSaves {
       let recordID = failure.record.recordID
       let name = recordID.recordName
       let clipID = clipIDsByRecordName[name]
       let isCollection = ClipCollection.isValidID(name)
+      logger.debug("""
+        Save failed: \(name, privacy: .public) \(failure.record.recordType, privacy: .public) \
+        CKError \(failure.error.code.rawValue, privacy: .public)
+        """)
       switch failure.error.code {
       case .serverRecordChanged:
-        // Another device saved first: merge with the server version and retry on top of it.
+        // Another device (or an earlier copy of this save) saved first: merge with the server version and retry
+        // on top of it, unless the server already has everything this device knows. Resending then would only
+        // conflict again with the next pending copy of the same save, round after round.
         guard let serverRecord = failure.error.serverRecord else { continue }
         if serverRecord.recordType == SettingsRecord.recordType {
           state.settingsSystemFields = ClipRecord.systemFields(of: serverRecord)
           let remote = SettingsRecord.sharedSettings(from: serverRecord) ?? SharedSyncSettings()
-          guard state.sharedSettings.merged(with: remote) != remote else {
-            // The other device's change is newer.
-            if remote != state.sharedSettings {
-              state.sharedSettings = remote
-              changedSettings = remote
-            }
+          let merged = state.sharedSettings.merged(with: remote)
+          if merged != state.sharedSettings {
+            // The other device changed some settings later: those are taken here.
+            state.sharedSettings = merged
+            changedSettings = merged
+          }
+          // Sent again only when this device changed something iCloud doesn't have yet.
+          guard merged != remote else { continue }
+        } else if serverRecord.recordType == AppIconRecord.recordType {
+          guard let bundleID = appIconBundleID(forRecordName: name), let local = state.appIcons[bundleID] else {
             continue
           }
-        } else if serverRecord.recordType == AppIconRecord.recordType {
-          guard let bundleID = appIconBundleID(forRecordName: name) else { continue }
+          guard let remote = AppIconRecord.icon(from: serverRecord), !local.replaces(remote) else {
+            // iCloud's icon is as new: keep it (applyIcon also takes its system fields).
+            if let changed = applyIcon(serverRecord, syncEngine: syncEngine) { changedIcons.append(changed) }
+            continue
+          }
           state.appIcons[bundleID]?.systemFields = ClipRecord.systemFields(of: serverRecord)
         } else if isCollection {
           guard let remote = CollectionRecord.collection(from: serverRecord),
                 let local = state.collections[name]?.collection else { continue }
+          let merged = local.merged(with: remote)
           state.collections[name] = CollectionEntry(
-            collection: local.merged(with: remote), systemFields: ClipRecord.systemFields(of: serverRecord)
+            collection: merged, systemFields: ClipRecord.systemFields(of: serverRecord)
           )
+          if merged != local { conflictChanges.append(.collectionUpserted(merged)) }
+          if merged == remote { continue }
         } else {
           let remote = serverRecord.recordType == MediaRecord.recordType
             ? MediaRecord.clip(from: serverRecord) : ClipRecord.clip(from: serverRecord)
@@ -1255,6 +1304,8 @@ extension ClipSync: CKSyncEngineDelegate {
           merged.hasUnsentCopy = false
           merged.isLocalOnly = false
           state.entries[clipID] = merged
+          if merged.clip != entry.clip, state.reveals(merged.clip) { conflictChanges.append(.upserted(merged.clip)) }
+          if merged.clip == remote { continue }
         }
         resend.append(recordID)
       case .zoneNotFound:
@@ -1332,7 +1383,10 @@ extension ClipSync: CKSyncEngineDelegate {
     }
     lastSyncAt = .now
     persist()
-    await notify(deletedElsewhere + forgotten + (changedSettings.map { [.settingsChanged($0)] } ?? []))
+    await notify(
+      deletedElsewhere + forgotten + conflictChanges + (changedSettings.map { [.settingsChanged($0)] } ?? [])
+        + (changedIcons.isEmpty ? [] : [.appIconsChanged(changedIcons)])
+    )
   }
 }
 
