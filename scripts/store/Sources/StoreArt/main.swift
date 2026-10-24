@@ -240,8 +240,13 @@ func writeOpaque(_ image: CGImage, rect: CGRect? = nil, to url: URL) throws {
 @MainActor
 func run() throws {
   let arguments = CommandLine.arguments
+  if arguments.count == 5, arguments[1] == "bezel13" {
+    try runBezel13(raw: URL(fileURLWithPath: arguments[2]), bezels: URL(fileURLWithPath: arguments[3]),
+                   out: URL(fileURLWithPath: arguments[4]))
+    return
+  }
   guard arguments.count == 3 else {
-    print("usage: StoreArt <raw dir> <out dir>")
+    print("usage: StoreArt <raw dir> <out dir> | StoreArt bezel13 <raw dir> <bezel dir> <out dir>")
     exit(2)
   }
   let raw = URL(fileURLWithPath: arguments[1])

@@ -693,6 +693,168 @@ class MaccyUITests: XCTestCase {
     }
   }
 
+  // Pastronaut 1.3 App Store pictures (APPSTORE.md §9): the whole screen as it is, with made-up copies only (the
+  // test's in-memory history, no sync). Other apps are hidden first so only the desktop is behind the popup; "Show
+  // All" in Finder brings them back. TextEdit, started in the shot's language without a window, is the app in front,
+  // so the menu bar speaks that language too. Languages: PT_SHOTS_LANGS (default "en,tr").
+  func testPastronaut13StoreShots() throws {
+    let langs = (ProcessInfo.processInfo.environment["PT_SHOTS_LANGS"] ?? "en,tr").split(separator: ",").map(String.init)
+    let finder = XCUIApplication(bundleIdentifier: "com.apple.finder")
+    finder.activate()
+    sleep(1)
+    finder.typeKey("h", modifierFlags: [.command, .option])
+    sleep(1)
+    for lang in langs {
+      let tr = lang == "tr"
+      app.terminate()
+      app.launchArguments = ["enable-testing", "-AppleLanguages", "(\(lang))", "-AppleLocale", tr ? "tr_TR" : "en_US",
+                             "-openPreviewAutomatically", "<false/>"]
+      app.launch()
+      let textEdit = XCUIApplication(bundleIdentifier: "com.apple.TextEdit")
+      textEdit.launchArguments = ["-AppleLanguages", "(\(lang))", "-AppleLocale", tr ? "tr_TR" : "en_US"]
+      textEdit.launch()
+      sleep(2)
+      // Its open panel goes; TextEdit stays in front with no window.
+      textEdit.typeKey(.escape, modifierFlags: [])
+      sleep(1)
+      defer { textEdit.terminate() }
+      copyDemoItems(tr: tr)
+
+      func shot(_ name: String) {
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = "m13-\(lang)-\(name)"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+      }
+
+      // 1. The history, with pictures, a PDF and files among the text.
+      popUpWithMouse()
+      app.typeKey(.downArrow, modifierFlags: [])
+      app.typeKey(.upArrow, modifierFlags: [])
+      usleep(800_000)
+      shot("01-popup")
+
+      // 3. Space shows a picture large.
+      let rows = app.dialogs.firstMatch.descendants(matching: .any).matching(identifier: "copy-history-item")
+      // The second row: the boarding pass screenshot (a picture's row has no text to find it by).
+      let picture = rows.element(boundBy: 1)
+      if picture.exists {
+        picture.hover()
+        app.typeKey(.space, modifierFlags: [])
+        sleep(2)
+        shot("03-preview")
+        app.typeKey(.space, modifierFlags: [])
+        sleep(1)
+      }
+
+      // 4. The filter menu with its Kind submenu, then a kind chosen (a chip).
+      let menu = app.descendants(matching: .any)["clip-filter-menu"].firstMatch
+      if menu.waitForExistence(timeout: 3) {
+        menu.click()
+        let kind = app.menuItems.matching(NSPredicate(format: "title BEGINSWITH 'Kind' OR title BEGINSWITH 'Tür'")).firstMatch
+        if kind.waitForExistence(timeout: 3) {
+          kind.hover()
+          sleep(1)
+          shot("04-filter-kinds")
+          let images = app.menuItems.matching(NSPredicate(format: "title BEGINSWITH 'Images' OR title BEGINSWITH 'Görseller'")).firstMatch
+          if images.waitForExistence(timeout: 3) {
+            images.click()
+            sleep(1)
+            shot("04-filter-chip")
+            // The kind stays chosen after the popup closes: its chip takes it away.
+            let chips = app.descendants(matching: .any)["active-filters"].firstMatch
+            if chips.exists { chips.buttons.firstMatch.click() }
+            usleep(500_000)
+          }
+        }
+      }
+      app.typeKey(.escape, modifierFlags: [])
+      sleep(1)
+
+      // 5. A word that is only in a picture.
+      popUpWithMouse()
+      let words = tr ? "kapı" : "gate"
+      search(words)
+      sleep(1)
+      shot("05-search")
+      // The popup keeps its search when it closes: take the words away first.
+      for _ in words { app.typeKey(.delete, modifierFlags: []) }
+      usleep(500_000)
+      app.typeKey(.escape, modifierFlags: [])
+      sleep(1)
+
+      // 6. A queue of three: the link, the address and the code (rows 1, 3 and 5; picture rows have no text).
+      popUpWithMouse()
+      let rows6 = app.dialogs.firstMatch.descendants(matching: .any).matching(identifier: "copy-history-item")
+      if rows6.element(boundBy: 4).waitForExistence(timeout: 5) {
+        rows6.element(boundBy: 0).hover()
+        usleep(300_000)
+        XCUIElement.perform(withKeyModifiers: .command) {
+          rows6.element(boundBy: 2).click()
+          rows6.element(boundBy: 4).click()
+        }
+        usleep(800_000)
+        shot("06-queue")
+      }
+      app.typeKey(.escape, modifierFlags: [])
+      sleep(1)
+    }
+  }
+
+  /// The same made-up copies as the iPhone's demo (DemoClips, DemoMedia), oldest first, each from a plausible app.
+  private func copyDemoItems(tr: Bool) {
+    let source = NSPasteboard.PasteboardType("com.xkbxyberk.pastronaut.test-source-app")
+    func copy(_ app: String, _ write: (NSPasteboard) -> Void) {
+      pasteboard.clearContents()
+      write(pasteboard)
+      pasteboard.setString(app, forType: source)
+      waitTillClipboardCheck()
+    }
+    // A Finder copy shows its path; this one has no user name in it.
+    let folder = URL(fileURLWithPath: "/Users/Shared/Pastronaut Demo", isDirectory: true)
+    try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    let files = [
+      (tr ? "rapor-q3.pdf" : "report-q3.pdf", DemoArt.invoice(tr: tr)),
+      (tr ? "butce-2026.xlsx" : "budget-2026.xlsx", Data(repeating: 7, count: 48_000)),
+      (tr ? "notlar.txt" : "notes.txt", Data((tr ? "Toplantı notları" : "Meeting notes").utf8))
+    ].map { name, data in
+      let url = folder.appendingPathComponent(name)
+      try? data.write(to: url)
+      return url as NSURL
+    }
+    copy("com.apple.finder") { $0.writeObjects(files) }
+    copy("com.apple.Terminal") { $0.setString("swift test --parallel", forType: .string) }
+    copy("com.apple.Photos") { $0.setData(DemoArt.poster(tr: tr), forType: .png) }
+    copy("com.apple.Terminal") { $0.setString("git push origin main", forType: .string) }
+    copy("com.apple.AddressBook") { $0.setString("+1 555 0100 2030", forType: .string) }
+    copy("com.apple.mail") { $0.setString(tr ? "merhaba@example.com" : "hello@example.com", forType: .string) }
+    copy("com.apple.Notes") {
+      $0.setString(tr ? "Toplantı perşembe 14:00'e alındı, 3B salonu." : "Meeting moved to Thursday 2 pm, room 3B.", forType: .string)
+    }
+    copy("com.apple.DigitalColorMeter") { $0.setString("#5B4BD0", forType: .string) }
+    copy("com.apple.Photos") { $0.setData(DemoArt.landscape(), forType: .png) }
+    copy("com.apple.dt.Xcode") {
+      $0.setString("func greet(_ name: String) -> String {\n  // \(tr ? "Selam ver" : "Say hello")\n  return \"\(tr ? "Merhaba" : "Hello"), \\(name)!\"\n}", forType: .string)
+    }
+    // As Preview copies a PDF: the PDF and a picture of its page.
+    copy("com.apple.Preview") {
+      let pdf = DemoArt.invoice(tr: tr)
+      $0.setData(pdf, forType: .pdf)
+      $0.setData(NSPDFImageRep(data: pdf).flatMap { rep in
+        let image = NSImage(size: rep.size)
+        image.addRepresentation(rep)
+        return image.tiffRepresentation
+      }, forType: .tiff)
+    }
+    // A Universal Clipboard copy, i.e. one made on the iPhone.
+    pasteboard.clearContents()
+    pasteboard.setString("Galata Kulesi, Bereketzade Mah., Galata Kulesi Sk., 34421 Beyoğlu/İstanbul", forType: .string)
+    pasteboard.setData(Data(), forType: NSPasteboard.PasteboardType("com.apple.is-remote-clipboard"))
+    waitTillClipboardCheck()
+    copy("com.apple.Preview") { $0.setData(DemoArt.boardingPass(tr: tr), forType: .png) }
+    copy("com.apple.Safari") { $0.setString("https://developer.apple.com/documentation/cloudkit", forType: .string) }
+  }
+
   // Pastronaut: row context menu, undo after deleting, "Show in History" and the timed pause.
   func testPastronautPopupExtras() throws {
     for text in ["c0ffee", "git push origin main", "Toplantı Perşembe 14:00'te"] {

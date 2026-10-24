@@ -694,6 +694,229 @@ final class SyncStepTests: XCTestCase {
         shot("15-pause-menu-light")
       }
       report(["ok": true])
+    case "kbMediaCopy":
+      // The keyboard copying a picture (made-up clips, PT_DEMO): screenshots right after the tap, to see what
+      // the keyboard shows and whether it stays up.
+      app.launchEnvironment["PT_DEMO"] = "1"
+      launchAtTop()
+      Thread.sleep(forTimeInterval: 4)
+      app.buttons["newClipButton"].firstMatch.tap()
+      let type = app.buttons.matching(NSPredicate(format: "identifier == 'typeClipButton' OR label IN %@", ["Type a Clip", "Yazarak Ekle"])).firstMatch
+      _ = type.waitForExistence(timeout: 3)
+      type.tap()
+      let editor = app.textViews["clipEditor"].firstMatch
+      _ = editor.waitForExistence(timeout: 5)
+      editor.tap()
+      let shown = showPastronautKeyboard(in: app)
+      Thread.sleep(forTimeInterval: 2)
+      let tiles = app.descendants(matching: .any).matching(identifier: "kbClip")
+      let labels = tiles.allElementsBoundByIndex.prefix(6).map(\.label)
+      let picture = app.descendants(matching: .any)
+        .matching(NSPredicate(format: "identifier == 'kbClip' AND (label CONTAINS[c] 'Görsel' OR label CONTAINS[c] 'Image')")).firstMatch
+      let found = picture.exists
+      if found { picture.tap() }
+      for delay in [0.3, 1.0, 3.0] {
+        Thread.sleep(forTimeInterval: delay)
+        attachScreenshot(named: "kbcopy-\(delay)")
+      }
+      let message = app.descendants(matching: .any)["mediaMessage"].firstMatch
+      report(["ok": shown && found, "labels": labels, "message": message.exists ? message.label : "",
+              "stillOurs": app.descendants(matching: .any)["spaceKey"].exists])
+      app.terminate()
+    case "storeShots13":
+      // App Store screenshots for 1.3 in one language (PT_SHOTS_LANG = en or tr), made-up clips only (PT_DEMO), in
+      // the order of APPSTORE.md §9: clips from the Mac, every kind, the keyboard copying a picture, search inside a
+      // picture, the Kind filter, a picture's detail, cards, a queue, a clip's menu and Settings › Privacy. The real
+      // status bar stays. Ends with the app closed, so this Debug build never syncs.
+      let lang = env["PT_SHOTS_LANG"] ?? "en"
+      let tr = lang == "tr"
+      defer {
+        XCUIDevice.shared.appearance = .dark
+        app.terminate()
+      }
+      app.launchEnvironment["PT_DEMO"] = "1"
+      app.launchArguments = ["-AppleLanguages", "(\(lang))", "-AppleLocale", tr ? "tr_TR" : "en_US", "-appearance", "system"]
+      func launch(_ appearance: XCUIDevice.Appearance, previews: String = "1") {
+        XCUIDevice.shared.appearance = appearance
+        app.terminate()
+        app.launchEnvironment["PT_E2E_PREVIEWS"] = previews
+        app.launch()
+        // Previews load, and the demo pictures are read for their text.
+        Thread.sleep(forTimeInterval: previews == "1" ? 8 : 3)
+      }
+      func shot(_ name: String) { attachScreenshot(named: "s13-\(lang)-\(name)") }
+      func card(containing text: String) -> XCUIElement {
+        app.descendants(matching: .any)
+          .matching(NSPredicate(format: "identifier BEGINSWITH 'card.' AND label CONTAINS[c] %@", text)).firstMatch
+      }
+      func button(_ identifier: String, _ labels: [String]) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "identifier == %@ OR label IN %@", identifier, labels)).firstMatch
+      }
+      func cancelSheet() {
+        let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Vazgeç"])).firstMatch
+        if cancel.exists { cancel.tap() }
+      }
+      /// A new clip's editor with the Pastronaut keyboard up: "+", then Type a Clip.
+      func keyboardInEditor() -> Bool {
+        let plus = app.buttons["newClipButton"].firstMatch
+        guard plus.waitForExistence(timeout: 5) else { return false }
+        plus.tap()
+        let type = button("typeClipButton", ["Type a Clip", "Yazarak Ekle"])
+        guard type.waitForExistence(timeout: 3) else { return false }
+        type.tap()
+        let editor = app.textViews["clipEditor"].firstMatch
+        guard editor.waitForExistence(timeout: 5) else { return false }
+        editor.tap()
+        return showPastronautKeyboard(in: app)
+      }
+
+      // 1. What came from the Mac; 2. everything, every kind. Light and dark of each, to choose from.
+      for (name, appearance) in [("light", XCUIDevice.Appearance.light), ("dark", .dark)] {
+        launch(appearance)
+        shot("02-all-\(name)")
+        let macFilter = app.descendants(matching: .any)["filter.mac"].firstMatch
+        if macFilter.waitForExistence(timeout: 5) {
+          macFilter.tap()
+          Thread.sleep(forTimeInterval: 2)
+          shot("01-mac-\(name)")
+        }
+      }
+
+      // 3. The keyboard puts a picture on the clipboard ("Copied").
+      launch(.light)
+      if keyboardInEditor() {
+        Thread.sleep(forTimeInterval: 2)
+        shot("03-keyboard-light")
+        // The boarding pass screenshot from the Mac: a picture goes to the clipboard.
+        let picture = app.descendants(matching: .any)
+          .matching(NSPredicate(format: "identifier == 'kbClip' AND (label CONTAINS[c] 'Görsel' OR label CONTAINS[c] 'Image')")).firstMatch
+        if picture.exists {
+          picture.tap()
+          Thread.sleep(forTimeInterval: 0.8)
+          shot("03-keyboard-copied-light")
+        }
+      }
+      cancelSheet()
+
+      // 4. Search finds words inside pictures (the boarding pass, the poster) next to text clips.
+      for (name, appearance) in [("light", XCUIDevice.Appearance.light), ("dark", .dark)] {
+        launch(appearance)
+        let search = app.searchFields.firstMatch
+        if search.waitForExistence(timeout: 5) {
+          search.tap()
+          search.typeText(tr ? "kapı" : "gate")
+          Thread.sleep(forTimeInterval: 2)
+          // Return submits the search and puts the keyboard away, so the result shows in full.
+          let returnKey = app.descendants(matching: .any)["returnKey"].firstMatch
+          if returnKey.exists { returnKey.tap() }
+          Thread.sleep(forTimeInterval: 1.5)
+          shot("04-search-\(name)")
+        }
+      }
+
+      // 5. The filter menu with its Kind submenu open.
+      launch(.light)
+      let filters = app.descendants(matching: .any)["collectionsMenu"].firstMatch
+      if filters.waitForExistence(timeout: 5) {
+        filters.tap()
+        Thread.sleep(forTimeInterval: 1)
+        shot("05-filter-menu-light")
+        let kinds = app.buttons.matching(NSPredicate(format: "identifier == 'kindMenu' OR label BEGINSWITH 'Tür' OR label BEGINSWITH 'Kind'")).firstMatch
+        if kinds.waitForExistence(timeout: 3) {
+          kinds.tap()
+          Thread.sleep(forTimeInterval: 1.2)
+          shot("05-filter-kinds-light")
+        }
+        dismissMenu()
+      }
+
+      // 6. A picture's detail: Live Text, the text read from it, Copy, Share, Save and Markup.
+      for (name, appearance) in [("light", XCUIDevice.Appearance.light), ("dark", .dark)] {
+        launch(appearance)
+        for (label, text) in [("poster", tr ? "Konser" : "Concert"), ("photo", tr ? "Kapadokya" : "Cappadocia")] {
+          let picture = card(containing: text)
+          guard picture.waitForExistence(timeout: 5) else { continue }
+          picture.press(forDuration: 1.0)
+          let details = app.buttons["showDetails"].firstMatch
+          if details.waitForExistence(timeout: 3) {
+            details.tap()
+            Thread.sleep(forTimeInterval: 2.5)
+            shot("06-detail-\(label)-\(name)")
+            cancelSheet()
+            let close = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Bitti", "Close", "Kapat"])).firstMatch
+            if close.exists { close.tap() }
+            Thread.sleep(forTimeInterval: 1)
+          } else {
+            dismissMenu()
+          }
+        }
+      }
+
+      // 7. Cards of every kind (dark): scroll to the map and code cards.
+      launch(.dark)
+      app.swipeUp()
+      Thread.sleep(forTimeInterval: 2)
+      shot("07-cards-dark")
+
+      // 8. A queue in the keyboard (dark).
+      launch(.light)
+      app.buttons["selectButton"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 0.6)
+      for text in [tr ? "merhaba@" : "hello@", "+1 555", "Galata"] {
+        let element = card(containing: text)
+        if element.waitForExistence(timeout: 3) { element.tap() }
+      }
+      let more = app.buttons["bulkMore"].firstMatch
+      if more.waitForExistence(timeout: 3) {
+        more.tap()
+        let start = app.buttons["startQueue"].firstMatch
+        if start.waitForExistence(timeout: 3) {
+          start.tap()
+          Thread.sleep(forTimeInterval: 1)
+        }
+      }
+      launch(.dark)
+      if keyboardInEditor() {
+        Thread.sleep(forTimeInterval: 2)
+        let next = app.descendants(matching: .any)["queueNext"].firstMatch
+        if next.exists {
+          next.tap()
+          Thread.sleep(forTimeInterval: 0.6)
+          app.descendants(matching: .any)["returnKey"].firstMatch.tap()
+          Thread.sleep(forTimeInterval: 0.4)
+          next.tap()
+          Thread.sleep(forTimeInterval: 1.2)
+        }
+        shot("08-queue-dark")
+        let end = app.descendants(matching: .any)["queueEnd"].firstMatch
+        if end.exists { end.tap() }
+      }
+      cancelSheet()
+
+      // 9. A titled clip's menu (title, collections).
+      launch(.light)
+      let titled = card(containing: "Galata")
+      if titled.waitForExistence(timeout: 5) {
+        titled.press(forDuration: 1.0)
+        Thread.sleep(forTimeInterval: 1.2)
+        shot("09-clip-menu-light")
+        dismissMenu()
+      }
+
+      // 10. Settings › Privacy.
+      launch(.light, previews: "0")
+      app.buttons["settingsButton"].firstMatch.tap()
+      Thread.sleep(forTimeInterval: 1.5)
+      let recording = app.descendants(matching: .any)["hideWhileRecording"].firstMatch
+      for _ in 0..<8 where !recording.isHittable {
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 0.6)
+      }
+      // Up to the Privacy switches and the encryption note below them.
+      app.swipeUp()
+      Thread.sleep(forTimeInterval: 1.5)
+      shot("10-settings-privacy-light")
+      report(["ok": true])
     case "readmeShots":
       // README and store pictures: made-up clips (PT_DEMO, no sync), English, cards and list, light and dark,
       // a collection, the keyboard. Ends by launching normally, which puts the real history back for the keyboard.

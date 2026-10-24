@@ -529,13 +529,36 @@ All pictures use made-up clips only (`PT_DEMO`; `DemoClips.swift`). They are mad
 The output is opaque PNGs in `appstore-screenshots/store/<lang>/`. Upload the English set to English (U.S.) and
 English (U.K.), and the Turkish set to Turkish.
 
-### 1.3 set: plan (to be built after approval; the 1.2 set below stays live until then)
+### 1.3 set (built 2026-10-24; upload with 1.3)
+How to make it:
+1. iPhone, per language: SyncStepTests `storeShots13` (`TEST_RUNNER_PT_SHOTS_LANG` = en / tr) → `s13-<lang>-….png`.
+2. Mac: MaccyUITests `testPastronaut13StoreShots` (quit the real Pastronaut first; `PT_SHOTS_LANGS`) → `m13-….png`.
+3. Raw shots in `appstore-screenshots/raw13/{en,tr,mac}/` (not in git).
+4. `cd scripts/store && swift run -c release StoreArt bezel13 ../../appstore-screenshots/raw13
+   ../../appstore-screenshots/bezels ../../appstore-screenshots/store13` → `store13/<lang>/iphone-1…10.png`
+   (1320 × 2868) and `mac-1…6.png` (2880 × 1800), opaque.
+
 Research behind it (sources in §14):
 - Only the first three frames show in search results, so they carry the story: sync, the new kinds, the keyboard.
 - One message per frame, a caption of at most ~6 words above the device, readable at thumbnail size.
-- Device frames: either Apple's own bezels (Apple Design Resources: used as they are, never tilted, cropped or
-  shadowed; text beside the device, not on it; correct relative size when a Mac and an iPhone stand together; the
-  files must never go into git or be shared) or our own drawn bodies as in 1.2. **Decision: open.**
+- Device frames: **Apple's own bezels** (Apple Design Resources: iPhone 18 Pro Max Silver/Black, MacBook Air M5
+  13-inch Sky Blue), used as they are: never tilted, cropped or shadowed; the caption beside the device, not on it;
+  true relative size when the Mac and the iPhone stand together (Mac frame 2). The license allows them only in
+  mock-ups of apps for Apple platforms, not on the website or in the README; the files stay in
+  `appstore-screenshots/bezels/` (not in git) and are never shared.
+- **Bezel or not** (user's choice): the iPhone frames and Mac frames 1–2 show the whole device; Mac frames 3–6 show
+  the right part of the real screen (menu bar, popup and what opens beside it) at its own size, without a bezel,
+  so the popup can be read.
+- **Sheets on the iPhone** (frames 3, 8, 10): iOS dims the screen above a sheet; inside the taller iPhone 18 bezel
+  that band read as a grey stripe, so `StoreArt` gives it the sheet's own color (status bar glyphs kept). Nothing
+  else in a screenshot is changed.
+- **Real screens** (2026-10-24, the user's choice): status bar and menu bar as they are, nothing redrawn. iPhone
+  shots on an iPhone 14 Pro Max with Do Not Disturb on; Mac shots of the whole screen of a MacBook Air at the
+  1470 × 956 scale, other apps hidden, TextEdit in front in the shot's language (so the menu bar matches).
+- **Made-up content only**: `PT_DEMO` on the iPhone (DemoClips, DemoMedia: a boarding pass screenshot, a holiday
+  drawing, a concert poster whose words exist only in the picture, an invoice PDF, three files); the Mac test copies
+  the same items (`MaccyUITests/DemoArt.swift`) into its in-memory history. No app icons in the pictures: Apple's
+  rules don't allow Apple app icons in marketing, so clips show letter badges.
 - Sizes: iPhone 1320 × 2868 (6.9"; App Store Connect scales it down for smaller phones). Mac 2880 × 1800. Opaque PNG.
 - Same order, palette and pictures in both languages; only the captions and the app language change.
 
