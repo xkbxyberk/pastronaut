@@ -596,4 +596,21 @@ import UniformTypeIdentifiers
     #expect(own?.recordID.recordName == proper.recordName)
     #expect(ClipSync.base(nil, for: proper) == nil)
   }
+  /// Safari and other apps put a link on the clipboard as a property list; Paste read its bytes as the address
+  /// and saved "bplist00…https://…" (1.3, reported on the iPhone).
+  @Test func linksCopiedAsPropertyListsArePastedAsTheirAddress() async throws {
+    let address = "https://www.apple.com/tr/iphone/"
+    let safari = try PropertyListSerialization.data(fromPropertyList: [address, ""], format: .binary, options: 0)
+    let archive = try NSKeyedArchiver.archivedData(withRootObject: URL(string: address)! as NSURL, requiringSecureCoding: true)
+    for data in [safari, archive, Data(address.utf8)] {
+      #expect(MediaIntake.webURL(fromURLItem: data)?.absoluteString == address)
+      let provider = NSItemProvider()
+      provider.registerDataRepresentation(forTypeIdentifier: UTType.url.identifier, visibility: .all) { done in
+        done(data, nil)
+        return nil
+      }
+      #expect(await MediaIntake.text(from: [provider]) == address)
+    }
+    #expect(MediaIntake.webURL(fromURLItem: Data("bplist00 not a list".utf8)) == nil)
+  }
 }

@@ -1,6 +1,6 @@
 # 1.3 planı: iPhone 1.3 ve Mac 1.3 birlikte (taslak)
 
-> Tarih: 2026-10-23. Durum: **Adım 0, 1, 2 bitti. Adım 3 (iPhone): tasarım onaylandı, kod yazıldı; telefonda göz kontrolü bekliyor**
+> Tarih: 2026-10-23. Durum: **Adım 0–4 bitti (Koşu 6: 74/75, T66 testi düzeltildi ve ayrıca geçti). Sıradaki: commit, Adım 5 (şema Production'a)**
 > (tuval: https://claude.ai/artifact/L86xntrWRgjkSfAyegqo8V).
 > Bu belge eski `MAC-1.3-PLAN.md`'nin yerini alır. iPhone 1.2'nin kararları ve bulguları (K1–K17)
 > `IOS-1.2-PLAN.md`'de kalır. Yayın adımları `SURUM.md`'de.
@@ -109,6 +109,92 @@ ve iCloud'la deneme henüz yapılmadı: Debug derlemesi gerçek veriyi açar (ku
   olur); "Geçmişi Sakla" (iPhone'un kendi kopyalarını her yerden siler, Mac'tekileri yalnızca iPhone'dan kaldırır).
 - **Widget, Kestirmeler, Spotlight:** yalnızca metin öğeleri (görseller bu sürümde orada yok).
 - **Yeni izin:** Fotoğraflar'a yalnızca ekleme (`NSPhotoLibraryAddUsageDescription`), TR çevirisiyle.
+
+## Adım 4 sonuçları (iki cihazlı E2E, 2026-10-23)
+
+Medya senaryoları T35–T45 eklendi (`scripts/e2e/sync_e2e.py`; iPhone tarafı `SyncStepTests` autoSaveImage/saveFile,
+Mac tarafı E2EControl pinMedia/deleteMedia/pruneMedia/mediaSync).
+
+- **Koşu 1 (150448):** T38, T39, T44 geçti; diğer medya senaryoları düştü. Nedenler betikteydi: iPhone uygulaması
+  beklerken kapalıydı (artık `devicectl` ile açık tutuluyor), T41'de işlem adı yanlış yazılmıştı, PDF yalnızca PDF
+  olarak kopyalanıyordu (Maccy yalnızca PDF olan panoyu yok sayar; Önizleme PDF'in yanına resmini de koyar).
+- **Koşu 2:** T35, T37, T38, T39, T41, T42, T43, T44, T45 geçti. Uygulamada bulunan ve düzeltilen hatalar:
+  1. **Mac, PDF'i resmi yüzünden atıyordu.** Önizleme tarzı kopyada resim 27 MB çıktı, sınırı aştı ve PDF'e hiç
+     bakılmadı. Artık önce PDF alınıyor (`MediaCapture.read`, test: `testAPDFCopiedWithAPictureOfItIsSentAsThePDF`).
+  2. **İkon kayıtları dakikada bir sonsuza dek gönderiliyordu.** iCloud'da eski anahtarla adlandırılmış ikon kayıtları
+     vardı; Mac onların sistem alanlarını saklayıp kaydı o adla gönderiyordu, bekleyen kayıt hiç kapanmıyordu.
+     Artık başıboş ikon kaydı silinip doğru adla kaydediliyor ve başka bir kaydın sistem alanları kullanılmıyor
+     (`ClipSync.base(_:for:)`, `AppIconRecord.isNamed`; test: `strayIconRecordsAndForeignSystemFieldsAreNotUsed`).
+  3. **Çakışmada gereksiz yeniden gönderme.** Sunucu bizdekinin aynısını ya da daha yenisini tutuyorsa artık yeniden
+     gönderilmiyor (ikon, metin/medya, koleksiyon); birleştirilen sonuç arayüze bildiriliyor
+     (`AppIconEntry.replaces`; test: `iconConflictResendsOnlyANewerDifferentIcon`).
+- T01'deki tek metin farkı betiğin karakter saymasındandı (Swift harf kümesi sayar); betik artık Swift gibi sayıyor.
+- **Koşu 3 (son):** T00–T45 geçti (T36 PDF aynı baytlarla ve metniyle, T40 PDF iğnesi 13 s, T01 62/62); T13 (arka plan sessiz bildirimi) her zamanki gibi WARN. Koşu boyunca ikon döngüsü yok.
+- **Koşu 4 hazırlığı (genişletilmiş test):** T46–T70 eklendi. Kapsam:
+  - iPhone kapalıyken gelen görsel (+ klavye küçük resmi), Mac kapalıyken gelen görsel
+  - çoklu Finder dosyası (Türkçe harf, emoji, virgül adlarda), Largest Item'ı aşan dosya (iki tarafta)
+  - aynı içerik iki cihazda tek öğe, görseldeki tek kullanımlık kod
+  - medya başlığı (iki yön), koleksiyon, iPhone'da sabitleme ve silme
+  - geçmiş sınırıyla gizlenenin geri gelmesi, iki tarafta "yalnızca sabitlenenler"
+  - ortak ayar iPhone→Mac ve aynı anda iki cihazdan değişiklik
+  - 15 hızlı kopya ve sıra, yeniden kopyalayınca öne çıkma, sil-hemen-kopyala, silme ile kopyalama yarışı
+  - aynı anda sabitleme + başlık, boştayken gönderim olmaması (döngü yakalayıcı)
+  - iki aynanın alan alan karşılaştırılması, koşu boyunca kayıt hatası
+  Koddan önceden şüphelenilenler (koşu doğrulayacak): T57 (Mac'te yalnızca sabitlenenler + görsel: sabitlenince
+  gitmiyor olabilir), T58 (iPhone'da yalnızca sabitlenenler: sabitlenen öğe yerel kalıyor olabilir), T60b (ortak
+  ayarlar bütün olarak son yazan kazanır; aynı anda iki değişiklikten biri kaybolur).
+- **Koşu 4 (2026-10-23 19:39):** 76 senaryodan 66'sı geçti, 8 FAIL, 2 WARN. Bulunan ve düzeltilen uygulama hataları:
+  1. **Finder dosyalarının sırası rastgele.** Maccy içerikleri sırasız saklıyor; medya kimliği sıraya bağlı olduğu
+     için aynı seçim farklı öğe olabiliyordu. Artık ad sırası (`didAddMedia`).
+  2. **T57, Mac "yalnızca sabitlenenler" + görsel:** görsel hiç saklanmıyor, sabitlenince de gitmiyordu. Artık
+     yakalanıp bu Mac'te tutuluyor (Mac gizlilik kurallarını ClipSync'e de veriyor), sabitlenince gidiyor.
+  3. **T58, iPhone "yalnızca sabitlenenler":** sabitlenen öğe yerel kalıyordu. Artık yalnızca gizlilik kuralı
+     yüzünden tutulan öğe, kurala uyunca gönderiliyor (`SyncMirror.stage`; testler
+     `pinningAClipHeldBackByPinnedOnlySendsIt`, `pinningAKeptCodeDoesNotSendIt`).
+  Test sorunları: T47 (JXA yalnızca ilk dosyayı yazıyordu → `scripts/e2e/copy_files.swift`), T54/T55 (T52'ye
+  bağlıydı), T01 (bekleme sırasında iPhone uygulaması kapalıydı). T52/T66 iPhone'da başlık ara sıra kayboluyor;
+  elle 4 denemede yeniden üretilemedi, adım artık yazılanı raporluyor. **Karar bekleyen:** T60b, ortak ayarlar
+  bütün olarak son yazan kazanır; iki cihazdan aynı anda farklı anahtar değişirse biri kaybolur.
+- **T60b kararı (kullanıcı, 2026-10-24):** her ortak ayar kendi değişiklik tarihiyle birleşir
+  (`SharedSyncSettings.fieldModifiedAt`, `merged(with:)`, `stamp(changesSince:at:)`; 3 yeni test). Alan tarihi olmayan
+  kayıtlar `modifiedAt` ile okunur.
+- **Koşu 5 (2026-10-24 00:55):** 70 geçti. Koşu 4'ün düzeltmeleri doğrulandı (T47, T52, T54, T55, T57'de sabitlenince
+  5 s'de iPhone'da, T58, T60b). Düşenler test kaynaklı: başlık penceresinde iki "Kaydet" (biri klavye tuşu; ara sıra
+  başlık kaybının nedeni buydu), T57 yerel kalan kaydı iCloud'da sanıyordu, T60 birleştirilmiş ayarın yeniden
+  gönderimini (CKSyncEngine ~36 s bekletti) beklemiyordu, T00b/T66'da test çalıştırıcısı başlamadı. Test düzeltildi;
+  doğrulama koşusu (Koşu 6) bekliyor.
+- **Koşu 6 (2026-10-24 02:02):** 74 geçti, T13 WARN (her zamanki gibi). Tek FAIL T66: Mac'in sabitlemesi iPhone'da
+  menü açılırken geldi, satır Sabitlenenler'e taşındı ve menü kapandı ("title action missing"); veri kaybı yok. Test,
+  iki değişikliği iCloud'da çakıştıracak şekilde yeniden yazıldı ve tek başına iki cihazda geçti (ikisinde de
+  sabitli + başlıklı). **Adım 4 bitti.**
+
+## iPhone filtre çubuğu (2026-10-24, kullanıcı kararı: C2)
+
+Tasarım tuvali: https://claude.ai/artifact/5FSzpfhWsBi7qESDL11Y3c (C2 seçildi).
+- Kapsülde Tümü / Mac / iPhone; yanında filtre düğmesi. Menüde **Tür ›** alt menüsü (uygulamanın bütün türleri,
+  içinde öğe olmayanlar gizli; PDF ve Dosya ayrı), koleksiyonlar, Yeni Koleksiyon, seçiliyken Yeniden Adlandır /
+  Dışa Aktar / Sil ve "Filtreleri Temizle".
+- Kaynak, tür ve koleksiyon birlikte seçilir (`HistoryScope` artık üç alanlı bir yapı). Seçilenler çubuğun altında
+  kaldırılabilir etiket olarak görünür.
+- Aramadaki tür önerileri aynı tür filtresidir (`SearchChip`): aramada seçmek menüde de seçer. Mac'in arama
+  belirteçleri değişmedi.
+- **Hata düzeltmesi:** menü `glassEffect`/`glassEffectID` ile cam kabın içindeydi; çubuğun altındaki dokunuşlar
+  listeye gidiyordu. Artık sistem menüsü + cam düğme stili. Kanıt: `menuProbe` adımı (satırın 5 noktasına
+  dokunma, 5/5 seçildi), `filterCheck` adımı (tür, birleşim, etiket, temizle), `filterShots` ekran görüntüleri.
+- iPad kenar çubuğu: Kaynak, Tür, Koleksiyonlar bölümleri.
+- 2026-10-24 düzeltmeleri: çubuk inceldi (kapsül 38 pt, filtre düğmesi 34 pt); Tümü simge + ad, Mac ve iPhone
+  yalnızca simge (VoiceOver adlarını okur). Kaynak kapsülünde parmak kaydırılarak seçilir: mercek parmağı izler,
+  bırakınca en yakına oturur, seçenek değişince hafif titreşim (`SourcePicker`; test `sourceSlide`). Yapıştır
+  düğmesi artık her sonucu bildiriyor ("Panodan kaydedildi" vb.); önce sessiz kaydediyordu.
+- Yapıştır "+" menüsüne taşındı (kullanıcı kararı C): "+" dokununca menü açar (Yapıştır, Yazarak Ekle, Metni Tara,
+  Belge Tara); Yapıştır yalnızca panoda bir şey varken görünür (pano içeriği okunmadan, `changeCount` ve
+  `numberOfItems` ile). Üstteki mavi düğme kalktı. **Açık:** sistem Yapıştır düğmesinin menü içinde izin penceresi
+  açmadan çalıştığı Apple'ca belgeli değil; kullanıcı telefonda elle deneyecek. Pencere çıkarsa yedek plan: düğme
+  "+"nın yanında, yine yalnızca panoda bir şey varken.
+- Kullanıcı denedi (2026-10-24): menüdeki Yapıştır izin penceresi açmadan yapıştırıyor; kaydırmalı filtre doğru.
+  Bulunan hata: Safari'den kopyalanan bağlantı `bplist00…` önekiyle kaydediliyordu (bağlantı bir property list
+  içinde geliyor, bayt olarak okunuyordu). `MediaIntake.webURL(fromURLItem:)` listeyi açıyor; test
+  `linksCopiedAsPropertyListsArePastedAsTheirAddress`.
 
 ## 0. Kısaca
 - **Sürümler:** 1.3 = iPhone 1.3 (derleme 5) + Mac 1.3 (derleme 2).

@@ -119,8 +119,7 @@ extension MediaIntake {
     for provider in providers {
       if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier),
          let item = try? await provider.loadItem(forTypeIdentifier: UTType.url.identifier),
-         let url = (item as? URL) ?? (item as? Data).flatMap({ URL(dataRepresentation: $0, relativeTo: nil) }),
-         !url.isFileURL {
+         let url = webURL(fromURLItem: item), !url.isFileURL {
         return url.absoluteString
       }
       if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier),
@@ -130,6 +129,39 @@ extension MediaIntake {
       }
     }
     return nil
+  }
+
+  /// The link in a URL item. Copies from Safari and other apps arrive as a property list (`bplist00…`) holding the
+  /// address, not as its bytes: read as bytes, the list itself became the "link" (seen in 1.3 with Paste).
+  static func webURL(fromURLItem item: Any) -> URL? {
+    if let url = item as? URL { return url }
+    guard let data = item as? Data else { return nil }
+    if let list = try? PropertyListSerialization.propertyList(from: data, format: nil) {
+      return firstURL(in: list)
+    }
+    guard let string = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+      return nil
+    }
+    return Self.url(string)
+  }
+
+  /// The first string in a property list (arrays, dictionaries, a keyed archive's objects) that is an address.
+  private static func firstURL(in list: Any) -> URL? {
+    switch list {
+    case let string as String: return url(string)
+    case let array as [Any]: return array.lazy.compactMap(firstURL(in:)).first
+    case let dictionary as [String: Any]:
+      // A keyed archive keeps its strings in "$objects", in order.
+      if let objects = dictionary["$objects"] { return firstURL(in: objects) }
+      return dictionary.values.lazy.compactMap(firstURL(in:)).first
+    default: return nil
+    }
+  }
+
+  private static func url(_ string: String) -> URL? {
+    guard let url = URL(string: string), let scheme = url.scheme, !scheme.isEmpty, string.count > scheme.count + 1
+    else { return nil }
+    return url
   }
 
   /// Images, PDFs and other files from item providers, as parts of one clip. Images are prepared (`MediaQuality`);
