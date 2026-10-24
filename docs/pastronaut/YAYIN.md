@@ -124,9 +124,13 @@ birlikte çıkar; Mac'e özel ara sürüm yok. Plan `PLAN-1.3.md`.
    (görsel kopyalayınca klavye kapanıyordu, `873d208`).
 4. ⏳ Adım 7 (2026-10-24): sürüm 1.3, iPhone derleme 5, Mac derleme 2 (`8285d12`). Testler: çekirdek 188, Mac 119.
    - iPhone: Release arşivi hazır (`build/ios/Pastronaut.xcarchive`, beş paket 1.3 (5), gizlilik bildirimli,
-     Kestirmelerde ürün adı yok). **Yükleme kullanıcının "yükle" demesini bekliyor.**
+     Kestirmelerde ürün adı yok). ✅ **App Store Connect'e yüklendi** (2026-10-24 19:19, "Upload succeeded").
+     Sonraki iPhone yüklemesi: build 6.
    - Mac App Store: `build/mas/export/Pastronaut.pkg` 1.3 (2) (Apple Distribution, Sparkle yok, sandbox, iCloud
-     Production). **Yükleme "yükle" bekliyor** (`scripts/appstore/build-mas.sh --upload`).
+     Production). ✅ **App Store Connect'e yüklendi** (2026-10-24 19:21, `build-mas.sh --upload`). Sonraki Mac
+     yüklemesi: build 3.
+   - Kullanıcıda: iOS App ve macOS App › "+" › 1.3; metinler `APPSTORE.md` §6–§8, inceleme notu §13, görseller
+     `store13/`; TestFlight, incelemeye gönderme.
    - GitHub: `build/github/Pastronaut-1.3.zip` notarize edildi (Accepted), staple'lı, Sparkle imzalı; notlar
      `build/github/notes-1.3.md`, appcast kaydı `build/github/appcast-item-1.3.xml`. **Release ve appcast push'u
      kullanıcı onayı bekliyor**; appcast en son.
