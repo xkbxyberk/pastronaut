@@ -190,7 +190,7 @@ final class KeyboardModel {
     let message: MediaMessage
     if !hasFullAccess {
       message = .needsFullAccess
-    } else if MediaPasteboard.copy(clip) {
+    } else if MediaPasteboard.copy(clip, lowMemory: true) {
       // Our own copy: not a new clip to save.
       defaults?.set(UIPasteboard.general.changeCount, forKey: lastCapturedChangeCountKey)
       message = .copied

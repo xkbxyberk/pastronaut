@@ -1,3 +1,4 @@
+import ImageIO
 import PastronautCore
 import SwiftUI
 import UIKit
@@ -65,20 +66,26 @@ enum MediaFiles {
 
 /// Puts an image, a PDF or files on the clipboard.
 enum MediaPasteboard {
-  /// False when the clip's files aren't on this device yet.
+  /// The largest side of the JPEG a keyboard adds for apps that can't paste HEIC.
+  static let compatibleImageSide = 2048
+
+  /// False when the clip's files aren't on this device yet. `lowMemory` (the keyboard, which iOS stops at about
+  /// 60 MB): a picture is never decoded at full size; its file goes on the clipboard as it is.
   @MainActor
   @discardableResult
-  static func copy(_ clip: Clip) -> Bool {
+  static func copy(_ clip: Clip, lowMemory: Bool = false) -> Bool {
     guard let media = clip.media, MediaFiles.hasFiles(for: clip) else { return false }
     let urls = MediaFiles.fileURLs(for: clip)
     let pasteboard = UIPasteboard.general
     switch media.kind {
     case .image:
+      guard let url = urls.first else { return false }
+      if lowMemory { return copyImageFile(url, to: pasteboard) }
       // As an image, which every app can paste; the system offers PNG and JPEG for it.
-      guard let url = urls.first, let image = UIImage(contentsOfFile: url.path) else { return false }
+      guard let image = UIImage(contentsOfFile: url.path) else { return false }
       pasteboard.image = image
     case .pdf:
-      guard let url = urls.first, let data = try? Data(contentsOf: url) else { return false }
+      guard let url = urls.first, let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return false }
       pasteboard.setData(data, forPasteboardType: UTType.pdf.identifier)
     default:
       pasteboard.itemProviders = urls.compactMap { url in
@@ -88,6 +95,34 @@ enum MediaPasteboard {
       }
     }
     return true
+  }
+
+  /// The image file's own bytes, plus a smaller JPEG when the file is a type not every app pastes (HEIC). Setting
+  /// `UIPasteboard.image` would decode and re-encode the full picture, which ends a keyboard (a 12 MP photo is
+  /// about 48 MB decoded).
+  private static func copyImageFile(_ url: URL, to pasteboard: UIPasteboard) -> Bool {
+    guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return false }
+    let type = UTType(filenameExtension: url.pathExtension) ?? .image
+    var item: [String: Any] = [type.identifier: data]
+    if type != .png, type != .jpeg, let jpeg = compatibleJPEG(of: data) {
+      item[UTType.jpeg.identifier] = jpeg
+    }
+    pasteboard.setItems([item])
+    return true
+  }
+
+  /// A JPEG at most `compatibleImageSide` on its long side, decoded at that size only.
+  private static func compatibleJPEG(of data: Data) -> Data? {
+    guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+          let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: compatibleImageSide
+          ] as CFDictionary) else { return nil }
+    let output = NSMutableData()
+    guard let destination = CGImageDestinationCreateWithData(output, UTType.jpeg.identifier as CFString, 1, nil) else { return nil }
+    CGImageDestinationAddImage(destination, image, [kCGImageDestinationLossyCompressionQuality: 0.9] as CFDictionary)
+    return CGImageDestinationFinalize(destination) ? output as Data : nil
   }
 }
 
