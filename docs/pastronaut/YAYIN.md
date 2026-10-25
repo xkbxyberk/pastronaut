@@ -149,6 +149,9 @@ birlikte çıkar; Mac'e özel ara sürüm yok. Plan `PLAN-1.3.md`.
      1.3 (3) 03:27 (`399a3a7`). GitHub 1.3 (3) notarize ve Sparkle imzalı (`build/github/Pastronaut-1.3.zip`).
    - Kullanıcıda: 1.3 sayfalarında yeni build'i seçmek, What's New ve inceleme notunu yenilemek, incelemeye göndermek.
    - GitHub 1.3 yeni kodla yeniden derlenir (eski `Pastronaut-1.3.zip` 2. derlemedir, yayınlanmaz).
+   - ✅ Push (`6513c2a`) ve gizlilik politikası güncellemesi (gh-pages `79c2920`, 2026-10-25: klavye, henüz
+     iPhone'da olmayan bir öğeyi önce iCloud'dan indirir, en fazla 15 MB). Mac ekran görüntüleri yeniden
+     çekilmeyecek (kullanıcı kararı). GitHub 1.3 yayını ve appcast: kullanıcı Mac App Store onayından sonra haber verecek.
 
 **Sürüm kuralı (2026-10-18'den sonra):** her sürüm üç kanalda çıkar (iPhone, Mac App Store, Mac GitHub/Sparkle);
 adımlar `SURUM.md`'de. Görünen sürüm: iPhone 1.2, Mac 1.0 (Mac App Store), GitHub 0.1.0. Sıradaki: ortak **1.3**; derleme
