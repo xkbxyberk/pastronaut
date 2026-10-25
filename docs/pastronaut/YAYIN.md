@@ -145,6 +145,8 @@ birlikte çıkar; Mac'e özel ara sürüm yok. Plan `PLAN-1.3.md`.
    Testler: çekirdek 195, Mac 123, iPhone kurulum rehberi 7.
    - Derleme numaraları: iPhone **6**, Mac **3** (Mac App Store ve GitHub). Metinler `APPSTORE.md` v6 (What's
      New, açıklamada klavye maddesi, inceleme notları).
+   - ✅ **App Store Connect'e yüklendi** (kullanıcı "yükle" dedi, 2026-10-25): iPhone 1.3 (6) 03:24, Mac App Store
+     1.3 (3) 03:27 (`399a3a7`). GitHub 1.3 (3) notarize ve Sparkle imzalı (`build/github/Pastronaut-1.3.zip`).
    - Kullanıcıda: 1.3 sayfalarında yeni build'i seçmek, What's New ve inceleme notunu yenilemek, incelemeye göndermek.
    - GitHub 1.3 yeni kodla yeniden derlenir (eski `Pastronaut-1.3.zip` 2. derlemedir, yayınlanmaz).
 
