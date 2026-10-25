@@ -58,9 +58,22 @@ final class ClipStore {
     let directory = files?.directory ?? URL.applicationSupportDirectory.appending(path: "Pastronaut")
     // The mirror is the iPhone's history: what iCloud forgets stays here as local-only clips.
     sync = ClipSync(
-      containerIdentifier: PastronautIDs.iCloudContainer, storageDirectory: directory, keepsLocalHistory: true
+      containerIdentifier: PastronautIDs.iCloudContainer, storageDirectory: directory, keepsLocalHistory: true,
+      environment: Self.iCloudEnvironment
     )
     showSavedSnapshot()
+  }
+
+  /// "development" for builds installed from Xcode, "production" for TestFlight and the App Store: only
+  /// development builds carry a provisioning profile, and its push environment follows the iCloud one. A Debug
+  /// build opens the same App Group as the real app.
+  static var iCloudEnvironment: String {
+    guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+          let profile = try? String(contentsOf: url, encoding: .isoLatin1),
+          let key = profile.range(of: "<key>aps-environment</key>"),
+          let value = profile[key.upperBound...].range(of: "<string>"),
+          let end = profile[value.upperBound...].range(of: "</string>") else { return "production" }
+    return String(profile[value.upperBound..<end.lowerBound])
   }
 
   private func showSavedSnapshot() {
@@ -468,6 +481,17 @@ final class ClipStore {
     case ownCopy
   }
 
+  /// What the setup's check found, and whether iPhone asked first. Reading the clipboard waits while iOS shows its
+  /// paste prompt, so a read that takes a while means iPhone asked: Paste from Other Apps isn't Allow yet. Before
+  /// the first prompt that setting isn't even in Settings, so the setup tries first and allows after.
+  struct ClipboardCheck: Equatable {
+    var trial: ClipboardTrial
+    var asked = false
+  }
+
+  /// Longer than any read without a prompt, shorter than anyone answers one.
+  static let promptDelay: TimeInterval = 0.35
+
   /// The pasteboard change count of the last copy this app made itself (the setup's check skips it).
   private static let ownCopyChangeCountKey = "ownCopyChangeCount"
 
@@ -475,22 +499,25 @@ final class ClipStore {
     UserDefaults.standard.set(UIPasteboard.general.changeCount, forKey: Self.ownCopyChangeCountKey)
   }
 
-  func trySavingClipboard() async -> ClipboardTrial {
+  func trySavingClipboard() async -> ClipboardCheck {
     #if DEBUG
-    if DemoClips.isOn { return .saved }
+    if DemoClips.isOn { return ClipboardCheck(trial: .saved) }
     #endif
     let pasteboard = UIPasteboard.general
-    guard pasteboard.hasStrings else { return .empty }
+    guard pasteboard.hasStrings else { return ClipboardCheck(trial: .empty) }
     if pasteboard.changeCount == UserDefaults.standard.object(forKey: Self.ownCopyChangeCountKey) as? Int {
-      return .ownCopy
+      return ClipboardCheck(trial: .ownCopy)
     }
     sharedDefaults?.set(pasteboard.changeCount, forKey: AutoCapture.lastChangeCountKey)
-    guard let text = pasteboard.string else { return .denied }
-    guard AutoCapture.allows(text) else { return .sensitive }
+    let start = Date.now
+    let text = pasteboard.string
+    let asked = Date.now.timeIntervalSince(start) > Self.promptDelay
+    guard let text else { return ClipboardCheck(trial: .denied, asked: asked) }
+    guard AutoCapture.allows(text) else { return ClipboardCheck(trial: .sensitive, asked: asked) }
     switch await saveNow(text) {
-    case .saved: return .saved
-    case .empty: return .empty
-    case .tooLarge: return .tooLarge
+    case .saved: return ClipboardCheck(trial: .saved, asked: asked)
+    case .empty: return ClipboardCheck(trial: .empty, asked: asked)
+    case .tooLarge: return ClipboardCheck(trial: .tooLarge, asked: asked)
     }
   }
 
@@ -504,6 +531,10 @@ final class ClipStore {
     let pasteboard = UIPasteboard.general
     let changeCount = pasteboard.changeCount
     guard changeCount != sharedDefaults?.object(forKey: AutoCapture.lastChangeCountKey) as? Int else { return }
+    if pasteboard.contains(pasteboardTypes: [AutoCapture.finderCopyType]) {
+      sharedDefaults?.set(changeCount, forKey: AutoCapture.lastChangeCountKey)
+      return
+    }
     if !pasteboard.hasStrings, MediaLoader.hasMedia(pasteboard) {
       sharedDefaults?.set(changeCount, forKey: AutoCapture.lastChangeCountKey)
       let parts = MediaLoader.parts(from: pasteboard, quality: mediaQuality, maxBytes: Self.maxLocalMediaBytes)
@@ -521,6 +552,8 @@ final class ClipStore {
     // isn't relabelled as an iPhone copy or moved to the top.
     let id = Clip.id(for: text)
     guard !clips.contains(where: { $0.id == id }) else { return }
+    // The name of a file the Mac copied, which Universal Clipboard brings as text: the Mac's clip is the copy.
+    guard clips.fileNamed(by: text, near: .now) == nil else { return }
     if await saveNow(text) == .saved {
       notice = .savedFromClipboard
     }
@@ -608,6 +641,18 @@ final class ClipStore {
     await start()
     guard let prepared = await MediaIntake.prepare(parts, device: .iphone) else { return .empty }
     if sensitiveCheck, let text = prepared.clip.media?.recognizedText, !AutoCapture.allows(text) { return .empty }
+    // An automatic save of a picture the Mac copied: Universal Clipboard put it here, and sync already brought the
+    // Mac's own clip of it (same picture, other bytes). Keeping both showed it twice.
+    if sensitiveCheck, let media = prepared.clip.media, let width = media.pixelWidth, let height = media.pixelHeight,
+       let copied = parts.first?.original,
+       clips.contains(where: { clip in
+         guard clip.sourceDevice == .mac, clip.media?.isSamePicture(
+           width: width, height: height, copiedAt: prepared.clip.firstCopiedAt, as: clip.firstCopiedAt
+         ) == true, let url = sync.media.fileURLs(for: clip).first, let data = try? Data(contentsOf: url) else { return false }
+         return MediaProcessing.isSamePicture(copied, data)
+       }) {
+      return .empty
+    }
     do {
       try MediaIntake.store(prepared, in: sync.media)
     } catch {

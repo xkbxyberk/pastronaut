@@ -78,9 +78,10 @@ public struct SharedClipFiles: Sendable {
     var base = readSnapshot()
     if useKeyboardCache, let cache = readKeyboardCache(), let fetchedAt = cache.fetchedAt,
        fetchedAt > snapshotDate ?? .distantPast {
-      // The cache only knows iCloud; clips the app keeps on this device alone come from the snapshot.
+      // The cache only knows iCloud: clips the app keeps on this device alone come from the snapshot, and so do
+      // images, PDFs and files while the cache is from before it read them (1.3).
       let localOnly = readLocalOnly().clips
-      base = cache.clips + base.filter { localOnly.contains($0.id) }
+      base = cache.clips + base.filter { localOnly.contains($0.id) || ($0.isMedia && !cache.includesMedia) }
     }
     var byID: [String: Clip] = [:]
     for clip in base + readInbox() {

@@ -396,17 +396,35 @@ struct DeviceFilterPicker: View {
 /// copied. Images keep Maccy's thumbnail.
 struct ClipRowInfo {
   let kind: ClipKind
-  /// nil for files.
+  /// nil for files, pictures and PDFs.
   let content: ClipContent?
   let subtitle: String
   let fromIPhone: Bool
+  /// Its image or files stay on this Mac.
+  let isLocalOnly: Bool
+  /// What the row says when its own title is empty or a path: a picture copied without a name ("Picture 1944 ×
+  /// 1222"), or a row from before 1.3.
+  let name: String?
+  /// The small picture shows (only rows with a picture have one; `MediaRowStyle`).
+  let showsPicture: Bool
+  /// The kind's icon shows: always for text and files, for pictures as `MediaRowStyle` says.
+  let showsIcon: Bool
+  /// Copied on the iPhone, which never says in which app: the app icon column shows the iPhone instead of Maccy's
+  /// question mark.
+  let showsIPhoneBadge: Bool
 
   @MainActor
   init?(_ decorator: HistoryItemDecorator) {
     let item = decorator.item
-    guard item.imageData == nil else { return nil }
-    if !item.fileURLs.isEmpty {
-      kind = .file
+    let imageData = item.imageData
+    let isPDF = item.pdfData != nil
+      || (!item.fileURLs.isEmpty && item.fileURLs.allSatisfy { $0.pathExtension.lowercased() == "pdf" })
+    if imageData != nil {
+      // A picture, or a PDF shown by its first page (1.3: named and dated like files, `MediaRowStyle`).
+      kind = isPDF ? .pdf : .image
+      content = nil
+    } else if !item.fileURLs.isEmpty {
+      kind = isPDF ? .pdf : .file
       content = nil
     } else if let text = item.text, !text.isEmpty {
       let content = ClipContent(text)
@@ -415,11 +433,28 @@ struct ClipRowInfo {
     } else {
       return nil
     }
+    let style = imageData == nil ? nil : Defaults[.mediaRowStyle]
+    showsPicture = style == .previewAndName
+    showsIcon = style == nil || style == .iconAndName
+    if !item.title.isEmpty, !item.title.hasPrefix("file://") {
+      name = nil
+    } else if !item.fileURLs.isEmpty {
+      name = item.fileURLs.map(\.lastPathComponent).joined(separator: ", ")
+    } else if kind == .pdf {
+      name = String(localized: "PDF Document", table: "Pastronaut")
+    } else if let size = imageData.flatMap(MediaProcessing.pixelSize(of:)) {
+      name = SyncBridge.pictureTitle(width: size.width, height: size.height)
+    } else {
+      name = nil
+    }
     fromIPhone = item.isFromIPhone
+    showsIPhoneBadge = fromIPhone && item.application == nil
+    isLocalOnly = item.isLocalOnlyMedia
     let when = item.lastCopiedAt.formatted(.relative(presentation: .named, unitsStyle: .abbreviated))
     // The app recorded for a Universal Clipboard copy is only what was frontmost here, so leave it out.
     let app = fromIPhone ? nil : item.application.flatMap(AppNames.name(for:))
-    subtitle = [app, when].compactMap { $0 }.joined(separator: " · ")
+    let localOnly = isLocalOnly ? String(localized: "Only on This Mac", table: "Pastronaut") : nil
+    subtitle = [app, when, localOnly].compactMap { $0 }.joined(separator: " · ")
   }
 
   var colorHex: String? {
@@ -438,6 +473,26 @@ enum AppNames {
     let name = FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: "")
     cache[bundleIdentifier] = name
     return name
+  }
+}
+
+/// In the app icon column, for a copy made on the iPhone: an iPhone on a gray tile, the size of an app icon.
+struct IPhoneBadge: View {
+  var size: CGFloat = 15
+
+  var body: some View {
+    // App icons leave a margin around their tile (about 8%); the badge keeps the same one, so both look one size.
+    let tile = size * 0.84
+    RoundedRectangle(cornerRadius: tile * 0.24, style: .continuous)
+      .fill(LinearGradient(colors: [Color(white: 0.62), Color(white: 0.45)], startPoint: .top, endPoint: .bottom))
+      .overlay {
+        Image(systemName: "iphone")
+          .font(.system(size: tile * 0.62, weight: .semibold))
+          .foregroundStyle(.white)
+      }
+      .frame(width: tile, height: tile)
+      .frame(width: size, height: size)
+      .accessibilityHidden(true)
   }
 }
 

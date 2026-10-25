@@ -4,7 +4,7 @@ import UIKit
 
 /// Made-up images, a PDF and files for screenshots (`PT_DEMO=1`), drawn here so nothing personal is on screen. Their
 /// files go to the media store like real ones; nothing is synced, and the next real launch prunes them.
-/// No bundle identifiers: a stored icon of a real Mac app (Apple's or anyone's) must not show up in store pictures.
+/// The Mac apps are made up (DemoIcons): no real app's icon shows up in store pictures.
 enum DemoMedia {
   private static var isTurkish: Bool { Bundle.main.preferredLocalizations.first == "tr" }
 
@@ -28,7 +28,7 @@ enum DemoMedia {
 
     if let shot = screenshot(tr: tr).pngData(),
        let part = MediaIntake.image(shot, quality: .optimized, maxBytes: 10_000_000) {
-      await add([part], minutesAgo: 2, device: .mac, app: tr ? "Önizleme" : "Preview")
+      await add([part], minutesAgo: 2, device: .mac, app: DemoIcons.viewer.name, bundle: DemoIcons.viewer.bundleIdentifier)
     }
     if let photo = landscape().jpegData(compressionQuality: 0.8),
        let part = MediaIntake.image(photo, quality: .optimized, maxBytes: 10_000_000) {
@@ -42,12 +42,12 @@ enum DemoMedia {
       await add([part], minutesAgo: 30, device: .iphone, title: tr ? "Konser afişi" : "Concert poster")
     }
     await add([MediaIntake.pdf(invoice(tr: tr), name: tr ? "Fatura-2026-10.pdf" : "Invoice-2026-10.pdf")],
-              minutesAgo: 6, device: .mac, app: tr ? "Posta" : "Mail", pinned: true)
+              minutesAgo: 6, device: .mac, app: DemoIcons.mail.name, bundle: DemoIcons.mail.bundleIdentifier, pinned: true)
     await add([
       MediaIntake.file(named: tr ? "rapor-q3.pdf" : "report-q3.pdf", data: invoice(tr: tr)),
       MediaIntake.file(named: tr ? "butce-2026.xlsx" : "budget-2026.xlsx", data: Data(repeating: 7, count: 48_000)),
       MediaIntake.file(named: tr ? "notlar.txt" : "notes.txt", data: Data((tr ? "Toplantı notları" : "Meeting notes").utf8))
-    ], minutesAgo: 70, device: .mac, app: "Finder")
+    ], minutesAgo: 70, device: .mac, app: DemoIcons.files.name, bundle: DemoIcons.files.bundleIdentifier)
     return clips
   }
 

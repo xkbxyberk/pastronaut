@@ -47,7 +47,7 @@ struct HistoryItemView: View {
       id: item.id,
       selectionId: item.id,
       appIcon: item.applicationImage,
-      image: item.thumbnailImage,
+      image: info?.showsPicture == false ? nil : item.thumbnailImage, // Pastronaut: MediaRowStyle
       accessoryImage: item.thumbnailImage != nil || info != nil ? nil : colorSwatchImage,
       clipInfo: info,
       attributedTitle: item.attributedTitle,
@@ -57,7 +57,7 @@ struct HistoryItemView: View {
       selectionAppearance: selectionAppearance,
       accessibilityLabel: item.accessibilityLabel
     ) {
-      Text(verbatim: item.title)
+      Text(verbatim: info?.name ?? item.title) // Pastronaut: a name for pictures without a title
     }
     .accessibilityIdentifier("copy-history-item")
     .buttonAction(performSelect)

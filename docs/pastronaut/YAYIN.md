@@ -42,7 +42,7 @@ Durum işaretleri: ✅ bitti · ⏳ onay ya da kullanıcı adımı bekliyor · �
 - Mac App Store yapılandırması (Sparkle'sız, ayrı yetkiler) ve Mac için gizlilik bildirimi.
 - Homebrew tap.
 
-## D. Durum ve kalan işler (2026-10-23)
+## D. Durum ve kalan işler (2026-10-25)
 **Bitti:**
 - Mac 0.1.0 GitHub'da (Developer ID, notarize, Sparkle appcast).
 - Site ve gizlilik politikası yayında (İngilizce önce). README.
@@ -136,6 +136,17 @@ birlikte çıkar; Mac'e özel ara sürüm yok. Plan `PLAN-1.3.md`.
    - GitHub: `build/github/Pastronaut-1.3.zip` notarize edildi (Accepted), staple'lı, Sparkle imzalı; notlar
      `build/github/notes-1.3.md`, appcast kaydı `build/github/appcast-item-1.3.xml`. **Release ve appcast push'u
      kullanıcı onayı bekliyor**; appcast en son.
+5. ⏳ **1.3 yeniden gönderim** (2026-10-25). TestFlight'ta bulunan hatalar yüzünden kullanıcı iki sürümü
+   incelemeden çekti ("Developer Rejected"). Düzeltilenler: yapıştırma rehberi sırası (Dene › İzin Ver › Doğrula),
+   iPhone resminin Mac'te birkaç satır olması, klavyenin resim kaybetmesi, Mac uygulama simgelerinin Production'a
+   gitmemesi (ortam değişince bir kez yeniden gönderilir), PDF ve dosya adları, klavyenin Mac'teki resmi kendisi
+   indirmesi (≤ 15 MB), "Yalnızca bu Mac'te" işareti, Mac'te Görünüş › Resim ve PDF satırları, iPhone satırlarında
+   soru işareti yerine iPhone rozeti. Otomatik "kopyalama matrisi" eklendi (`sync_e2e.py --matrix`, 19/19).
+   Testler: çekirdek 195, Mac 123, iPhone kurulum rehberi 7.
+   - Derleme numaraları: iPhone **6**, Mac **3** (Mac App Store ve GitHub). Metinler `APPSTORE.md` v6 (What's
+     New, açıklamada klavye maddesi, inceleme notları).
+   - Kullanıcıda: 1.3 sayfalarında yeni build'i seçmek, What's New ve inceleme notunu yenilemek, incelemeye göndermek.
+   - GitHub 1.3 yeni kodla yeniden derlenir (eski `Pastronaut-1.3.zip` 2. derlemedir, yayınlanmaz).
 
 **Sürüm kuralı (2026-10-18'den sonra):** her sürüm üç kanalda çıkar (iPhone, Mac App Store, Mac GitHub/Sparkle);
 adımlar `SURUM.md`'de. Görünen sürüm: iPhone 1.2, Mac 1.0 (Mac App Store), GitHub 0.1.0. Sıradaki: ortak **1.3**; derleme

@@ -4119,6 +4119,160 @@
           }
         }
       }
+    },
+    "Verify": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doğrula"
+          }
+        }
+      }
+    },
+    "Try it once first": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce bir kez dene"
+          }
+        }
+      }
+    },
+    "Come back here. iPhone asks: tap Allow Paste.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buraya dön. iPhone soracak: Yapıştırmaya İzin Ver'e dokun."
+          }
+        }
+      }
+    },
+    "That question adds the setting in Settings; the next step makes it permanent.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu soru Ayarlar'daki izni açar; sonraki adımda onu kalıcı yapacağız."
+          }
+        }
+      }
+    },
+    "Pastronaut's own copies don't count: iPhone only asks about copies from other apps.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastronaut'un kendi kopyası işe yaramaz: iPhone yalnızca başka uygulamalardan gelen kopyada sorar."
+          }
+        }
+      }
+    },
+    "Now make it permanent": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi kalıcı yap"
+          }
+        }
+      }
+    },
+    "iPhone asked, so the setting is there now. In Settings, tap Paste from Other Apps and choose Allow.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone sordu; ayar artık hazır. Ayarlar'da Diğer Uygulamalardan Yapıştır'a dokun ve İzin Ver'i seç."
+          }
+        }
+      }
+    },
+    "iPhone asked again, so the setting isn't Allow yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone yine sordu: ayar henüz İzin Ver değil."
+          }
+        }
+      }
+    },
+    "Open Settings takes you to Pastronaut's page. Come back after choosing Allow.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'ı Aç seni Pastronaut'un sayfasına götürür. İzin Ver'i seçtikten sonra buraya dön."
+          }
+        }
+      }
+    },
+    "Try once more": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir kez daha dene"
+          }
+        }
+      }
+    },
+    "Copy something new in another app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir uygulamada yeni bir şey kopyala."
+          }
+        }
+      }
+    },
+    "All set": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her şey hazır"
+          }
+        }
+      }
+    },
+    "iPhone didn't ask, and your copy was saved. Pastronaut now saves your latest copy whenever you open it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone sormadı ve kopyan kaydedildi. Pastronaut artık açıldığında son kopyanı kendiliğinden kaydeder."
+          }
+        }
+      }
+    },
+    "I Allowed It, Check": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin Verdim, Doğrula"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

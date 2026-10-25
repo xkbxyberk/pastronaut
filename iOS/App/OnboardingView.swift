@@ -149,13 +149,13 @@ struct OnboardingView: View {
     case .paste:
       guard autoSave else { return next }
       switch paste.stage {
+      case .tryFirst, .verify:
+        return FooterAction(title: "Check Now", identifier: "tryClipboardSave") { paste.check() }
       case .allow:
         return FooterAction(title: "Open Settings", identifier: "openPasteSettings") {
           paste.openedSettings()
           openSettings()
         }
-      case .check:
-        return FooterAction(title: "Check Now", identifier: "tryClipboardSave") { paste.check() }
       case .done:
         return next
       }
@@ -178,10 +178,15 @@ struct OnboardingView: View {
     case .paste:
       guard autoSave else { return nil }
       switch paste.stage {
+      case .tryFirst:
+        return FooterAction(title: "Not Now", identifier: "pasteNotNow", action: advance)
       case .allow:
-        return FooterAction(title: "Already Allowed? Check", identifier: "pasteAlreadyAllowed") { paste.stage = .check }
-      case .check:
-        return FooterAction(title: "Open Settings", identifier: "openPasteSettings", action: openSettings)
+        return FooterAction(title: "I Allowed It, Check", identifier: "pasteAlreadyAllowed") { paste.stage = .verify }
+      case .verify:
+        return FooterAction(title: "Open Settings", identifier: "openPasteSettings") {
+          paste.openedSettings()
+          openSettings()
+        }
       case .done:
         return FooterAction(title: "Check Again", identifier: "tryClipboardSave") { paste.check() }
       }
@@ -230,15 +235,19 @@ private enum KeyboardStage {
   }
 }
 
-/// The paste step: allow pasting in Settings, check it with a copy from another app, done. The check runs by
-/// itself when the person comes back to the app with a new copy.
+/// The paste step. "Paste from Other Apps" shows in Settings only after iPhone has asked once, so: try a copy from
+/// another app (iPhone asks; that adds the setting), set it to Allow in Settings, then try again (no question:
+/// done). A check that iPhone doesn't ask about at all means the setting is Allow already. The check runs by itself
+/// when the person comes back to the app with a new copy.
 @MainActor
 @Observable
 final class PasteProgress {
-  enum Stage { case allow, check, done }
+  enum Stage { case tryFirst, allow, verify, done }
 
-  var stage: Stage = .allow
+  var stage: Stage = .tryFirst
   private(set) var trial: ClipStore.ClipboardTrial?
+  /// The last check was asked about after the setting step: it isn't Allow yet.
+  private(set) var askedAgain = false
   private(set) var isChecking = false
   private var lastCheckedChangeCount: Int?
   private var wentToSettings = false
@@ -250,7 +259,8 @@ final class PasteProgress {
   /// The app is in front again: from Settings, the next thing is the check; with a new copy, the check itself.
   func cameBack() {
     if stage == .allow, wentToSettings {
-      withAnimation(.snappy) { stage = .check }
+      wentToSettings = false
+      withAnimation(.snappy) { stage = .verify }
     }
     let pasteboard = UIPasteboard.general
     guard stage != .allow, pasteboard.hasStrings, pasteboard.changeCount != lastCheckedChangeCount else { return }
@@ -264,10 +274,16 @@ final class PasteProgress {
     Task {
       let result = await ClipStore.shared.trySavingClipboard()
       withAnimation(.snappy) {
-        trial = result
-        if result == .saved { stage = .done } else if stage == .allow { stage = .check }
+        trial = result.trial
+        if result.trial == .saved && !result.asked {
+          stage = .done
+        } else if result.asked || result.trial == .denied {
+          // Asked (the setting exists now) or blocked (it is Deny): on to Allow in Settings.
+          askedAgain = stage == .verify
+          stage = .allow
+        }
       }
-      if result == .saved { Haptics.success() }
+      if stage == .done { Haptics.success() }
       isChecking = false
     }
   }
@@ -480,14 +496,35 @@ private struct PasteStep: View {
           .padding(.horizontal, 4)
       } else {
         ProgressStrip(
-          titles: ["Allow", "Check", "Ready"], current: progress.stage.index,
+          titles: ["Try", "Allow", "Verify"], current: progress.stage.index,
           identifiers: ["pasteStep1", "pasteStep2", "pasteStep3"]
         )
         switch progress.stage {
+        case .tryFirst:
+          OnboardingCard {
+            Text("Try it once first")
+              .font(.headline)
+            InstructionList(items: [
+              "Copy a word in another app, such as Notes or Safari.",
+              "Come back here. iPhone asks: tap Allow Paste.",
+              "That question adds the setting in Settings; the next step makes it permanent.",
+            ])
+            Text("Pastronaut's own copies don't count: iPhone only asks about copies from other apps.")
+              .font(.footnote)
+              .foregroundStyle(.secondary)
+              .fixedSize(horizontal: false, vertical: true)
+            if let trial = progress.trial, trial != .saved {
+              TrialResult(trial: trial)
+                .transition(.opacity)
+            }
+          }
         case .allow:
           OnboardingCard {
-            Text("Choose Allow in Settings")
+            Text("Now make it permanent")
               .font(.headline)
+            Text("iPhone asked, so the setting is there now. In Settings, tap Paste from Other Apps and choose Allow.")
+              .font(.subheadline)
+              .fixedSize(horizontal: false, vertical: true)
             SettingsMockup(title: Text("Paste from Other Apps")) {
               MockRow(icon: nil, title: Text("Ask")) { EmptyView() }
               MockDivider()
@@ -500,19 +537,30 @@ private struct PasteStep: View {
               }
             }
             .accessibilityHidden(true)
-            Text("Open Settings takes you to Pastronaut's page: tap Paste from Other Apps, choose Allow, then come back.")
+            if progress.askedAgain {
+              Label {
+                Text("iPhone asked again, so the setting isn't Allow yet.")
+                  .fixedSize(horizontal: false, vertical: true)
+              } icon: {
+                Image(systemName: "exclamationmark.triangle.fill")
+                  .foregroundStyle(.orange)
+              }
+              .font(.subheadline)
+              .accessibilityElement(children: .combine)
+              .accessibilityIdentifier("pasteAskedAgain")
+            }
+            Text("Open Settings takes you to Pastronaut's page. Come back after choosing Allow.")
               .font(.subheadline)
               .foregroundStyle(.secondary)
               .fixedSize(horizontal: false, vertical: true)
           }
-        case .check:
+        case .verify:
           OnboardingCard {
-            Text("Check that it works")
+            Text("Try once more")
               .font(.headline)
             InstructionList(items: [
-              "Copy a word in another app, such as Notes or Safari.",
+              "Copy something new in another app.",
               "Come back here. Pastronaut checks by itself, or tap Check Now.",
-              "If iPhone asks whether to allow pasting, the setting isn't Allow yet.",
             ])
             if let trial = progress.trial, trial != .saved {
               TrialResult(trial: trial)
@@ -526,9 +574,9 @@ private struct PasteStep: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.green)
                 .accessibilityHidden(true)
-              Text("Saved your copy")
+              Text("All set")
                 .font(.title3.bold())
-              Text("If iPhone didn't ask, everything is set: Pastronaut now saves your latest copy whenever you open it. If it asked, choose Allow in Settings.")
+              Text("iPhone didn't ask, and your copy was saved. Pastronaut now saves your latest copy whenever you open it.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -549,9 +597,10 @@ private struct PasteStep: View {
 private extension PasteProgress.Stage {
   var index: Int {
     switch self {
-    case .allow: 0
-    case .check: 1
-    case .done: 2
+    case .tryFirst: 0
+    case .allow: 1
+    case .verify: 2
+    case .done: 3
     }
   }
 }

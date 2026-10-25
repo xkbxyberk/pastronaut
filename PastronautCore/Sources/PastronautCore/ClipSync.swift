@@ -104,6 +104,13 @@ public actor ClipSync {
     var settingsUnsent = false
     /// Since 1.3: app icons by bundle identifier. The PNGs are files (`ClipSync.appIconURL`).
     var appIcons: [String: AppIconEntry] = [:]
+    /// The iCloud environment this state belongs to ("development" or "production"), when the app tells.
+    var environment: String?
+    /// Bumped when icons must go up once more (`iconsVersion`).
+    var iconsVersion = 0
+
+    /// 1: 1.3 (5) marked icons sent in a Development run as sent in Production, so they never went up there.
+    static let currentIconsVersion = 1
 
     init() {}
 
@@ -121,6 +128,26 @@ public actor ClipSync {
       settingsSystemFields = try container.decodeIfPresent(Data.self, forKey: .settingsSystemFields)
       settingsUnsent = try container.decodeIfPresent(Bool.self, forKey: .settingsUnsent) ?? false
       appIcons = try container.decodeIfPresent([String: AppIconEntry].self, forKey: .appIcons) ?? [:]
+      environment = try container.decodeIfPresent(String.self, forKey: .environment)
+      iconsVersion = try container.decodeIfPresent(Int.self, forKey: .iconsVersion) ?? 0
+    }
+
+    /// A state written by a build of the other iCloud environment (a Debug build and an App Store one share the
+    /// app's container) knows records that this environment has never seen. Icons are only sent when they change,
+    /// so they would never go up here: mark them unsent, to be sent again (`start`). Clips and the rest recover by
+    /// themselves through conflicts. Returns whether icons were marked.
+    mutating func adopt(environment: String?) -> Bool {
+      var resend = iconsVersion < Self.currentIconsVersion
+      if let environment {
+        if let previous = self.environment, previous != environment { resend = true }
+        self.environment = environment
+      }
+      iconsVersion = Self.currentIconsVersion
+      guard resend else { return false }
+      for id in appIcons.keys {
+        appIcons[id]?.systemFields = nil
+      }
+      return true
     }
   }
 
@@ -151,7 +178,8 @@ public actor ClipSync {
     containerIdentifier: String,
     storageDirectory: URL,
     policy: SyncPolicy = .default,
-    keepsLocalHistory: Bool = false
+    keepsLocalHistory: Bool = false,
+    environment: String? = nil
   ) {
     self.container = CKContainer(identifier: containerIdentifier)
     self.fileURL = storageDirectory.appending(path: "clip-sync.json")
@@ -160,7 +188,9 @@ public actor ClipSync {
     self.keyFile = SyncKeyFile(directory: storageDirectory)
     self.policy = policy
     self.keepsLocalHistory = keepsLocalHistory
-    let state = Self.load(from: fileURL)
+    var state = Self.load(from: fileURL)
+    // Saved with the next change; until then a relaunch marks the same icons again.
+    _ = state.adopt(environment: environment)
     self.state = state
     if let key = state.key {
       clipIDsByRecordName = Self.recordNames(for: state.entries.keys, key: key)
@@ -411,6 +441,11 @@ public actor ClipSync {
     }
     if state.schema < PersistedState.currentSchema {
       prepareMove(engine: engine)
+    }
+    // Icons not in iCloud yet: those this device has a PNG for (sent from here, or kept after a reset) go up.
+    if let key = state.key {
+      let unsentIcons = state.appIcons.filter { $0.value.systemFields == nil }.keys.filter { appIcon(for: $0) != nil }
+      engine.state.add(pendingRecordZoneChanges: unsentIcons.map { .saveRecord(AppIconRecord.recordID(for: $0, key: key)) })
     }
     logger.notice("Started with \(self.state.entries.count) mirrored clips, \(self.state.collections.count) collections")
   }

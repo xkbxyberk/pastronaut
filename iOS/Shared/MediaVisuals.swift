@@ -37,6 +37,9 @@ enum MediaFiles {
 
   /// A Mac app's icon, sent once by the Mac.
   static func appIcon(for bundleIdentifier: String) -> UIImage? {
+    #if DEBUG
+    if let demo = DemoIcons.image(for: bundleIdentifier) { return demo }
+    #endif
     let key = bundleIdentifier as NSString
     if let hit = icons.object(forKey: key) { return hit }
     guard let directory = storageDirectory,
@@ -84,10 +87,8 @@ enum MediaPasteboard {
       // As an image, which every app can paste; the system offers PNG and JPEG for it.
       guard let image = UIImage(contentsOfFile: url.path) else { return false }
       pasteboard.image = image
-    case .pdf:
-      guard let url = urls.first, let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return false }
-      pasteboard.setData(data, forPasteboardType: UTType.pdf.identifier)
     default:
+      // PDFs and files with their own names: bare PDF data came out as "Pasted Document" or a made-up name.
       pasteboard.itemProviders = urls.compactMap { url in
         let provider = NSItemProvider(contentsOf: url)
         provider?.suggestedName = url.lastPathComponent
@@ -127,14 +128,8 @@ enum MediaPasteboard {
 }
 
 extension Clip {
-  /// What a media clip says without a title: the first line of the text read from it, or its file names.
-  var mediaCaption: String? {
-    guard let media else { return nil }
-    if let line = media.recognizedText?.split(whereSeparator: \.isNewline).first {
-      return String(line.prefix(Clip.maxTitleLength))
-    }
-    return media.files.map(\.name).joined(separator: ", ")
-  }
+  /// What a media clip says without a title (`ClipMedia.caption`, the same on the Mac).
+  var mediaCaption: String? { media?.caption }
 
   /// "PDF · 240 KB", "3 files · 8.1 MB", "1,240 × 2,688 · 640 KB"
   var mediaSummary: String? {

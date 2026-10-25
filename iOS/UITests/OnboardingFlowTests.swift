@@ -7,6 +7,8 @@ final class OnboardingFlowTests: XCTestCase {
     continueAfterFailure = false
     app = XCUIApplication()
     app.launchEnvironment["PT_DEMO"] = "1"
+    // The paste step's checks show only with "Save Clipboard on Opening" on; the sync end-to-end run turns it off.
+    app.launchEnvironment["PT_AUTO_SAVE"] = "1"
   }
 
   func testFirstLaunchShowsGuideUntilFinished() {
@@ -23,15 +25,16 @@ final class OnboardingFlowTests: XCTestCase {
     XCTAssertTrue(keyboardMain.contains { $0.exists && $0.isHittable })
     if next.exists { next.tap() } else { app.buttons["keyboardNotNow"].tap() }
     XCTAssertTrue(app.staticTexts["Paste without being asked"].waitForExistence(timeout: 5))
-    let openSettings = app.buttons["openPasteSettings"]
-    XCTAssertTrue(openSettings.exists && openSettings.isHittable)
-    app.buttons["pasteAlreadyAllowed"].tap()
+    // Try first: "Paste from Other Apps" shows in Settings only after iPhone has asked once. The demo check is never
+    // asked about, as with the setting at Allow, so it goes straight to done.
     let tryButton = app.buttons["tryClipboardSave"]
     XCTAssertTrue(tryButton.waitForExistence(timeout: 3) && tryButton.isHittable)
+    XCTAssertTrue(app.buttons["pasteNotNow"].exists)
+    XCTAssertFalse(app.buttons["openPasteSettings"].exists)
     tryButton.tap()
     let result = app.descendants(matching: .any)["tryClipboardResult"]
     XCTAssertTrue(result.waitForExistence(timeout: 5))
-    XCTAssertTrue(result.label.contains("Saved"))
+    XCTAssertTrue(result.label.contains("All set"))
     XCTAssertFalse(app.buttons["onboardingSkip"].exists)
     XCTAssertTrue(next.waitForExistence(timeout: 3))
     XCTAssertEqual(next.label, "Start Using Pastronaut")
@@ -128,7 +131,11 @@ final class OnboardingFlowTests: XCTestCase {
     app.launch()
     let newClip = app.buttons["newClipButton"].firstMatch
     XCTAssertTrue(newClip.waitForExistence(timeout: 10))
+    // Since 1.3 "+" is a menu: Type a Clip opens the editor.
     newClip.tap()
+    let typeClip = app.buttons["typeClipButton"].firstMatch
+    XCTAssertTrue(typeClip.waitForExistence(timeout: 3))
+    typeClip.tap()
     let editor = app.textViews["clipEditor"].firstMatch
     XCTAssertTrue(editor.waitForExistence(timeout: 5))
     editor.tap()

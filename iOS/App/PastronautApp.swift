@@ -98,6 +98,20 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         }
       }
     }
+    // 1.3 copy matrix: what is on the clipboard (types and file names, no contents), for the script to read with
+    // `devicectl`: whether a keyboard copy kept the file's name.
+    if ProcessInfo.processInfo.environment["PT_E2E_PASTEBOARD_REPORT"] == "1",
+       let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: PastronautIDs.appGroup) {
+      let pasteboard = UIPasteboard.general
+      let report: [String: Any] = [
+        "types": pasteboard.types,
+        "names": pasteboard.itemProviders.map { $0.suggestedName ?? "" },
+        "count": pasteboard.numberOfItems
+      ]
+      if let data = try? JSONSerialization.data(withJSONObject: report) {
+        try? data.write(to: container.appending(path: "Library/Pastronaut/e2e-pasteboard.json"))
+      }
+    }
     // 1.3: changes a setting every device shares, as Settings would ("maxItemBytes=…", "codes=1", "cards=0",
     // "pinnedOnly=1", "mediaSync=0"; several separated by commas).
     if let spec = ProcessInfo.processInfo.environment["PT_E2E_SHARED"] {

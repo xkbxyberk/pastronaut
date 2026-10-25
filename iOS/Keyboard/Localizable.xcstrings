@@ -582,6 +582,26 @@
           }
         }
       }
+    },
+    "Downloading from iCloud…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud'dan indiriliyor…"
+          }
+        }
+      }
+    },
+    "It goes to the clipboard as soon as it's here.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İner inmez panoya kopyalanır."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

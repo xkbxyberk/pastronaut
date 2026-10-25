@@ -18,6 +18,7 @@ struct AppearanceSettingsPane: View {
   @Default(.showFooter) private var showFooter
   @Default(.windowPosition) private var windowPosition
   @Default(.showApplicationIcons) private var showApplicationIcons
+  @Default(.mediaRowStyle) private var mediaRowStyle // Pastronaut
 
   @State private var screens = NSScreen.screens
 
@@ -93,6 +94,10 @@ struct AppearanceSettingsPane: View {
         .accessibilityLabel(Text("PinTo", tableName: "AppearanceSettings"))
       }
 
+      Settings.Section(label: { Text("Picture and PDF rows:", tableName: "Pastronaut") }) { // Pastronaut
+        MediaRowStylePicker()
+      }
+
       Settings.Section(label: { Text("ImageHeight", tableName: "AppearanceSettings") }) {
         HStack {
           TextField("", value: $imageHeight, formatter: imageHeightFormatter)
@@ -103,6 +108,7 @@ struct AppearanceSettingsPane: View {
             .labelsHidden()
             .accessibilityLabel(Text("ImageHeight", tableName: "AppearanceSettings"))
         }
+        .disabled(mediaRowStyle != .previewAndName) // Pastronaut
       }
 
       Settings.Section(title: "") {

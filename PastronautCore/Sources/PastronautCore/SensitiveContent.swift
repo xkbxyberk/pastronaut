@@ -158,6 +158,10 @@ public enum AutoCapture {
   /// The pasteboard change count that was last saved or looked at, so one copy is read once.
   public static let lastChangeCountKey = "keyboardLastCapturedChangeCount"
 
+  /// A file copied in Finder on the Mac, brought by Universal Clipboard: its name as text, a picture of it and
+  /// Finder's own data. Pastronaut for Mac sends the file itself; saving the name here made a text clip of it.
+  public static let finderCopyType = "fndf"
+
   public static func allows(_ text: String) -> Bool {
     guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
           SyncPolicy.default.isEligible(text) else { return false }

@@ -3,6 +3,7 @@ import Defaults
 import Logging
 import os
 import PastronautCore
+import Security
 import Settings
 
 extension Defaults.Keys {
@@ -44,7 +45,16 @@ final class SyncBridge {
 
   private init() {
     let directory = URL.applicationSupportDirectory.appending(path: "Pastronaut")
-    sync = ClipSync(containerIdentifier: PastronautIDs.iCloudContainer, storageDirectory: directory)
+    sync = ClipSync(
+      containerIdentifier: PastronautIDs.iCloudContainer, storageDirectory: directory, environment: Self.iCloudEnvironment
+    )
+  }
+
+  /// "development" for Debug builds, "production" for the App Store and GitHub ones: the push environment in this
+  /// app's signature, which follows the iCloud one. A Debug build opens the same container as the real app.
+  static var iCloudEnvironment: String? {
+    guard let task = SecTaskCreateFromSelf(nil) else { return nil }
+    return SecTaskCopyValueForEntitlement(task, "com.apple.developer.aps-environment" as CFString, nil) as? String
   }
 
   /// Call once at launch. Follows the setting for the rest of the session.
@@ -451,6 +461,13 @@ final class SyncBridge {
     }
   }
 
+  /// Takes a row out of this Mac's history without telling iCloud (it is not a deletion of the clip).
+  func removeLocally(_ decorator: HistoryItemDecorator) {
+    isApplyingRemote = true
+    defer { isApplyingRemote = false }
+    History.shared.delete(decorator)
+  }
+
   // MARK: - Remote changes
 
   private func apply(_ changes: [ClipChange]) {
@@ -476,7 +493,7 @@ final class SyncBridge {
         } else if clip.isMedia {
           // Shown once its files are here; `ClipSync` reports it again when they arrive.
           if sync.media.hasFiles(for: clip) { insertMedia(clip) }
-        } else {
+        } else if !isFileNameEcho(clip) {
           insert(clip)
         }
       case .deleted(let id):
@@ -640,7 +657,8 @@ enum E2EControl {
     guard let data = object?.data(using: .utf8),
           let command = try? JSONDecoder().decode(Command.self, from: data) else { return }
     // 1.3: images, PDFs and files, found by text in them or in their file names (`text`).
-    if command.op.hasSuffix("Media") {
+    // "deleteUnsyncedMedia" works on history rows that have no clip, below.
+    if command.op.hasSuffix("Media"), command.op != "deleteUnsyncedMedia" {
       Task {
         await handleMedia(command)
         await dump(prefix: command.prefix ?? "PTEST", tag: command.tag ?? command.op, full: false)
@@ -803,6 +821,23 @@ enum E2EControl {
         "collections": clip.collectionIDs.compactMap { names[$0] }
       ]
     }
+    // 1.3 copy matrix: every picture or file row whose title, file names or clip contains the prefix, with or without
+    // a clip: what the row shows, and whether it says it stays on this Mac.
+    let rows: [[String: Any]] = History.shared.allItems.compactMap { decorator in
+      let item = decorator.item
+      guard item.pastronautMediaID != nil || item.imageData != nil || item.pdfData != nil || !item.fileURLs.isEmpty
+      else { return nil }
+      let clip = item.pastronautMediaID.flatMap { id in mirrored.first { $0.id == id } }
+      let names = item.fileURLs.map(\.lastPathComponent)
+      guard item.title.contains(prefix) || names.contains(where: { $0.contains(prefix) })
+              || clip.map({ haystack($0).contains(prefix) }) == true else { return nil }
+      return [
+        "title": item.title, "mediaID": item.pastronautMediaID ?? NSNull(), "kind": clip?.kind.rawValue ?? NSNull(),
+        "hasImage": item.imageData != nil, "files": names, "clipFiles": clip?.media?.files.map(\.name) ?? [],
+        "localOnlyMarker": item.isLocalOnlyMedia,
+        "lastCopiedAt": item.lastCopiedAt.timeIntervalSinceReferenceDate
+      ]
+    }
     let shared = await sync?.sharedSettings
     // Every clip in iCloud (not those kept on this Mac), without its text: titles as a short hash.
     var everything: [[String: Any]] = []
@@ -821,6 +856,7 @@ enum E2EControl {
       "full": everything,
       "media": mediaHistory,
       "mediaMirror": mediaMirror,
+      "rows": rows,
       "shared": [
         "codes": shared?.skipOneTimeCodes ?? false, "cards": shared?.skipCardNumbers ?? false,
         "pinnedOnly": shared?.pinnedOnly ?? false, "mediaSync": shared?.media.syncEnabled ?? true,

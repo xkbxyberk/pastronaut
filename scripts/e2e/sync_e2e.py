@@ -785,6 +785,244 @@ def extended_tests(run, prefix, tag, run_started):
 
 # MARK: - Reporting
 
+# MARK: - Copy matrix (1.3): every kind of copy, both ways, as each device shows it
+
+def make_png(path, side=480):
+    """A colour gradient PNG written by hand: a picture no other test copies, so it is nobody's twin."""
+    import struct
+    import zlib
+    rows = b"".join(b"\0" + bytes(v for x in range(side) for v in (x * 255 // side, y * 255 // side, 128))
+                    for y in range(side))
+
+    def chunk(kind, body):
+        return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
+    with open(path, "wb") as file:
+        file.write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", side, side, 8, 2, 0, 0, 0))
+                   + chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b""))
+
+
+def mac_rows(state, *needles):
+    """This Mac's picture and file rows (E2EControl.dump "rows") whose title or file names contain every needle."""
+    def text(row):
+        return nfc(" ".join([row.get("title") or ""] + row.get("files", []) + row.get("clipFiles", []))).lower()
+    return [r for r in state.get("rows", []) if all(nfc(n).lower() in text(r) for n in needles)]
+
+
+def mac_row_for(state, clip_id):
+    return next((r for r in state.get("rows", []) if r.get("mediaID") == clip_id), None)
+
+
+def names_of(clip):
+    return [nfc(f["name"]) for f in (clip or {}).get("media", {}).get("files", [])]
+
+
+def row_detail(row):
+    if not row:
+        return "no Mac row"
+    return (f"title={row['title'][:60]!r} kind={row.get('kind')} image={row['hasImage']} "
+            f"local-only={row['localOnlyMarker']} files={row.get('clipFiles') or row.get('files')}")
+
+
+def mac_to_iphone(case_id, title, copy, needles, kind, names=None, image_row=False):
+    """A Mac copy that goes to iCloud: the Mac row shows it properly, the iPhone gets the same kind and names."""
+    copy()
+    ok, secs, state = mac_wait(case_id, lambda s: mac_media(s, *needles, mirror=True) is not None, 60,
+                               prefix=needles[-1])
+    mirrored = mac_media(state, *needles, mirror=True) if state else None
+    # The row may still be gaining its picture (a Finder image or PDF) right after the clip is made.
+    time.sleep(3)
+    row = mac_row_for(mac_state(prefix=needles[-1]), mirrored["id"]) if mirrored else None
+    clip, data, ios_secs = ios_wait_media(150, *needles)
+    expected = [nfc(n) for n in names] if names else None
+    got = names_of(clip)
+    if expected and kind == "image":
+        # A picture is optimized on the way (PNG may become HEIC or JPEG): the name keeps its base.
+        same_names = len(got) == 1 and os.path.splitext(got[0])[0] == os.path.splitext(expected[0])[0]
+    else:
+        same_names = expected is None or sorted(got) == sorted(expected)
+    row_ok = (row is not None and "file://" not in row["title"] and not row["localOnlyMarker"]
+              and row["hasImage"] == image_row and (not expected or kind == "image"
+                                                     or sorted(map(nfc, row["clipFiles"])) == sorted(expected)))
+    check(case_id, title,
+          ok and row_ok and clip is not None and clip["kind"] == kind and bool(data) and same_names,
+          f"Mac {secs}s [{row_detail(row)}]; iPhone {ios_secs}s kind={clip and clip['kind']} names={got} "
+          f"bytes={len(data) if data else 0}")
+    return clip
+
+
+def mac_stays(case_id, title, copy, needle):
+    """A Mac copy that may not go to iCloud: its row says so, and neither iCloud nor the iPhone has it."""
+    copy()
+    ok, secs, state = mac_wait(case_id, lambda s: any(r["localOnlyMarker"] for r in mac_rows(s, needle)), 40,
+                               prefix=needle)
+    rows = mac_rows(state, needle) if state else []
+    time.sleep(10)
+    in_cloud = mac_media(mac_state(prefix=needle), needle, mirror=True) is not None
+    on_iphone = ios_media(ios_state(), needle) is not None
+    check(case_id, title, ok and len(rows) == 1 and "file://" not in rows[0]["title"] and not in_cloud and not on_iphone,
+          f"{secs}s rows={[row_detail(r) for r in rows]} in iCloud={in_cloud} on iPhone={on_iphone}")
+
+
+def keyboard_copy(case_id, title, name, mime, timeout=60, expect_download=False):
+    """The keyboard (in Safari, the app closed) copies the clip named `name`; the clipboard keeps the name."""
+    r = ios_step("kbCopy", match=name, timeout=timeout)
+    board = ios_file("e2e-pasteboard.json") or {}
+    names = [nfc(n) for n in board.get("names", [])]
+    downloaded = not expect_download or bool(r.get("message"))
+    # The keyboard's own copy: not the Mac's, brought by Universal Clipboard.
+    local = "com.apple.is-remote-clipboard" not in board.get("types", [])
+    check(case_id, title, r.get("ok") and nfc(name) in names and mime in board.get("types", []) and downloaded and local,
+          f"step={r.get('ok')} keyboard={r.get('keyboard')} found={r.get('found')} tiles={r.get('tiles')} "
+          f"test tiles={r.get('testTiles')} {r.get('testLabels')} cloud={r.get('cloudStatus')!r} "
+          f"message={r.get('message')!r} "
+          f"clipboard names={names} types={board.get('types')}")
+    # The step ends with the app closed; the next checks need it running.
+    ios_open()
+
+
+def copy_matrix(tag):
+    """Each kind of copy, Mac → iPhone and iPhone → Mac, checked on both: the row's title, picture and "Only on
+    This Mac" mark on the Mac; kind and file names on the iPhone; file names kept by the keyboard's copy."""
+    folder = os.path.join(work, f"matrix-{tag}")
+    os.makedirs(folder, exist_ok=True)
+
+    def made(name, body):
+        path = os.path.join(folder, name)
+        with open(path, "wb") as handle:
+            handle.write(body)
+        return path
+
+    started = mac_now() - 1
+    ios_open()
+
+    # X01. Text.
+    text = f"PTEST-{tag} matrix text"
+    mac_copy(text)
+    ok, secs, _ = ios_wait(lambda s: any(e["clip"]["text"] == text for e in s.get("entries", {}).values()), 120)
+    check("X01", "Mac text → iPhone", ok, f"{secs}s")
+    mac_state(op="delete", text=text)
+
+    # X02. Picture data (a screenshot copied to the clipboard).
+    mac_to_iphone("X02", "Mac picture data → iPhone image; Mac row shows the picture",
+                  lambda: mac_copy_image(f"MXIMG {tag}"), ("mximg", tag), "image", image_row=True)
+
+    # X03. PDF data as Preview copies a selection (the PDF and a picture of it).
+    pdf_data_path = os.path.join(folder, "selection.pdf")
+    make_pdf(f"MXSEL {tag}", pdf_data_path)
+    mac_to_iphone("X03", "Mac PDF data (Preview) → iPhone PDF; Mac row shows the page",
+                  lambda: mac_copy_pdf(pdf_data_path), ("mxsel", tag), "pdf", image_row=True)
+
+    # X04. One picture file copied in Finder: sent as a picture, the row shows it and its name, not a path.
+    png_name = f"PTEST-{tag} ekran resmi 20.48.54.png"
+    png_path = os.path.join(folder, png_name)
+    make_png(png_path)
+    mac_to_iphone("X04", "Finder picture file → iPhone image with its name; Mac row shows the picture, no path",
+                  lambda: mac_copy_files([png_path]), (f"PTEST-{tag} ekran", ), "image", names=[png_name],
+                  image_row=True)
+
+    # X05. A PDF file copied in Finder: same name on the iPhone; the Mac row shows its first page.
+    pdf_name = f"PTEST-{tag} Fatura Ekim çğş.pdf"
+    pdf_path = os.path.join(folder, pdf_name)
+    make_pdf(f"MXPDF {tag}", pdf_path)
+    mac_to_iphone("X05", "Finder PDF file → iPhone PDF with its name; Mac row shows page 1, no path",
+                  lambda: mac_copy_files([pdf_path]), (f"PTEST-{tag} Fatura", ), "pdf", names=[pdf_name],
+                  image_row=True)
+
+    # X10. The keyboard copies that PDF (already on the iPhone): the clipboard keeps its name. Universal Clipboard
+    #      may carry the copy to the Mac too; it must not become a second row there.
+    keyboard_copy("X10", "Keyboard copies a Mac PDF with its own name", pdf_name, "com.adobe.pdf")
+    time.sleep(10)
+    rows = mac_rows(mac_state(prefix=tag), f"PTEST-{tag} Fatura")
+    check("X10b", "Keyboard copy makes no second row on the Mac", len(rows) == 1,
+          f"rows={[row_detail(r) for r in rows]}", soft=True)
+
+    # X06. Another file.
+    txt_name = f"PTEST-{tag} notlar.txt"
+    txt_path = made(txt_name, f"matrix {tag}\nikinci satır".encode())
+    mac_to_iphone("X06", "Finder text file → iPhone file with its name", lambda: mac_copy_files([txt_path]),
+                  (txt_name, ), "file", names=[txt_name])
+
+    # X07. Two files at once: one clip with both.
+    two = [f"PTEST-{tag} ikili-a.csv", f"PTEST-{tag} ikili-b.json"]
+    two_paths = [made(two[0], b"a,b\n1,2"), made(two[1], b'{"a": 1}')]
+    mac_to_iphone("X07", "Two Finder files → one iPhone clip with both names", lambda: mac_copy_files(two_paths),
+                  (f"PTEST-{tag} ikili", ), "file", names=two)
+
+    # X08. A folder stays on this Mac, and its row says so.
+    folder_name = f"PTEST-{tag} klasor"
+    folder_path = os.path.join(folder, folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+    made(os.path.join(folder_name, "icerik.txt"), b"x")
+    mac_stays("X08", "Finder folder stays on the Mac, row marked Only on This Mac",
+              lambda: mac_copy_files([folder_path]), folder_name)
+
+    # X09. A file over Largest Item stays on this Mac, and its row says so.
+    limit = mac_state(prefix=tag)["shared"]["maxItemBytes"] or 10_000_000
+    big_name = f"PTEST-{tag} buyuk.bin"
+    big_path = made(big_name, os.urandom(limit + 1_000_000))
+    mac_stays("X09", f"File over Largest Item ({limit // 1_000_000} MB) stays on the Mac, row marked",
+              lambda: mac_copy_files([big_path]), big_name)
+
+    # X11. A Mac PDF made while the iPhone app is closed: the keyboard downloads it and keeps its name.
+    ios_terminate_app()
+    late_name = f"PTEST-{tag} kapaliyken.pdf"
+    late_path = os.path.join(folder, late_name)
+    make_pdf(f"MXLATE {tag}", late_path)
+    mac_copy_files([late_path])
+    mac_wait("X11", lambda s: mac_media(s, late_name, mirror=True) is not None, 60, prefix=tag)
+    time.sleep(10)
+    keyboard_copy("X11", "Keyboard downloads a Mac PDF by itself (app closed) and keeps its name", late_name,
+                  "com.adobe.pdf", timeout=90, expect_download=True)
+
+    # X12. A Finder copy is not saved back as text on the iPhone (its file name rides along as text). Real Finder
+    #      copies and Universal Clipboard can't be made here, so a pass only means nothing went wrong.
+    echoes = [e["clip"]["text"] for e in ios_state().get("entries", {}).values()
+              if e["clip"]["text"] and any(nfc(n) in nfc(e["clip"]["text"]) for n in (png_name, pdf_name, txt_name))]
+    check("X12", "No file name came back as a text clip", not echoes, f"echoes={echoes}", soft=True)
+
+    # P01–P03. iPhone → Mac: the Mac row shows the name (no path), a picture for PDFs and images.
+    ios_open()
+    phone_pdf = f"PTEST-{tag} telefon belge.pdf"
+    pdf_text = make_pdf(f"MXPHONE {tag}", os.path.join(folder, "phone.pdf")).decode("latin-1")
+    phone_txt = f"PTEST-{tag} telefon not.txt"
+    for case_id, name, body, kind, image_row in (("P01", phone_pdf, pdf_text, "pdf", True),
+                                                 ("P02", phone_txt, f"telefon {tag}", "file", False)):
+        r = ios_step("saveFile", f"{name}|{body}", match=name, timeout=40)
+        # The step ends by stopping the app, maybe before it sent the file; open, it sends what is waiting.
+        ios_open()
+        ok, secs, state = mac_wait(case_id, lambda s: any(x.get("mediaID") for x in mac_rows(s, name))
+                                   and all(x["hasImage"] == image_row for x in mac_rows(s, name)), 120, prefix=tag)
+        rows = mac_rows(state, name) if state else []
+        row = rows[0] if rows else None
+        check(case_id, f"iPhone {kind} → Mac row titled by its name" + (", page shown" if image_row else ""),
+              r.get("ok") and ok and len(rows) == 1 and row["kind"] == kind and nfc(row["title"]) == nfc(name)
+              and row["clipFiles"] == [name], f"{secs}s [{row_detail(row)}] rows={len(rows)}")
+    r = ios_step("autoSaveImage", f"MXPIC {tag}", match=f"MXPIC {tag}", timeout=40)
+    ok, secs, state = mac_wait("P03", lambda s: (mac_media(s, "mxpic", tag) or {}).get("hasFiles") is True, 120,
+                               prefix=tag)
+    clip = mac_media(state, "mxpic", tag) if state else None
+    row = mac_row_for(state, clip["id"]) if clip else None
+    check("P03", "iPhone picture → Mac row shows the picture", r.get("ok") and ok and bool(row and row["hasImage"]),
+          f"{secs}s [{row_detail(row)}]")
+
+    # Cleanup: synced clips through the Mac (the iPhone follows), the rest by time.
+    for needle in (f"MXIMG {tag}", f"MXSEL {tag}", f"PTEST-{tag} ekran", pdf_name, txt_name, two[0], late_name, phone_pdf,
+                   phone_txt, f"MXPIC {tag}"):
+        mac_state(op="deleteMedia", text=needle, prefix=tag)
+    mac_state(op="deleteUnsyncedMedia", text=f"{started},{mac_now() + 1}")
+    start = time.time()
+    left = []
+    while time.time() - start < 120:
+        # Started again each round: a push about a delete may not come, a launch fetches what changed.
+        ios_open()
+        left = [media_text(c)[:40] for c in ios_mirror() if c.get("media") and tag in media_text(c)]
+        if not left and not mac_state(prefix=tag).get("rows"):
+            break
+        time.sleep(20)
+    check("X99", "Matrix cleanup: nothing left on either device",
+          not left and not mac_state(prefix=tag).get("rows"), f"iPhone {left}")
+
+
 def check(test_id, title, ok, detail="", soft=False):
     status = "PASS" if ok else ("WARN" if soft else "FAIL")
     results.append((test_id, title, status, detail))
@@ -813,7 +1051,21 @@ def main():
     parser.add_argument("--device", required=True)
     parser.add_argument("--report")
     parser.add_argument("--skip-keyboard", action="store_true")
+    parser.add_argument("--matrix", action="store_true", help="only the copy matrix (1.3)")
     args = parser.parse_args()
+
+    if args.matrix:
+        run = time.strftime("%H%M%S")
+        log(f"Copy matrix {run}, scratch files in {work}")
+        ios_install()
+        state = mac_launch()
+        if check("T00", "Mac sync enabled and running", state["enabled"] and state["running"], state["lastError"] or ""):
+            try:
+                copy_matrix("".join(chr(ord("B") + int(digit)) for digit in run))
+            except Exception as error:  # noqa: BLE001 — still write what ran
+                check("X0X", "Copy matrix ran to the end", False, f"stopped: {error!r}")
+        write_report(f"matrix {run}")
+        return
 
     run = time.strftime("%H%M%S")
     run_started = time.time()

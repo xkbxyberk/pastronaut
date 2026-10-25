@@ -1,4 +1,4 @@
-# App Store: Pastronaut for iPhone and Mac (v5, 2026-10-24: 1.3 for iPhone and Mac)
+# App Store: Pastronaut for iPhone and Mac (v6, 2026-10-25: 1.3 resubmitted, iPhone build 6, Mac build 3)
 
 Copy-ready App Store Connect metadata for one product on two devices, the research behind it, and every form
 answer. Character counts were measured. Everything describes the app as it is at this commit.
@@ -164,7 +164,7 @@ How the 1.3 texts are written (research in §1 and §14):
 - **Short benefit bullets,** one idea each; the honest iPhone limit (only the app on screen reads the clipboard)
   stays, said plainly.
 
-About 2,993 characters in English and 3,163 in Turkish (limit 4,000). The 1.2 text is in git history.
+About 3,035 characters in English and 3,197 in Turkish (limit 4,000). The 1.2 text is in git history.
 
 ### English
 ```
@@ -178,7 +178,7 @@ ONE CLIPBOARD, TWO DEVICES
 
 PASTE ANYTHING, IN ANY APP
 – The Pastronaut keyboard shows your clips as tidy thumbnails, newest first, with the latest copy from your Mac on top
-– Tap a clip to type it; with Full Access, tap a photo or file to put it on the clipboard
+– Tap a clip to type it; with Full Access, tap a photo or file to put it on the clipboard, even one that just arrived from your Mac
 – Paste a list in order: start a queue, and every tap types the next one
 
 PHOTOS, PDFS AND FILES
@@ -235,7 +235,7 @@ TEK PANO, İKİ CİHAZ
 
 HER ŞEYİ, HER UYGULAMADA YAPIŞTIR
 – Pastronaut klavyesi öğelerini en yenisi başta, düzenli küçük resimlerle gösterir; Mac'ten gelen son kopya en üstte
-– Bir öğeye dokun, yazılsın; Tam Erişim'le bir fotoğrafa ya da dosyaya dokun, panoya gitsin
+– Bir öğeye dokun, yazılsın; Tam Erişim'le bir fotoğrafa ya da dosyaya dokun, panoya gitsin; Mac'ten az önce gelmiş olsa bile
 – Bir listeyi sırayla yapıştır: sırayı başlat, her dokunuş sıradakini yazsın
 
 FOTOĞRAFLAR, PDF'LER VE DOSYALAR
@@ -445,7 +445,7 @@ Pastronaut 1.2: yeni bir kat boya ve cep dolusu yeni numara.
 • iCloud'u temizlemek artık öğelerini de götürmüyor: yeniden yükleyene kadar "Yalnızca Bu iPhone'da" kalıyorlar.
 ```
 
-### 1.3 (iPhone build 5, Mac build 2)
+### 1.3 (iPhone build 6, Mac build 3; first sent as iPhone 5 and Mac 2, withdrawn on 2026-10-25)
 Light and a little playful, like 1.1 and 1.2. No "✕" or "›" (App Store Connect refused "✕" in 1.2); bullets (•) are
 fine. Same English text for English (U.S.) and English (U.K.).
 
@@ -453,41 +453,43 @@ fine. Same English text for English (U.S.) and English (U.K.).
 1.3 both apps share one version number. GitHub users come from 0.1.0; their release notes (Sparkle, Adım 7) say the
 same with "0.1.0".
 
-iPhone, English (1,353):
+iPhone, English (1,537):
 ```
 Pastronaut 1.3: your clipboard learned to carry pictures.
 
 • Photos, screenshots, PDFs and files now travel between your Mac and your iPhone. Copy a screenshot on the Mac, and it's on your iPhone before your coffee cools.
 • The words inside images and PDFs are searchable. Type "invoice", find the invoice. Revolutionary, we know.
 • Open a picture to select its text with Live Text, mark up a copy, save it to Photos or Files, or share it.
+• The keyboard fetches a picture or PDF from your Mac by itself, even if you haven't opened the app since. File names come along too.
 • A new filter bar: All, Mac and iPhone in one glass capsule you can slide your finger along, and a filter button for every kind (PDFs included) and your collections. Mix them freely.
 • The + button now holds Paste, Type a Clip, Scan Text and Scan Document. Paste shows up only when there's something to paste.
 • Settings has a new Images & Files page: the largest item, how much iCloud space to use, and image quality.
 • Privacy switches are now shared with your Mac. Set them once, enjoy them twice.
 • Cards from your Mac show the icon of the app they came from.
 • Keep History: let old clips go after a day, a week, a month or a year. Pinned clips and collections stay.
-• The setup guide was rebuilt: one task at a time, one big button, no scrolling treasure hunt. It even checks the paste permission by itself.
+• The setup guide was rebuilt: one task at a time, one big button, no scrolling treasure hunt. Paste permission takes three short steps (try, allow, verify), and it checks each one by itself.
 • Sync got sturdier, thanks to a very picky test that tossed copies between two devices for hours.
 ```
 
-iPhone, Türkçe (1,409):
+iPhone, Türkçe (1,599):
 ```
 Pastronaut 1.3: panon resim taşımayı öğrendi.
 
 • Fotoğraflar, ekran görüntüleri, PDF'ler ve dosyalar artık Mac'inle iPhone'un arasında gidip geliyor. Mac'te bir ekran görüntüsü kopyala; kahven soğumadan iPhone'unda.
 • Görsellerdeki ve PDF'lerdeki kelimeler aranabiliyor. "Fatura" yaz, faturayı bul. Devrim niteliğinde, biliyoruz.
 • Bir resmi aç: Canlı Metin'le metnini seç, bir kopyasını işaretle, Fotoğraflar'a ya da Dosyalar'a kaydet ya da paylaş.
+• Klavye, Mac'ten gelen bir resmi ya da PDF'i kendisi getiriyor; uygulamayı o arada hiç açmamış olsan bile. Dosya adları da yanında geliyor.
 • Yeni süzgeç çubuğu: Tümü, Mac ve iPhone parmağınla kaydırabildiğin tek bir cam kapsülde; yanındaki süzgeç düğmesinde her tür (PDF'ler dahil) ve koleksiyonların. Dilediğin gibi birleştir.
 • + düğmesinde artık Yapıştır, Yazarak Ekle, Metni Tara ve Belge Tara var. Yapıştır yalnızca yapıştıracak bir şey varken görünüyor.
 • Ayarlar'da yeni bir Görseller ve Dosyalar sayfası: en büyük öğe, ne kadar iCloud alanı kullanılacağı ve görsel kalitesi.
 • Gizlilik anahtarları artık Mac'inle ortak. Bir kez ayarla, iki cihazda keyfini sür.
 • Mac'ten gelen kartlarda geldiği uygulamanın simgesi var.
 • Geçmişi Sakla: eski öğeler bir gün, bir hafta, bir ay ya da bir yıl sonra gitsin. Sabitlenenler ve koleksiyondakiler kalır.
-• Kurulum rehberi baştan yapıldı: her seferinde tek iş, tek büyük düğme, kaydırmalı hazine avı yok. Yapıştırma iznini de kendisi kontrol ediyor.
+• Kurulum rehberi baştan yapıldı: her seferinde tek iş, tek büyük düğme, kaydırmalı hazine avı yok. Yapıştırma izni üç kısa adımda (dene, izin ver, doğrula) ve her adımı kendisi kontrol ediyor.
 • Eşitleme sağlamlaştı; iki cihaz arasında saatlerce kopya atıp tutan çok titiz bir test sayesinde.
 ```
 
-Mac, English (1,154):
+Mac, English (1,372):
 ```
 Pastronaut for Mac 1.3. Yes, straight from 1.0: the iPhone app took 1.1 and 1.2 for a spin, and from now on both apps share one version number. The Mac didn't miss a thing; it just arrived fashionably late.
 
@@ -495,6 +497,8 @@ Pastronaut for Mac 1.3. Yes, straight from 1.0: the iPhone app took 1.1 and 1.2 
 • Text in screenshots and PDFs is searchable on both devices.
 • A new filter bar: All, This Mac and iPhone in one capsule, and a filter button for every kind, your collections, pins and dates. What you pick shows as chips you can remove.
 • Give items a title, and titles you give on your iPhone show here too.
+• Pictures and PDFs show their name next to a small preview. Prefer an icon, or just the name? Settings › Appearance.
+• Copies from your iPhone wear a little iPhone where the app icon goes, instead of a question mark.
 • A new Images & Files section in Settings: sync on or off, the largest item, iCloud space and image quality.
 • Privacy switches are shared with your iPhone. Set them once.
 • Advanced settings in plain words: Pause Copying and Ignore Only the Next Copy. The command-line tricks are still there, tucked away.
@@ -502,7 +506,7 @@ Pastronaut for Mac 1.3. Yes, straight from 1.0: the iPhone app took 1.1 and 1.2 
 • Fixes: pins that arrive from your iPhone are kept, and copying something again moves it to the top on both devices.
 ```
 
-Mac, Türkçe (1,240):
+Mac, Türkçe (1,475):
 ```
 Pastronaut for Mac 1.3. Evet, 1.0'dan doğrudan 1.3'e: 1.1 ve 1.2'yi iPhone uygulaması bizim için denedi, bundan sonra iki uygulama aynı sürüm numarasını taşıyor. Mac hiçbir şey kaçırmadı; yalnızca şık bir gecikmeyle geldi.
 
@@ -510,6 +514,8 @@ Pastronaut for Mac 1.3. Evet, 1.0'dan doğrudan 1.3'e: 1.1 ve 1.2'yi iPhone uygu
 • Ekran görüntülerindeki ve PDF'lerdeki metin iki cihazda da aranabiliyor.
 • Yeni süzgeç çubuğu: Tümü, Bu Mac ve iPhone tek bir kapsülde; yanındaki süzgeç düğmesinde her tür, koleksiyonların, sabitlenenler ve tarihler. Seçtiklerin kaldırılabilir etiketler olarak görünüyor.
 • Öğelere başlık ver; iPhone'da verdiğin başlıklar da burada görünüyor.
+• Resimler ve PDF'ler küçük bir önizlemenin yanında adlarıyla görünüyor. Simge ya da yalnızca ad mı istersin? Ayarlar › Görünüş.
+• iPhone'dan gelen kopyalarda uygulama simgesinin yerinde artık soru işareti değil, küçük bir iPhone var.
 • Ayarlar'da yeni Görseller ve Dosyalar bölümü: eşitlemeyi aç ya da kapat, en büyük öğe, iCloud alanı ve görsel kalitesi.
 • Gizlilik anahtarları iPhone'unla ortak. Bir kez ayarla.
 • Gelişmiş ayarlar artık anlaşılır: Kopyalamayı Duraklat ve Yalnızca Sonraki Kopyayı Yok Say. Komut satırı numaraları hâlâ orada, bir kenarda.
@@ -688,7 +694,8 @@ New in 1.3:
 - Images, PDFs and files: saved from the clipboard (the system Paste button in the + menu at the bottom, or Save Clipboard on Opening), from the Share sheet and "Save to Pastronaut", and from Scan Document. With iCloud sync they go to the user's private CloudKit database; file contents are encrypted on the device before upload. Settings › Sync › Images & Files sets the largest item and the iCloud space they may use.
 - Photos: add-only permission, asked only when the user taps "Save to Photos" on an image. The app never reads the photo library.
 - Text in images and PDFs is recognized on the device (Apple's text recognition and PDFKit) so it can be searched. Nothing is sent anywhere for this.
-- Keyboard: tapping a text clip types it, as before, with or without Full Access. Tapping an image or file puts it on the clipboard; that needs Full Access, and without it the keyboard shows a short explanation instead.
+- Keyboard: tapping a text clip types it, as before, with or without Full Access. Tapping an image or file puts it on the clipboard; that needs Full Access, and without it the keyboard shows a short explanation instead. If the file isn't on the device yet (copied on the Mac while the app was closed), the keyboard downloads that one file, up to 15 MB, from the user's own private CloudKit database, the same database it already reads for new clips. It makes no other network requests.
+- Setup guide, paste step: iOS shows the setting "Paste from Other Apps" only after the app has asked once. So the guide first asks the user to copy a word in another app and come back (iOS asks; any answer makes the setting appear), then opens the app's page in Settings to choose Allow, then checks again.
 - Paste moved from the top bar into the + menu. It is the system Paste button and appears only while the clipboard holds something.
 - App icons on cards come from the user's own Mac through the same private iCloud database.
 ```
@@ -701,6 +708,8 @@ New in 1.3:
 - A file copied in Finder is read at the moment it is copied, inside the app sandbox. For files in Desktop, Documents or Downloads macOS may ask once for access to that folder; without it the item stays on this Mac only.
 - Text in screenshots and PDFs is recognized on the Mac (Apple's text recognition and PDFKit) for search.
 - Settings › Advanced: Pause Copying and Ignore Only the Next Copy (the same switches as Option-click and Option-Shift-click on the menu bar icon).
+- A photo or file copied on an iPhone reaches the Mac's clipboard through Universal Clipboard as a file the sandboxed app can't keep. The app then shows a short notice and does not add an empty row; the item arrives through iCloud once Pastronaut for iPhone has saved it (iOS lets only the app on screen read the clipboard).
+- Settings › Appearance › Picture and PDF rows: Preview and Name (default), Icon and Name, or Name Only.
 ```
 
 ### iPhone (1.2)

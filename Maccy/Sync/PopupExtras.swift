@@ -8,6 +8,7 @@ import SwiftUI
 // gain one-line hooks (marked "// Pastronaut").
 
 extension HistoryAge: Defaults.Serializable {}
+extension MediaRowStyle: Defaults.Serializable {}
 
 extension Defaults.Keys {
   /// UI tests use Maccy's isolated preferences, like the Maccy settings these sit next to.
@@ -23,6 +24,7 @@ extension Defaults.Keys {
   static let pausedUntil = Key<Date?>("pastronautPausedUntil", default: nil, suite: extrasSuite)
   static let historyAge = Key<HistoryAge>("pastronautHistoryAge", default: .forever, suite: extrasSuite)
   static let hideDuringScreenSharing = Key<Bool>("pastronautHideDuringScreenSharing", default: false, suite: extrasSuite)
+  static let mediaRowStyle = Key<MediaRowStyle>("pastronautMediaRowStyle", default: .previewAndName, suite: extrasSuite)
 }
 
 @MainActor
@@ -382,6 +384,62 @@ struct HideDuringScreenSharingToggle: View {
       Text("Hide during screen sharing and recording", tableName: "Pastronaut")
     }
     .help(Text("Other people in a call, and screenshots, won't see your clipboard history.", tableName: "Pastronaut"))
+  }
+}
+
+// MARK: - Picture and PDF rows (1.3)
+
+/// How a row with a picture (an image, or a PDF's first page) looks in the popup. The large preview (Space) shows
+/// the picture whichever is chosen.
+enum MediaRowStyle: String, CaseIterable, Identifiable {
+  /// A small picture, then the name and "where · when".
+  case previewAndName
+  /// The kind's icon, like files and text.
+  case iconAndName
+  /// The name and "where · when" alone.
+  case nameOnly
+
+  var id: Self { self }
+
+  var title: String {
+    switch self {
+    case .previewAndName: String(localized: "Preview and Name", table: "Pastronaut")
+    case .iconAndName: String(localized: "Icon and Name", table: "Pastronaut")
+    case .nameOnly: String(localized: "Name Only", table: "Pastronaut")
+    }
+  }
+}
+
+/// The picture of a "Preview and Name" row: Maccy's image height tall, in a column of one width so names line up.
+struct MediaRowPicture: View {
+  let image: NSImage
+  @Default(.imageMaxHeight) private var height
+
+  var body: some View {
+    let side = CGFloat(height)
+    Image(nsImage: image)
+      .resizable()
+      .scaledToFit()
+      .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+      .frame(width: side * 1.5, height: side)
+      .accessibilityHidden(true)
+  }
+}
+
+/// Settings › Appearance, above Maccy's image height (which only the preview uses).
+struct MediaRowStylePicker: View {
+  @Default(.mediaRowStyle) private var style
+
+  var body: some View {
+    Picker("", selection: $style) {
+      ForEach(MediaRowStyle.allCases) { style in
+        Text(verbatim: style.title).tag(style)
+      }
+    }
+    .labelsHidden()
+    .frame(width: 141, alignment: .leading)
+    .help(Text("Space opens the large preview with the picture in every style.", tableName: "Pastronaut"))
+    .accessibilityLabel(Text("Picture and PDF rows:", tableName: "Pastronaut"))
   }
 }
 

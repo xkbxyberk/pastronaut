@@ -380,6 +380,14 @@ import UniformTypeIdentifiers
     #expect(page.count <= MediaRecord.maxThumbnailBytes)
   }
 
+  /// A PDF's history row on the Mac shows its first page, drawn large enough for the Space preview.
+  @Test func pdfFirstPageIsDrawnForTheRow() throws {
+    let picture = try #require(MediaProcessing.pagePicture(ofPDF: pdf(text: "Fatura 2026")))
+    let size = try #require(MediaProcessing.pixelSize(of: picture))
+    #expect(size.height == 1600 && size.width == 1200)
+    #expect(MediaProcessing.pagePicture(ofPDF: Data("not a pdf".utf8)) == nil)
+  }
+
   @Test func pdfTextIsReadForSearch() {
     #expect(MediaProcessing.text(inPDF: pdf(text: "Fatura 2026"))?.contains("Fatura 2026") == true)
     #expect(MediaProcessing.text(inPDF: Data("not a pdf".utf8)) == nil)
@@ -581,6 +589,110 @@ import UniformTypeIdentifiers
     #expect(!entry(png, at: date.addingTimeInterval(60)).replaces(server))
     #expect(!entry(Data(repeating: 2, count: 200), at: date.addingTimeInterval(-60)).replaces(server))
     #expect(entry(Data(repeating: 2, count: 200), at: date.addingTimeInterval(60)).replaces(server))
+  }
+  /// Universal Clipboard brings the original picture, sync the optimized copy: the same picture by size or by
+  /// shape after scaling down, and only within five minutes (1.3 TestFlight: one iPhone picture, several Mac rows).
+  @Test func picturesFromBothWaysAreTwins() throws {
+    let clip = imageClip()
+    let media = try #require(clip.media)
+    #expect(media.isSamePicture(width: 1200, height: 800, copiedAt: date.addingTimeInterval(20), as: date))
+    #expect(!media.isSamePicture(width: 1200, height: 801, copiedAt: date, as: date))
+    // The iPhone app saves when it is opened: up to an hour after the copy, not more.
+    #expect(media.isSamePicture(width: 1200, height: 800, copiedAt: date.addingTimeInterval(-1800), as: date))
+    #expect(!media.isSamePicture(width: 1200, height: 800, copiedAt: date.addingTimeInterval(4000), as: date))
+    // A 48 MP photo sent at most 4096 pixels long.
+    let scaled = ClipMedia(kind: .image, files: media.files, pixelWidth: 4096, pixelHeight: 3072)
+    #expect(scaled.isSamePicture(width: 8064, height: 6048, copiedAt: date, as: date))
+    #expect(!scaled.isSamePicture(width: 6048, height: 8064, copiedAt: date, as: date))
+    #expect(!scaled.isSamePicture(width: 8064, height: 4536, copiedAt: date, as: date))
+    #expect(!ClipMedia(kind: .pdf, files: media.files).isSamePicture(width: 1200, height: 800, copiedAt: date, as: date))
+  }
+  /// Two screenshots of one iPhone have the same size: only the pictures tell them apart. The same picture
+  /// re-encoded and scaled down is still the same.
+  @Test func samePictureIsToldByItsContent() throws {
+    func picture(_ draw: (CGContext) -> Void, width: Int = 600, height: Int = 1300) -> Data {
+      let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                              space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+      draw(context)
+      return MediaProcessing.encode(context.makeImage()!, as: .png, quality: 1)!
+    }
+    let first = picture { context in
+      context.setFillColor(gray: 0.95, alpha: 1); context.fill(CGRect(x: 0, y: 0, width: 600, height: 1300))
+      context.setFillColor(red: 0.1, green: 0.3, blue: 0.8, alpha: 1); context.fill(CGRect(x: 40, y: 900, width: 520, height: 300))
+      context.setFillColor(gray: 0.2, alpha: 1); context.fill(CGRect(x: 40, y: 200, width: 300, height: 120))
+    }
+    let second = picture { context in
+      context.setFillColor(gray: 0.1, alpha: 1); context.fill(CGRect(x: 0, y: 0, width: 600, height: 1300))
+      context.setFillColor(red: 0.9, green: 0.6, blue: 0.1, alpha: 1); context.fill(CGRect(x: 300, y: 100, width: 260, height: 700))
+    }
+    // As iPhone sends it: other bytes (HEIC), lossy.
+    let image = try #require(MediaProcessing.cgImage(of: first))
+    let reencoded = try #require(MediaProcessing.encode(image, as: .heic, quality: 0.5))
+    #expect(reencoded != first)
+    #expect(MediaProcessing.isSamePicture(first, reencoded))
+    #expect(!MediaProcessing.isSamePicture(first, second))
+  }
+  /// A Finder copy's name, which Universal Clipboard brings to the iPhone as text, is not a clip of its own.
+  @Test func aFileNameIsAnEchoOfTheMacClip() {
+    let file = ClipMedia.File(name: "Ekran Resmi 2026-10-24 20.48.54.heic", type: "public.heic", byteCount: 9, sha256: "")
+    let clip = Clip(
+      media: ClipMedia(kind: .image, files: [file], pixelWidth: 3420, pixelHeight: 2224),
+      contentHashes: [ClipMedia.sha256(Data("desktop".utf8))], sourceDevice: .mac, firstCopiedAt: date
+    )
+    #expect(clip.media?.isNamed(by: "Ekran Resmi 2026-10-24 20.48.54") == true)
+    #expect(clip.media?.isNamed(by: "Ekran Resmi 2026-10-24 20.48.54.png\n") == true)
+    #expect(clip.media?.isNamed(by: "Ekran Resmi 2026-10-24") == false)
+    #expect(clip.media?.isNamed(by: "Ekran Resmi 2026-10-24 20.48.54\nmore") == false)
+    #expect([clip].fileNamed(by: "Ekran Resmi 2026-10-24 20.48.54", near: date.addingTimeInterval(60))?.id == clip.id)
+    #expect([clip].fileNamed(by: "Ekran Resmi 2026-10-24 20.48.54", near: date.addingTimeInterval(7200)) == nil)
+  }
+  /// A named picture, PDF or file goes by its name on both devices; one copied without a name by its text
+  /// (1.3 copy matrix: an iPhone PDF showed its first text line on the Mac, a Finder PDF its name).
+  @Test func aNamedFileGoesByItsName() {
+    func media(_ kind: Clip.Kind, _ names: [String], text: String? = "FATURA\nikinci satır") -> ClipMedia {
+      ClipMedia(kind: kind, files: names.map { ClipMedia.File(name: $0, type: "", byteCount: 1, sha256: "") },
+                recognizedText: text)
+    }
+    #expect(media(.pdf, ["Fatura Ekim.pdf"]).caption == "Fatura Ekim.pdf")
+    #expect(media(.pdf, ["Document 2026-10-25 at 01.19.36.pdf"]).caption == "FATURA")
+    #expect(media(.pdf, ["Document 2026-10-25 at 01.19.36.pdf"], text: nil).caption == "Document 2026-10-25 at 01.19.36.pdf")
+    #expect(media(.file, ["a.csv", "b.json"]).caption == "a.csv, b.json")
+    #expect(media(.image, ["ekran resmi.heic"]).caption == "ekran resmi.heic")
+    #expect(media(.image, ["Image 2026-10-25 at 01.19.23.heic"]).caption == "FATURA")
+    #expect(media(.image, ["Image 2026-10-25 at 01.19.23.heic"], text: nil).caption == "Image 2026-10-25 at 01.19.23.heic")
+    #expect(!MediaProcessing.isDefaultName("Document 2026-10-25 at 01.19.36 kopya.pdf"))
+  }
+  /// A state that believed its icons were in iCloud, written by a build of the other environment or before the
+  /// fix, sends them once more; after that, only an environment change does (1.3 TestFlight: no icons arrived).
+  @Test func iconsGoUpAgainAfterAnEnvironmentChange() throws {
+    let saved = ClipRecord.systemFields(of: AppIconRecord.record(
+      for: AppIcon(bundleIdentifier: "com.apple.Safari", name: "Safari", png: Data(repeating: 1, count: 200)), key: key))
+    var state = ClipSync.PersistedState()
+    state.appIcons["com.apple.Safari"] = ClipSync.AppIconEntry(
+      name: "Safari", sha256: "x", modifiedAt: date, systemFields: saved)
+    // Written by 1.3 (5): no version, no environment.
+    let old = try JSONDecoder().decode(ClipSync.PersistedState.self, from: JSONEncoder().encode(state))
+    var upgraded = old
+    let markedUpgraded = upgraded.adopt(environment: "production")
+    #expect(markedUpgraded)
+    #expect(upgraded.appIcons["com.apple.Safari"]?.systemFields == nil)
+    #expect(upgraded.environment == "production")
+
+    // Once sent again, the same environment leaves icons alone; the other one marks them again.
+    upgraded.appIcons["com.apple.Safari"]?.systemFields = saved
+    var same = try JSONDecoder().decode(ClipSync.PersistedState.self, from: JSONEncoder().encode(upgraded))
+    let markedSame = same.adopt(environment: "production")
+    #expect(!markedSame)
+    #expect(same.appIcons["com.apple.Safari"]?.systemFields != nil)
+    var other = same
+    let markedOther = other.adopt(environment: "development")
+    #expect(markedOther)
+    #expect(other.appIcons["com.apple.Safari"]?.systemFields == nil)
+    // Without an environment (an app that doesn't tell) nothing changes after the one-time resend.
+    var unknown = same
+    let markedUnknown = unknown.adopt(environment: nil)
+    #expect(!markedUnknown)
+    #expect(unknown.environment == "production")
   }
   /// An icon record saved under an older key is a stray; system fields of another record are never built on.
   @Test func strayIconRecordsAndForeignSystemFieldsAreNotUsed() throws {

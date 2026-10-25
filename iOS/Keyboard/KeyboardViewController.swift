@@ -156,7 +156,9 @@ final class KeyboardModel {
 
     let pasteboard = UIPasteboard.general
     let lastCaptured = defaults?.object(forKey: lastCapturedChangeCountKey) as? Int
+    // A Finder copy from the Mac carries its file name as text: the Mac sends the file itself.
     hasNewClip = hasFullAccess && pasteboard.hasStrings && pasteboard.changeCount != lastCaptured
+      && !pasteboard.contains(pasteboardTypes: [AutoCapture.finderCopyType])
     // "Save Clipboard on Opening" (app settings): save the new copy without waiting for the Paste button.
     // Texts already in the history (often a Mac copy brought by Universal Clipboard) are left alone.
     if hasNewClip, AutoCapture.isActive(in: defaults),
@@ -181,26 +183,43 @@ final class KeyboardModel {
   }
 
   /// What the keyboard last said about an image or a file (1.3); cleared after a few seconds.
-  enum MediaMessage: Equatable { case copied, needsFullAccess, notDownloaded }
+  enum MediaMessage: Equatable { case copied, needsFullAccess, downloading, notDownloaded }
   private(set) var mediaMessage: MediaMessage?
   @ObservationIgnored private var mediaMessageTask: Task<Void, Never>?
 
   /// A keyboard can't put an image into a text field; it puts it on the clipboard (Full Access) to paste.
   private func copyMedia(_ clip: Clip) {
-    let message: MediaMessage
-    if !hasFullAccess {
-      message = .needsFullAccess
-    } else if MediaPasteboard.copy(clip, lowMemory: true) {
-      // Our own copy: not a new clip to save.
-      defaults?.set(UIPasteboard.general.changeCount, forKey: lastCapturedChangeCountKey)
-      message = .copied
-    } else {
-      message = .notDownloaded
+    guard hasFullAccess else { return show(.needsFullAccess) }
+    if MediaPasteboard.copy(clip, lowMemory: true) { return copied() }
+    // Not on this iPhone yet (the app hasn't run since the Mac copied it): small enough, the keyboard fetches it.
+    guard let cloud, let media = clip.media, media.totalBytes <= KeyboardCloud.maxDownloadBytes else {
+      return show(.notDownloaded)
     }
+    show(.downloading, for: nil)
+    Task { [weak self] in
+      let downloaded = await cloud.downloadFiles(of: clip)
+      guard let self else { return }
+      if downloaded, MediaPasteboard.copy(clip, lowMemory: true) {
+        copied()
+      } else {
+        show(.notDownloaded)
+      }
+    }
+  }
+
+  private func copied() {
+    // Our own copy: not a new clip to save.
+    defaults?.set(UIPasteboard.general.changeCount, forKey: lastCapturedChangeCountKey)
+    show(.copied)
+  }
+
+  /// Shows `message`, and hides it after `seconds` (nil: until the next message).
+  private func show(_ message: MediaMessage, for seconds: Double? = 4) {
     mediaMessage = message
     mediaMessageTask?.cancel()
+    guard let seconds else { return }
     mediaMessageTask = Task { [weak self] in
-      try? await Task.sleep(for: .seconds(4))
+      try? await Task.sleep(for: .seconds(seconds))
       guard !Task.isCancelled else { return }
       self?.mediaMessage = nil
     }
@@ -390,6 +409,8 @@ final class KeyboardModel {
     hasNewClip = false
     // Over 100 KB (or only spaces) can't sync: it would show here until the app quietly dropped it.
     guard SyncPolicy.default.isEligible(text) else { return }
+    // The name of a file the Mac copied, which Universal Clipboard brings as text: the Mac's clip is the copy.
+    guard clips.fileNamed(by: text, near: .now) == nil else { return }
     let clip = Clip(text: text, sourceDevice: .iphone)
     try? files.appendToInbox(clip)
     reload()
@@ -653,12 +674,21 @@ private struct LatestFromMacKey: View {
       HStack(spacing: 9) {
         Image(systemName: "laptopcomputer")
           .font(.system(size: 15, weight: .semibold))
+        // A picture or file from the Mac has no text: its thumbnail and name instead.
+        if clip.isMedia, let thumbnail = MediaFiles.thumbnail(for: clip) {
+          Image(uiImage: thumbnail)
+            .resizable()
+            .scaledToFill()
+            .frame(width: 32, height: 32)
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .accessibilityHidden(true)
+        }
         VStack(alignment: .leading, spacing: 1) {
           Text("From Mac")
             .font(.system(size: 10, weight: .semibold))
             .textCase(.uppercase)
             .opacity(0.85)
-          Text(clip.text.keyboardPreview)
+          Text(clip.isMedia ? (clip.title ?? clip.mediaCaption ?? "") : clip.text.keyboardPreview)
             .font(.system(size: 15, weight: .semibold))
             .lineLimit(1)
         }
@@ -1177,7 +1207,7 @@ private struct MediaMessageBar: View {
   var body: some View {
     HStack(spacing: 8) {
       Image(systemName: symbol)
-        .foregroundStyle(message == .copied ? Color.accentColor : Color.orange)
+        .foregroundStyle(message == .copied || message == .downloading ? Color.accentColor : Color.orange)
       VStack(alignment: .leading, spacing: 1) {
         Text(title).font(.system(size: 13, weight: .bold))
         Text(detail).font(.system(size: 11.5)).foregroundStyle(.secondary)
@@ -1196,6 +1226,7 @@ private struct MediaMessageBar: View {
     switch message {
     case .copied: "checkmark.circle.fill"
     case .needsFullAccess: "lock.fill"
+    case .downloading: "icloud.and.arrow.down"
     case .notDownloaded: "icloud.and.arrow.down"
     }
   }
@@ -1204,6 +1235,7 @@ private struct MediaMessageBar: View {
     switch message {
     case .copied: "Copied"
     case .needsFullAccess: "Needs Full Access"
+    case .downloading: "Downloading from iCloud…"
     case .notDownloaded: "Not on this iPhone yet"
     }
   }
@@ -1212,6 +1244,7 @@ private struct MediaMessageBar: View {
     switch message {
     case .copied: "Touch and hold the text field, then choose Paste."
     case .needsFullAccess: "Images and files need Allow Full Access. Text always types."
+    case .downloading: "It goes to the clipboard as soon as it's here."
     case .notDownloaded: "Open Pastronaut once to download it."
     }
   }

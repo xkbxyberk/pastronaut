@@ -56,7 +56,16 @@ struct ListItemView<Title: View, ID: Hashable>: View {
 
   var body: some View {
     HStack(spacing: 0) {
-      if showIcons, let appIcon {
+      if showIcons, clipInfo?.showsIPhoneBadge == true {
+        // Pastronaut: the iPhone instead of a question mark (iOS doesn't say which app a copy came from).
+        VStack {
+          Spacer(minLength: 0)
+          IPhoneBadge()
+          Spacer(minLength: 0)
+        }
+        .padding(.leading, 4)
+        .padding(.vertical, 5)
+      } else if showIcons, let appIcon {
         VStack {
           Spacer(minLength: 0)
           AppImageView(appImage: appIcon, size: NSSize(width: 15, height: 15))
@@ -69,8 +78,13 @@ struct ListItemView<Title: View, ID: Hashable>: View {
       Spacer()
         .frame(width: showIcons ? 5 : 10)
 
-      if let clipInfo {
+      if let clipInfo, clipInfo.showsIcon {
         ClipContentIcon(kind: clipInfo.kind, colorHex: clipInfo.colorHex, isSelected: isSelected)
+          .padding(.trailing, 8)
+          .padding(.vertical, 5)
+      } else if let clipInfo, image == nil {
+        // Pastronaut: "Name Only" keeps the icon's place, so names line up with text rows.
+        ClipContentIcon(kind: clipInfo.kind).hidden()
           .padding(.trailing, 8)
           .padding(.vertical, 5)
       }
@@ -83,13 +97,19 @@ struct ListItemView<Title: View, ID: Hashable>: View {
           .padding(.vertical, 5)
       }
 
-      if let image {
+      if let image, clipInfo != nil {
+        // Pastronaut: a small picture in a column of its own, with the name and "where · when" next to it.
+        MediaRowPicture(image: image)
+          .padding(.trailing, 8)
+          .padding(.vertical, 5)
+      } else if let image {
         Image(nsImage: image)
           .accessibilityIdentifier("copy-history-item")
           .accessibilityHidden(true)
           .padding(.trailing, 5)
           .padding(.vertical, 5)
-      } else if let clipInfo {
+      }
+      if let clipInfo {
         VStack(alignment: .leading, spacing: 1) {
           ListItemTitleView(attributedTitle: attributedTitle, title: title)
           HStack(spacing: 4) {
@@ -106,7 +126,7 @@ struct ListItemView<Title: View, ID: Hashable>: View {
         .accessibilityHidden(true)
         .padding(.trailing, 5)
         .padding(.vertical, 4)
-      } else {
+      } else if image == nil {
         ListItemTitleView(attributedTitle: attributedTitle, title: title)
           .accessibilityHidden(true)
           .padding(.trailing, 5)

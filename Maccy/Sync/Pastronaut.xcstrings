@@ -1994,6 +1994,116 @@
           }
         }
       }
+    },
+    "Only on This Mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca bu Mac'te"
+          }
+        }
+      }
+    },
+    "Picture from iPhone: open Pastronaut on the iPhone to bring it here": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone'dan resim: iPhone'da Pastronaut'u açınca buraya gelir"
+          }
+        }
+      }
+    },
+    "File from iPhone: open Pastronaut on the iPhone to bring it here": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone'dan dosya: iPhone'da Pastronaut'u açınca buraya gelir"
+          }
+        }
+      }
+    },
+    "Picture and PDF rows:": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resim ve PDF satırları:"
+          }
+        }
+      }
+    },
+    "Preview and Name": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önizleme ve ad"
+          }
+        }
+      }
+    },
+    "Icon and Name": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simge ve ad"
+          }
+        }
+      }
+    },
+    "Name Only": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca ad"
+          }
+        }
+      }
+    },
+    "Space opens the large preview with the picture in every style.": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boşluk tuşu, her seçenekte resmi büyük önizlemede açar."
+          }
+        }
+      }
+    },
+    "Picture %lld × %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görsel %lld × %lld"
+          }
+        }
+      }
+    },
+    "PDF Document": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF belgesi"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

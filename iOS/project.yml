@@ -17,7 +17,7 @@ settings:
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_EMIT_LOC_STRINGS: YES
     MARKETING_VERSION: "1.3"  # Same version on iPhone, Mac App Store and GitHub; see docs/pastronaut/SURUM.md
-    CURRENT_PROJECT_VERSION: "5"
+    CURRENT_PROJECT_VERSION: "6"
 targets:
   Pastronaut:
     type: application

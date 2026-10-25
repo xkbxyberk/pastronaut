@@ -1,4 +1,5 @@
 import AppKit
+import Defaults
 import PastronautCore
 import UniformTypeIdentifiers
 import XCTest
@@ -103,9 +104,85 @@ class SyncMediaTests: XCTestCase {
     XCTAssertNil(SyncBridge.clip(for: image, modifiedAt: .now))
   }
 
+  /// Settings › Appearance › Picture and PDF rows: a picture row shows its picture, the kind's icon or neither, and
+  /// always a name ("Picture 64 × 32" when it has none).
+  func testPictureRowsFollowTheChosenStyle() throws {
+    let image = NSImage(size: NSSize(width: 64, height: 32), flipped: false) { rect in
+      NSColor.systemTeal.setFill()
+      rect.fill()
+      return true
+    }
+    let png = try XCTUnwrap(NSBitmapImageRep(data: XCTUnwrap(image.tiffRepresentation))?.representation(using: .png, properties: [:]))
+    let picture = item([(.png, png)])
+    let pdf = item([(.pdf, Data("%PDF-1.4".utf8)), (.png, png)])
+    pdf.title = "Fatura Ekim.pdf"
+    let text = item([(.string, Data("plain text".utf8))])
+    defer { Defaults.reset(.mediaRowStyle) }
+
+    Defaults[.mediaRowStyle] = .previewAndName
+    var row = try XCTUnwrap(ClipRowInfo(HistoryItemDecorator(picture)))
+    XCTAssertEqual(row.kind, .image)
+    XCTAssertTrue(row.showsPicture)
+    XCTAssertFalse(row.showsIcon)
+    XCTAssertEqual(row.name, SyncBridge.pictureTitle(width: 64, height: 32))
+    row = try XCTUnwrap(ClipRowInfo(HistoryItemDecorator(pdf)))
+    XCTAssertEqual(row.kind, .pdf)
+    XCTAssertNil(row.name, "its own title shows")
+
+    Defaults[.mediaRowStyle] = .iconAndName
+    row = try XCTUnwrap(ClipRowInfo(HistoryItemDecorator(picture)))
+    XCTAssertFalse(row.showsPicture)
+    XCTAssertTrue(row.showsIcon)
+
+    Defaults[.mediaRowStyle] = .nameOnly
+    row = try XCTUnwrap(ClipRowInfo(HistoryItemDecorator(picture)))
+    XCTAssertFalse(row.showsPicture)
+    XCTAssertFalse(row.showsIcon)
+    // Text keeps its icon whatever is chosen.
+    XCTAssertTrue(try XCTUnwrap(ClipRowInfo(HistoryItemDecorator(text))).showsIcon)
+  }
+
+  /// iOS never says which app a copy came from: an iPhone row shows the iPhone where the app icon would be, not a
+  /// question mark. A Mac row, or an iPhone row that names its app, doesn't.
+  func testIPhoneRowsShowTheIPhoneInsteadOfAnUnknownApp() throws {
+    let fromIPhone = item([(.string, Data("from the iPhone".utf8)), (.pastronautFromIPhone, Data())])
+    XCTAssertTrue(try XCTUnwrap(ClipRowInfo(HistoryItemDecorator(fromIPhone))).showsIPhoneBadge)
+    let named = item([(.string, Data("named app".utf8)), (.pastronautFromIPhone, Data())])
+    named.application = "com.apple.mobilesafari"
+    XCTAssertFalse(try XCTUnwrap(ClipRowInfo(HistoryItemDecorator(named))).showsIPhoneBadge)
+    let mac = item([(.string, Data("from this Mac".utf8))])
+    XCTAssertFalse(try XCTUnwrap(ClipRowInfo(HistoryItemDecorator(mac))).showsIPhoneBadge)
+  }
+
+  /// A picture synced without a name and without text goes by its size; one with a name by its name.
+  func testUnnamedPicturesGoByTheirSize() {
+    let unnamed = ClipMedia.File(name: "Image 2026-10-25 at 02.45.12.heic", type: UTType.heic.identifier, byteCount: 1, sha256: "x")
+    let clip = Clip(media: ClipMedia(kind: .image, files: [unnamed], pixelWidth: 1944, pixelHeight: 1222),
+                    contentHashes: ["d"], sourceDevice: .iphone)
+    XCTAssertEqual(SyncBridge.mediaTitle(of: clip), SyncBridge.pictureTitle(width: 1944, height: 1222))
+    let named = ClipMedia.File(name: "ekran resmi.heic", type: UTType.heic.identifier, byteCount: 1, sha256: "x")
+    let namedClip = Clip(media: ClipMedia(kind: .image, files: [named], pixelWidth: 10, pixelHeight: 10),
+                         contentHashes: ["e"], sourceDevice: .iphone)
+    XCTAssertEqual(SyncBridge.mediaTitle(of: namedClip), "ekran resmi.heic")
+  }
+
+  /// A PDF from the iPhone's Files app came by Universal Clipboard as types without bytes, an empty row (1.3).
+  func testACopyWithoutBytesIsNotARow() {
+    let remote = NSPasteboard.PasteboardType("com.apple.is-remote-clipboard")
+    XCTAssertTrue(item([(NSPasteboard.PasteboardType("com.apple.DocumentManager.FINode.File"), nil),
+                        (.fileURL, nil), (remote, nil)]).hasNoData)
+    XCTAssertTrue(item([(.fileURL, Data())]).hasNoData)
+    XCTAssertFalse(item([(.fileURL, Data("file:///a.pdf".utf8)), (remote, nil)]).hasNoData)
+    XCTAssertFalse(item([]).hasNoData)
+  }
+
   func testMediaTitlesUseTheTextOrTheFileNames() {
     let file = ClipMedia.File(name: "Invoice.pdf", type: UTType.pdf.identifier, byteCount: 1, sha256: "x")
-    let withText = Clip(media: ClipMedia(kind: .pdf, files: [file], recognizedText: "Invoice 42\nTotal"), contentHashes: ["a"], sourceDevice: .iphone)
+    // A named PDF goes by its name, as Finder shows it; one copied without a name by its text (1.3 copy matrix).
+    let named = Clip(media: ClipMedia(kind: .pdf, files: [file], recognizedText: "Invoice 42\nTotal"), contentHashes: ["a"], sourceDevice: .iphone)
+    XCTAssertEqual(SyncBridge.mediaTitle(of: named), "Invoice.pdf")
+    let unnamed = ClipMedia.File(name: "Document 2026-10-25 at 01.19.36.pdf", type: UTType.pdf.identifier, byteCount: 1, sha256: "x")
+    let withText = Clip(media: ClipMedia(kind: .pdf, files: [unnamed], recognizedText: "Invoice 42\nTotal"), contentHashes: ["c"], sourceDevice: .iphone)
     XCTAssertEqual(SyncBridge.mediaTitle(of: withText), "Invoice 42")
     let plain = Clip(media: ClipMedia(kind: .file, files: [file, file]), contentHashes: ["b"], sourceDevice: .iphone)
     XCTAssertEqual(SyncBridge.mediaTitle(of: plain), "Invoice.pdf, Invoice.pdf")

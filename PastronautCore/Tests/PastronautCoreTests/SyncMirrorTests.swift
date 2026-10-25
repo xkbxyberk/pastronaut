@@ -211,6 +211,34 @@ import Testing
     #expect(files.currentCollections().map(\.id) == [collection.id])
   }
 
+  /// The keyboard's own fetch reads text clips only. Once it was newer than the app's snapshot, the keyboard
+  /// showed a picture and then lost it (1.3 TestFlight): pictures, PDFs and files stay from the snapshot.
+  @Test func keyboardCacheDoesNotHideMediaClips() throws {
+    let file = ClipMedia.File(name: "Shot.heic", type: "public.heic", byteCount: 900, sha256: String(repeating: "b", count: 64))
+    let picture = Clip(
+      media: ClipMedia(kind: .image, files: [file], pixelWidth: 1200, pixelHeight: 800),
+      contentHashes: [ClipMedia.sha256(Data("picture".utf8))], sourceDevice: .iphone
+    )
+    let text = Clip(text: "in iCloud", sourceDevice: .mac)
+    try files.writeSnapshot([picture, text])
+    try files.writeKeyboardCache(KeyboardCache(clips: [text], fetchedAt: .now.addingTimeInterval(60)))
+
+    #expect(Set(files.currentClips().map(\.id)) == [picture.id, text.id])
+
+    // Since 1.3 the keyboard reads media records itself: a picture deleted in iCloud no longer comes back from an
+    // older snapshot, and one the cache has shows from it.
+    var current = KeyboardCache(clips: [text], fetchedAt: .now.addingTimeInterval(60))
+    current.includesMedia = true
+    try files.writeKeyboardCache(current)
+    #expect(Set(files.currentClips().map(\.id)) == [text.id])
+    current.clips = [text, picture]
+    try files.writeKeyboardCache(current)
+    #expect(Set(files.currentClips().map(\.id)) == [picture.id, text.id])
+    // An older cache file reads as one that doesn't know media.
+    let old = try JSONDecoder().decode(KeyboardCache.self, from: Data(#"{"clips":[],"collections":[]}"#.utf8))
+    #expect(!old.includesMedia)
+  }
+
   @Test func missingLocalOnlyFileReadsAsEmpty() {
     #expect(files.readLocalOnly().isEmpty)
   }

@@ -248,10 +248,7 @@ final class SyncStepTests: XCTestCase {
       // The keyboard is ready in the last launch: on to the paste step.
       app.buttons["onboardingNext"].firstMatch.tap()
       Thread.sleep(forTimeInterval: 1.5)
-      attachScreenshot(named: "setup-paste-allow")
-      app.buttons["pasteAlreadyAllowed"].firstMatch.tap()
-      Thread.sleep(forTimeInterval: 1.2)
-      attachScreenshot(named: "setup-paste-check")
+      attachScreenshot(named: "setup-paste-try")
       app.buttons["tryClipboardSave"].firstMatch.tap()
       Thread.sleep(forTimeInterval: 1.5)
       attachScreenshot(named: "setup-paste-done")
@@ -722,6 +719,49 @@ final class SyncStepTests: XCTestCase {
       let message = app.descendants(matching: .any)["mediaMessage"].firstMatch
       report(["ok": shown && found, "labels": labels, "message": message.exists ? message.label : "",
               "stillOurs": app.descendants(matching: .any)["spaceKey"].exists])
+      app.terminate()
+    case "kbCopy":
+      // 1.3 copy matrix: the keyboard, in Safari with the app closed, copies the clip whose tile shows `match` (a
+      // file name), downloading it first when needed. Then the app opens with PT_E2E_PASTEBOARD_REPORT and writes
+      // what the clipboard holds (types and names, no contents) for the script.
+      app.terminate()
+      let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
+      safari.launch()
+      let address = safari.textFields.firstMatch
+      if !address.waitForExistence(timeout: 5) {
+        safari.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Address'")).firstMatch.tap()
+      } else {
+        address.tap()
+      }
+      let shown = showPastronautKeyboard(in: safari)
+      // Only this keyboard's own elements are read; the rest of Safari may show the user's pages.
+      let tile = safari.descendants(matching: .any)
+        // The latest Mac copy has its own key above the tiles.
+        .matching(NSPredicate(format: "identifier IN {'kbClip', 'fromMacChip'} AND label CONTAINS[cd] %@", match)).firstMatch
+      let found = tile.waitForExistence(timeout: timeout)
+      if found { tile.tap() }
+      // A file not on this iPhone yet is downloaded first; the message goes away when it is on the clipboard.
+      let message = safari.descendants(matching: .any)["mediaMessage"].firstMatch
+      Thread.sleep(forTimeInterval: 1)
+      let said = message.exists ? message.label : ""
+      let deadline = Date().addingTimeInterval(timeout)
+      while message.exists, Date() < deadline { Thread.sleep(forTimeInterval: 0.5) }
+      // Counts only (the keyboard's other tiles may hold the user's clips): how many tiles, how many are test clips.
+      let tiles = safari.descendants(matching: .any).matching(NSPredicate(format: "identifier IN {'kbClip', 'fromMacChip'}"))
+      let testTiles = tiles.matching(NSPredicate(format: "label CONTAINS 'PTEST'"))
+      let cloudStatus = safari.descendants(matching: .any)["cloudStatus"].firstMatch
+      let tileCount = tiles.count, testCount = testTiles.count
+      // The test's own clips only.
+      let testLabels = testTiles.allElementsBoundByIndex.prefix(6).map(\.label)
+      // Each tile's label length and whether it says PDF: enough to tell an unlabeled tile, nothing of the content.
+      let shapes = tiles.allElementsBoundByIndex.prefix(6).map { "\($0.label.count):\($0.label.contains("PDF"))" }
+      let status = cloudStatus.exists ? cloudStatus.label : ""
+      app.launchEnvironment["PT_E2E_PASTEBOARD_REPORT"] = "1"
+      app.launch()
+      allowPasteIfAsked()
+      Thread.sleep(forTimeInterval: 2)
+      report(["ok": shown && found, "keyboard": shown, "found": found, "message": said, "tiles": tileCount,
+              "testTiles": testCount, "cloudStatus": status, "shapes": shapes, "testLabels": testLabels])
       app.terminate()
     case "storeShots13":
       // App Store screenshots for 1.3 in one language (PT_SHOTS_LANG = en or tr), made-up clips only (PT_DEMO), in

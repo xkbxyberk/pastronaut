@@ -693,6 +693,42 @@ class MaccyUITests: XCTestCase {
     }
   }
 
+  // Pastronaut 1.3: Settings › Appearance › Picture and PDF rows, each style with made-up copies (the test's
+  // in-memory history): a picture, a PDF as Preview copies it, a PDF file and text.
+  func testPastronautMediaRowStyles() throws {
+    let picture = NSImage(size: NSSize(width: 480, height: 300), flipped: false) { rect in
+      NSGradient(colors: [.systemTeal, .systemIndigo])?.draw(in: rect, angle: 30)
+      return true
+    }
+    let pdfURL = FileManager.default.temporaryDirectory.appending(path: "Fatura Ekim.pdf")
+    let pdfData = NSMutableData()
+    var box = CGRect(x: 0, y: 0, width: 300, height: 400)
+    if let consumer = CGDataConsumer(data: pdfData), let context = CGContext(consumer: consumer, mediaBox: &box, nil) {
+      context.beginPDFPage(nil)
+      context.setFillColor(NSColor.systemOrange.cgColor)
+      context.fill(CGRect(x: 30, y: 300, width: 240, height: 60))
+      context.endPDFPage()
+      context.closePDF()
+    }
+    try (pdfData as Data).write(to: pdfURL)
+    for style in ["previewAndName", "iconAndName", "nameOnly"] {
+      app.terminate()
+      app.launchArguments = ["enable-testing", "-pastronautMediaRowStyle", style]
+      app.launch()
+      copyToClipboard("Toplantı Perşembe 14:00'te")
+      copyToClipboard(pdfURL)
+      pasteboard.clearContents()
+      pasteboard.setData(pdfData as Data, forType: .pdf)
+      pasteboard.setData(NSImage(data: pdfData as Data)?.tiffRepresentation, forType: .tiff)
+      waitTillClipboardCheck()
+      copyToClipboard(picture)
+      popUpWithMouse()
+      sleep(1)
+      attachScreenshot(app.dialogs.firstMatch, named: "rows-\(style)")
+      app.typeKey(.escape, modifierFlags: [])
+    }
+  }
+
   // Pastronaut 1.3 App Store pictures (APPSTORE.md §9): the whole screen as it is, with made-up copies only (the
   // test's in-memory history, no sync). Other apps are hidden first so only the desktop is behind the popup; "Show
   // All" in Finder brings them back. TextEdit, started in the shot's language without a window, is the app in front,

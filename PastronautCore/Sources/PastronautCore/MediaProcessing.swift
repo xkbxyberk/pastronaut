@@ -67,6 +67,27 @@ public enum MediaProcessing {
     return nil
   }
 
+  /// The first page of a PDF on white, as a PNG at most `side` pixels long: what Preview puts next to a PDF it
+  /// copies, so a history row can show the page.
+  public static func pagePicture(ofPDF pdfData: Data, side: Int = 1600) -> Data? {
+    guard let provider = CGDataProvider(data: pdfData as CFData), let document = CGPDFDocument(provider),
+          let page = document.page(at: 1) else { return nil }
+    let box = page.getBoxRect(.cropBox)
+    guard box.width > 0, box.height > 0 else { return nil }
+    let scale = CGFloat(side) / max(box.width, box.height)
+    let width = Int(box.width * scale), height = Int(box.height * scale)
+    guard let context = CGContext(
+      data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+      space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+    ) else { return nil }
+    context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+    context.scaleBy(x: scale, y: scale)
+    context.translateBy(x: -box.minX, y: -box.minY)
+    context.drawPDFPage(page)
+    return context.makeImage().flatMap { encode($0, as: .png, quality: 1) }
+  }
+
   /// The first page of a PDF on white, as a JPEG of at most `maxBytes`.
   public static func thumbnail(ofPDF pdfData: Data, maxBytes: Int = MediaRecord.maxThumbnailBytes) -> Data? {
     guard let provider = CGDataProvider(data: pdfData as CFData),
@@ -127,6 +148,11 @@ public enum MediaProcessing {
     return "\(prefix) \(formatter.string(from: date)).\(ext)"
   }
 
+  /// A name `defaultName` made: the content was copied without one.
+  public static func isDefaultName(_ name: String) -> Bool {
+    name.wholeMatch(of: /(Image|Document) \d{4}-\d{2}-\d{2} at \d{2}\.\d{2}\.\d{2}\.[A-Za-z0-9]+/) != nil
+  }
+
   /// The image as PNG, for apps that don't take HEIC or JPEG from the pasteboard. Orientation applied.
   public static func png(of imageData: Data) -> Data? {
     guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
@@ -138,6 +164,49 @@ public enum MediaProcessing {
     ]
     guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
     return encode(image, as: .png, quality: 1)
+  }
+
+  // MARK: - The same picture, other bytes
+
+  /// A 64-bit picture of the picture (difference hash): each bit says whether a pixel of a 9 × 8 grey version is
+  /// brighter than its right neighbour. Re-encoding and scaling barely move it; another picture of the same size
+  /// does. Decodes only a small thumbnail.
+  public static func fingerprint(of imageData: Data) -> UInt64? {
+    guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
+          let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 64
+          ] as CFDictionary) else { return nil }
+    let width = 9, height = 8
+    var pixels = [UInt8](repeating: 0, count: width * height)
+    guard let context = CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width,
+                                  space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue) else {
+      return nil
+    }
+    context.interpolationQuality = .medium
+    context.draw(thumbnail, in: CGRect(x: 0, y: 0, width: width, height: height))
+    var hash: UInt64 = 0
+    for row in 0..<height {
+      for column in 0..<(width - 1) {
+        hash <<= 1
+        if pixels[row * width + column] > pixels[row * width + column + 1] { hash |= 1 }
+      }
+    }
+    return hash
+  }
+
+  /// Universal Clipboard and sync bring the same picture with different bytes: the original, and the copy the clip
+  /// was made from (re-encoded, maybe scaled down to `MediaQuality.maxLongEdge`). Same shape and nearly the same
+  /// fingerprint.
+  public static func isSamePicture(_ first: Data, _ second: Data) -> Bool {
+    guard let one = pixelSize(of: first), let other = pixelSize(of: second),
+          let firstPrint = fingerprint(of: first), let secondPrint = fingerprint(of: second) else { return false }
+    let media = ClipMedia(kind: .image, files: [], pixelWidth: one.width, pixelHeight: one.height)
+    let sameShape = media.isSameSize(width: other.width, height: other.height)
+      || ClipMedia(kind: .image, files: [], pixelWidth: other.width, pixelHeight: other.height)
+        .isSameSize(width: one.width, height: one.height)
+    return sameShape && (firstPrint ^ secondPrint).nonzeroBitCount <= 8
   }
 
   /// A decoded image for text recognition.

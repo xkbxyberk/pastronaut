@@ -13,6 +13,8 @@ public struct KeyboardCache: Codable, Equatable, Sendable {
   public var fetchedAt: Date?
   /// The zone `token` belongs to. A cache from the original zone starts over with a full fetch.
   public var zone: String?
+  /// Since 1.3: the fetch reads images, PDFs and files too (not their files). A cache from before starts over.
+  public var includesMedia = false
 
   public init(clips: [Clip] = [], collections: [ClipCollection] = [], token: Data? = nil, fetchedAt: Date? = nil) {
     self.clips = clips
@@ -29,6 +31,7 @@ public struct KeyboardCache: Codable, Equatable, Sendable {
     token = try container.decodeIfPresent(Data.self, forKey: .token)
     fetchedAt = try container.decodeIfPresent(Date.self, forKey: .fetchedAt)
     zone = try container.decodeIfPresent(String.self, forKey: .zone)
+    includesMedia = try container.decodeIfPresent(Bool.self, forKey: .includesMedia) ?? false
   }
 
   /// Applies one fetch. A full fetch is the whole zone, so clips it does not mention are gone.
@@ -111,7 +114,7 @@ public actor KeyboardCloud {
   @discardableResult
   public func refresh() async throws -> KeyboardCache {
     var cache = files.readKeyboardCache() ?? KeyboardCache()
-    if cache.zone != ClipRecord.zoneName {
+    if cache.zone != ClipRecord.zoneName || !cache.includesMedia {
       cache.token = nil
     }
     let key = try? await currentKey()
@@ -125,12 +128,22 @@ public actor KeyboardCloud {
     var moreComing = true
     do {
       while moreComing {
-        let changes = try await database.recordZoneChanges(inZoneWith: ClipRecord.zoneID, since: token)
+        // Never the media files: a full fetch would bring every picture in iCloud into the keyboard.
+        let changes = try await database.recordZoneChanges(
+          inZoneWith: ClipRecord.zoneID, since: token, desiredKeys: ClipSync.catchUpKeys
+        )
         for (_, result) in changes.modificationResultsByID {
           guard case .success(let modification) = result else { continue }
           let record = modification.record
           if let clip = ClipRecord.clip(from: record), key.map({ ClipRecord.isNamed(record, for: clip, key: $0) }) ?? true {
             fetched.append(clip)
+          } else if let clip = MediaRecord.clip(from: record),
+                    key.map({ ClipRecord.isNamed(record, for: clip, key: $0) }) ?? true {
+            // A picture from the Mac shows here before the app has run: its thumbnail travels in the record.
+            fetched.append(clip)
+            if store.thumbnail(for: clip.id) == nil, let thumbnail = MediaRecord.thumbnail(of: record) {
+              try? store.storeThumbnail(thumbnail, for: clip.id)
+            }
           } else if let collection = CollectionRecord.collection(from: record) {
             fetchedCollections.append(collection)
           }
@@ -167,9 +180,31 @@ public actor KeyboardCloud {
       token: archived,
       at: .now
     )
+    cache.includesMedia = true
     try files.writeKeyboardCache(cache)
     logger.notice("Keyboard fetched \(fetched.count) changes, \(deletedNames.count) deletions (full: \(isFullFetch))")
     return cache
+  }
+
+  /// The largest image, PDF or files the keyboard downloads itself: decrypting holds them in memory, and iOS stops
+  /// a keyboard at about 60 MB. Larger ones wait for the app.
+  public static let maxDownloadBytes = 15 * MediaSettings.megabyte
+
+  private var store: MediaStore { MediaStore(storageDirectory: files.directory) }
+
+  /// Downloads a media clip's files from iCloud into the app's media store (the app then needs not fetch them).
+  /// False when too large, not in iCloud or not readable.
+  public func downloadFiles(of clip: Clip) async -> Bool {
+    guard let media = clip.media, media.totalBytes <= Self.maxDownloadBytes else { return false }
+    if store.hasFiles(for: clip) { return true }
+    guard let key = try? await currentKey() else { return false }
+    let recordID = ClipRecord.recordID(forClipID: clip.id, key: key)
+    guard let result = try? await database.records(for: [recordID], desiredKeys: [MediaRecord.filesField])[recordID],
+          case .success(let record) = result, let urls = MediaRecord.encryptedFileURLs(of: record) else {
+      logger.error("Keyboard could not download the files of a media clip")
+      return false
+    }
+    return store.storeDownloaded(urls, for: clip, cipher: MediaCipher(syncKey: key))
   }
 
   /// Saves a captured clip straight to iCloud, merging with the server copy if the clip already exists.

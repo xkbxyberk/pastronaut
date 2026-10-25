@@ -97,6 +97,62 @@ public struct MediaSettings: Codable, Equatable, Sendable {
   public static let cloudBudgetChoices = [500 * megabyte, gigabyte, 2 * gigabyte, 5 * gigabyte]
 }
 
+extension ClipMedia {
+  /// Universal Clipboard and sync can bring the same picture twice: the original, and the copy this clip was made
+  /// from. The clip's time is when the iPhone app saved it, which can be well after the copy (the app saves when it
+  /// is opened), so the window is wide; `MediaProcessing.isSamePicture` then compares the pictures themselves.
+  public static let pictureTwinWindow: TimeInterval = 60 * 60
+
+  /// Could a picture of `width` × `height` copied at `copiedAt` be this image clip? Same size, or the same shape
+  /// scaled down to `MediaQuality.maxLongEdge`, within `pictureTwinWindow`. A cheap first check.
+  public func isSamePicture(width: Int, height: Int, copiedAt: Date, as clipCopiedAt: Date) -> Bool {
+    guard kind == .image, abs(copiedAt.timeIntervalSince(clipCopiedAt)) <= Self.pictureTwinWindow else { return false }
+    return isSameSize(width: width, height: height)
+  }
+
+  /// This image's size is `width` × `height`, or that scaled down to `MediaQuality.maxLongEdge`.
+  public func isSameSize(width: Int, height: Int) -> Bool {
+    guard let ownWidth = pixelWidth, let ownHeight = pixelHeight, width > 0, height > 0 else { return false }
+    if ownWidth == width && ownHeight == height { return true }
+    // Scaled down: the long edge is the limit, the other side within a pixel of the original's shape.
+    guard max(ownWidth, ownHeight) == MediaQuality.maxLongEdge, max(width, height) > MediaQuality.maxLongEdge else {
+      return false
+    }
+    let scale = Double(MediaQuality.maxLongEdge) / Double(max(width, height))
+    let expected = (Double(min(width, height)) * scale).rounded()
+    return abs(expected - Double(min(ownWidth, ownHeight))) <= 1 && (ownWidth >= ownHeight) == (width >= height)
+  }
+}
+
+extension ClipMedia {
+  /// Copying a file in Finder also puts its name on the clipboard, and Universal Clipboard takes only that text to
+  /// the iPhone, which then saved "Screenshot 2026-10-24 at 20.48.54" as a text clip (1.3 TestFlight). Whether
+  /// `text` is just the name of one of these files, with or without its extension (a picture is sent as HEIC).
+  public func isNamed(by text: String) -> Bool {
+    let name = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !name.isEmpty, !name.contains(where: \.isNewline) else { return false }
+    let base = Self.baseName(name)
+    return files.contains { file in file.name == name || Self.baseName(file.name) == base }
+  }
+
+  /// A name without its extension; "20.48.54" in a screenshot's name is a time, not an extension.
+  static func baseName(_ name: String) -> String {
+    let ext = (name as NSString).pathExtension
+    guard !ext.isEmpty, ext.count <= 5, ext.allSatisfy(\.isLetter) else { return name }
+    return (name as NSString).deletingPathExtension
+  }
+}
+
+extension Collection where Element == Clip {
+  /// The Mac's image, PDF or file clip, copied around `copiedAt`, whose file `text` names: `text` is an echo of it.
+  public func fileNamed(by text: String, near copiedAt: Date) -> Clip? {
+    first { clip in
+      clip.sourceDevice == .mac && clip.media?.isNamed(by: text) == true
+        && abs(clip.lastCopiedAt.timeIntervalSince(copiedAt)) <= ClipMedia.pictureTwinWindow
+    }
+  }
+}
+
 /// How a device sends the images it copies. Each device's own choice.
 public enum MediaQuality: String, Codable, Sendable, CaseIterable {
   /// HEIC, at most 4096 pixels on the long edge; the original when that is smaller.
@@ -230,6 +286,22 @@ public struct AppIcon: Codable, Equatable, Sendable {
 }
 
 // MARK: - Decoding what later versions write
+
+extension ClipMedia {
+  /// What the clip says without a title (1.3 copy matrix). A picture, PDF or file with a name of its own goes by
+  /// that name, as Finder shows it: its first text line is often only a header. One copied without a name ("Image
+  /// 2026-10-25 at 01.19.23.heic", "Document …pdf") goes by the first line of the text read from it.
+  public var caption: String {
+    let names = files.map(\.name)
+    if !names.contains(where: MediaProcessing.isDefaultName) {
+      return names.joined(separator: ", ")
+    }
+    if let line = recognizedText?.split(whereSeparator: \.isNewline).first {
+      return String(line.prefix(Clip.maxTitleLength))
+    }
+    return names.joined(separator: ", ")
+  }
+}
 
 // These travel as JSON in encrypted fields, so a later version can add fields without a schema change. Missing
 // fields take their defaults, so a version that knows a field reads what an older one wrote.
